@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Agroindustria: Soluciones "Máquina Parada" | MetalPro</title>
+    <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;600;700&family=Inter:wght@300;400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+
+    <style>
+        :root { --primary: #0044cc; --secondary: #1a1a1a; --accent: #ffae00; --surface: #f4f6f9; }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Inter', sans-serif; background: #fff; color: #333; overflow-x: hidden; }
+        h1, h2, h3, .tech-font { font-family: 'Chakra Petch', sans-serif; text-transform: uppercase; }
+
+        /* HEADER */
+        header { background: white; border-bottom: 2px solid var(--primary); padding: 15px 0; position: sticky; top: 0; z-index: 100; box-shadow: 0 4px 20px rgba(0,0,0,0.1); }
+        .container { max-width: 1200px; margin: 0 auto; padding: 0 20px; }
+        .nav-flex { display: flex; justify-content: space-between; align-items: center; }
+        .logo { font-size: 1.8rem; font-weight: 700; color: var(--secondary); text-decoration: none; }
+        .logo span { color: var(--primary); }
+        .btn-quote { background: var(--primary); color: white; padding: 12px 25px; font-weight: 700; border-radius: 4px; text-decoration: none; transition: 0.3s; }
+        .btn-quote:hover { background: #003399; transform: translateY(-2px); box-shadow: 0 5px 15px rgba(0,68,204,0.3); }
+
+        /* HERO PARALLAX */
+        .hero {
+            height: 70vh;
+            background: linear-gradient(to right, rgba(0,0,0,0.8), rgba(0,0,0,0.4)), url('https://images.unsplash.com/photo-1625246333195-584038e12f6a?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80');
+            background-attachment: fixed; background-size: cover; background-position: center;
+            display: flex; align-items: center; color: white; position: relative;
+        }
+        .hero-content h1 { font-size: 3.5rem; line-height: 1.1; margin-bottom: 20px; text-shadow: 0 4px 10px rgba(0,0,0,0.5); }
+        .hero-badge { background: var(--accent); color: var(--secondary); padding: 5px 15px; font-weight: 800; display: inline-block; margin-bottom: 15px; border-radius: 2px; }
+
+        /* STATS BAR */
+        .stats-bar { background: var(--secondary); color: white; padding: 40px 0; margin-top: -50px; position: relative; z-index: 10; box-shadow: 0 10px 30px rgba(0,0,0,0.2); }
+        .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; text-align: center; }
+        .stat-item h3 { font-size: 2.5rem; color: var(--accent); margin-bottom: 5px; }
+        .stat-item p { font-size: 0.9rem; opacity: 0.8; }
+
+        /* TABS INTERACTIVOS */
+        .tabs-section { padding: 80px 0; background: var(--surface); }
+        .tabs-nav { display: flex; justify-content: center; gap: 10px; margin-bottom: 40px; flex-wrap: wrap; }
+        .tab-btn {
+            padding: 15px 30px; border: none; background: white; font-weight: 700; font-family: 'Chakra Petch';
+            cursor: pointer; transition: 0.3s; border-bottom: 3px solid transparent; font-size: 1.1rem;
+        }
+        .tab-btn.active { border-bottom-color: var(--primary); color: var(--primary); background: #fff; box-shadow: 0 5px 15px rgba(0,0,0,0.05); }
+        
+        .tab-content { display: none; animation: fadeIn 0.5s; }
+        .tab-content.active { display: grid; grid-template-columns: 1fr 1fr; gap: 50px; align-items: center; }
+        
+        .tech-list li { margin-bottom: 15px; display: flex; gap: 15px; align-items: flex-start; }
+        .tech-list i { color: var(--success, #00c851); background: #e8f5e9; padding: 8px; border-radius: 50%; font-size: 0.9rem; }
+
+        /* PROBLEMA VS SOLUCION */
+        .problem-solution { padding: 80px 0; }
+        .ps-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0; border-radius: 12px; overflow: hidden; box-shadow: 0 20px 50px rgba(0,0,0,0.1); }
+        .ps-col { padding: 60px; }
+        .problem { background: #fff5f5; color: #c00; }
+        .solution { background: #f0fdf4; color: #006400; position: relative; overflow: hidden; }
+        .solution::before { content: ''; position: absolute; top:0; left:0; width: 5px; height: 100%; background: #00c851; }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        @media (max-width: 768px) { .stats-grid, .tab-content.active, .ps-grid { grid-template-columns: 1fr; } .hero-content h1 { font-size: 2.5rem; } }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="container nav-flex">
+            <a href="index.html" class="logo">METAL<span>PRO</span> IND.</a>
+            <a href="cotizador.html" class="btn-quote">SOLICITAR URGENCIA <i class="fa-solid fa-bolt"></i></a>
+        </div>
+    </header>
+
+    <section class="hero">
+        <div class="container hero-content" data-aos="fade-up">
+            <div class="hero-badge">CAMPAÑA 2026</div>
+            <h1>REPUESTOS AGRÍCOLAS<br>EN TIEMPO RÉCORD</h1>
+            <p style="font-size: 1.3rem; max-width: 600px; margin-bottom: 30px;">Cuando la cosecha arranca, no hay tiempo para esperas. Fabricación de ejes, bujes y engranajes con entrega prioritaria.</p>
+            <a href="cotizador.html" class="btn-quote" style="background: var(--accent); color: var(--secondary);">COTIZAR PIEZA AHORA</a>
+        </div>
+    </section>
+
+    <div class="container">
+        <div class="stats-bar">
+            <div class="stats-grid">
+                <div class="stat-item"><h3>24h</h3><p>Cotización Garantizada</p></div>
+                <div class="stat-item"><h3>450+</h3><p>Piezas Agro Entregadas</p></div>
+                <div class="stat-item"><h3>SAE</h3><p>Aceros Certificados</p></div>
+                <div class="stat-item"><h3>100%</h3><p>Garantía Dimensional</p></div>
+            </div>
+        </div>
+    </div>
+
+    <section class="tabs-section">
+        <div class="container">
+            <h2 class="tech-font" style="text-align: center; margin-bottom: 40px;">CAPACIDAD TÉCNICA ESPECIALIZADA</h2>
+            
+            <div class="tabs-nav">
+                <button class="tab-btn active" onclick="openTab(event, 'piezas')">PIEZAS CRÍTICAS</button>
+                <button class="tab-btn" onclick="openTab(event, 'materiales')">MATERIALES & DUREZA</button>
+                <button class="tab-btn" onclick="openTab(event, 'procesos')">PROCESOS</button>
+            </div>
+
+            <div id="piezas" class="tab-content active">
+                <img src="https://images.unsplash.com/photo-1530260626688-d48233003fe9?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" style="width: 100%; border-radius: 8px; box-shadow: 0 10px 30px rgba(0,0,0,0.1);">
+                <div>
+                    <h3>COMPONENTES DE TRANSMISIÓN</h3>
+                    <p style="margin-bottom: 20px;">Fabricamos bajo plano o muestra física (Ingeniería Inversa) para tractores John Deere, Case, New Holland y maquinaria nacional.</p>
+                    <ul class="tech-list">
+                        <li><i class="fa-solid fa-check"></i> Ejes estriados con tratamiento térmico.</li>
+                        <li><i class="fa-solid fa-check"></i> Cajas de rodamientos mecanizadas.</li>
+                        <li><i class="fa-solid fa-check"></i> Pernos de articulación cementados.</li>
+                        <li><i class="fa-solid fa-check"></i> Sinfines y coronas de bronce.</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div id="materiales" class="tab-content">
+                <img src="https://images.unsplash.com/photo-1622359567675-a0cb5d0e729a?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" style="width: 100%; border-radius: 8px;">
+                <div>
+                    <h3>RESISTENCIA AL DESGASTE</h3>
+                    <p style="margin-bottom: 20px;">El campo es abrasivo. Usamos materiales que soportan tierra, fricción y carga pesada.</p>
+                    <ul class="tech-list">
+                        <li><i class="fa-solid fa-layer-group"></i> <strong>SAE 8620:</strong> Cementado para máxima dureza superficial.</li>
+                        <li><i class="fa-solid fa-layer-group"></i> <strong>SAE 4140 Bonificado:</strong> Para ejes de alta torsión.</li>
+                        <li><i class="fa-solid fa-layer-group"></i> <strong>UHMW / Nylon:</strong> Plásticos para guías de deslizamiento.</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div id="procesos" class="tab-content">
+                <img src="https://images.unsplash.com/photo-1565043589221-1a6fd49cb727?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" style="width: 100%; border-radius: 8px;">
+                <div>
+                    <h3>TECNOLOGÍA APLICADA</h3>
+                    <ul class="tech-list">
+                        <li><i class="fa-solid fa-cogs"></i> Tallado de engranajes (Generadora).</li>
+                        <li><i class="fa-solid fa-fire"></i> Templado y Revenido controlado.</li>
+                        <li><i class="fa-solid fa-compress"></i> Brochado de chaveteros y estriados interiores.</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="container problem-solution" data-aos="fade-up">
+        <div class="ps-grid">
+            <div class="ps-col problem">
+                <h3 class="tech-font"><i class="fa-solid fa-triangle-exclamation"></i> EL PROBLEMA</h3>
+                <h2 style="margin: 15px 0;">"No consigo el repuesto original"</h2>
+                <p>Las importaciones están cerradas o el concesionario demora 60 días en traer la pieza. La máquina está parada en el lote y se anuncia lluvia.</p>
+            </div>
+            <div class="ps-col solution">
+                <h3 class="tech-font"><i class="fa-solid fa-circle-check"></i> LA SOLUCIÓN METALPRO</h3>
+                <h2 style="margin: 15px 0;">Fabricación Exprés en 48hs</h2>
+                <p>Traiga la pieza rota. Hacemos el plano, analizamos el material en laboratorio y fabricamos una nueva con las mismas o mejores especificaciones que la original.</p>
+                <a href="cotizador.html" class="btn-quote" style="display: inline-block; margin-top: 20px;">INICIAR URGENCIA</a>
+            </div>
+        </div>
+    </section>
+
+    <footer style="background: #111; color: #666; padding: 40px 0; text-align: center; margin-top: 50px;">
+        <div class="container">
+            <p>© 2026 MetalPro Industrial | <a href="index.html" style="color: white;">Volver al Inicio</a></p>
+        </div>
+    </footer>
+
+    <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+    <script>
+        AOS.init();
+        function openTab(evt, tabName) {
+            var i, tabcontent, tablinks;
+            tabcontent = document.getElementsByClassName("tab-content");
+            for (i = 0; i < tabcontent.length; i++) { tabcontent[i].className = tabcontent[i].className.replace(" active", ""); }
+            tablinks = document.getElementsByClassName("tab-btn");
+            for (i = 0; i < tablinks.length; i++) { tablinks[i].className = tablinks[i].className.replace(" active", ""); }
+            document.getElementById(tabName).className += " active";
+            evt.currentTarget.className += " active";
+        }
+    </script>
+    <script src="js/crm.js"></script>
+</body>
+</html>

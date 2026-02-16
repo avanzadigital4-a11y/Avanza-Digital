@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Oil & Gas: Normas API y Alta Presión | MetalPro</title>
+    <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;600;700&family=Inter:wght@300;400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+
+    <style>
+        :root { --primary: #0044cc; --secondary: #0a0a0a; --accent: #ffae00; --surface: #f4f6f9; }
+        body { font-family: 'Inter', sans-serif; background: #fff; color: #333; margin:0; }
+        h1, h2, h3, .tech-font { font-family: 'Chakra Petch', sans-serif; text-transform: uppercase; }
+        
+        /* HEADER IGUAL */
+        header { background: white; border-bottom: 2px solid var(--primary); padding: 15px 0; position: sticky; top: 0; z-index: 100; box-shadow: 0 4px 20px rgba(0,0,0,0.1); }
+        .container { max-width: 1200px; margin: 0 auto; padding: 0 20px; }
+        .nav-flex { display: flex; justify-content: space-between; align-items: center; }
+        .logo { font-size: 1.8rem; font-weight: 700; color: var(--secondary); text-decoration: none; }
+        .logo span { color: var(--primary); }
+        .btn-quote { background: var(--primary); color: white; padding: 12px 25px; font-weight: 700; border-radius: 4px; text-decoration: none; }
+
+        /* HERO OIL & GAS */
+        .hero {
+            height: 80vh;
+            background: linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.6)), url('https://images.unsplash.com/photo-1565431698379-3d073809df65?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80');
+            background-attachment: fixed; background-size: cover; background-position: center;
+            display: flex; align-items: center; justify-content: center; text-align: center; color: white;
+        }
+        .hero h1 { font-size: 4rem; margin-bottom: 10px; letter-spacing: 2px; }
+
+        /* CARDS GLASSMORPHISM (EXCLUSIVO DE ESTA PAGINA) */
+        .glass-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 30px; margin-top: -80px; position: relative; z-index: 10; padding-bottom: 80px; }
+        .glass-card { 
+            background: rgba(255, 255, 255, 0.95); padding: 40px; border-radius: 8px; 
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2); border-top: 5px solid var(--primary);
+            transition: 0.3s;
+        }
+        .glass-card:hover { transform: translateY(-10px); }
+        .glass-card i { font-size: 2.5rem; color: var(--primary); margin-bottom: 20px; }
+
+        /* SECCION MATERIALES EXOTICOS */
+        .exotic-section { background: var(--secondary); color: white; padding: 100px 0; }
+        .exotic-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 60px; align-items: center; }
+        .alloy-list li { margin-bottom: 15px; border-bottom: 1px solid #333; padding-bottom: 10px; font-size: 1.1rem; }
+        .alloy-list span { color: var(--accent); font-weight: 700; width: 140px; display: inline-block; }
+
+        @media (max-width: 768px) { .glass-grid, .exotic-grid { grid-template-columns: 1fr; } .hero h1 { font-size: 2.5rem; } }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="container nav-flex">
+            <a href="index.html" class="logo">METAL<span>PRO</span> IND.</a>
+            <a href="cotizador.html" class="btn-quote">SUBIR PLANOS</a>
+        </div>
+    </header>
+
+    <section class="hero">
+        <div class="container" data-aos="zoom-in">
+            <div style="color: var(--accent); font-weight: 700; letter-spacing: 3px; margin-bottom: 20px;">UPSTREAM & DOWNSTREAM</div>
+            <h1 class="tech-font">OIL & GAS</h1>
+            <p style="font-size: 1.2rem; max-width: 700px; margin: 0 auto 40px;">Componentes críticos mecanizados bajo estándares API y ASME. Trazabilidad de materiales al 100%.</p>
+        </div>
+    </section>
+
+    <div class="container">
+        <div class="glass-grid">
+            <div class="glass-card" data-aos="fade-up">
+                <i class="fa-solid fa-file-contract"></i>
+                <h3 class="tech-font">CERTIFICADOS 3.1</h3>
+                <p>Entregamos "Data Books" completos: Mill Test Reports de usina, tratamientos térmicos y ensayos no destructivos (END).</p>
+            </div>
+            <div class="glass-card" data-aos="fade-up" data-aos-delay="100">
+                <i class="fa-solid fa-ring"></i>
+                <h3 class="tech-font">ROSCAS API</h3>
+                <p>Mecanizado de precisión para roscas cónicas, housings de válvulas y sellos metal-metal de alta presión.</p>
+            </div>
+            <div class="glass-card" data-aos="fade-up" data-aos-delay="200">
+                <i class="fa-solid fa-stopwatch"></i>
+                <h3 class="tech-font">PARADAS DE PLANTA</h3>
+                <p>Servicio 24/7 para emergencias en refinería o pozo. Fabricación urgente de espárragos, bridas y niples.</p>
+            </div>
+        </div>
+    </div>
+
+    <section class="exotic-section">
+        <div class="container exotic-grid">
+            <div data-aos="fade-right">
+                <h2 class="tech-font" style="font-size: 2.5rem; margin-bottom: 30px;">ALEACIONES EXÓTICAS</h2>
+                <p style="color: #ccc; margin-bottom: 30px; font-size: 1.1rem; line-height: 1.6;">No solo mecanizamos acero al carbono. Somos especialistas en materiales resistentes a la corrosión y alta temperatura (H2S) donde un fallo no es una opción.</p>
+                
+                <ul class="alloy-list" style="list-style: none;">
+                    <li><span>INCONEL</span> 625 / 718 (Base Níquel)</li>
+                    <li><span>DUPLEX</span> F51 / Super Duplex F53</li>
+                    <li><span>INOXIDABLE</span> 316L / 410 / 17-4PH</li>
+                    <li><span>TITANIO</span> Grado 2 y 5</li>
+                </ul>
+                
+                <a href="cotizador.html" class="btn-quote" style="background: var(--accent); color: var(--secondary); margin-top: 20px; display: inline-block;">COTIZAR EN ALEACIÓN</a>
+            </div>
+            <div data-aos="fade-left">
+                <img src="https://images.unsplash.com/photo-1605218427368-35b861217e47?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" style="width: 100%; border-radius: 8px; border: 5px solid #333; box-shadow: 0 20px 50px rgba(0,0,0,0.5);">
+            </div>
+        </div>
+    </section>
+
+    <footer style="background: #000; color: #666; padding: 40px 0; text-align: center;">
+        <div class="container">
+            <p>© 2026 MetalPro | <a href="index.html" style="color: white;">Volver al Inicio</a></p>
+        </div>
+    </footer>
+
+    <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+    <script>AOS.init();</script>
+    <script src="js/crm.js"></script>
+</body>
+</html>

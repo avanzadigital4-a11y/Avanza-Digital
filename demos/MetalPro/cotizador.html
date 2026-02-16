@@ -1,0 +1,750 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cotizador Industrial | MetalPro - Ingeniería de Costos</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;600;700&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        /* === VARIABLES DE DISEÑO === */
+        :root {
+            --primary: #0044cc;
+            --primary-dark: #003399;
+            --secondary: #1a1a1a;
+            --accent: #ffae00;
+            --success: #00c851;
+            --error: #cc0000;
+            --surface: #f4f6f9;
+            --border: #e0e0e0;
+            --text-muted: #666;
+        }
+
+        /* === RESET & BASE === */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body { 
+            font-family: 'Inter', sans-serif; 
+            background: var(--surface); 
+            color: #333; 
+            min-height: 100vh; 
+            display: flex; 
+            flex-direction: column; 
+        }
+        
+        h1, h2, h3, .tech-font { 
+            font-family: 'Chakra Petch', sans-serif; 
+            text-transform: uppercase; 
+            letter-spacing: 0.5px; 
+        }
+
+        /* === HEADER MINIMALISTA (Tunnel Vision) === */
+        header { 
+            background: white; 
+            padding: 15px 5%; 
+            border-bottom: 3px solid var(--primary); 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+
+        .logo { 
+            font-size: 1.5rem; 
+            font-weight: 700; 
+            color: var(--secondary); 
+            text-decoration: none; 
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .logo span { color: var(--primary); }
+
+        .secure-badge { 
+            display: flex; 
+            align-items: center; 
+            gap: 8px; 
+            color: var(--success); 
+            font-weight: 600; 
+            font-size: 0.9rem; 
+            background: #e8f5e9; 
+            padding: 6px 15px; 
+            border-radius: 50px; 
+            border: 1px solid #c8e6c9;
+        }
+
+        /* === LAYOUT PRINCIPAL (GRID) === */
+        .main-grid { 
+            display: grid; 
+            grid-template-columns: 1fr 1.6fr; /* Columna derecha más ancha para el form */
+            gap: 50px; 
+            max-width: 1200px; 
+            margin: 40px auto; 
+            padding: 0 20px; 
+            flex-grow: 1;
+        }
+
+        /* === COLUMNA IZQUIERDA (PERSUASIÓN & TRUST) === */
+        .trust-panel { padding-top: 20px; }
+        
+        .trust-panel h1 { 
+            font-size: 2.8rem; 
+            line-height: 1.1; 
+            margin-bottom: 25px; 
+            color: var(--secondary); 
+        }
+        
+        .trust-panel p { 
+            color: var(--text-muted); 
+            margin-bottom: 35px; 
+            line-height: 1.6; 
+            font-size: 1.05rem;
+        }
+        
+        .trust-list { list-style: none; margin-bottom: 45px; }
+        
+        .trust-list li { 
+            display: flex; 
+            gap: 15px; 
+            margin-bottom: 25px; 
+            align-items: flex-start; 
+        }
+        
+        .trust-list i { 
+            color: var(--primary); 
+            font-size: 1.3rem; 
+            margin-top: 4px; 
+            background: #eef4ff;
+            padding: 10px;
+            border-radius: 50%;
+        }
+        
+        .trust-list h4 { 
+            font-weight: 700; 
+            margin-bottom: 5px; 
+            color: var(--secondary); 
+            font-size: 1.1rem;
+        }
+        
+        .trust-list p { 
+            font-size: 0.95rem; 
+            margin: 0; 
+            color: #555;
+        }
+
+        .nda-box { 
+            background: #fff; 
+            border-left: 5px solid var(--accent); 
+            padding: 25px; 
+            border-radius: 6px; 
+            box-shadow: 0 5px 20px rgba(0,0,0,0.05); 
+        }
+        
+        .nda-title { 
+            color: var(--accent); 
+            font-weight: 700; 
+            display: flex; 
+            align-items: center; 
+            gap: 10px; 
+            margin-bottom: 10px; 
+            font-size: 1.1rem;
+        }
+
+        /* === COLUMNA DERECHA (EL WIZARD) === */
+        .quote-card { 
+            background: white; 
+            border-radius: 12px; 
+            box-shadow: 0 15px 50px rgba(0,0,0,0.1); 
+            overflow: hidden; 
+            position: relative; 
+            display: flex;
+            flex-direction: column;
+        }
+        
+        /* BARRA DE PROGRESO */
+        .progress-container {
+            background: #eee;
+            height: 6px;
+            width: 100%;
+        }
+        .progress-fill { 
+            background: var(--primary); 
+            height: 100%;
+            width: 33%; 
+            transition: width 0.5s ease; 
+        }
+
+        .step-container { padding: 50px; }
+        
+        /* HEADER DEL PASO */
+        .step-header { margin-bottom: 35px; border-bottom: 1px solid #f0f0f0; padding-bottom: 20px; }
+        .step-count { 
+            color: #999; 
+            font-weight: 700; 
+            font-size: 0.85rem; 
+            margin-bottom: 8px; 
+            display: block; 
+            letter-spacing: 1px;
+        }
+        .step-title { font-size: 2rem; color: var(--secondary); }
+
+        /* FORMULARIOS & INPUTS */
+        .form-grid { 
+            display: grid; 
+            grid-template-columns: 1fr 1fr; 
+            gap: 25px; 
+        }
+        .full-width { grid-column: span 2; }
+        
+        label { 
+            display: block; 
+            font-weight: 600; 
+            font-size: 0.95rem; 
+            margin-bottom: 8px; 
+            color: #444; 
+        }
+        
+        input[type="text"], 
+        input[type="email"], 
+        input[type="tel"], 
+        input[type="date"], 
+        select, 
+        textarea { 
+            width: 100%; 
+            padding: 14px; 
+            border: 2px solid var(--border); 
+            border-radius: 6px; 
+            font-family: 'Inter'; 
+            font-size: 1rem; 
+            transition: all 0.3s;
+            background: #fafafa;
+        }
+
+        input:focus, select:focus, textarea:focus { 
+            border-color: var(--primary); 
+            background: white;
+            outline: none; 
+            box-shadow: 0 0 0 3px rgba(0, 68, 204, 0.1);
+        }
+
+        /* FILE UPLOAD (DRAG & DROP) */
+        .upload-area {
+            border: 2px dashed #bbb; 
+            background: #f8f9fa; 
+            padding: 50px 20px; 
+            text-align: center;
+            border-radius: 8px; 
+            cursor: pointer; 
+            transition: 0.3s; 
+            position: relative;
+        }
+        .upload-area:hover { 
+            border-color: var(--primary); 
+            background: #f0f4ff; 
+        }
+        .upload-icon { 
+            font-size: 3.5rem; 
+            color: #ccc; 
+            margin-bottom: 15px; 
+            transition: 0.3s;
+        }
+        .upload-area:hover .upload-icon { color: var(--primary); }
+        .upload-text { font-size: 1.1rem; color: #555; }
+        .upload-text strong { color: var(--primary); font-weight: 700; }
+        
+        /* BOTONES DE NAVEGACIÓN */
+        .btn-group { 
+            display: flex; 
+            justify-content: space-between; 
+            margin-top: 40px; 
+            padding-top: 25px; 
+            border-top: 1px solid #eee; 
+        }
+        
+        .btn { 
+            padding: 14px 35px; 
+            border-radius: 6px; 
+            font-weight: 700; 
+            cursor: pointer; 
+            transition: 0.3s; 
+            border: none; 
+            font-size: 1rem; 
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .btn-prev { 
+            background: transparent; 
+            color: var(--text-muted); 
+            border: 1px solid transparent;
+        }
+        .btn-prev:hover { 
+            color: var(--secondary); 
+            border-color: #ddd;
+        }
+        
+        .btn-next { 
+            background: var(--primary); 
+            color: white; 
+            box-shadow: 0 4px 10px rgba(0,68,204,0.3);
+        }
+        .btn-next:hover { 
+            background: var(--primary-dark); 
+            transform: translateY(-2px);
+        }
+        .btn-submit {
+            background: var(--success);
+            color: white;
+            box-shadow: 0 4px 10px rgba(0, 200, 81, 0.3);
+        }
+        .btn-submit:hover { background: #00a844; }
+        
+        /* ALERTAS DE URGENCIA */
+        .urgency-check { 
+            display: flex; 
+            align-items: center; 
+            gap: 15px; 
+            background: #fff5f5; 
+            padding: 20px; 
+            border: 1px solid #ffcccc; 
+            border-radius: 8px; 
+            color: var(--error); 
+            font-weight: 700;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+        .urgency-check:hover { background: #ffebeb; }
+        .urgency-check input { width: 20px; height: 20px; accent-color: var(--error); }
+
+        /* PANTALLAS (STEPS) */
+        .step { display: none; animation: slideUp 0.4s ease-out; }
+        .step.active { display: block; }
+
+        /* PANTALLA DE ÉXITO */
+        .success-screen { text-align: center; padding: 60px 40px; display: none; }
+        .success-icon { font-size: 5rem; color: var(--success); margin-bottom: 25px; animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+        .ticket-box { 
+            background: #e8f5e9; 
+            padding: 20px; 
+            margin: 30px auto; 
+            font-family: monospace; 
+            font-size: 1.4rem; 
+            border-radius: 8px; 
+            border: 2px dashed var(--success);
+            max-width: 400px;
+            color: #2e7d32;
+            font-weight: 700;
+        }
+
+        /* ANIMACIONES */
+        @keyframes slideUp { 
+            from { opacity: 0; transform: translateY(20px); } 
+            to { opacity: 1; transform: translateY(0); } 
+        }
+        @keyframes popIn {
+            from { transform: scale(0.5); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+
+        /* RESPONSIVE */
+        @media (max-width: 900px) {
+            .main-grid { grid-template-columns: 1fr; gap: 30px; }
+            .trust-panel { padding-right: 0; text-align: center; }
+            .trust-list li { justify-content: flex-start; text-align: left; }
+        }
+        @media (max-width: 600px) {
+            .form-grid { grid-template-columns: 1fr; }
+            .full-width { grid-column: span 1; }
+            .step-container { padding: 25px; }
+            .step-title { font-size: 1.5rem; }
+            .upload-area { padding: 30px 10px; }
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <a href="index.html" class="logo">METAL<span>PRO</span> IND.</a>
+        <div class="secure-badge">
+            <i class="fa-solid fa-lock"></i> Conexión Segura SSL 256-bit
+        </div>
+    </header>
+
+    <div class="main-grid">
+        
+        <div class="trust-panel">
+            <h1 class="tech-font">INGENIERÍA DE COSTOS</h1>
+            <p>Suba sus planos para un análisis de factibilidad y cotización formal. Nuestro equipo técnico revisará tolerancias y disponibilidad de material.</p>
+            
+            <ul class="trust-list">
+                <li>
+                    <i class="fa-solid fa-bolt"></i>
+                    <div>
+                        <h4>Cotización en 24hs</h4>
+                        <p>Para piezas estándar y series cortas. Proyectos complejos en 48hs hábiles.</p>
+                    </div>
+                </li>
+                <li>
+                    <i class="fa-solid fa-microscope"></i>
+                    <div>
+                        <h4>Revisión de Ingeniería</h4>
+                        <p>Detectamos posibles mejoras de diseño para reducir costos antes de fabricar.</p>
+                    </div>
+                </li>
+                <li>
+                    <i class="fa-solid fa-shield-halved"></i>
+                    <div>
+                        <h4>Propiedad Intelectual</h4>
+                        <p>Sus planos se almacenan en servidores encriptados y se borran tras 30 días si no hay compra.</p>
+                    </div>
+                </li>
+            </ul>
+
+            <div class="nda-box">
+                <div class="nda-title"><i class="fa-solid fa-file-signature"></i> PROTECCIÓN DE DATOS</div>
+                <p style="font-size: 0.9rem; margin: 0; color: #555;">
+                    ¿Requiere NDA (Acuerdo de Confidencialidad)? Marque la casilla en el último paso y lo enviaremos firmado antes de abrir los archivos.
+                </p>
+            </div>
+        </div>
+
+        <div class="quote-card">
+            
+            <div class="progress-container">
+                <div class="progress-fill" id="progress"></div>
+            </div>
+
+            <form id="quoteForm" onsubmit="event.preventDefault();">
+                
+                <div class="step active" id="step1">
+                    <div class="step-container">
+                        <div class="step-header">
+                            <span class="step-count">PASO 1 DE 3</span>
+                            <h2 class="step-title">Especificaciones Técnicas</h2>
+                        </div>
+                        
+                        <div class="form-grid">
+                            <div>
+                                <label>Tipo de Servicio *</label>
+                                <select required>
+                                    <option value="">Seleccione...</option>
+                                    <option>Mecanizado CNC</option>
+                                    <option>Corte Láser / Plegado</option>
+                                    <option>Fabricación de Estructuras</option>
+                                    <option>Ingeniería Inversa (Pieza física)</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label>Material Principal *</label>
+                                <select required>
+                                    <option value="">Seleccione...</option>
+                                    <option>Acero al Carbono (SAE 1010/1045)</option>
+                                    <option>Acero Inoxidable (304/316)</option>
+                                    <option>Aluminio (6061/7075)</option>
+                                    <option>Bronce / Latón</option>
+                                    <option>Plásticos Técnicos (Nylon/Delrin)</option>
+                                    <option>A definir por ingeniería</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label>Cantidad de Piezas *</label>
+                                <select required>
+                                    <option value="">Seleccione volumen...</option>
+                                    <option>Prototipo (1-5 unidades)</option>
+                                    <option>Serie Corta (10-100 unidades)</option>
+                                    <option>Producción (500+ unidades)</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label>Fecha Objetivo (Opcional)</label>
+                                <input type="date">
+                            </div>
+                            
+                            <div class="full-width">
+                                <label class="urgency-check">
+                                    <input type="checkbox" id="urgency">
+                                    <span>
+                                        <i class="fa-solid fa-triangle-exclamation"></i> 
+                                        🚨 MÁQUINA PARADA / URGENCIA (Prioridad Alta +15%)
+                                    </span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="btn-group">
+                            <div></div> <button type="button" class="btn btn-next" onclick="nextStep(2)">
+                                SIGUIENTE PASO <i class="fa-solid fa-arrow-right"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="step" id="step2">
+                    <div class="step-container">
+                        <div class="step-header">
+                            <span class="step-count">PASO 2 DE 3</span>
+                            <h2 class="step-title">Planos y Archivos</h2>
+                        </div>
+
+                        <div class="upload-area" id="dropZone" onclick="document.getElementById('fileInput').click()">
+                            <input type="file" id="fileInput" multiple style="display: none;" onchange="handleFiles(this.files)">
+                            <i class="fa-solid fa-cloud-arrow-up upload-icon"></i>
+                            <p class="upload-text" id="uploadText">
+                                Arrastre sus archivos aquí o <strong>haga clic para buscar</strong><br>
+                                <span style="font-size: 0.9rem; color: #999; margin-top: 10px; display: block;">
+                                    Soportamos: PDF, DWG, DXF, STEP, IGES (Máx 50MB)
+                                </span>
+                            </p>
+                        </div>
+
+                        <div style="margin-top: 25px;">
+                            <label>Detalles Adicionales / Tolerancias</label>
+                            <textarea rows="4" placeholder="Especifique tratamientos térmicos, superficiales (zincado, pavonado) o tolerancias críticas (ej: H7 en rodamientos)..."></textarea>
+                        </div>
+
+                        <div class="btn-group">
+                            <button type="button" class="btn btn-prev" onclick="prevStep(1)">
+                                <i class="fa-solid fa-arrow-left"></i> Atrás
+                            </button>
+                            <button type="button" class="btn btn-next" onclick="nextStep(3)">
+                                SIGUIENTE PASO <i class="fa-solid fa-arrow-right"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="step" id="step3">
+                    <div class="step-container">
+                        <div class="step-header">
+                            <span class="step-count">PASO 3 DE 3</span>
+                            <h2 class="step-title">Datos de Contacto</h2>
+                        </div>
+
+                        <div class="form-grid">
+                            <div class="full-width">
+                                <label>Nombre de la Empresa *</label>
+                                <input type="text" placeholder="Ej: Industrias Metalúrgicas S.A." required>
+                            </div>
+                            <div>
+                                <label>Nombre de Contacto *</label>
+                                <input type="text" required>
+                            </div>
+                            <div>
+                                <label>Cargo / Puesto</label>
+                                <input type="text" placeholder="Ej. Jefe de Mantenimiento">
+                            </div>
+                            <div>
+                                <label>Email Corporativo *</label>
+                                <input type="email" required>
+                            </div>
+                            <div>
+                                <label>Teléfono / WhatsApp *</label>
+                                <input type="tel" required>
+                            </div>
+                            <div class="full-width">
+                                <label style="font-weight: 400; font-size: 0.95rem; display: flex; align-items: center; gap: 10px; margin-top: 10px;">
+                                    <input type="checkbox" style="width: 18px; height: 18px;"> 
+                                    Solicito firmar NDA (Acuerdo de Confidencialidad) antes de recibir la cotización.
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="btn-group">
+                            <button type="button" class="btn btn-prev" onclick="prevStep(2)">
+                                <i class="fa-solid fa-arrow-left"></i> Atrás
+                            </button>
+                            <button type="button" class="btn btn-submit" onclick="submitForm()">
+                                FINALIZAR SOLICITUD <i class="fa-solid fa-check"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+            </form>
+
+            <div class="success-screen" id="successScreen">
+                <i class="fa-solid fa-circle-check success-icon"></i>
+                <h2 class="tech-font" style="color: var(--secondary); font-size: 2.5rem;">SOLICITUD RECIBIDA</h2>
+                <p style="font-size: 1.1rem; color: #555;">Su caso ha sido asignado al Departamento de Ingeniería.</p>
+                
+                <div class="ticket-box">
+                    TICKET ID: #<span id="ticketId">----</span>
+                </div>
+                
+                <p style="font-size: 0.95rem; color: #777; margin-top: 25px; line-height: 1.6;">
+                    Hemos enviado una confirmación a su correo electrónico. Un ingeniero analizará la factibilidad y lo contactará dentro de las próximas 24 horas hábiles.
+                </p>
+                
+                <button class="btn btn-prev" style="margin: 40px auto 0; border: 2px solid #ccc;" onclick="window.location.href='index.html'">
+                    VOLVER AL INICIO
+                </button>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        // Variables de Estado
+        let currentStep = 1;
+        const totalSteps = 3;
+
+        // Función para actualizar la barra de progreso
+        function updateProgress(step) {
+            const percentage = (step / totalSteps) * 100;
+            document.getElementById('progress').style.width = percentage + '%';
+        }
+
+        // Navegación: Siguiente Paso
+        function nextStep(targetStep) {
+            // Aquí podrías agregar validaciones de campos obligatorios antes de avanzar
+            // if (!validateStep(currentStep)) return;
+            
+            // Animación de salida y entrada
+            document.getElementById('step' + currentStep).classList.remove('active');
+            
+            // Pequeño delay para suavidad visual
+            setTimeout(() => {
+                document.getElementById('step' + targetStep).classList.add('active');
+                currentStep = targetStep;
+                updateProgress(currentStep);
+                window.scrollTo({ top: 0, behavior: 'smooth' }); // Scroll arriba
+            }, 100);
+        }
+
+        // Navegación: Paso Anterior
+        function prevStep(targetStep) {
+            document.getElementById('step' + currentStep).classList.remove('active');
+            setTimeout(() => {
+                document.getElementById('step' + targetStep).classList.add('active');
+                currentStep = targetStep;
+                updateProgress(currentStep);
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }, 100);
+        }
+
+        // Manejador de Archivos (Drag & Drop + Input)
+        function handleFiles(files) {
+            if(files.length > 0) {
+                const names = Array.from(files).map(f => f.name).join(', ');
+                const count = files.length;
+                
+                // Actualizar UI del DropZone
+                const dropZone = document.getElementById('dropZone');
+                const uploadText = document.getElementById('uploadText');
+                
+                dropZone.style.borderColor = 'var(--success)';
+                dropZone.style.backgroundColor = '#e8f5e9';
+                
+                uploadText.innerHTML = `
+                    <div style="color: var(--success); font-weight: 700; font-size: 1.2rem;">
+                        <i class="fa-solid fa-check-circle"></i> ${count} Archivo(s) Listo(s)
+                    </div>
+                    <div style="font-size: 0.9rem; color: #555; margin-top: 5px; word-break: break-all;">
+                        ${names}
+                    </div>
+                `;
+            }
+        }
+
+        // Envío del Formulario (Conexión a Make/CRM)
+        async function submitForm() {
+            // 1. CONFIGURACIÓN DEL WEBHOOK
+            // Reemplaza esta URL con la que obtuviste en Make (Webhook > Custom Webhook)
+            const WEBHOOK_URL = 'https://hook.us2.make.com/jw509vcelyusnhrkjfvh2g4olcks5ob7';
+            
+            const btn = document.querySelector('.btn-submit');
+            const originalText = btn.innerHTML;
+
+            // UI: Bloquear botón para evitar doble envío
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> ENVIANDO PLANOS...';
+            btn.disabled = true;
+            btn.style.opacity = "0.7";
+
+            // 2. EXTRAER DATOS DEL DOM
+            const step1 = document.getElementById('step1');
+            const selects1 = step1.querySelectorAll('select');
+            
+            const step2 = document.getElementById('step2');
+            const fileInput = document.getElementById('fileInput');
+            
+            const step3 = document.getElementById('step3');
+            const inputs3 = step3.querySelectorAll('input');
+
+            // Construir el paquete de datos (FormData para soportar archivos)
+            const formData = new FormData();
+            
+            // -- Datos Técnicos --
+            formData.append('servicio', selects1[0].value);
+            formData.append('material', selects1[1].value);
+            formData.append('cantidad', selects1[2].value);
+            formData.append('fecha_limite', step1.querySelector('input[type="date"]').value);
+            formData.append('urgencia', document.getElementById('urgency').checked ? "🚨 URGENTE (Máquina Parada)" : "Normal");
+            formData.append('detalles', step2.querySelector('textarea').value);
+            
+            // -- Datos de Contacto --
+            formData.append('empresa', inputs3[0].value);
+            formData.append('nombre', inputs3[1].value);
+            formData.append('cargo', inputs3[2].value);
+            formData.append('email', inputs3[3].value);
+            formData.append('telefono', inputs3[4].value);
+            formData.append('solicita_nda', inputs3[5].checked ? "SI" : "NO");
+
+            // -- INTELIGENCIA DE CRM (UTMs + Historial) --
+            // Intentamos obtener datos de crm.js, si no existe usamos valores por defecto
+            const crmData = typeof getCRMData === 'function' 
+                ? getCRMData() 
+                : { source: 'Directo/Orgánico', medium: '', interes_calidad: 'Desconocido', historial_navegacion: 'No disponible' };
+            
+            formData.append('utm_source', crmData.source);
+            formData.append('utm_medium', crmData.medium);
+            formData.append('utm_campaign', crmData.campaign || '');
+            formData.append('crm_interes_calidad', crmData.interes_calidad);
+            formData.append('crm_historial', crmData.historial_navegacion);
+
+            // -- Adjuntar Archivos --
+            if (fileInput.files.length > 0) {
+                for (let i = 0; i < fileInput.files.length; i++) {
+                    formData.append('archivos[]', fileInput.files[i]);
+                }
+            }
+
+            try {
+                // 3. ENVÍO DE DATOS AL WEBHOOK
+                const response = await fetch(WEBHOOK_URL, {
+                    method: 'POST',
+                    body: formData // El navegador setea automáticamente el Content-Type multipart/form-data
+                });
+
+                if (response.ok) {
+                    // 4. UI: ÉXITO
+                    document.getElementById('step3').style.display = 'none';
+                    document.querySelector('.progress-container').style.display = 'none';
+                    document.getElementById('successScreen').style.display = 'block';
+                    
+                    // Generar un ID de Ticket aleatorio para feedback visual
+                    document.getElementById('ticketId').innerText = Math.floor(1000 + Math.random() * 9000); 
+                    
+                    // Scroll arriba para ver el mensaje
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                } else {
+                    throw new Error('Error status: ' + response.status);
+                }
+
+            } catch (error) {
+                console.error(error);
+                alert("Hubo un error de conexión al enviar los planos. Por favor verifique su internet o envíe los archivos directamente a ingenieria@metalpro.com");
+                
+                // Restaurar botón
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+                btn.style.opacity = "1";
+            }
+        }
+    </script>
+    
+    <script src="js/crm.js"></script>
+</body>
+</html>

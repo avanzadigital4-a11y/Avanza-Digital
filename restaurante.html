@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>La Nonna | Cucina Italiana</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+
+    <style>
+        :root {
+            --primary: #D32F2F; /* Rojo Italiano */
+            --gold: #FBC02D;
+            --dark: #121212;
+            --light-bg: #f9f9f9;
+            --text-body: #4a4a4a;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body { 
+            font-family: 'Inter', sans-serif; 
+            color: var(--text-body); 
+            background: var(--light-bg);
+            overflow-x: hidden;
+        }
+
+        h1, h2, h3, h4 { font-family: 'Playfair Display', serif; color: var(--dark); }
+
+        /* --- NAVBAR STICKY CON EFECTO BLUR --- */
+        .navbar {
+            position: fixed; top: 0; width: 100%; z-index: 1000;
+            padding: 20px 5%;
+            display: flex; justify-content: space-between; align-items: center;
+            transition: 0.4s;
+            background: rgba(255,255,255,0.0);
+        }
+        
+        .navbar.scrolled {
+            background: rgba(255,255,255,0.95);
+            padding: 15px 5%;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+            backdrop-filter: blur(10px);
+        }
+
+        .logo { font-size: 1.5rem; font-weight: 700; color: white; transition: 0.3s; }
+        .navbar.scrolled .logo { color: var(--dark); }
+        .logo span { color: var(--gold); }
+
+        .btn-reserve {
+            padding: 10px 25px;
+            background: var(--primary);
+            color: white;
+            border-radius: 50px;
+            text-decoration: none;
+            font-weight: 600;
+            box-shadow: 0 4px 15px rgba(211, 47, 47, 0.4);
+            transition: 0.3s;
+        }
+        .btn-reserve:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(211, 47, 47, 0.6); }
+
+        /* --- HERO CINEMÁTICO --- */
+        .hero {
+            height: 90vh;
+            background: linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.6)), url('https://images.unsplash.com/photo-1559339352-11d035aa65de?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80');
+            background-size: cover;
+            background-attachment: fixed; /* Efecto Parallax */
+            background-position: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            color: white;
+            position: relative;
+        }
+
+        .hero-content h1 { font-size: 4.5rem; color: white; margin-bottom: 20px; line-height: 1.1; }
+        .hero-content p { font-size: 1.3rem; max-width: 600px; margin: 0 auto 40px; color: rgba(255,255,255,0.9); }
+        .hero-content i { font-style: italic; color: var(--gold); }
+
+        /* --- MENÚ VISUAL --- */
+        .section-padding { padding: 100px 5%; }
+        .section-title { text-align: center; margin-bottom: 60px; }
+        .section-title span { color: var(--primary); font-weight: 700; text-transform: uppercase; font-size: 0.9rem; letter-spacing: 2px; font-family: 'Inter', sans-serif; }
+        .section-title h2 { font-size: 3rem; margin-top: 10px; }
+
+        .menu-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 40px;
+        }
+
+        .dish-card {
+            background: white;
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+            transition: 0.4s;
+            position: relative;
+        }
+
+        .dish-card:hover { transform: translateY(-10px); box-shadow: 0 20px 40px rgba(0,0,0,0.1); }
+
+        .dish-img { height: 250px; width: 100%; object-fit: cover; }
+        
+        .dish-info { padding: 30px; position: relative; }
+        .price-badge {
+            position: absolute; top: -20px; right: 30px;
+            background: var(--gold); color: var(--dark);
+            padding: 10px 20px; border-radius: 50px;
+            font-weight: 700; box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .dish-info h3 { font-size: 1.5rem; margin-bottom: 10px; }
+        .dish-info p { font-size: 0.95rem; color: #777; line-height: 1.6; margin-bottom: 20px; }
+
+        .tags span {
+            display: inline-block; font-size: 0.75rem; 
+            padding: 5px 10px; border-radius: 5px;
+            background: #f0f0f0; color: #666; margin-right: 5px;
+        }
+
+        /* --- SECCIÓN HISTORIA (TEXTO + IMAGEN) --- */
+        .about-section {
+            background: white;
+            display: flex; flex-wrap: wrap;
+            align-items: center;
+        }
+        /* Aquí estaba el problema, en escritorio mantenemos 400px */
+        .about-img { flex: 1; min-width: 400px; height: 600px; object-fit: cover; }
+        .about-text { flex: 1; min-width: 400px; padding: 80px; }
+        
+        .about-text h2 { font-size: 3rem; margin-bottom: 30px; }
+        .about-text p { margin-bottom: 20px; font-size: 1.1rem; }
+
+        /* --- FOOTER COMPLEJO --- */
+        footer {
+            background: var(--dark); color: white;
+            padding: 80px 5% 40px;
+        }
+        .footer-grid {
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 40px;
+            margin-bottom: 60px;
+        }
+        .footer-col h4 { color: var(--gold); margin-bottom: 25px; font-size: 1.2rem; }
+        .footer-col ul { list-style: none; }
+        .footer-col ul li { margin-bottom: 15px; color: #aaa; font-size: 0.95rem; }
+        .footer-col ul li i { margin-right: 10px; width: 20px; }
+
+        .copyright {
+            border-top: 1px solid rgba(255,255,255,0.1);
+            padding-top: 30px; text-align: center; color: #666; font-size: 0.9rem;
+        }
+
+        /* --- RESPONSIVE CORREGIDO --- */
+        @media (max-width: 768px) {
+            .hero-content h1 { font-size: 3rem; }
+            .navbar { background: rgba(0,0,0,0.9); } /* Fondo oscuro en móvil para leer logo */
+
+            /* Solución al problema de la franja blanca */
+            .about-img, .about-text {
+                min-width: 100%;   /* Ocupa todo el ancho */
+                flex-basis: 100%;  /* Se apila uno arriba del otro */
+                width: 100%;
+            }
+            
+            .about-text {
+                padding: 40px 20px; /* Menos relleno para aprovechar espacio */
+            }
+
+            .about-img {
+                height: 300px; /* Altura controlada para la foto */
+            }
+
+            /* Solución al fondo cortado */
+            .hero {
+                background-attachment: scroll; /* Quita el efecto parallax que rompe en móvil */
+                background-position: center;
+                height: auto;
+                min-height: 80vh;
+                padding-top: 120px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <nav class="navbar" id="navbar">
+        <div class="logo">LA NONNA<span>.</span></div>
+        <div class="nav-links">
+            </div>
+        <a href="https://wa.me/12345678" class="btn-reserve">Reservar Mesa</a>
+    </nav>
+
+    <header class="hero">
+        <div class="hero-content" data-aos="fade-up">
+            <p><i>Dal 1985</i></p>
+            <h1>El Sabor de la <br>Toscana en tu Mesa</h1>
+            <p>Ingredientes importados, masa madre de 48 horas y la pasión de tres generaciones.</p>
+            <div style="margin-top: 30px;">
+                <a href="#menu" class="btn-reserve" style="background: white; color: var(--dark);">Ver Menú</a>
+                <a href="#reservas" class="btn-reserve" style="margin-left: 15px;">Pedir Delivery</a>
+            </div>
+        </div>
+    </header>
+
+    <section class="about-section">
+        <img src="https://img.freepik.com/foto-gratis/chef-cocinando-cocina-mientras-lleva-ropa-profesional_23-2151208288.jpg?semt=ais_hybrid&w=740&q=80" class="about-img">
+        <div class="about-text" data-aos="fade-left">
+            <span>NUESTRA HISTORIA</span>
+            <h2>No es solo comida,<br>es tradición.</h2>
+            <p>Todo comenzó en un pequeño pueblo cerca de Florencia, donde la Nonna María amasaba pan cada mañana.</p>
+            <p>Hoy, mantenemos vivo su secreto: tiempo, paciencia y respeto absoluto por el producto. Nuestras salsas se cocinan a fuego lento durante 6 horas y nuestra mozzarella llega fresca cada día.</p>
+           
+        </div>
+    </section>
+
+    <section id="menu" class="section-padding">
+        <div class="section-title" data-aos="fade-up">
+            <span>Nuestros Favoritos</span>
+            <h2>Platos Estrella</h2>
+        </div>
+
+        <div class="menu-grid">
+            
+            <div class="dish-card" data-aos="fade-up" data-aos-delay="100">
+                <img src="https://images.unsplash.com/photo-1574071318508-1cdbab80d002?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80" alt="Pizza" class="dish-img">
+                <div class="dish-info">
+                    <div class="price-badge">$12.500</div>
+                    <h3>Burrata & Prosciutto</h3>
+                    <p>Base de tomate San Marzano, burrata cremosa entera, prosciutto di Parma y rúcula fresca.</p>
+                    <div class="tags">
+                        <span><i class="fa-solid fa-wheat-awn"></i> Masa Madre</span>
+                        <span><i class="fa-solid fa-fire"></i> Horno Leña</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="dish-card" data-aos="fade-up" data-aos-delay="200">
+                <img src="https://images.unsplash.com/photo-1626844131082-256783844137?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80" alt="Pasta" class="dish-img">
+                <div class="dish-info">
+                    <div class="price-badge">$10.800</div>
+                    <h3>Pappardelle al Cinghiale</h3>
+                    <p>Cintas anchas de pasta fresca al huevo con ragú de jabalí cocinado por 12 horas en vino tinto.</p>
+                    <div class="tags">
+                        <span><i class="fa-solid fa-egg"></i> Pasta Fresca</span>
+                        <span><i class="fa-solid fa-wine-glass"></i> Vino Chianti</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="dish-card" data-aos="fade-up" data-aos-delay="300">
+                <img src="https://images.unsplash.com/photo-1551024709-8f23befc6f87?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80" alt="Postre" class="dish-img">
+                <div class="dish-info">
+                    <div class="price-badge">$6.200</div>
+                    <h3>Tiramisú Clásico</h3>
+                    <p>La receta original. Mascarpone italiano, savoiardi bañados en café espresso fuerte y cacao amargo.</p>
+                    <div class="tags">
+                        <span><i class="fa-solid fa-coffee"></i> Café 100%</span>
+                        <span><i class="fa-solid fa-spoon"></i> Casero</span>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </section>
+
+    <footer>
+        <div class="footer-grid">
+            <div class="footer-col">
+                <h3>LA NONNA<span>.</span></h3>
+                <p style="margin-top: 20px; color: #888; line-height: 1.6;">La auténtica experiencia italiana en el corazón de la ciudad. Pasión por la calidad desde 1985.</p>
+            </div>
+            <div class="footer-col">
+                <h4>Contacto</h4>
+                <ul>
+                    <li><i class="fa-solid fa-location-dot"></i> Av. Libertador 2400, Palermo</li>
+                    <li><i class="fa-solid fa-phone"></i> +54 11 4567 8900</li>
+                    <li><i class="fa-solid fa-envelope"></i> reservas@lanonna.com</li>
+                </ul>
+            </div>
+            <div class="footer-col">
+                <h4>Horarios</h4>
+                <ul>
+                    <li>Martes a Jueves: 19:00 - 00:00</li>
+                    <li>Viernes y Sábados: 19:00 - 02:00</li>
+                    <li>Domingos: 12:00 - 16:00</li>
+                </ul>
+            </div>
+        </div>
+        <div class="copyright">
+            <p>&copy; 2025 La Nonna Ristorante. Diseño y Desarrollo por <a href="index.html" style="color:white;">Avanza Digital</a>.</p>
+        </div>
+    </footer>
+
+    <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+    <script>
+        AOS.init({ duration: 1000, once: true });
+
+        // Navbar Scroll Effect
+        window.addEventListener('scroll', function() {
+            const navbar = document.getElementById('navbar');
+            if (window.scrollY > 50) {
+                navbar.classList.add('scrolled');
+            } else {
+                navbar.classList.remove('scrolled');
+            }
+        });
+    </script>
+    <!-- Start of HubSpot Embed Code -->
+<script type="text/javascript" id="hs-script-loader" async defer src="//js.hs-scripts.com/51067454.js"></script>
+<!-- End of HubSpot Embed Code -->
+</body>
+</html>

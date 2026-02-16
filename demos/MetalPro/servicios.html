@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Capacidad Técnica y Maquinaria | MetalPro Industrial</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;600;700&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+
+    <style>
+        /* MISMAS VARIABLES QUE EN EL RESTO DEL SITIO */
+        :root {
+            --primary: #0044cc;
+            --secondary: #1a1a1a;
+            --accent: #ffae00;
+            --surface: #f4f6f9;
+            --border: #e0e0e0;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Inter', sans-serif; background: white; color: #333; }
+        h1, h2, h3, .tech-font { font-family: 'Chakra Petch', sans-serif; text-transform: uppercase; }
+
+        /* REUTILIZAMOS HEADER Y FOOTER */
+        header { background: white; border-bottom: 2px solid var(--primary); position: sticky; top: 0; z-index: 100; padding: 15px 0; box-shadow: 0 4px 20px rgba(0,0,0,0.05); }
+        .container { max-width: 1280px; margin: 0 auto; padding: 0 20px; }
+        .nav-flex { display: flex; justify-content: space-between; align-items: center; }
+        .logo { font-size: 1.8rem; font-weight: 700; color: var(--secondary); text-decoration: none; }
+        .logo span { color: var(--primary); }
+        .nav-menu { display: flex; gap: 30px; }
+        .nav-link { color: var(--secondary); font-weight: 600; text-decoration: none; font-size: 0.95rem; transition: 0.3s; }
+        .nav-link:hover, .nav-link.active { color: var(--primary); }
+        .btn-quote { background: var(--primary); color: white; padding: 10px 20px; font-weight: 700; border-radius: 4px; text-decoration: none; }
+
+        /* ESTILOS ESPECÍFICOS DE SERVICIOS */
+        .page-header { background: var(--secondary); color: white; padding: 60px 0; text-align: center; }
+        
+        .machine-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 30px; margin: 50px 0; }
+        .machine-card { border: 1px solid var(--border); border-radius: 6px; overflow: hidden; transition: 0.3s; }
+        .machine-card:hover { border-color: var(--primary); box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
+        .machine-header { background: #f8f9fa; padding: 15px; border-bottom: 1px solid var(--border); font-weight: 700; display: flex; justify-content: space-between; align-items: center; }
+        .machine-body { padding: 20px; }
+        .spec-list { list-style: none; font-size: 0.9rem; color: #555; }
+        .spec-list li { margin-bottom: 8px; display: flex; gap: 10px; }
+        .spec-list i { color: var(--primary); margin-top: 4px; }
+
+        .tech-table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        .tech-table th, .tech-table td { border: 1px solid #ddd; padding: 12px; text-align: left; }
+        .tech-table th { background: var(--secondary); color: white; }
+        .tech-table tr:nth-child(even) { background: #f9f9f9; }
+
+        footer { background: #111; color: #666; padding: 40px 0; text-align: center; border-top: 4px solid var(--primary); margin-top: 60px; }
+        
+        @media (max-width: 992px) { .nav-menu { display: none; } }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="container nav-flex">
+            <a href="index.html" class="logo">METAL<span>PRO</span> IND.</a>
+            <nav class="nav-menu">
+                <a href="servicios.html" class="nav-link active">CAPACIDAD</a>
+                <a href="industrias.html" class="nav-link">INDUSTRIAS</a>
+                <a href="calidad.html" class="nav-link">CALIDAD</a>
+                <a href="recursos.html" class="nav-link">RECURSOS</a>
+            </nav>
+            <a href="cotizador.html" class="btn-quote">COTIZAR</a>
+        </div>
+    </header>
+
+    <div class="page-header">
+        <div class="container" data-aos="fade-up">
+            <h1 class="tech-font">PARQUE DE MAQUINARIA & CAPACIDAD</h1>
+            <p style="color:#ccc; max-width:700px; margin:0 auto;">Tecnología CNC de 3, 4 y 5 ejes para geometrías complejas y producción seriada.</p>
+        </div>
+    </div>
+
+    <div class="container" style="padding: 60px 20px;">
+        
+        <h2 class="tech-font" style="color: var(--secondary); border-left: 5px solid var(--accent); padding-left: 15px;">CENTROS DE MECANIZADO CNC</h2>
+        
+        <div class="machine-grid">
+            <div class="machine-card" data-aos="fade-up">
+                <div class="machine-header">
+                    <span>HAAS VF-4SS (5 Ejes)</span>
+                    <i class="fa-solid fa-microchip" style="color: var(--primary);"></i>
+                </div>
+                <div class="machine-body">
+                    <ul class="spec-list">
+                        <li><i class="fa-solid fa-ruler-combined"></i> Recorrido X/Y/Z: 1270 x 508 x 635 mm</li>
+                        <li><i class="fa-solid fa-bolt"></i> Spindle: 12.000 RPM (Inline Direct Drive)</li>
+                        <li><i class="fa-solid fa-layer-group"></i> Capacidad: Series Cortas y Alta Complejidad</li>
+                        <li><i class="fa-solid fa-check"></i> Precisión: ±0.005mm</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="machine-card" data-aos="fade-up" data-aos-delay="100">
+                <div class="machine-header">
+                    <span>MAZAK QUICK TURN 250</span>
+                    <i class="fa-solid fa-cogs" style="color: var(--primary);"></i>
+                </div>
+                <div class="machine-body">
+                    <ul class="spec-list">
+                        <li><i class="fa-solid fa-circle-notch"></i> Diámetro Máx Torneado: 380 mm</li>
+                        <li><i class="fa-solid fa-arrows-alt-h"></i> Longitud Máx: 1050 mm</li>
+                        <li><i class="fa-solid fa-industry"></i> Alimentador automático de barras (Bar Feeder)</li>
+                        <li><i class="fa-solid fa-check"></i> Ideal para ejes, bujes y bridas en volumen.</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="machine-card" data-aos="fade-up" data-aos-delay="200">
+                <div class="machine-header">
+                    <span>CORTE LÁSER FIBRA 3KW</span>
+                    <i class="fa-solid fa-fire" style="color: var(--primary);"></i>
+                </div>
+                <div class="machine-body">
+                    <ul class="spec-list">
+                        <li><i class="fa-solid fa-expand"></i> Mesa: 1500 x 3000 mm</li>
+                        <li><i class="fa-solid fa-cut"></i> Espesor Acero Carbono: Hasta 20mm</li>
+                        <li><i class="fa-solid fa-cut"></i> Espesor Inoxidable: Hasta 10mm</li>
+                        <li><i class="fa-solid fa-tachometer-alt"></i> Velocidad de corte ultra-rápida.</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div style="margin-top: 80px;" data-aos="fade-up">
+            <h2 class="tech-font" style="margin-bottom: 20px;">CAPACIDAD DE MATERIALES</h2>
+            <div style="overflow-x: auto;">
+                <table class="tech-table">
+                    <thead>
+                        <tr>
+                            <th>Grupo Material</th>
+                            <th>Aleaciones Comunes (Stock)</th>
+                            <th>Aplicaciones Típicas</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Aceros al Carbono</strong></td>
+                            <td>SAE 1010, 1045, 4140, 8620</td>
+                            <td>Ejes, engranajes, estructuras, partes de maquinaria agrícola.</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Aceros Inoxidables</strong></td>
+                            <td>AISI 304, 316L, 420</td>
+                            <td>Industria alimenticia, farmacéutica, válvulas, fittings.</td>
+                        </tr>
+                        <tr>
+                            <td><strong>No Ferrosos</strong></td>
+                            <td>Aluminio 6061/7075, Bronce SAE 64/65</td>
+                            <td>Aeronáutica, disipadores, bujes de fricción.</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Plásticos Técnicos</strong></td>
+                            <td>Nylon 6, Delrin (Acetal), UHMW, PTFE</td>
+                            <td>Rodillos, guías de desgaste, aislantes eléctricos.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div style="text-align: center; margin-top: 60px; background: #e8f5e9; padding: 40px; border-radius: 8px;">
+            <h3 style="color: #2e7d32;">¿Su proyecto requiere tolerancias especiales?</h3>
+            <p style="margin: 15px 0;">Nuestro departamento de ingeniería puede revisar sus planos y sugerir ajustes de diseño para manufacturabilidad.</p>
+            <a href="cotizador.html" class="btn-quote" style="display: inline-block;">ENVIAR PLANOS PARA REVISIÓN</a>
+        </div>
+
+    </div>
+
+    <footer>
+        <div class="container">
+            <p>© 2026 MetalPro Industrial S.A. | <a href="#" style="color: #666;">Política de Privacidad</a></p>
+        </div>
+    </footer>
+
+    <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+    <script>AOS.init();</script>
+    <script src="js/crm.js"></script>
+</body>
+</html>

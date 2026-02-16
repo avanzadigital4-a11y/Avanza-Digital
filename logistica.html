@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <title>EXPRESO LITORAL | Logística y Distribución - Santa Fe</title>
+    <meta name="description" content="Transporte de cargas generales, paquetería industrial y logística integral. Rastreo satelital en tiempo real. Frecuencia diaria Santa Fe - Buenos Aires.">
+    
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;800&family=Open+Sans:wght@400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+
+    <style>
+        :root {
+            --log-blue: #002B5C; /* Azul Corporativo Logística */
+            --log-red: #E31C23; /* Rojo Acción/Urgencia */
+            --log-grey: #f4f4f4;
+            --dark: #111;
+            --white: #fff;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body { 
+            font-family: 'Open Sans', sans-serif; 
+            color: #333; 
+            background: var(--log-grey);
+            overflow-x: hidden;
+        }
+
+        h1, h2, h3, .heading-font { font-family: 'Montserrat', sans-serif; text-transform: uppercase; font-weight: 800; }
+        
+        /* UTILIDADES */
+        .container { max-width: 1200px; margin: 0 auto; padding: 0 20px; }
+        .text-blue { color: var(--log-blue); }
+        .text-red { color: var(--log-red); }
+
+        /* HEADER */
+        .top-header { background: #0a1a2b; color: #ccc; padding: 10px 0; font-size: 0.8rem; border-bottom: 1px solid #333; }
+        .top-flex { display: flex; justify-content: space-between; }
+
+        header {
+            background: var(--white);
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            position: sticky; top: 0; z-index: 100;
+            padding: 15px 0;
+        }
+        .nav-flex { display: flex; justify-content: space-between; align-items: center; }
+        
+        .logo { font-size: 1.6rem; color: var(--log-blue); font-weight: 800; display: flex; align-items: center; gap: 10px; letter-spacing: -1px; }
+        .logo i { color: var(--log-red); }
+
+        .nav-links { display: flex; gap: 25px; }
+        .nav-links a { text-decoration: none; color: var(--log-blue); font-weight: 600; font-size: 0.95rem; transition: 0.3s; }
+        .nav-links a:hover { color: var(--log-red); }
+
+        .btn-client {
+            background: var(--log-blue); color: white;
+            padding: 8px 20px; border-radius: 4px; font-weight: 600; font-size: 0.9rem;
+            text-decoration: none; display: flex; align-items: center; gap: 8px;
+            border: 1px solid var(--log-blue); transition: 0.3s;
+        }
+        .btn-client:hover { background: white; color: var(--log-blue); }
+
+        /* HERO SECTION CON TRACKING */
+        .hero {
+            height: 85vh;
+            background: linear-gradient(rgba(0,43,92,0.8), rgba(0,43,92,0.6)), url('https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80');
+            background-size: cover; background-position: center;
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            text-align: center; color: white; padding: 0 20px; position: relative;
+        }
+
+        .hero h1 { font-size: 3.5rem; margin-bottom: 20px; line-height: 1.1; max-width: 900px; }
+        .hero p { font-size: 1.3rem; margin-bottom: 40px; color: #ddd; max-width: 700px; }
+
+        /* WIDGET RASTREO (LA JOYA DE LA DEMO) */
+        .tracking-widget {
+            background: white; padding: 30px; border-radius: 8px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+            max-width: 600px; width: 100%; text-align: left;
+            border-bottom: 5px solid var(--log-red);
+        }
+        .tracking-widget h3 { color: var(--log-blue); margin-bottom: 15px; font-size: 1.1rem; display: flex; align-items: center; gap: 10px; }
+        
+        .track-form { display: flex; gap: 10px; }
+        .track-input { flex: 1; padding: 15px; border: 2px solid #ddd; border-radius: 4px; font-size: 1rem; color: #333; outline: none; transition: 0.3s; }
+        .track-input:focus { border-color: var(--log-blue); }
+        
+        .btn-track {
+            background: var(--log-red); color: white; border: none; padding: 0 25px;
+            font-weight: 800; font-family: 'Montserrat'; text-transform: uppercase; cursor: pointer;
+            border-radius: 4px; transition: 0.3s;
+        }
+        .btn-track:hover { background: #b00e14; }
+
+        /* SERVICIOS */
+        .services { padding: 80px 0; background: white; }
+        .section-title { text-align: center; margin-bottom: 50px; }
+        .section-title h2 { font-size: 2.5rem; color: var(--log-blue); margin-bottom: 10px; }
+        .section-title p { color: #666; max-width: 600px; margin: 0 auto; }
+
+        .services-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 30px; }
+        .service-card { padding: 30px; border: 1px solid #eee; border-radius: 8px; transition: 0.3s; position: relative; overflow: hidden; }
+        .service-card:hover { transform: translateY(-10px); box-shadow: 0 10px 30px rgba(0,0,0,0.1); border-color: var(--log-blue); }
+        .service-icon { font-size: 3rem; color: var(--log-red); margin-bottom: 20px; }
+        .service-card h3 { color: var(--log-blue); margin-bottom: 15px; font-size: 1.3rem; }
+        .service-card p { color: #666; line-height: 1.6; font-size: 0.95rem; }
+
+        /* COTIZADOR (LEAD MAGNET) */
+        .quote-section { background: var(--log-blue); padding: 80px 0; color: white; position: relative; overflow: hidden; }
+        .quote-bg-icon { position: absolute; right: -50px; bottom: -50px; font-size: 20rem; opacity: 0.05; color: white; }
+        
+        .quote-container { display: flex; flex-wrap: wrap; gap: 50px; align-items: center; }
+        .quote-text { flex: 1; min-width: 300px; }
+        .quote-form-box { 
+            flex: 1; min-width: 300px; background: white; padding: 40px; border-radius: 8px; 
+            color: #333; box-shadow: 0 15px 30px rgba(0,0,0,0.2);
+        }
+
+        .form-group { margin-bottom: 20px; }
+        .form-group label { display: block; font-weight: 700; font-size: 0.85rem; margin-bottom: 8px; color: #555; text-transform: uppercase; }
+        .form-control { width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 4px; font-family: 'Open Sans'; }
+        
+        .btn-submit {
+            width: 100%; background: var(--log-red); color: white; padding: 15px; font-weight: 800; 
+            text-transform: uppercase; border: none; border-radius: 4px; cursor: pointer; font-size: 1rem;
+            transition: 0.3s;
+        }
+        .btn-submit:hover { background: #b00e14; }
+
+        /* FLOTA / CONFIANZA */
+        .fleet { padding: 80px 0; text-align: center; }
+        .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 30px; margin-top: 50px; }
+        .stat-item h4 { font-size: 3rem; color: var(--log-blue); margin-bottom: 5px; }
+        .stat-item p { text-transform: uppercase; font-weight: 700; color: #888; font-size: 0.8rem; letter-spacing: 1px; }
+
+        /* FOOTER */
+        footer { background: #111; color: #888; padding-top: 60px; font-size: 0.9rem; }
+        .footer-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 40px; padding-bottom: 40px; }
+        .footer-logo { font-size: 1.5rem; color: white; font-weight: 800; display: block; margin-bottom: 20px; }
+        .footer-link { color: #888; text-decoration: none; display: block; margin-bottom: 10px; transition: 0.3s; }
+        .footer-link:hover { color: white; padding-left: 5px; }
+
+        .wa-float {
+            position: fixed; bottom: 30px; right: 30px;
+            background: #25D366; color: white; width: 60px; height: 60px;
+            border-radius: 50%; display: flex; align-items: center; justify-content: center;
+            font-size: 2rem; box-shadow: 0 4px 15px rgba(0,0,0,0.3); z-index: 999;
+            transition: 0.3s;
+        }
+        .wa-float:hover { transform: scale(1.1); }
+
+        @media (max-width: 768px) {
+            .hero h1 { font-size: 2.2rem; }
+            .nav-links { display: none; }
+            .stats-grid { grid-template-columns: 1fr 1fr; }
+            .track-form { flex-direction: column; }
+            .btn-track { padding: 15px; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="top-header">
+        <div class="container top-flex">
+            <div><i class="fa-solid fa-phone"></i> 0810-999-LOGISTICA</div>
+            <div><i class="fa-solid fa-envelope"></i> operaciones@expresolitoral.com</div>
+        </div>
+    </div>
+
+    <header>
+        <div class="container nav-flex">
+            <div class="logo">
+                <i class="fa-solid fa-truck-fast"></i> EXPRESO LITORAL
+            </div>
+            <nav class="nav-links">
+                <a href="#servicios">Servicios</a>
+                <a href="#cobertura">Cobertura</a>
+                <a href="#cotizar">Cotizar Flete</a>
+                <a href="#contacto">Contacto</a>
+            </nav>
+            <a href="#" class="btn-client" onclick="alert('Demo: Aquí entrarían tus clientes corporativos a ver sus facturas y stock.')">
+                <i class="fa-solid fa-lock"></i> Acceso Clientes
+            </a>
+        </div>
+    </header>
+
+    <section class="hero">
+        <div data-aos="fade-up">
+            <h1 class="heading-font">LOGÍSTICA INDUSTRIAL <br><span style="color: var(--log-red);">SIN INCERTIDUMBRES</span></h1>
+            <p>Especialistas en cargas completas y paquetería B2B. Conexión diaria Santa Fe - Buenos Aires - Córdoba.</p>
+        </div>
+
+        <div class="tracking-widget" data-aos="fade-up" data-aos-delay="200">
+            <h3 class="heading-font"><i class="fa-solid fa-satellite-dish"></i> RASTREO DE CARGA</h3>
+            <div class="track-form">
+                <input type="text" id="guiaInput" class="track-input" placeholder="Ingrese N° de Guía o Remito...">
+                <button class="btn-track" onclick="rastrearGuia()">
+                    <i class="fa-solid fa-magnifying-glass"></i> ESTADO
+                </button>
+            </div>
+            <p style="font-size: 0.75rem; margin-top: 10px; color: #888;">* Datos actualizados en tiempo real vía satélite.</p>
+        </div>
+    </section>
+
+    <section id="servicios" class="services">
+        <div class="container">
+            <div class="section-title">
+                <h2>SOLUCIONES LOGÍSTICAS</h2>
+                <p>No movemos cajas, integramos la cadena de suministro de su empresa.</p>
+            </div>
+
+            <div class="services-grid">
+                <div class="service-card" data-aos="fade-up">
+                    <i class="fa-solid fa-pallet service-icon"></i>
+                    <h3 class="heading-font">Carga Paletizada</h3>
+                    <p>Tarifas especiales para pallets estándar y europallets. Servicio de consolidación y desconsolidación en depósitos propios.</p>
+                </div>
+                <div class="service-card" data-aos="fade-up" data-aos-delay="100">
+                    <i class="fa-solid fa-truck-moving service-icon"></i>
+                    <h3 class="heading-font">Cargas Completas</h3>
+                    <p>Semirremolques exclusivos de 14.50m y sider para carga lateral. Ideal para abastecimiento de planta a planta.</p>
+                </div>
+                <div class="service-card" data-aos="fade-up" data-aos-delay="200">
+                    <i class="fa-solid fa-boxes-packing service-icon"></i>
+                    <h3 class="heading-font">Distribución B2B</h3>
+                    <p>Reparto capilar en zonas urbanas. Entrega garantizada en 24hs en principales capitales del litoral.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="cotizar" class="quote-section">
+        <i class="fa-solid fa-map-location-dot quote-bg-icon"></i>
+        <div class="container quote-container">
+            <div class="quote-text" data-aos="fade-right">
+                <span style="font-weight: 700; color: rgba(255,255,255,0.7); letter-spacing: 1px;">COTIZADOR ONLINE</span>
+                <h2 class="heading-font" style="font-size: 3rem; margin-bottom: 20px;">CALCULE EL COSTO <br>DE SU FLETE</h2>
+                <p style="margin-bottom: 30px; font-size: 1.1rem; opacity: 0.9; line-height: 1.6;">
+                    Obtenga una estimación inmediata para su presupuesto logístico. Para cargas de proyecto o sobredimensionadas, contacte a ingeniería.
+                </p>
+                <div style="display: flex; gap: 30px;">
+                    <div>
+                        <i class="fa-solid fa-shield-halved" style="font-size: 2rem; color: var(--log-red); margin-bottom: 10px;"></i>
+                        <h4 class="heading-font">Carga Asegurada</h4>
+                        <p style="font-size: 0.8rem; opacity: 0.7;">Póliza flotante de primera línea.</p>
+                    </div>
+                    <div>
+                        <i class="fa-solid fa-stopwatch" style="font-size: 2rem; color: var(--log-red); margin-bottom: 10px;"></i>
+                        <h4 class="heading-font">Just in Time</h4>
+                        <p style="font-size: 0.8rem; opacity: 0.7;">Entregas pactadas con ventana horaria.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="quote-form-box" data-aos="fade-left">
+                <h3 class="heading-font" style="color: var(--log-blue); margin-bottom: 20px; text-align: center;">Solicitud de Cotización</h3>
+                <form onsubmit="event.preventDefault(); cotizarWhatsApp();">
+                    <div class="form-group">
+                        <label>Origen</label>
+                        <select class="form-control" id="origen">
+                            <option>Santa Fe (Capital)</option>
+                            <option>Rosario</option>
+                            <option>Buenos Aires (AMBA)</option>
+                            <option>Córdoba</option>
+                            <option>Paraná</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Destino</label>
+                        <select class="form-control" id="destino">
+                            <option>Buenos Aires (AMBA)</option>
+                            <option>Santa Fe (Capital)</option>
+                            <option>Rosario</option>
+                            <option>Córdoba</option>
+                            <option>Norte del País</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Tipo de Carga</label>
+                        <select class="form-control" id="tipoCarga">
+                            <option>Pallets General</option>
+                            <option>Maquinaria</option>
+                            <option>Carga Peligrosa (IMO)</option>
+                            <option>Refrigerada</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="btn-submit">
+                        COTIZAR AHORA <i class="fa-solid fa-arrow-right"></i>
+                    </button>
+                    <p style="text-align: center; font-size: 0.8rem; color: #888; margin-top: 15px;">
+                        <i class="fa-brands fa-whatsapp"></i> Respuesta inmediata por Asesor Comercial
+                    </p>
+                </form>
+            </div>
+        </div>
+    </section>
+
+    <section class="fleet">
+        <div class="container">
+            <h2 class="heading-font text-blue">NUESTRA CAPACIDAD OPERATIVA</h2>
+            <div class="stats-grid">
+                <div class="stat-item" data-aos="zoom-in">
+                    <h4>+50</h4>
+                    <p>Unidades Propias</p>
+                </div>
+                <div class="stat-item" data-aos="zoom-in" data-aos-delay="100">
+                    <h4>24hs</h4>
+                    <p>Lead Time Promedio</p>
+                </div>
+                <div class="stat-item" data-aos="zoom-in" data-aos-delay="200">
+                    <h4>3</h4>
+                    <p>Centros de Distribución</p>
+                </div>
+                <div class="stat-item" data-aos="zoom-in" data-aos-delay="300">
+                    <h4>100%</h4>
+                    <p>Trazabilidad</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <footer id="contacto">
+        <div class="container">
+            <div class="footer-grid">
+                <div>
+                    <span class="footer-logo"><i class="fa-solid fa-truck-fast"></i> EXPRESO LITORAL</span>
+                    <p>Más de 20 años uniendo puntos estratégicos del país. Tecnología y compromiso en cada kilómetro.</p>
+                </div>
+                <div>
+                    <h4 class="heading-font" style="color: white; margin-bottom: 20px;">Navegación</h4>
+                    <a href="#" class="footer-link">Rastreo de Envíos</a>
+                    <a href="#" class="footer-link">Solicitar Cuenta Corriente</a>
+                    <a href="#" class="footer-link">Trabaja con Nosotros</a>
+                </div>
+                <div>
+                    <h4 class="heading-font" style="color: white; margin-bottom: 20px;">Contacto</h4>
+                    <p style="margin-bottom: 10px;">Parque Industrial Sauce Viejo, Calle 3.</p>
+                    <p style="margin-bottom: 10px;">Santa Fe, Argentina.</p>
+                    <p class="text-red" style="font-weight: 700;">0810-999-3977</p>
+                </div>
+            </div>
+            <div style="border-top: 1px solid #222; padding: 20px 0; text-align: center;">
+                © 2026 Expreso Litoral S.R.L. | Desarrollado por <a href="#" style="color: #666;">Avanza Digital</a>
+            </div>
+        </div>
+    </footer>
+
+    <a href="https://wa.me/12345678" class="wa-float" target="_blank">
+        <i class="fa-brands fa-whatsapp"></i>
+    </a>
+
+    <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+    <script>
+        AOS.init();
+
+        // 1. Script de Rastreo Simulado
+        function rastrearGuia() {
+            let guia = document.getElementById('guiaInput').value;
+            if(guia === "") {
+                alert("Por favor ingrese un número de guía.");
+                return;
+            }
+            // Simula ir a WhatsApp con el número de guía
+            let mensaje = "Hola, necesito conocer el estado actual de la guía Nº " + guia;
+            let url = "https://wa.me/5493424392759?text=" + encodeURIComponent(mensaje);
+            window.open(url, '_blank');
+        }
+
+        // 2. Script de Cotizador a WhatsApp
+        function cotizarWhatsApp() {
+            let origen = document.getElementById('origen').value;
+            let destino = document.getElementById('destino').value;
+            let tipo = document.getElementById('tipoCarga').value;
+            
+            let mensaje = "Hola Expreso Litoral, solicito cotización de flete.\n📍 Origen: " + origen + "\n🏁 Destino: " + destino + "\n📦 Carga: " + tipo;
+            
+            let url = "https://wa.me/5493424392759?text=" + encodeURIComponent(mensaje);
+            window.open(url, '_blank');
+        }
+    </script>
+    <!-- Start of HubSpot Embed Code -->
+<script type="text/javascript" id="hs-script-loader" async defer src="//js.hs-scripts.com/51067454.js"></script>
+<!-- End of HubSpot Embed Code -->
+</body>
+</html>

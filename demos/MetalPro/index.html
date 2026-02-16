@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <title>MetalPro Industrial | Mecanizado CNC y Fabricación Bajo Plano</title>
+    <meta name="description" content="Soluciones de mecanizado de precisión y fabricación industrial para cadenas de suministro críticas. Certificación ISO 9001. Cotización en 24hs.">
+    
+    <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;600;700&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+
+    <style>
+        :root {
+            /* PALETA INDUSTRIAL "INGENIERÍA" */
+            --primary: #0044cc; /* Azul Técnico Intenso */
+            --secondary: #1a1a1a; /* Negro Carbón */
+            --accent: #ffae00; /* Naranja Seguridad/Acción */
+            --surface: #f8f9fa;
+            --border: #dee2e6;
+            --text-body: #4a4a4a;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body { 
+            font-family: 'Inter', sans-serif; 
+            color: var(--text-body); 
+            background: white;
+            line-height: 1.6;
+        }
+
+        h1, h2, h3, .tech-font { font-family: 'Chakra Petch', sans-serif; text-transform: uppercase; letter-spacing: 0.5px; }
+        
+        a { text-decoration: none; transition: 0.3s; }
+        .container { max-width: 1280px; margin: 0 auto; padding: 0 20px; }
+        
+        /* === 1. HEADER ESTRATÉGICO === */
+        .top-bar { background: var(--secondary); color: #aaa; padding: 8px 0; font-size: 0.85rem; border-bottom: 1px solid #333; }
+        .top-flex { display: flex; justify-content: space-between; align-items: center; }
+        .status-dot { height: 8px; width: 8px; background: #00ff00; border-radius: 50%; display: inline-block; margin-right: 5px; box-shadow: 0 0 5px #00ff00; }
+
+        header { background: white; border-bottom: 2px solid var(--primary); position: sticky; top: 0; z-index: 100; padding: 15px 0; box-shadow: 0 4px 20px rgba(0,0,0,0.05); }
+        .nav-flex { display: flex; justify-content: space-between; align-items: center; }
+        
+        .logo { font-size: 1.8rem; font-weight: 700; color: var(--secondary); display: flex; align-items: center; gap: 10px; }
+        .logo span { color: var(--primary); }
+
+        .nav-menu { display: flex; gap: 30px; }
+        .nav-link { color: var(--secondary); font-weight: 600; font-size: 0.95rem; position: relative; }
+        .nav-link:hover { color: var(--primary); }
+        .nav-link::after { content: ''; position: absolute; width: 0; height: 2px; bottom: -5px; left: 0; background: var(--primary); transition: 0.3s; }
+        .nav-link:hover::after { width: 100%; }
+
+        /* CTA PRINCIPAL: EL COTIZADOR */
+        .btn-quote {
+            background: var(--primary); color: white; padding: 12px 25px; 
+            font-weight: 700; border-radius: 4px; display: flex; align-items: center; gap: 10px;
+            box-shadow: 0 4px 15px rgba(0,68,204,0.3); border: 2px solid var(--primary);
+        }
+        .btn-quote:hover { background: white; color: var(--primary); }
+
+        /* === 2. HERO SECTION === */
+        .hero {
+            height: 80vh;
+            background: linear-gradient(rgba(0,10,30,0.85), rgba(0,10,30,0.7)), url('https://images.unsplash.com/photo-1565043589221-1a6fd49cb727?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80');
+            background-size: cover; background-position: center;
+            display: flex; align-items: center; color: white;
+            position: relative; overflow: hidden;
+        }
+        /* Grid decorativo técnico */
+        .hero::before {
+            content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background-image: linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px);
+            background-size: 40px 40px; pointer-events: none;
+        }
+
+        .hero-content h1 { font-size: 3.5rem; line-height: 1.1; margin-bottom: 20px; font-weight: 700; }
+        .hero-content p { font-size: 1.25rem; color: #ccc; max-width: 650px; margin-bottom: 40px; font-weight: 300; }
+        
+        .hero-cta-group { display: flex; gap: 20px; }
+        .btn-outline { border: 2px solid white; color: white; padding: 12px 25px; font-weight: 600; border-radius: 4px; }
+        .btn-outline:hover { background: white; color: var(--secondary); }
+
+        /* === 3. SELECTOR DE PERFIL (FILTRO DE TRÁFICO) === */
+        .profiler { padding: 80px 0; background: var(--surface); }
+        .section-header { text-align: center; margin-bottom: 50px; }
+        .section-header h2 { font-size: 2.2rem; color: var(--secondary); margin-bottom: 10px; }
+        
+        .profile-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 30px; }
+        .profile-card { 
+            background: white; padding: 40px 30px; border: 1px solid var(--border); 
+            border-top: 4px solid transparent; transition: 0.3s; cursor: pointer;
+        }
+        .profile-card:hover { transform: translateY(-10px); border-top-color: var(--primary); box-shadow: 0 15px 30px rgba(0,0,0,0.1); }
+        .profile-icon { font-size: 2.5rem; color: var(--primary); margin-bottom: 20px; }
+        .profile-card h3 { font-size: 1.4rem; margin-bottom: 10px; color: var(--secondary); }
+        .profile-link { color: var(--primary); font-weight: 700; margin-top: 15px; display: inline-block; }
+        .profile-link i { font-size: 0.8rem; margin-left: 5px; transition: 0.3s; }
+        .profile-card:hover .profile-link i { transform: translateX(5px); }
+
+        /* === 4. HOOK LEAD MAGNET (TOFU) === */
+        .lead-magnet-banner {
+            background: var(--secondary); color: white; padding: 60px 0;
+            border-left: 10px solid var(--accent); position: relative; overflow: hidden;
+        }
+        .lm-flex { display: flex; align-items: center; justify-content: space-between; gap: 50px; }
+        .lm-text h3 { font-size: 2rem; color: var(--accent); margin-bottom: 10px; }
+        .lm-text p { color: #ccc; max-width: 600px; font-size: 1.1rem; }
+        .btn-magnet { 
+            background: var(--accent); color: var(--secondary); padding: 15px 40px; 
+            font-weight: 800; text-transform: uppercase; border-radius: 4px; box-shadow: 0 0 20px rgba(255,174,0,0.4);
+        }
+        .btn-magnet:hover { background: white; }
+
+        /* === 5. SECTORES (SEO & EMPATÍA) === */
+        .sectors { padding: 80px 0; }
+        .sector-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 5px; margin-top: 40px; }
+        .sector-item { 
+            height: 250px; position: relative; overflow: hidden; group: hover;
+            background: #000; display: flex; align-items: center; justify-content: center;
+        }
+        .sector-item img { width: 100%; height: 100%; object-fit: cover; opacity: 0.5; transition: 0.5s; }
+        .sector-item:hover img { opacity: 0.3; transform: scale(1.1); }
+        .sector-label { position: absolute; color: white; font-size: 1.2rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; z-index: 2; border-bottom: 2px solid var(--accent); }
+
+        /* === 6. FOOTER INDUSTRIAL === */
+        footer { background: #111; color: #666; padding-top: 60px; font-size: 0.9rem; border-top: 4px solid var(--primary); }
+        .footer-grid { display: grid; grid-template-columns: 1.5fr 1fr 1fr 1fr; gap: 40px; padding-bottom: 40px; }
+        .footer-logo { color: white; font-size: 1.5rem; font-weight: 700; display: block; margin-bottom: 20px; font-family: 'Chakra Petch'; }
+        .footer h4 { color: white; margin-bottom: 20px; text-transform: uppercase; letter-spacing: 1px; }
+        .footer ul { list-style: none; }
+        .footer li { margin-bottom: 10px; }
+        .footer a { color: #666; }
+        .footer a:hover { color: var(--accent); }
+
+        @media (max-width: 992px) {
+            .hero-content h1 { font-size: 2.5rem; }
+            .profile-grid, .sector-grid { grid-template-columns: 1fr; }
+            .lm-flex { flex-direction: column; text-align: center; }
+            .nav-menu { display: none; } /* En prod usaría menú hamburguesa */
+        }
+    </style>
+</head>
+<body>
+
+    <div class="top-bar">
+        <div class="container top-flex">
+            <div>
+                <span class="status-dot"></span> PLANTA OPERATIVA AL 100% | TURNOS DISPONIBLES
+            </div>
+            <div>
+                <i class="fa-solid fa-envelope"></i> ingenieria@metalpro.com | <i class="fa-solid fa-phone"></i> +54 9 11 1234-5678
+            </div>
+        </div>
+    </div>
+
+    <header>
+        <div class="container nav-flex">
+            <a href="index.html" class="logo">METAL<span>PRO</span></a>
+            
+            <nav class="nav-menu">
+                <a href="servicios.html" class="nav-link">CAPACIDAD TÉCNICA</a>
+                <a href="industrias.html" class="nav-link">INDUSTRIAS</a>
+                <a href="calidad.html" class="nav-link">CALIDAD (ISO)</a>
+                <a href="recursos.html" class="nav-link">RECURSOS</a>
+            </nav>
+
+            <a href="cotizador.html" class="btn-quote">
+                <i class="fa-solid fa-file-invoice-dollar"></i> COTIZAR PROYECTO
+            </a>
+        </div>
+    </header>
+
+    <section class="hero">
+        <div class="container hero-content" data-aos="fade-up">
+            <span style="color: var(--accent); font-weight: 700; letter-spacing: 2px; font-size: 0.9rem;">MANUFACTURA B2B DE ALTA PRECISIÓN</span>
+            <h1>MECANIZADO CNC Y<br>FABRICACIÓN BAJO PLANO</h1>
+            <p>Integramos su cadena de suministro con piezas certificadas, trazabilidad total y entregas Just-in-Time. Especialistas en aceros especiales y series complejas.</p>
+            
+            <div class="hero-cta-group">
+                <a href="cotizador.html" class="btn-quote" style="border:none; padding: 15px 35px; font-size: 1.1rem;">
+                    SUBIR PLANOS (DWG/PDF)
+                </a>
+                <a href="servicios.html" class="btn-outline">
+                    VER PARQUE DE MAQUINARIA
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <section class="profiler">
+        <div class="container">
+            <div class="section-header">
+                <h2>SOLUCIONES SEGÚN SU PERFIL</h2>
+                <p>Optimizamos la información técnica y comercial para ahorrar su tiempo.</p>
+            </div>
+            
+            <div class="profile-grid">
+                <div class="profile-card" onclick="window.location.href='servicios.html'" data-aos="fade-up">
+                    <i class="fa-solid fa-compass-drafting profile-icon"></i>
+                    <h3 class="tech-font">INGENIERÍA / TÉCNICA</h3>
+                    <p>Acceda a listados de maquinaria, tolerancias máximas (µm), capacidades de mesa y materiales homologados.</p>
+                    <span class="profile-link">VER CAPACIDAD <i class="fa-solid fa-arrow-right"></i></span>
+                </div>
+
+                <div class="profile-card" onclick="window.location.href='cotizador.html'" data-aos="fade-up" data-aos-delay="100">
+                    <i class="fa-solid fa-briefcase profile-icon"></i>
+                    <h3 class="tech-font">GERENCIA DE COMPRAS</h3>
+                    <p>Solicite cotizaciones formales, valide proveedores, descargue certificaciones fiscales y consulte plazos.</p>
+                    <span class="profile-link">INICIAR GESTIÓN <i class="fa-solid fa-arrow-right"></i></span>
+                </div>
+
+                <div class="profile-card" onclick="window.location.href='calidad.html'" data-aos="fade-up" data-aos-delay="200">
+                    <i class="fa-solid fa-certificate profile-icon"></i>
+                    <h3 class="tech-font">ASEGURAMIENTO CALIDAD</h3>
+                    <p>Auditoría remota: Descargue manual de calidad, certificados ISO 9001:2015 y reportes de calibración.</p>
+                    <span class="profile-link">AUDITAR PROCESOS <i class="fa-solid fa-arrow-right"></i></span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="sectors">
+        <div class="container">
+            <div class="section-header">
+                <h2>SECTORES ATENDIDOS</h2>
+                <p>Experiencia comprobable en industrias con tolerancia cero al error.</p>
+            </div>
+            <div class="sector-grid">
+                <a href="agro.html" class="sector-item">
+                    <img src="https://img.freepik.com/foto-gratis/concepto-produccion-agricola-alimentaria-silos-maquinas-tractoras-sistema-riego_342744-565.jpg?semt=ais_hybrid&w=740&q=80" alt="Agro">
+                    <span class="sector-label">AGROINDUSTRIA</span>
+                </a>
+                <a href="oil-gas.html" class="sector-item">
+                    <img src="https://www.dynaflux.com.pe/blog/wp-content/uploads/2023/02/oil-and-gas-portada.png" alt="Oil & Gas">
+                    <span class="sector-label">OIL & GAS</span>
+                </a>
+                <a href="automotriz.html" class="sector-item">
+                    <img src="https://images.unsplash.com/photo-1494976388531-d1058494cdd8?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" alt="Automotriz">
+                    <span class="sector-label">AUTOMOTRIZ</span>
+                </a>
+                <a href="energia.html" class="sector-item">
+                    <img src="https://masachs.com/wp-content/uploads/2023/03/energia-industria-masachs.jpeg" alt="Energía">
+                    <span class="sector-label">ENERGÍA</span>
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <section class="lead-magnet-banner">
+        <div class="container lm-flex">
+            <div class="lm-text">
+                <h3><i class="fa-solid fa-book-open"></i> RECURSOS PARA INGENIERÍA</h3>
+                <p>Descarga nuestra guía técnica actualizada: <strong>"Optimización de Planos para Reducción de Costos de Mecanizado (2026)"</strong>. Evita errores comunes de diseño.</p>
+            </div>
+            <a href="recursos.html" class="btn-magnet">
+                DESCARGAR PDF GRATIS <i class="fa-solid fa-download"></i>
+            </a>
+        </div>
+    </section>
+
+    <footer>
+        <div class="container">
+            <div class="footer-grid">
+                <div>
+                    <span class="footer-logo">METAL<span>PRO</span> IND.</span>
+                    <p>Socio estratégico en manufactura industrial. Planta modelo en Parque Industrial Pilar.</p>
+                </div>
+                <div class="footer">
+                    <h4>Empresa</h4>
+                    <ul>
+                        <li><a href="servicios.html">Maquinaria</a></li>
+                        <li><a href="calidad.html">Política de Calidad</a></li>
+                        <li><a href="industrias.html">Casos de Éxito</a></li>
+                    </ul>
+                </div>
+                <div class="footer">
+                    <h4>Recursos</h4>
+                    <ul>
+                        <li><a href="recursos.html">Descargas Técnicas</a></li>
+                        <li><a href="cotizador.html">Solicitud de Cotización</a></li>
+                        <li><a href="#">Portal de Proveedores</a></li>
+                    </ul>
+                </div>
+                <div class="footer">
+                    <h4>Contacto</h4>
+                    <ul>
+                        <li><i class="fa-solid fa-location-dot"></i> Calle 9, Lote 45, PIP</li>
+                        <li><i class="fa-solid fa-envelope"></i> ventas@metalpro.com</li>
+                        <li><i class="fa-brands fa-linkedin"></i> /metalpro-industrial</li>
+                    </ul>
+                </div>
+            </div>
+            <div style="border-top: 1px solid #222; padding: 20px 0; text-align: center; color: #444;">
+                © 2026 MetalPro Industrial S.A. | Arquitectura Web por Avanza Digital
+            </div>
+        </div>
+    </footer>
+
+    <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+    <script>AOS.init();</script>
+    <script src="js/crm.js"></script>
+</body>
+</html>

@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <title>Marketing para Empresas de Servicios Técnicos y Refrigeración | Avanza Digital</title>
+    <meta name="description" content="Demo de sistema de captación de urgencias para servicios técnicos (HVAC, Plomería, Electricidad). Botones de llamada rápida y geolocalización para cerrar ventas en el momento.">
+    <link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Roboto:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+
+    <style>
+        :root {
+            --blue-tech: #004AAD; /* Azul Técnico */
+            --red-urgency: #E63946; /* Rojo Urgencia */
+            --dark: #1B2631;
+            --grey-light: #F4F6F8;
+            --yellow-warn: #FFD700;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body { 
+            font-family: 'Roboto', sans-serif; 
+            background-color: var(--grey-light);
+            color: #333;
+            overflow-x: hidden;
+        }
+
+        h1, h2, h3 { font-family: 'Archivo Black', sans-serif; text-transform: uppercase; color: var(--dark); }
+
+        /* --- BARRA DE URGENCIA (STICKY) --- */
+        .urgency-bar {
+            background: var(--red-urgency);
+            color: white;
+            padding: 10px;
+            text-align: center;
+            font-weight: 700;
+            font-size: 0.9rem;
+            position: sticky;
+            top: 0;
+            z-index: 1001;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+            display: flex; justify-content: center; align-items: center; gap: 10px;
+        }
+        .urgency-bar i { animation: flash 1.5s infinite; }
+
+        /* --- HEADER --- */
+        header {
+            background: white;
+            padding: 15px 5%;
+            display: flex; justify-content: space-between; align-items: center;
+            border-bottom: 3px solid var(--blue-tech);
+        }
+
+        .logo { font-size: 1.8rem; font-family: 'Archivo Black', sans-serif; color: var(--blue-tech); letter-spacing: -1px; }
+        .logo span { color: var(--dark); }
+
+        .header-phone {
+            display: flex; align-items: center; gap: 10px;
+            text-decoration: none; color: var(--dark);
+        }
+        .phone-icon-box {
+            width: 40px; height: 40px; background: var(--grey-light);
+            border-radius: 50%; display: flex; align-items: center; justify-content: center;
+            color: var(--blue-tech); font-size: 1.2rem;
+        }
+        .phone-number { font-weight: 900; font-size: 1.2rem; }
+        .phone-text { font-size: 0.75rem; color: #666; display: block; }
+
+        /* --- HERO SECTION --- */
+        .hero {
+            background: linear-gradient(rgba(27, 38, 49, 0.85), rgba(0, 74, 173, 0.85)), url('https://images.unsplash.com/photo-1621905251189-08b45d6a269e?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80');
+            background-size: cover;
+            background-position: center;
+            padding: 80px 5%;
+            text-align: center;
+            color: white;
+            min-height: 70vh;
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+        }
+
+        .hero h1 { font-size: 3.5rem; line-height: 1.1; margin-bottom: 20px; text-shadow: 0 4px 10px rgba(0,0,0,0.5); }
+        .hero p { font-size: 1.3rem; margin-bottom: 40px; font-weight: 300; max-width: 700px; }
+
+        /* Botón Pulsante */
+        .btn-cta {
+            background: var(--red-urgency);
+            color: white;
+            font-size: 1.3rem;
+            font-weight: 700;
+            padding: 18px 40px;
+            border-radius: 5px;
+            text-decoration: none;
+            display: inline-flex; align-items: center; gap: 10px;
+            box-shadow: 0 10px 20px rgba(230, 57, 70, 0.4);
+            transition: 0.3s;
+            text-transform: uppercase;
+            border: 2px solid white;
+        }
+        .btn-cta:hover { transform: translateY(-5px); box-shadow: 0 15px 30px rgba(230, 57, 70, 0.6); background: #ff4d5a; }
+
+        /* --- TRUST GRID (GARANTÍA) --- */
+        .trust-grid {
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px; margin-top: -50px; padding: 0 5%; position: relative; z-index: 10;
+        }
+
+        .trust-card {
+            background: white; padding: 30px; border-radius: 8px;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+            text-align: center; border-bottom: 4px solid var(--blue-tech);
+        }
+        .trust-card i { font-size: 2.5rem; color: var(--blue-tech); margin-bottom: 15px; }
+        .trust-card h3 { font-size: 1.1rem; margin-bottom: 10px; }
+        .trust-card p { font-size: 0.9rem; color: #666; }
+
+        /* --- SERVICIOS --- */
+        .services-section { padding: 100px 5%; }
+        .section-title { text-align: center; margin-bottom: 50px; }
+        .section-title h2 { font-size: 2.5rem; }
+        .section-title span { color: var(--red-urgency); }
+
+        .service-list {
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 30px;
+        }
+
+        .service-item {
+            background: white; display: flex; align-items: center; gap: 20px;
+            padding: 20px; border-radius: 10px; border: 1px solid #ddd;
+            transition: 0.3s;
+        }
+        .service-item:hover { border-color: var(--blue-tech); box-shadow: 0 5px 15px rgba(0,0,0,0.05); }
+        
+        .service-icon { 
+            width: 60px; height: 60px; background: #E3F2FD; color: var(--blue-tech);
+            border-radius: 10px; display: flex; justify-content: center; align-items: center; font-size: 1.5rem;
+        }
+        .service-info h3 { font-size: 1.1rem; margin-bottom: 5px; }
+        .service-info p { font-size: 0.9rem; color: #666; }
+
+        /* --- ZONA DE COBERTURA (MAPA VISUAL) --- */
+        .coverage-section {
+            background: var(--dark); color: white; padding: 60px 5%;
+            display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between;
+        }
+        .coverage-text { max-width: 500px; }
+        .coverage-badges { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 20px; }
+        .badge { background: rgba(255,255,255,0.1); padding: 5px 15px; border-radius: 20px; font-size: 0.9rem; }
+
+        /* --- FOOTER --- */
+        footer { background: #111; color: #888; padding: 40px 5%; text-align: center; font-size: 0.9rem; }
+        footer a { color: white; text-decoration: none; }
+
+        /* Floating WhatsApp */
+        .float-wa {
+            position: fixed; bottom: 20px; right: 20px;
+            background: #25D366; color: white;
+            width: 65px; height: 65px; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 35px; box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+            z-index: 1000; transition: 0.3s;
+        }
+        .float-wa:hover { transform: scale(1.1); }
+
+        @keyframes flash { 50% { opacity: 0.5; } }
+
+        @media (max-width: 768px) {
+            .hero h1 { font-size: 2.2rem; }
+            .header-phone { display: none; } /* Ocultamos el número en header, dejamos la barra sticky */
+            .trust-grid { margin-top: 20px; }
+            .btn-cta { width: 100%; justify-content: center; font-size: 1.1rem; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="urgency-bar">
+        <i class="fa-solid fa-triangle-exclamation"></i> ASISTENCIA INMEDIATA 24HS
+    </div>
+
+    <header>
+        <div class="logo"><i class="fa-solid fa-snowflake"></i> POLAR <span>TECH</span></div>
+        <a href="tel:12345678" class="header-phone">
+            <div class="phone-icon-box"><i class="fa-solid fa-phone"></i></div>
+            <div>
+                <span class="phone-text">¿Urgencias? Llama ahora</span>
+                <span class="phone-number">0800-555-FRIO</span>
+            </div>
+        </a>
+    </header>
+
+    <section class="hero">
+        <div data-aos="zoom-in">
+            <div style="display:inline-block; background:rgba(0,0,0,0.5); padding:5px 15px; border-radius:50px; margin-bottom:20px; font-size:0.9rem; font-weight:bold; border:1px solid rgba(255,255,255,0.3);">
+                <i class="fa-solid fa-bolt" style="color: var(--yellow-warn);"></i> LLEGAMOS EN 90 MINUTOS
+            </div>
+            <h1>SOLUCIONES DE<br>REFRIGERACIÓN</h1>
+            <p>Servicio técnico oficial. Reparación, instalación y mantenimiento de aires acondicionados en el día.</p>
+            
+            <a href="https://wa.me/3424392759" class="btn-cta">
+                <i class="fa-brands fa-whatsapp"></i> SOLICITAR TÉCNICO YA
+            </a>
+            <div style="margin-top: 15px; font-size: 0.85rem; opacity: 0.8;">
+                *Presupuesto GRATIS por WhatsApp enviando foto del equipo.
+            </div>
+        </div>
+    </section>
+
+    <div class="trust-grid">
+        <div class="trust-card" data-aos="fade-up" data-aos-delay="100">
+            <i class="fa-solid fa-medal"></i>
+            <h3>Garantía Escrita</h3>
+            <p>6 meses de garantía en todas nuestras reparaciones con factura oficial.</p>
+        </div>
+        <div class="trust-card" data-aos="fade-up" data-aos-delay="200">
+            <i class="fa-solid fa-credit-card"></i>
+            <h3>Todos los Pagos</h3>
+            <p>Aceptamos Mercado Pago, Tarjetas de Crédito en cuotas y Efectivo.</p>
+        </div>
+        <div class="trust-card" data-aos="fade-up" data-aos-delay="300">
+            <i class="fa-solid fa-user-shield"></i>
+            <h3>Técnicos Matriculados</h3>
+            <p>Personal identificado, con seguro de accidentes y matrícula al día.</p>
+        </div>
+    </div>
+
+    <section class="services-section">
+        <div class="section-title">
+            <h2>NUESTROS <span>SERVICIOS</span></h2>
+            <p style="color: #666; max-width: 600px; margin: 0 auto;">No improvisamos. Tenemos herramientas de última generación para diagnósticos precisos.</p>
+        </div>
+
+        <div class="service-list">
+            <div class="service-item" data-aos="fade-right">
+                <div class="service-icon"><i class="fa-solid fa-wind"></i></div>
+                <div class="service-info">
+                    <h3>Carga de Gas</h3>
+                    <p>Detección de fugas con nitrógeno y carga de gas ecológico R410.</p>
+                </div>
+            </div>
+
+            <div class="service-item" data-aos="fade-right" data-aos-delay="100">
+                <div class="service-icon"><i class="fa-solid fa-screwdriver-wrench"></i></div>
+                <div class="service-info">
+                    <h3>Reparación de Placas</h3>
+                    <p>Solución a errores electrónicos, cambios de capacitores y sensores.</p>
+                </div>
+            </div>
+
+            <div class="service-item" data-aos="fade-right" data-aos-delay="200">
+                <div class="service-icon"><i class="fa-solid fa-droplet-slash"></i></div>
+                <div class="service-info">
+                    <h3>Mantenimiento</h3>
+                    <p>Limpieza profunda de filtros, turbinas y desagües. Evita malos olores.</p>
+                </div>
+            </div>
+
+            <div class="service-item" data-aos="fade-right" data-aos-delay="300">
+                <div class="service-icon"><i class="fa-solid fa-box-open"></i></div>
+                <div class="service-info">
+                    <h3>Instalaciones</h3>
+                    <p>Instalación prolija "sin romper todo". Incluye ménsulas y cañerías.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="coverage-section">
+        <div class="coverage-text">
+            <h3><i class="fa-solid fa-map-location-dot" style="color: var(--blue-tech);"></i> Zona de Cobertura</h3>
+            <p style="color: #aaa; margin-top: 10px;">Tenemos móviles en puntos estratégicos para llegar rápido a tu domicilio.</p>
+            <div class="coverage-badges">
+                <span class="badge">Capital Federal</span>
+                <span class="badge">Zona Norte</span>
+                <span class="badge">Zona Oeste</span>
+                <span class="badge">Zona Sur</span>
+            </div>
+        </div>
+        <div>
+            <a href="https://wa.me/TU_NUMERO" style="background: white; color: var(--dark); padding: 10px 20px; font-weight: bold; border-radius: 5px; text-decoration: none;">Consultar mi Barrio</a>
+        </div>
+    </section>
+
+    <footer>
+        <div style="margin-bottom: 20px;">
+            <i class="fa-solid fa-snowflake" style="color: var(--blue-tech); font-size: 2rem;"></i>
+        </div>
+        <p>&copy; 2025 Polar Tech Servicios. Todos los derechos reservados.</p>
+        <p style="margin-top: 10px;">Diseño Web de Alto Rendimiento por <a href="index.html" style="color: white; font-weight: bold;">Avanza Digital</a>.</p>
+    </footer>
+
+    <a href="https://wa.me/TU_NUMERO" class="float-wa">
+        <i class="fa-brands fa-whatsapp"></i>
+    </a>
+
+    <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+    <script>
+        AOS.init({
+            duration: 800,
+            once: true
+        });
+    </script>
+    <!-- Start of HubSpot Embed Code -->
+<script type="text/javascript" id="hs-script-loader" async defer src="//js.hs-scripts.com/51067454.js"></script>
+<!-- End of HubSpot Embed Code -->
+</body>
+</html>

@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestión de Calidad ISO 9001 | MetalPro Industrial</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;600;700&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+
+    <style>
+        :root {
+            --primary: #0044cc;
+            --secondary: #1a1a1a;
+            --accent: #ffae00;
+            --surface: #f4f6f9;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Inter', sans-serif; background: white; color: #333; }
+        h1, h2, h3, .tech-font { font-family: 'Chakra Petch', sans-serif; text-transform: uppercase; }
+
+        header { background: white; border-bottom: 2px solid var(--primary); position: sticky; top: 0; z-index: 100; padding: 15px 0; box-shadow: 0 4px 20px rgba(0,0,0,0.05); }
+        .container { max-width: 1280px; margin: 0 auto; padding: 0 20px; }
+        .nav-flex { display: flex; justify-content: space-between; align-items: center; }
+        .logo { font-size: 1.8rem; font-weight: 700; color: var(--secondary); text-decoration: none; }
+        .logo span { color: var(--primary); }
+        .nav-menu { display: flex; gap: 30px; }
+        .nav-link { color: var(--secondary); font-weight: 600; text-decoration: none; font-size: 0.95rem; transition: 0.3s; }
+        .nav-link:hover, .nav-link.active { color: var(--primary); }
+        .btn-quote { background: var(--primary); color: white; padding: 10px 20px; font-weight: 700; border-radius: 4px; text-decoration: none; }
+
+        .iso-banner { background: #f8f9fa; padding: 60px 0; border-bottom: 1px solid #ddd; }
+        .iso-flex { display: flex; align-items: center; justify-content: space-between; gap: 40px; }
+        .iso-badge { font-size: 8rem; color: var(--primary); opacity: 0.1; position: absolute; right: 20px; top: 20px; z-index: 0; }
+        
+        .feature-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 30px; margin-top: 60px; }
+        .feature-box { text-align: center; padding: 30px; border: 1px solid #eee; border-radius: 8px; transition: 0.3s; }
+        .feature-box:hover { box-shadow: 0 10px 20px rgba(0,0,0,0.05); border-color: var(--accent); }
+        .feature-icon { font-size: 2.5rem; color: var(--primary); margin-bottom: 20px; }
+
+        .download-zone { background: var(--secondary); color: white; padding: 50px; border-radius: 8px; margin-top: 80px; text-align: center; }
+        .btn-download { background: var(--accent); color: var(--secondary); padding: 12px 30px; text-decoration: none; font-weight: 700; border-radius: 4px; display: inline-block; margin-top: 20px; transition: 0.3s; }
+        .btn-download:hover { background: white; }
+
+        footer { background: #111; color: #666; padding: 40px 0; text-align: center; border-top: 4px solid var(--primary); margin-top: 80px; }
+        @media (max-width: 992px) { 
+            .nav-menu { display: none; } 
+            .feature-grid { grid-template-columns: 1fr; }
+            .iso-flex { flex-direction: column; text-align: center; }
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="container nav-flex">
+            <a href="index.html" class="logo">METAL<span>PRO</span> IND.</a>
+            <nav class="nav-menu">
+                <a href="servicios.html" class="nav-link">CAPACIDAD</a>
+                <a href="industrias.html" class="nav-link">INDUSTRIAS</a>
+                <a href="calidad.html" class="nav-link active">CALIDAD</a>
+                <a href="recursos.html" class="nav-link">RECURSOS</a>
+            </nav>
+            <a href="cotizador.html" class="btn-quote">COTIZAR</a>
+        </div>
+    </header>
+
+    <div class="iso-banner">
+        <div class="container iso-flex" style="position: relative;">
+            <div style="z-index: 1;">
+                <h1 class="tech-font" style="font-size: 2.5rem; color: var(--secondary);">CALIDAD CERTIFICADA</h1>
+                <p style="font-size: 1.2rem; color: #666; max-width: 600px;">Nuestro Sistema de Gestión de Calidad (SGC) asegura la repetibilidad dimensional y el cumplimiento de especificaciones técnicas en cada lote.</p>
+            </div>
+            <div style="text-align: center; z-index: 1;">
+                <i class="fa-solid fa-award" style="font-size: 5rem; color: var(--primary);"></i>
+                <div style="font-weight: 800; margin-top: 10px; color: var(--primary);">ISO 9001:2015</div>
+            </div>
+            <i class="fa-solid fa-certificate iso-badge"></i>
+        </div>
+    </div>
+
+    <div class="container">
+        
+        <div class="feature-grid">
+            <div class="feature-box" data-aos="fade-up">
+                <i class="fa-solid fa-ruler-horizontal feature-icon"></i>
+                <h3 class="tech-font">METROLOGÍA</h3>
+                <p>Laboratorio climatizado con Máquina de Medición por Coordenadas (CMM), Proyector de perfiles y Rugosímetro.</p>
+            </div>
+            
+            <div class="feature-box" data-aos="fade-up" data-aos-delay="100">
+                <i class="fa-solid fa-file-contract feature-icon"></i>
+                <h3 class="tech-font">TRAZABILIDAD</h3>
+                <p>Control total desde la materia prima (Certificado de colada) hasta la entrega. Archivo de registros por 5 años.</p>
+            </div>
+
+            <div class="feature-box" data-aos="fade-up" data-aos-delay="200">
+                <i class="fa-solid fa-tools feature-icon"></i>
+                <h3 class="tech-font">CALIBRACIÓN</h3>
+                <p>Instrumentos de control de planta verificados semestralmente contra patrones nacionales trazables.</p>
+            </div>
+        </div>
+
+        <div class="download-zone" data-aos="zoom-in">
+            <h2 class="tech-font">AUDITORÍA REMOTA</h2>
+            <p>Sabemos que validar un nuevo proveedor lleva tiempo. Facilitamos el proceso poniendo nuestra documentación a su disposición.</p>
+            <div style="margin-top: 20px; display: flex; gap: 15px; justify-content: center; flex-wrap: wrap;">
+                <a href="#" class="btn-download"><i class="fa-solid fa-file-pdf"></i> CERTIFICADO ISO 9001</a>
+                <a href="#" class="btn-download" style="background: transparent; border: 2px solid white; color: white;"><i class="fa-solid fa-list"></i> LISTADO DE EQUIPOS</a>
+            </div>
+        </div>
+
+    </div>
+
+    <footer>
+        <div class="container">
+            <p>© 2026 MetalPro Industrial S.A. | <a href="#" style="color: #666;">Política de Privacidad</a></p>
+        </div>
+    </footer>
+
+    <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+    <script>AOS.init();</script>
+    <script src="js/crm.js"></script>
+</body>
+</html>

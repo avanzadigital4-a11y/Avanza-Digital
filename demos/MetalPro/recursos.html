@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Recursos Técnicos e Ingeniería | MetalPro Industrial</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;600;700&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+
+    <style>
+        :root {
+            --primary: #0044cc;
+            --secondary: #1a1a1a;
+            --accent: #ffae00;
+            --surface: #f4f6f9;
+            --border: #e0e0e0;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Inter', sans-serif; background: white; color: #333; }
+        
+        h1, h2, h3, .tech-font { font-family: 'Chakra Petch', sans-serif; text-transform: uppercase; letter-spacing: 0.5px; }
+
+        /* HEADER */
+        header { background: white; border-bottom: 2px solid var(--primary); position: sticky; top: 0; z-index: 100; padding: 15px 0; box-shadow: 0 4px 20px rgba(0,0,0,0.05); }
+        .container { max-width: 1280px; margin: 0 auto; padding: 0 20px; }
+        .nav-flex { display: flex; justify-content: space-between; align-items: center; }
+        .logo { font-size: 1.8rem; font-weight: 700; color: var(--secondary); text-decoration: none; }
+        .logo span { color: var(--primary); }
+        .nav-menu { display: flex; gap: 30px; }
+        .nav-link { color: var(--secondary); font-weight: 600; text-decoration: none; font-size: 0.95rem; }
+        .btn-quote { background: var(--primary); color: white; padding: 10px 20px; font-weight: 700; border-radius: 4px; text-decoration: none; }
+
+        /* HERO RECURSOS */
+        .hero-resources {
+            background: var(--secondary); color: white; padding: 80px 0;
+            text-align: center; background-image: radial-gradient(circle at 10% 20%, rgba(0, 68, 204, 0.2) 0%, transparent 20%);
+        }
+        .hero-resources h1 { font-size: 3rem; margin-bottom: 15px; }
+        .hero-resources p { font-size: 1.2rem; color: #ccc; max-width: 700px; margin: 0 auto; }
+
+        /* LEAD MAGNET PRINCIPAL */
+        .magnet-section { padding: 80px 0; background: white; }
+        .magnet-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 60px; align-items: center; }
+        
+        .magnet-visual { 
+            position: relative; padding: 40px; background: var(--surface); border-radius: 8px; border: 1px solid var(--border);
+            text-align: center;
+        }
+        .book-cover { 
+            width: 250px; box-shadow: 10px 10px 30px rgba(0,0,0,0.2); transform: rotate(-3deg); transition: 0.3s;
+            border: 5px solid white;
+        }
+        .magnet-visual:hover .book-cover { transform: rotate(0deg) scale(1.05); }
+        .badge-new { 
+            position: absolute; top: 20px; right: 20px; background: var(--accent); color: var(--secondary); 
+            padding: 5px 15px; font-weight: 800; font-size: 0.8rem; border-radius: 50px;
+        }
+
+        .magnet-content h2 { font-size: 2.5rem; line-height: 1.2; margin-bottom: 20px; color: var(--primary); }
+        .benefit-list { margin: 30px 0; list-style: none; }
+        .benefit-list li { margin-bottom: 15px; display: flex; align-items: center; gap: 10px; font-size: 1.05rem; }
+        .benefit-list i { color: var(--success, #00c851); font-size: 1.2rem; }
+
+        /* FORMULARIO */
+        .download-form { background: #f8f9fa; padding: 30px; border-radius: 8px; border-top: 4px solid var(--primary); box-shadow: 0 10px 30px rgba(0,0,0,0.05); }
+        .form-title { font-size: 1.2rem; font-weight: 700; margin-bottom: 20px; color: var(--secondary); display: flex; align-items: center; gap: 10px; }
+        .input-group { margin-bottom: 15px; }
+        .input-group label { display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 5px; color: #555; }
+        .input-group input, .input-group select { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; }
+        
+        .btn-download { 
+            width: 100%; background: var(--primary); color: white; border: none; padding: 12px; 
+            font-weight: 700; border-radius: 4px; cursor: pointer; transition: 0.3s; 
+            display: flex; align-items: center; justify-content: center; gap: 10px;
+        }
+        .btn-download:hover { background: #003399; }
+
+        /* BIBLIOTECA */
+        .library-section { padding: 80px 0; background: var(--surface); }
+        .library-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 30px; margin-top: 40px; }
+        
+        .resource-card { 
+            background: white; padding: 30px; border-radius: 6px; border: 1px solid var(--border); 
+            transition: 0.3s; display: flex; flex-direction: column;
+        }
+        .resource-card:hover { transform: translateY(-5px); border-color: var(--primary); box-shadow: 0 10px 20px rgba(0,0,0,0.05); }
+        .res-icon { font-size: 2.5rem; color: var(--primary); margin-bottom: 20px; }
+        .res-type { font-size: 0.75rem; font-weight: 800; color: #999; text-transform: uppercase; margin-bottom: 10px; }
+        .res-title { font-size: 1.3rem; font-weight: 700; margin-bottom: 10px; color: var(--secondary); }
+        .res-desc { font-size: 0.9rem; color: #666; margin-bottom: 20px; flex-grow: 1; }
+        .btn-link { color: var(--primary); font-weight: 700; text-decoration: none; display: flex; align-items: center; gap: 5px; }
+        .btn-link:hover { text-decoration: underline; }
+
+        /* FOOTER */
+        footer { background: #111; color: #666; padding: 40px 0; text-align: center; border-top: 4px solid var(--primary); }
+
+        @media (max-width: 992px) {
+            .magnet-grid { grid-template-columns: 1fr; }
+            .nav-menu { display: none; }
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="container nav-flex">
+            <a href="index.html" class="logo">METAL<span>PRO</span> IND.</a>
+            <nav class="nav-menu">
+                <a href="servicios.html" class="nav-link">CAPACIDAD</a>
+                <a href="industrias.html" class="nav-link">INDUSTRIAS</a>
+                <a href="calidad.html" class="nav-link">CALIDAD</a>
+                <a href="recursos.html" class="nav-link" style="color: var(--primary);">RECURSOS</a>
+            </nav>
+            <a href="cotizador.html" class="btn-quote">COTIZAR</a>
+        </div>
+    </header>
+
+    <section class="hero-resources">
+        <div class="container" data-aos="fade-up">
+            <h1 class="tech-font">CENTRO DE INGENIERÍA</h1>
+            <p>Documentación técnica, guías de diseño y estándares de calidad para optimizar sus procesos de manufactura.</p>
+        </div>
+    </section>
+
+    <section class="magnet-section">
+        <div class="container magnet-grid">
+            
+            <div class="magnet-content" data-aos="fade-right">
+                <span style="color: var(--accent); font-weight: 700; letter-spacing: 1px;">RECURSO DESTACADO 2026</span>
+                <h2 class="tech-font">GUÍA DE OPTIMIZACIÓN DE COSTOS EN MECANIZADO CNC</h2>
+                <p>El 30% del sobrecosto en piezas industriales proviene de tolerancias mal especificadas o selecciones de material ineficientes. Descargue nuestra guía técnica y aprenda a:</p>
+                
+                <ul class="benefit-list">
+                    <li><i class="fa-solid fa-check-circle"></i> Reducir tiempos de setup en máquinas de 5 ejes.</li>
+                    <li><i class="fa-solid fa-check-circle"></i> Estandarizar tolerancias ISO 2768 para bajar costos.</li>
+                    <li><i class="fa-solid fa-check-circle"></i> Seleccionar el acero correcto según tratamiento térmico.</li>
+                    <li><i class="fa-solid fa-check-circle"></i> Diseñar radios internos que no rompan herramientas.</li>
+                </ul>
+            </div>
+
+            <div class="magnet-visual" data-aos="fade-left">
+                <div class="badge-new">NUEVA EDICIÓN</div>
+                <div style="background: #333; color: white; width: 200px; height: 280px; margin: 0 auto 30px; display: flex; flex-direction: column; justify-content: center; align-items: center; border: 1px solid #555; box-shadow: 10px 10px 0px rgba(0,0,0,0.1);">
+                    <i class="fa-solid fa-file-pdf" style="font-size: 3rem; margin-bottom: 10px;"></i>
+                    <span style="font-weight: 700; text-align: center; padding: 0 10px;">GUÍA TÉCNICA<br>OPTIMIZACIÓN CNC</span>
+                </div>
+
+                <form id="leadForm" class="download-form" onsubmit="event.preventDefault(); downloadLeadMagnet();">
+                    <div class="form-title"><i class="fa-solid fa-lock"></i> DESCARGAR GRATIS</div>
+                    <div class="input-group">
+                        <input type="text" placeholder="Nombre completo" required>
+                    </div>
+                    <div class="input-group">
+                        <input type="email" placeholder="Email corporativo" required>
+                    </div>
+                    <div class="input-group">
+                        <select required>
+                            <option value="">Su Cargo / Rol</option>
+                            <option>Ingeniero de Proyecto</option>
+                            <option>Gerente de Planta</option>
+                            <option>Compras / Abastecimiento</option>
+                            <option>Estudiante / Otro</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="btn-download">
+                        ENVIARME LA GUÍA <i class="fa-solid fa-paper-plane"></i>
+                    </button>
+                    <p style="font-size: 0.75rem; margin-top: 10px; color: #888;">Sus datos están seguros. No enviamos spam.</p>
+                </form>
+                
+                <div id="successMsg" style="display: none; background: #e8f5e9; padding: 20px; border-radius: 8px; color: green;">
+                    <i class="fa-solid fa-check-circle" style="font-size: 2rem; margin-bottom: 10px;"></i><br>
+                    <strong>¡Gracias!</strong><br>Revisa tu correo, el enlace de descarga está en camino.
+                </div>
+            </div>
+
+        </div>
+    </section>
+
+    <section class="library-section">
+        <div class="container">
+            <div style="text-align: center; margin-bottom: 40px;">
+                <h2 class="tech-font">BIBLIOTECA TÉCNICA</h2>
+                <p>Documentación de libre acceso para validar nuestra capacidad.</p>
+            </div>
+
+            <div class="library-grid">
+                
+                <div class="resource-card" data-aos="fade-up">
+                    <i class="fa-solid fa-certificate res-icon"></i>
+                    <span class="res-type">CERTIFICACIÓN</span>
+                    <h3 class="res-title">Certificado ISO 9001:2015</h3>
+                    <p class="res-desc">Documento oficial vigente de nuestro Sistema de Gestión de Calidad, auditoría Bureau Veritas 2025.</p>
+                    <a href="#" class="btn-link">DESCARGAR PDF <i class="fa-solid fa-download"></i></a>
+                </div>
+
+                <div class="resource-card" data-aos="fade-up" data-aos-delay="100">
+                    <i class="fa-solid fa-table res-icon"></i>
+                    <span class="res-type">HOJA TÉCNICA</span>
+                    <h3 class="res-title">Tabla de Materiales & Durezas</h3>
+                    <p class="res-desc">Comparativa de aceros SAE, aluminios y plásticos de ingeniería con sus propiedades mecánicas y térmicas.</p>
+                    <a href="#" class="btn-link">VER TABLA <i class="fa-solid fa-arrow-right"></i></a>
+                </div>
+
+                <div class="resource-card" data-aos="fade-up" data-aos-delay="200">
+                    <i class="fa-solid fa-ruler-combined res-icon"></i>
+                    <span class="res-type">LISTADO</span>
+                    <h3 class="res-title">Parque de Maquinaria</h3>
+                    <p class="res-desc">Detalle completo de nuestros centros de mecanizado (recorridos X,Y,Z), tornos y equipos de metrología.</p>
+                    <a href="#" class="btn-link">DESCARGAR BROCHURE <i class="fa-solid fa-download"></i></a>
+                </div>
+
+            </div>
+        </div>
+    </section>
+
+    <footer>
+        <div class="container">
+            <p>© 2026 MetalPro Industrial S.A. | <a href="#" style="color: #666;">Política de Privacidad</a></p>
+        </div>
+    </footer>
+
+    <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+    <script>
+        AOS.init();
+
+        async function downloadLeadMagnet() {
+            // 1. URL DE MAKE/ZAPIER
+            const WEBHOOK_URL = 'https://hook.us2.make.com/jw509vcelyusnhrkjfvh2g4olcks5ob7';
+            
+            const btn = document.querySelector('.btn-download');
+            const form = document.getElementById('leadForm');
+            const originalText = btn.innerHTML;
+
+            // UI: Feedback visual de carga
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> PROCESANDO...';
+            btn.disabled = true;
+            
+            // 2. OBTENER INTELIGENCIA DEL CRM
+            const crmData = typeof getCRMData === 'function' ? getCRMData() : { source: 'Directo', medium: '', interes_calidad: 'Desconocido' };
+
+            // 3. RECOLECCIÓN DE DATOS COMPLETA
+            const datos = {
+                origen: "Landing Recursos - Guía CNC",
+                nombre: form.querySelector('input[type="text"]').value,
+                email: form.querySelector('input[type="email"]').value,
+                cargo: form.querySelector('select').value,
+                fecha: new Date().toLocaleString(),
+                
+                // DATOS INVISIBLES DE INTELIGENCIA
+                marketing_source: crmData.source,
+                marketing_medium: crmData.medium,
+                vio_pagina_calidad: crmData.interes_calidad
+            };
+
+            try {
+                // 4. ENVÍO "INVISIBLE"
+                const response = await fetch(WEBHOOK_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(datos)
+                });
+
+                if (response.ok) {
+                    // UI: ÉXITO
+                    document.getElementById('leadForm').style.display = 'none';
+                    document.getElementById('successMsg').style.display = 'block';
+                } else {
+                    throw new Error('Error en el servidor');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert("Hubo un problema de conexión. Por favor intenta nuevamente.");
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+            }
+        }
+    </script>
+    <script src="js/crm.js"></script>
+</body>
+</html>

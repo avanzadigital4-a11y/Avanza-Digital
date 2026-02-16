@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cómo automatizar la generación de leads en una metalúrgica: guía paso a paso</title>
+    <meta name="description" content="¿Tu web industrial no vende? Aprendé paso a paso cómo automatizar la generación de leads calificados para tu metalúrgica. Ejemplos, herramientas y estrategia B2B.">
+    
+    <style>
+        /* Estilos generales B2B y limpios */
+        :root {
+            --primary-color: #0f2c59; /* Azul industrial corporativo */
+            --accent-color: #f7a028; /* Naranja para llamados a la acción */
+            --text-color: #333333;
+            --bg-color: #f4f6f9;
+        }
+
+        body {
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-color);
+            background-color: var(--bg-color);
+            margin: 0;
+            padding: 0;
+        }
+
+        header {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 20px 0;
+            text-align: center;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 40px auto;
+            background: white;
+            padding: 40px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+        }
+
+        h1 {
+            color: var(--primary-color);
+            font-size: 2.2rem;
+            line-height: 1.2;
+            margin-bottom: 20px;
+        }
+
+        h2, h3 {
+            color: var(--primary-color);
+            margin-top: 30px;
+        }
+
+        h2 { border-bottom: 2px solid #eee; padding-bottom: 10px; }
+
+        p { margin-bottom: 15px; font-size: 1.05rem;}
+
+        .highlight {
+            background-color: #e9f0f8;
+            padding: 20px;
+            border-left: 4px solid var(--primary-color);
+            border-radius: 4px;
+            margin: 20px 0;
+            font-style: italic;
+        }
+
+        .pain-point {
+            font-size: 1.2rem;
+            color: #d9534f; /* Color rojo sutil para el dolor */
+            font-weight: bold;
+            text-align: center;
+            margin: 25px 0;
+            padding: 15px;
+            border: 1px dashed #d9534f;
+            border-radius: 5px;
+        }
+
+        .cta-box {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 30px;
+            text-align: center;
+            border-radius: 8px;
+            margin-top: 40px;
+        }
+
+        .cta-button {
+            display: inline-block;
+            background-color: var(--accent-color);
+            color: white;
+            text-decoration: none;
+            padding: 15px 30px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            border-radius: 5px;
+            margin-top: 15px;
+            transition: background-color 0.3s;
+        }
+
+        .cta-button:hover {
+            background-color: #e08b15;
+        }
+
+        /* Micro CTA */
+        .micro-cta {
+            text-align: center;
+            margin-top: -5px;
+            margin-bottom: 30px;
+            font-size: 1.1rem;
+            color: var(--primary-color);
+        }
+
+        .micro-cta a {
+            color: var(--accent-color);
+            font-weight: bold;
+            text-decoration: none;
+        }
+
+        .micro-cta a:hover {
+            text-decoration: underline;
+        }
+
+        /* Estilos del Formulario Inteligente de Demo */
+        .demo-form {
+            background: #fafafa;
+            border: 1px solid #ddd;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+
+        .form-group { margin-bottom: 15px; }
+        
+        label { display: block; font-weight: bold; margin-bottom: 5px; }
+        
+        input, select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+
+        .hidden { display: none; }
+        
+        /* Estilos para las imágenes del artículo */
+        .article-img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 8px;
+            margin: 20px auto;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            display: block;
+        }
+
+        /* Detalle de Confianza Local */
+        .trust-badge {
+            text-align: center;
+            font-size: 1.05rem;
+            color: #555;
+            margin-top: 40px;
+            margin-bottom: 10px;
+            padding: 15px;
+        }
+
+        /* Footer */
+        footer {
+            text-align: center;
+            padding: 20px 20px 40px 20px;
+            color: #666;
+            font-size: 0.95rem;
+            border-top: 1px solid #ddd;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        footer a {
+            color: var(--primary-color);
+            text-decoration: none;
+            font-weight: bold;
+        }
+
+        footer a:hover {
+            text-decoration: underline;
+        }
+        /* --- AJUSTES PARA CELULARES (Responsive) --- */
+        @media (max-width: 768px) {
+            .container {
+                margin: 15px; /* Reduce el margen exterior */
+                padding: 20px; /* Reduce el espacio interior para dejar más lugar al texto */
+            }
+            
+            h1 {
+                font-size: 1.8rem; /* Achica un poco el título principal */
+            }
+
+            .cta-box {
+                padding: 20px 15px; /* Ajusta la caja naranja del final */
+            }
+
+            header {
+                padding: 15px 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h2>AVANZA DIGITAL</h2>
+        <p>Sistemas de automatización de leads para PyMEs metalúrgicas</p>
+    </header>
+
+    <div class="container">
+        <h1>Guía Completa: Cómo automatizar la generación de leads en una metalúrgica paso a paso</h1>
+
+        <p>Si tenés una metalúrgica, probablemente tu web sea como un folleto digital: linda, pero <strong>no vende</strong>. Peor aún: te llegan consultas genéricas como <em>"¿cuánto cuesta?"</em> que tu equipo pierde horas tratando de clasificar. <strong>¿Te suena?</strong></p>
+
+        <p>En esta guía te voy a mostrar, paso a paso, cómo convertir tu página web en una máquina de <strong>leads calificados</strong> trabajando en automático para tu equipo de ventas. Sin humo y con ejemplos reales pensados específicamente para el sector industrial B2B.</p>
+
+        <h2>Paso 1: Definí qué es un "lead calificado" para tu industria</h2>
+        <p>Antes de instalar cualquier tecnología o automatizar procesos, tenés que tener muy en claro qué tipo de cliente querés que te llegue. En la industria metalúrgica, no todas las consultas valen lo mismo:</p>
+        <ul>
+            <li>❌ <strong>Un lead NO calificado es:</strong> "Hola, ¿me pasan precio de una caldera?" (Cero datos técnicos, cero contexto).</li>
+            <li>✅ <strong>Un lead SÍ calificado es:</strong> "Necesito una caldera para 10.000 kg/hora, con combustible biomasa, para la industria alimenticia en Córdoba. Mi nombre es Martín y mi teléfono es..."</li>
+        </ul>
+
+        <div class="pain-point">
+            ¿Cuántas horas por semana pierde tu equipo comercial contestando consultas que nunca compran?
+        </div>
+
+        <p><strong>💡 Acción concreta:</strong> Sentate hoy mismo con tu equipo comercial y definan: ¿Qué datos mínimos y excluyentes necesitan para considerar una consulta como "caliente"?</p>
+
+        <h2>Paso 2: Optimizá tu web para captar y filtrar a esos clientes</h2>
+        
+        <img src="formulario.jpg" alt="Ejemplo de formulario B2B para captación de leads" class="article-img">
+
+        <h3>A. Chau al formulario de contacto genérico, hola a los formularios inteligentes</h3>
+        <p>En lugar de tener un único formulario aburrido de "Nombre, Email, Mensaje", creá formularios segmentados según lo que el cliente busca. Probá el siguiente formulario de ejemplo para ver cómo funciona:</p>
+
+        <div class="demo-form">
+            <h3>⚙️ Demo de Formulario Inteligente</h3>
+            <p><em>Seleccioná el producto para ver cómo cambian las preguntas técnicas.</em></p>
+            
+            <div class="form-group">
+                <label for="producto">¿En qué equipo estás interesado?</label>
+                <select id="producto" onchange="mostrarCampos()">
+                    <option value="">-- Seleccioná una opción --</option>
+                    <option value="calderas">Calderas Industriales</option>
+                    <option value="intercambiadores">Intercambiadores de Calor</option>
+                </select>
+            </div>
+
+            <div id="campos-calderas" class="hidden">
+                <div class="form-group">
+                    <label>Capacidad requerida (kg/h):</label>
+                    <input type="number" placeholder="Ej: 10000">
+                </div>
+                <div class="form-group">
+                    <label>Tipo de Combustible:</label>
+                    <select>
+                        <option>Gas Natural</option>
+                        <option>Biomasa</option>
+                        <option>Gasoil</option>
+                    </select>
+                </div>
+            </div>
+
+            <div id="campos-intercambiadores" class="hidden">
+                <div class="form-group">
+                    <label>Tipo de fluido a tratar:</label>
+                    <input type="text" placeholder="Ej: Leche, Aceite, Agua">
+                </div>
+                <div class="form-group">
+                    <label>Temperatura de trabajo estimada (°C):</label>
+                    <input type="number" placeholder="Ej: 80">
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>Tu correo corporativo:</label>
+                <input type="email" placeholder="nombre@tuempresa.com">
+            </div>
+            
+            <button class="cta-button" style="margin-top: 0; padding: 10px 20px;" onclick="window.location.href='contratar.html'">Solicitar Cotización</button>
+        </div>
+        <p class="micro-cta"><em>¿Te gustaría tener un formulario dinámico como este en tu web? <a href="contratar.html">Contanos sobre tu proyecto.</a></em></p>
+
+        <h3>B. Landing pages (páginas de aterrizaje) específicas</h3>
+        <p>No mandes todo el tráfico a la página de inicio de tu empresa. Creá páginas especiales, directas y al grano para cada línea de producto clave. Cada una debe tener su propio formulario, contenido técnico y casos de éxito.</p>
+        
+        <div class="highlight">
+            <strong>Ejemplo real del sector:</strong> Una metalúrgica fabricante de equipos para la industria láctea dejó de enviar tráfico a su "Home" y creó una página específica orientada solo a dueños de queserías. En apenas 3 meses, <strong>las consultas altamente calificadas aumentaron un 40%</strong>.
+        </div>
+
+        <h2>Paso 3: Automatizá el primer contacto (Tu vendedor 24/7)</h2>
+        <p>Un gerente de planta o jefe de compras puede estar buscando proveedores a las 11 de la noche. Tu equipo no puede estar disponible 24/7, pero tu sistema sí.</p>
+        <ul>
+            <li><strong>Respuesta automática por Email:</strong> Agradecé el contacto, adjuntá un PDF con la ficha técnica y avisá que un asesor se comunicará en 24 horas hábiles.</li>
+            <li><strong>WhatsApp Business automatizado:</strong> Configurá respuestas rápidas para preguntas frecuentes sobre tiempos de fabricación o garantías.</li>
+        </ul>
+
+        <h2>Paso 4: Integrá tu web con un CRM (El paso donde la mayoría falla)</h2>
+        
+        <img src="crm.png" alt="Dashboard de CRM para metalúrgicas" class="article-img">
+
+        <p>Si los leads que llegan desde tu web quedan perdidos en una bandeja de entrada genérica (info@tuempresa.com), estás perdiendo plata. Conectá tu web directamente con un CRM.</p>
+        
+        <p>En <strong>Avanza Digital</strong> integramos tu web con tu CRM vía API. Esto significa: cuando un lead completa el formulario, <strong>automáticamente</strong> se crea un contacto en tu sistema, se asigna a un vendedor y se dispara un email de seguimiento. Sin planillas, sin pérdidas.</p>
+
+        <h2>Paso 5: Segmentá y hacé seguimiento en piloto automático</h2>
+        <p>No todos los clientes están listos para comprar hoy. Creá embudos de correo electrónico según el interés de cada lead. Si pidió información de silos, que reciba videos de instalaciones. Si pidió repuestos, el catálogo actualizado. Mientras el cliente evalúa opciones, tu sistema lo educa.</p>
+
+        <h2>Paso 6: Medí y optimizá sin parar</h2>
+        <div class="highlight">
+            "Automatizar no es instalar un software y olvidarse. Es un sistema vivo que mejora con el tiempo."
+        </div>
+        <p>Medí cuántos leads llegan, cuántos se convierten en ventas y de dónde vienen. Todo se puede ajustar para mejorar el rendimiento comercial de tu empresa.</p>
+
+        <div class="cta-box">
+            <h2>🚀 Tu web puede (y debe) ser tu mejor vendedor</h2>
+            <p>Automatizar la generación de leads no es "comprar tecnología", es una estrategia comercial indispensable. En <strong>Avanza Digital</strong> diseñamos ecosistemas de ventas y sistemas de automatización para PyMEs industriales. Entendemos tu negocio.</p>
+            <p>¿Querés que te ayudemos a implementarlo en tu empresa?</p>
+            <a href="contratar.html" class="cta-button">Solicitar Diagnóstico Gratuito</a>
+        </div>
+        
+        <p class="trust-badge">
+            📍 <em>Trabajamos con metalúrgicas de Rafaela, San Francisco y toda la región.</em>
+        </p>
+    </div>
+
+    <footer>
+        <strong>Avanza Digital</strong> · <a href="https://avanzadigital.digital" target="_blank">avanzadigital.digital</a> · <a href="https://www.linkedin.com/in/ivan-galarza-365064205" target="_blank">LinkedIn de Iván Galarza</a>
+    </footer>
+
+    <script>
+        function mostrarCampos() {
+            var seleccion = document.getElementById("producto").value;
+            
+            // Ocultamos todos primero
+            document.getElementById("campos-calderas").classList.add("hidden");
+            document.getElementById("campos-intercambiadores").classList.add("hidden");
+            
+            // Mostramos el que corresponde
+            if (seleccion === "calderas") {
+                document.getElementById("campos-calderas").classList.remove("hidden");
+            } else if (seleccion === "intercambiadores") {
+                document.getElementById("campos-intercambiadores").classList.remove("hidden");
+            }
+        }
+    </script>
+</body>
+</html>

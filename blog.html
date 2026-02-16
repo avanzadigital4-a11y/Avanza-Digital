@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Blog de Marketing Industrial y Automatización B2B | Avanza Digital</title>
+    <meta name="description" content="Artículos sobre generación de leads B2B, automatización de ventas y estrategias digitales para PYMEs en Santa Fe y Argentina.">
+    
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="style.min.css">
+    
+    <style>
+        .blog-header { padding: 120px 20px 60px; text-align: center; }
+        .blog-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 30px; max-width: 1100px; margin: 0 auto 80px; padding: 0 20px; }
+        .article-card { height: 100%; display: flex; flex-direction: column; justify-content: space-between; cursor: pointer; transition: 0.3s; text-decoration: none; color: white; }
+        .article-card:hover { transform: translateY(-5px); border-color: var(--primary-color); }
+        .article-meta { font-size: 0.8rem; color: #888; margin-bottom: 10px; display: flex; gap: 10px; }
+        .tag { color: var(--primary-color); font-weight: 700; text-transform: uppercase; }
+        .read-more { margin-top: 20px; color: var(--primary-color); font-weight: 600; display: flex; align-items: center; gap: 5px; }
+    </style>
+</head>
+<body>
+
+    <nav class="navbar-floating">
+        <div class="logo"><a href="index.html" style="color:white;"><i class="fa-solid fa-layer-group"></i> Avanza</a></div>
+        <ul class="nav-links">
+            <li><a href="index.html">Inicio</a></li>
+            <li><a href="index.html#servicios">Servicios</a></li>
+            <li><a href="recursos.html">Recursos</a></li>
+        </ul>
+        <a href="index.html#contacto" class="btn-nav">Hablemos</a>
+    </nav>
+
+    <header class="blog-header">
+        <span class="badge-outline" style="color: #4ade80; border-color: #4ade80;">Academia B2B</span>
+        <h1 style="font-size: 3rem; margin: 20px 0;">Estrategias de Crecimiento Industrial</h1>
+        <p style="color: #a1a1aa; max-width: 600px; margin: 0 auto;">
+            Guías prácticas para dueños de PYMEs que quieren dejar de depender del "boca a boca" y sistematizar sus ventas.
+        </p>
+    </header>
+
+    <section class="blog-grid">
+        
+        <a href="articulos/automatizar-ventas-pymes.html" class="bento-box article-card">
+            <div>
+                <div class="article-meta">
+                    <span class="tag">Estrategia</span>
+                    <span>• 5 min lectura</span>
+                </div>
+                <h2 style="font-size: 1.5rem; margin-bottom: 15px;">Cómo automatizar ventas en PYMEs argentinas (Guía 2026)</h2>
+                <p style="color: #ccc; font-size: 0.95rem; line-height: 1.6;">
+                    ¿Tus vendedores pierden tiempo enviando presupuestos manuales? Descubre cómo implementar un sistema que trabaja 24/7.
+                </p>
+            </div>
+            <div class="read-more">Leer Artículo <i class="fa-solid fa-arrow-right"></i></div>
+        </a>
+
+        <div class="bento-box article-card" style="opacity: 0.6; cursor: default;">
+            <div>
+                <div class="article-meta">
+                    <span class="tag">SEO Local</span>
+                    <span>• Próximamente</span>
+                </div>
+                <h2 style="font-size: 1.5rem; margin-bottom: 15px;">Generación de Leads B2B en Santa Fe: Caso Real</h2>
+                <p style="color: #ccc; font-size: 0.95rem; line-height: 1.6;">
+                    Cómo una metalúrgica local pasó de 0 a 15 consultas mensuales optimizando Google My Business y su web.
+                </p>
+            </div>
+            <div class="read-more">Disponible pronto...</div>
+        </div>
+        
+        <a href="guia-automatizacion-leads-industriales.html" class="bento-box article-card">
+            <div>
+                <img src="crm.png" alt="Automatización de leads" style="width: 100%; height: 180px; object-fit: cover; border-radius: 8px; margin-bottom: 20px; opacity: 0.9;">
+                <div class="article-meta">
+                    <span class="tag">Guía Paso a Paso</span>
+                    <span>• B2B Industrial</span>
+                </div>
+                <h2 style="font-size: 1.5rem; margin-bottom: 15px;">Cómo automatizar leads en metalúrgicas</h2>
+                <p style="color: #ccc; font-size: 0.95rem; line-height: 1.6;">
+                    Si tu web no vende, te mostramos el paso a paso exacto para transformarla en un sistema automático de generación de clientes de alta calidad.
+                </p>
+            </div>
+            <div class="read-more">Leer Artículo <i class="fa-solid fa-arrow-right"></i></div>
+        </a>
+
+    </section>
+
+    <footer style="padding: 40px; text-align: center; border-top: 1px solid #222;">
+        <p style="color: #666; font-size: 0.9rem;">&copy; 2026 Avanza Digital.</p>
+    </footer>
+<script type="text/javascript" id="hs-script-loader" async defer src="//js.hs-scripts.com/51067454.js"></script>
+</body>
+</html>

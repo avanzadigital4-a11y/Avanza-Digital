@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Energía & Eólica: Soluciones de Mantenimiento | MetalPro</title>
+    <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;600;700&family=Inter:wght@300;400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+
+    <style>
+        :root { --primary: #00897b; --secondary: #1a1a1a; --surface: #f4f6f9; } /* Verde Energía */
+        body { font-family: 'Inter', sans-serif; background: #fff; color: #333; margin:0; }
+        h1, h2, h3, .tech-font { font-family: 'Chakra Petch', sans-serif; text-transform: uppercase; }
+        
+        header { background: white; border-bottom: 2px solid var(--primary); padding: 15px 0; }
+        .container { max-width: 1200px; margin: 0 auto; padding: 0 20px; }
+        .nav-flex { display: flex; justify-content: space-between; align-items: center; }
+        .logo { font-size: 1.8rem; font-weight: 700; color: var(--secondary); text-decoration: none; }
+        .logo span { color: var(--primary); }
+        .btn-quote { background: var(--primary); color: white; padding: 12px 25px; font-weight: 700; border-radius: 4px; text-decoration: none; }
+
+        .hero-split { display: grid; grid-template-columns: 1fr 1fr; height: 85vh; }
+        .hero-text { background: var(--secondary); color: white; display: flex; flex-direction: column; justify-content: center; padding: 60px; }
+        .hero-image { background: url('https://images.unsplash.com/photo-1581093458791-9f3c3900df4b?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80') center/cover; }
+
+        .service-list { margin-top: 40px; list-style: none; }
+        .service-list li { padding: 20px; border-bottom: 1px solid #444; display: flex; justify-content: space-between; align-items: center; transition: 0.3s; cursor: pointer; }
+        .service-list li:hover { background: #333; padding-left: 30px; border-left: 4px solid var(--primary); }
+        .service-list h3 { font-size: 1.2rem; margin: 0; }
+        .service-list p { font-size: 0.9rem; color: #aaa; margin: 5px 0 0 0; }
+
+        .reverse-eng-banner { background: var(--surface); padding: 80px 0; text-align: center; }
+
+        @media (max-width: 768px) { .hero-split { grid-template-columns: 1fr; height: auto; } .hero-image { height: 300px; } }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container nav-flex">
+            <a href="index.html" class="logo">METAL<span>PRO</span> IND.</a>
+            <a href="cotizador.html" class="btn-quote">SOPORTE TÉCNICO</a>
+        </div>
+    </header>
+
+    <div class="hero-split">
+        <div class="hero-text">
+            <div data-aos="fade-right">
+                <h1 class="tech-font" style="font-size: 3rem; line-height: 1.1;">SOLUCIONES PARA<br>ENERGÍA & MINERÍA</h1>
+                <p style="margin: 30px 0; font-size: 1.1rem; color: #ccc;">Mantenga sus turbinas y generadores operando. Fabricación de repuestos críticos para paradas de planta y stock de seguridad.</p>
+                
+                <ul class="service-list">
+                    <li onclick="location.href='cotizador.html'">
+                        <div>
+                            <h3>ENERGÍA EÓLICA</h3>
+                            <p>Pernos de anclaje, bridas de torre y componentes de nacelle.</p>
+                        </div>
+                        <i class="fa-solid fa-arrow-right"></i>
+                    </li>
+                    <li onclick="location.href='cotizador.html'">
+                        <div>
+                            <h3>TURBINAS DE VAPOR/GAS</h3>
+                            <p>Mecanizado de álabes, sellos laberínticos y cojinetes.</p>
+                        </div>
+                        <i class="fa-solid fa-arrow-right"></i>
+                    </li>
+                    <li onclick="location.href='cotizador.html'">
+                        <div>
+                            <h3>TRANSMISIÓN DE POTENCIA</h3>
+                            <p>Reductores, acoples elásticos y ejes de gran porte.</p>
+                        </div>
+                        <i class="fa-solid fa-arrow-right"></i>
+                    </li>
+                </ul>
+            </div>
+        </div>
+        <div class="hero-image"></div>
+    </div>
+
+    <section class="reverse-eng-banner">
+        <div class="container" data-aos="fade-up">
+            <i class="fa-solid fa-microscope" style="font-size: 3rem; color: var(--primary); margin-bottom: 20px;"></i>
+            <h2 class="tech-font">INGENIERÍA INVERSA</h2>
+            <p style="max-width: 600px; margin: 0 auto 30px;">¿Tiene un equipo importado discontinuado? No necesita el plano original. Envienos la pieza gastada o rota. Usamos escáner 3D y metrología para generar el plano CAD y fabricar una pieza nueva con materiales modernos.</p>
+            <a href="cotizador.html" class="btn-quote">SOLICITAR RELEVAMIENTO</a>
+        </div>
+    </section>
+
+    <footer style="background: #111; color: #666; padding: 40px 0; text-align: center;">
+        <div class="container">
+            <p>© 2026 MetalPro | <a href="index.html" style="color: white;">Volver al Inicio</a></p>
+        </div>
+    </footer>
+
+    <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+    <script>AOS.init();</script>
+    <script src="js/crm.js"></script>
+</body>
+</html>
