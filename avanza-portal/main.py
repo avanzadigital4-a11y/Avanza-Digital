@@ -148,6 +148,7 @@ def ver_aliado(codigo: str, db: Session = Depends(get_db)):
         ],
         "ventas": [
             {
+                "id": v.id,
                 "cliente": v.nombre_cliente,
                 "plan": v.plan,
                 "valor": v.valor_usd,
