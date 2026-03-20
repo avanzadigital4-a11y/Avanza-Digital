@@ -171,7 +171,7 @@ def importar():
         try:
             res = requests.post(
                 f"{API}/aliados/crear",
-                json=params,
+                params=params,
                 timeout=10
             )
 
