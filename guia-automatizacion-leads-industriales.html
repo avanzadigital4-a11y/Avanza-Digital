@@ -1,354 +1,925 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
+    <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+    new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+    j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+    'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+    })(window,document,'script','dataLayer','GTM-P499M76P');</script>
+
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cómo automatizar la generación de leads en una metalúrgica: guía paso a paso</title>
-    <meta name="description" content="¿Tu web industrial no vende? Aprendé paso a paso cómo automatizar la generación de leads calificados para tu metalúrgica. Ejemplos, herramientas y estrategia B2B.">
-    
+    <title>Cómo automatizar la generación de leads en PYMES industriales | Avanza Digital</title>
+    <meta name="description" content="Guía paso a paso para convertir tu web industrial en una máquina de leads calificados. Formularios inteligentes, CRM, automatizaciones y métricas para metalúrgicas, logística y servicios técnicos B2B.">
+
+    <meta name="geo.region" content="AR-S" />
+    <meta name="geo.placename" content="Santa Fe" />
+    <meta property="og:title" content="Cómo automatizar leads en PYMES industriales | Avanza Digital">
+    <meta property="og:description" content="6 pasos para que tu web industrial trabaje como vendedor 24/7. Guía gratuita con ejemplos reales.">
+    <meta property="og:type" content="article">
+
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><path d=%22M10 20 L40 50 L10 80 L30 80 L60 50 L30 20 Z%22 fill=%22%230044cc%22/><path d=%22M45 20 L75 50 L45 80 L65 80 L95 50 L65 20 Z%22 fill=%22%2300cccc%22/></svg>">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="style.min.css">
+
     <style>
-        /* Estilos generales B2B y limpios */
-        :root {
-            --primary-color: #0f2c59; /* Azul industrial corporativo */
-            --accent-color: #f7a028; /* Naranja para llamados a la acción */
-            --text-color: #333333;
-            --bg-color: #f4f6f9;
-        }
+        body { background: #050505; color: #d1d5db; font-family: 'Inter', sans-serif; }
 
-        body {
-            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-            line-height: 1.6;
-            color: var(--text-color);
-            background-color: var(--bg-color);
-            margin: 0;
-            padding: 0;
+        /* ── HERO ── */
+        .guia-hero {
+            padding: 130px 20px 70px;
+            background: radial-gradient(circle at top, #0d1b2a 0%, #050505 65%);
+            border-bottom: 1px solid #1a1a1a;
         }
-
-        header {
-            background-color: var(--primary-color);
+        .guia-hero-inner { max-width: 760px; margin: 0 auto; }
+        .guia-meta {
+            display: flex; align-items: center; gap: 16px;
+            flex-wrap: wrap; margin-bottom: 24px;
+        }
+        .guia-tag {
+            font-size: 0.72rem; font-weight: 700; letter-spacing: 1.5px;
+            text-transform: uppercase; padding: 4px 12px; border-radius: 20px;
+        }
+        .tag-guia { background: rgba(59,130,246,0.12); color: #60a5fa; border: 1px solid rgba(59,130,246,0.25); }
+        .tag-nivel { background: rgba(74,222,128,0.1); color: #4ade80; border: 1px solid rgba(74,222,128,0.2); }
+        .guia-meta span { color: #555; font-size: 0.85rem; }
+        .guia-hero h1 {
+            font-size: clamp(1.8rem, 4vw, 2.8rem);
+            font-weight: 900;
+            letter-spacing: -1px;
+            line-height: 1.15;
             color: white;
-            padding: 20px 0;
-            text-align: center;
-        }
-
-        .container {
-            max-width: 800px;
-            margin: 40px auto;
-            background: white;
-            padding: 40px;
-            border-radius: 8px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
-        }
-
-        h1 {
-            color: var(--primary-color);
-            font-size: 2.2rem;
-            line-height: 1.2;
             margin-bottom: 20px;
         }
+        .guia-hero h1 span { color: #3b82f6; }
+        .guia-hero .lead {
+            font-size: 1.1rem;
+            color: #a1a1aa;
+            line-height: 1.7;
+            margin-bottom: 32px;
+        }
+        .guia-indice {
+            background: #0f0f0f;
+            border: 1px solid #2a2a2a;
+            border-radius: 14px;
+            padding: 24px 28px;
+            margin-top: 36px;
+        }
+        .guia-indice h4 {
+            color: #a1a1aa;
+            font-size: 0.75rem;
+            font-weight: 700;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            margin-bottom: 14px;
+        }
+        .guia-indice ol {
+            margin: 0; padding: 0 0 0 20px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 6px 24px;
+        }
+        .guia-indice li { color: #a1a1aa; font-size: 0.92rem; line-height: 1.5; }
+        .guia-indice a { color: #60a5fa; text-decoration: none; }
+        .guia-indice a:hover { text-decoration: underline; }
 
-        h2, h3 {
-            color: var(--primary-color);
-            margin-top: 30px;
+        /* ── CONTENIDO ── */
+        .guia-body {
+            max-width: 760px;
+            margin: 0 auto;
+            padding: 60px 20px;
         }
 
-        h2 { border-bottom: 2px solid #eee; padding-bottom: 10px; }
+        /* Paso */
+        .paso {
+            margin-bottom: 60px;
+            scroll-margin-top: 100px;
+        }
+        .paso-header {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+        .paso-num {
+            width: 44px; height: 44px;
+            background: #3b82f6;
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1rem; font-weight: 800; color: white;
+            flex-shrink: 0;
+        }
+        .paso h2 {
+            font-size: clamp(1.2rem, 2.5vw, 1.5rem);
+            font-weight: 800;
+            color: white;
+            margin: 0;
+            line-height: 1.2;
+        }
+        .paso p { color: #a1a1aa; line-height: 1.75; font-size: 1rem; margin-bottom: 16px; }
+        .paso ul, .paso ol { padding-left: 20px; color: #a1a1aa; line-height: 1.75; }
+        .paso li { margin-bottom: 8px; }
+        .paso strong { color: white; }
 
-        p { margin-bottom: 15px; font-size: 1.05rem;}
+        /* Bloques */
+        .bloque-destacado {
+            background: #0f0f0f;
+            border: 1px solid #2a2a2a;
+            border-radius: 14px;
+            padding: 24px;
+            margin: 24px 0;
+        }
+        .bloque-destacado h4 {
+            color: white;
+            font-size: 1rem;
+            margin-bottom: 10px;
+            display: flex; align-items: center; gap: 8px;
+        }
+        .bloque-destacado p { color: #a1a1aa; font-size: 0.95rem; margin: 0; line-height: 1.6; }
 
-        .highlight {
-            background-color: #e9f0f8;
+        .bloque-alerta {
+            background: rgba(239,68,68,0.06);
+            border: 1px solid rgba(239,68,68,0.25);
+            border-radius: 12px;
+            padding: 20px 24px;
+            margin: 24px 0;
+            display: flex; gap: 14px; align-items: flex-start;
+        }
+        .bloque-alerta .icon { color: #ef4444; font-size: 1.3rem; flex-shrink: 0; padding-top: 2px; }
+        .bloque-alerta p { color: #fca5a5; margin: 0; line-height: 1.6; font-size: 0.95rem; }
+
+        .bloque-ejemplo {
+            background: rgba(59,130,246,0.06);
+            border-left: 4px solid #3b82f6;
+            border-radius: 0 12px 12px 0;
+            padding: 20px 24px;
+            margin: 24px 0;
+        }
+        .bloque-ejemplo .label {
+            font-size: 0.72rem; font-weight: 700; letter-spacing: 1.5px;
+            text-transform: uppercase; color: #3b82f6; margin-bottom: 8px;
+        }
+        .bloque-ejemplo p { color: #d1d5db; margin: 0; line-height: 1.6; font-size: 0.95rem; }
+
+        .bloque-tip {
+            background: rgba(74,222,128,0.06);
+            border: 1px solid rgba(74,222,128,0.2);
+            border-radius: 12px;
+            padding: 20px 24px;
+            margin: 24px 0;
+            display: flex; gap: 14px; align-items: flex-start;
+        }
+        .bloque-tip .icon { color: #4ade80; font-size: 1.1rem; flex-shrink: 0; padding-top: 2px; }
+        .bloque-tip p { color: #a1a1aa; margin: 0; line-height: 1.6; font-size: 0.95rem; }
+        .bloque-tip strong { color: #4ade80; }
+
+        /* Separador entre pasos */
+        .paso-divider {
+            height: 1px;
+            background: linear-gradient(to right, #3b82f6, transparent);
+            margin-bottom: 60px;
+        }
+
+        /* Comparativa leads */
+        .leads-compare {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            margin: 24px 0;
+        }
+        .lead-card {
+            border-radius: 12px;
             padding: 20px;
-            border-left: 4px solid var(--primary-color);
-            border-radius: 4px;
-            margin: 20px 0;
+        }
+        .lead-card.malo {
+            background: rgba(239,68,68,0.06);
+            border: 1px solid rgba(239,68,68,0.2);
+        }
+        .lead-card.bueno {
+            background: rgba(74,222,128,0.06);
+            border: 1px solid rgba(74,222,128,0.2);
+        }
+        .lead-card .badge {
+            font-size: 0.7rem; font-weight: 700; letter-spacing: 1px;
+            text-transform: uppercase; margin-bottom: 10px; display: block;
+        }
+        .lead-card.malo .badge { color: #ef4444; }
+        .lead-card.bueno .badge { color: #4ade80; }
+        .lead-card p { color: #a1a1aa; font-size: 0.88rem; line-height: 1.5; margin: 0; font-style: italic; }
+
+        /* Formulario demo */
+        .demo-form {
+            background: #0f0f0f;
+            border: 1px solid #2a2a2a;
+            border-radius: 14px;
+            padding: 28px;
+            margin: 24px 0;
+        }
+        .demo-form h4 {
+            color: white;
+            font-size: 1rem;
+            margin-bottom: 6px;
+        }
+        .demo-form > p {
+            color: #666;
+            font-size: 0.85rem;
+            margin-bottom: 20px;
+        }
+        .form-group { margin-bottom: 16px; }
+        .form-group label {
+            display: block;
+            font-size: 0.88rem;
+            font-weight: 600;
+            color: #a1a1aa;
+            margin-bottom: 6px;
+        }
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            background: #000;
+            border: 1px solid #333;
+            color: white;
+            padding: 12px 14px;
+            border-radius: 8px;
+            font-family: 'Inter', sans-serif;
+            font-size: 0.9rem;
+            box-sizing: border-box;
+            transition: border-color 0.2s;
+        }
+        .form-group input:focus,
+        .form-group select:focus { border-color: #3b82f6; outline: none; }
+        .form-group select option { background: #111; }
+        .hidden { display: none; }
+        .btn-demo {
+            padding: 12px 24px;
+            background: #3b82f6;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-weight: 700;
+            font-size: 0.9rem;
+            cursor: pointer;
+            font-family: 'Inter', sans-serif;
+            transition: background 0.2s;
+        }
+        .btn-demo:hover { background: #2563eb; }
+        .demo-nota {
+            font-size: 0.8rem;
+            color: #555;
+            margin-top: 10px;
             font-style: italic;
         }
 
-        .pain-point {
-            font-size: 1.2rem;
-            color: #d9534f; /* Color rojo sutil para el dolor */
-            font-weight: bold;
+        /* Proceso CRM */
+        .crm-flujo {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin: 24px 0;
+        }
+        .crm-paso {
+            flex: 1;
+            min-width: 120px;
+            background: #0f0f0f;
+            border: 1px solid #2a2a2a;
+            border-radius: 10px;
+            padding: 14px 12px;
             text-align: center;
-            margin: 25px 0;
-            padding: 15px;
-            border: 1px dashed #d9534f;
-            border-radius: 5px;
         }
+        .crm-paso .icon { font-size: 1.4rem; margin-bottom: 6px; }
+        .crm-paso p { color: white; font-size: 0.82rem; font-weight: 600; margin: 0; line-height: 1.3; }
+        .crm-flecha { color: #3b82f6; font-size: 1.2rem; flex-shrink: 0; }
 
-        .cta-box {
-            background-color: var(--primary-color);
-            color: white;
-            padding: 30px;
-            text-align: center;
-            border-radius: 8px;
-            margin-top: 40px;
+        /* Métricas */
+        .metricas-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 16px;
+            margin: 24px 0;
         }
-
-        .cta-button {
-            display: inline-block;
-            background-color: var(--accent-color);
-            color: white;
-            text-decoration: none;
-            padding: 15px 30px;
-            font-size: 1.1rem;
-            font-weight: bold;
-            border-radius: 5px;
-            margin-top: 15px;
-            transition: background-color 0.3s;
-        }
-
-        .cta-button:hover {
-            background-color: #e08b15;
-        }
-
-        /* Micro CTA */
-        .micro-cta {
-            text-align: center;
-            margin-top: -5px;
-            margin-bottom: 30px;
-            font-size: 1.1rem;
-            color: var(--primary-color);
-        }
-
-        .micro-cta a {
-            color: var(--accent-color);
-            font-weight: bold;
-            text-decoration: none;
-        }
-
-        .micro-cta a:hover {
-            text-decoration: underline;
-        }
-
-        /* Estilos del Formulario Inteligente de Demo */
-        .demo-form {
-            background: #fafafa;
-            border: 1px solid #ddd;
+        .metrica-card {
+            background: #0f0f0f;
+            border: 1px solid #2a2a2a;
+            border-radius: 12px;
             padding: 20px;
-            border-radius: 8px;
-            margin: 20px 0;
-        }
-
-        .form-group { margin-bottom: 15px; }
-        
-        label { display: block; font-weight: bold; margin-bottom: 5px; }
-        
-        input, select {
-            width: 100%;
-            padding: 10px;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-            box-sizing: border-box;
-        }
-
-        .hidden { display: none; }
-        
-        /* Estilos para las imágenes del artículo */
-        .article-img {
-            max-width: 100%;
-            height: auto;
-            border-radius: 8px;
-            margin: 20px auto;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-            display: block;
-        }
-
-        /* Detalle de Confianza Local */
-        .trust-badge {
             text-align: center;
-            font-size: 1.05rem;
-            color: #555;
-            margin-top: 40px;
-            margin-bottom: 10px;
-            padding: 15px;
         }
-
-        /* Footer */
-        footer {
-            text-align: center;
-            padding: 20px 20px 40px 20px;
-            color: #666;
-            font-size: 0.95rem;
-            border-top: 1px solid #ddd;
-            max-width: 800px;
-            margin: 0 auto;
+        .metrica-card .num {
+            font-size: 1.8rem;
+            font-weight: 900;
+            color: #3b82f6;
+            margin-bottom: 4px;
         }
+        .metrica-card p { color: #a1a1aa; font-size: 0.82rem; margin: 0; line-height: 1.4; }
 
-        footer a {
-            color: var(--primary-color);
+        /* Micro CTA inline */
+        .micro-cta {
+            background: #0a0a0a;
+            border: 1px solid #222;
+            border-radius: 10px;
+            padding: 16px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            flex-wrap: wrap;
+            margin: 24px 0;
+        }
+        .micro-cta p { color: #a1a1aa; font-size: 0.9rem; margin: 0; }
+        .micro-cta a {
+            color: #4ade80;
+            font-weight: 700;
             text-decoration: none;
-            font-weight: bold;
+            font-size: 0.9rem;
+            white-space: nowrap;
         }
+        .micro-cta a:hover { text-decoration: underline; }
 
-        footer a:hover {
-            text-decoration: underline;
+        /* CTA Final */
+        .cta-final {
+            background: linear-gradient(135deg, #0d1b2a, #050505);
+            border: 1px solid rgba(59,130,246,0.3);
+            border-radius: 20px;
+            padding: 50px 40px;
+            text-align: center;
+            margin: 40px 0 60px;
         }
-        /* --- AJUSTES PARA CELULARES (Responsive) --- */
-        @media (max-width: 768px) {
-            .container {
-                margin: 15px; /* Reduce el margen exterior */
-                padding: 20px; /* Reduce el espacio interior para dejar más lugar al texto */
-            }
-            
-            h1 {
-                font-size: 1.8rem; /* Achica un poco el título principal */
-            }
+        .cta-final h2 {
+            font-size: clamp(1.5rem, 3vw, 2rem);
+            font-weight: 800;
+            color: white;
+            margin-bottom: 14px;
+        }
+        .cta-final p {
+            color: #a1a1aa;
+            max-width: 520px;
+            margin: 0 auto 28px;
+            line-height: 1.6;
+        }
+        .cta-btns {
+            display: flex;
+            gap: 14px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        .btn-primary-guia {
+            display: inline-block;
+            padding: 15px 28px;
+            background: #4ade80;
+            color: black;
+            font-weight: 700;
+            border-radius: 10px;
+            text-decoration: none;
+            font-size: 0.95rem;
+            transition: opacity 0.2s;
+        }
+        .btn-primary-guia:hover { opacity: 0.88; }
+        .btn-wa {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 15px 24px;
+            background: transparent;
+            color: #a1a1aa;
+            border: 1px solid #333;
+            border-radius: 10px;
+            text-decoration: none;
+            font-size: 0.95rem;
+            transition: all 0.2s;
+        }
+        .btn-wa:hover { border-color: #4ade80; color: #4ade80; }
 
-            .cta-box {
-                padding: 20px 15px; /* Ajusta la caja naranja del final */
-            }
+        /* Autor */
+        .autor-box {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            background: #0a0a0a;
+            border: 1px solid #1a1a1a;
+            border-radius: 14px;
+            padding: 24px;
+            margin: 40px 0;
+        }
+        .autor-avatar {
+            width: 64px; height: 64px;
+            border-radius: 50%;
+            background: #1a1a1a;
+            display: flex; align-items: center; justify-content: center;
+            color: #3b82f6;
+            font-size: 1.6rem;
+            flex-shrink: 0;
+        }
+        .autor-info h4 { color: white; font-size: 0.95rem; margin: 0 0 4px; }
+        .autor-info span { color: #3b82f6; font-size: 0.8rem; font-weight: 600; }
+        .autor-info p { color: #666; font-size: 0.85rem; margin: 6px 0 0; line-height: 1.5; }
 
-            header {
-                padding: 15px 10px;
-            }
+        /* Artículos relacionados */
+        .relacionados {
+            border-top: 1px solid #1a1a1a;
+            padding-top: 40px;
+            margin-top: 20px;
+        }
+        .relacionados h3 { color: white; font-size: 1rem; margin-bottom: 16px; }
+        .rel-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 16px;
+        }
+        .rel-card {
+            background: #0f0f0f;
+            border: 1px solid #2a2a2a;
+            border-radius: 12px;
+            padding: 20px;
+            text-decoration: none;
+            transition: border-color 0.2s;
+        }
+        .rel-card:hover { border-color: #3b82f6; }
+        .rel-card span { font-size: 0.72rem; color: #3b82f6; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; }
+        .rel-card h4 { color: white; font-size: 0.9rem; margin: 8px 0 0; line-height: 1.4; }
+
+        @media (max-width: 600px) {
+            .leads-compare { grid-template-columns: 1fr; }
+            .crm-flujo { flex-direction: column; }
+            .crm-flecha { transform: rotate(90deg); }
+            .autor-box { flex-direction: column; text-align: center; }
+            .cta-final { padding: 36px 20px; }
         }
     </style>
 </head>
 <body>
+<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-P499M76P" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 
-    <header>
-        <h2>AVANZA DIGITAL</h2>
-        <p>Sistemas de automatización de leads para PyMEs metalúrgicas</p>
-    </header>
+<!-- NAVBAR -->
+<nav class="navbar-floating">
+    <div class="logo">
+        <a href="index.html" style="color:white; text-decoration:none;">
+            <i class="fa-solid fa-layer-group"></i> Avanza
+        </a>
+    </div>
+    <ul class="nav-links">
+        <li><a href="index.html#servicios">Planes</a></li>
+        <li><a href="index.html#portafolio">Demos</a></li>
+        <li><a href="recursos.html" style="color: var(--primary-color); font-weight: 600;">Recursos</a></li>
+        <li><a href="alianzas.html" style="color: #4ade80; font-weight: 600;">Ser Aliado</a></li>
+    </ul>
+    <a href="index.html#contacto" class="btn-nav">Diagnóstico Gratuito</a>
+</nav>
 
-    <div class="container">
-        <h1>Guía Completa: Cómo automatizar la generación de leads en una metalúrgica paso a paso</h1>
+<!-- HERO -->
+<header class="guia-hero">
+    <div class="guia-hero-inner">
+        <div class="guia-meta">
+            <span class="guia-tag tag-guia">Guía Completa</span>
+            <span class="guia-tag tag-nivel">Nivel: Intermedio</span>
+            <span><i class="fa-regular fa-clock"></i> 8 min de lectura</span>
+            <span><i class="fa-solid fa-industry"></i> Para PYMES industriales</span>
+        </div>
+        <h1>Cómo automatizar la generación de leads en tu empresa industrial <span>paso a paso</span></h1>
+        <p class="lead">
+            Si tu web existe pero no genera consultas calificadas, este artículo es para vos. Te mostramos cómo convertir tu presencia digital en un sistema de ventas que trabaja 24/7 — sin saber programar, sin grandes presupuestos.
+        </p>
 
-        <p>Si tenés una metalúrgica, probablemente tu web sea como un folleto digital: linda, pero <strong>no vende</strong>. Peor aún: te llegan consultas genéricas como <em>"¿cuánto cuesta?"</em> que tu equipo pierde horas tratando de clasificar. <strong>¿Te suena?</strong></p>
+        <!-- Índice -->
+        <div class="guia-indice">
+            <h4><i class="fa-solid fa-list"></i> &nbsp;En esta guía:</h4>
+            <ol>
+                <li><a href="#paso1">Qué es un lead calificado para tu industria</a></li>
+                <li><a href="#paso2">Formularios inteligentes que filtran solos</a></li>
+                <li><a href="#paso3">Automatizá el primer contacto (vendedor 24/7)</a></li>
+                <li><a href="#paso4">Integrá tu web con un CRM</a></li>
+                <li><a href="#paso5">Seguimiento automático por etapa</a></li>
+                <li><a href="#paso6">Medí y mejorá sin parar</a></li>
+            </ol>
+        </div>
+    </div>
+</header>
 
-        <p>En esta guía te voy a mostrar, paso a paso, cómo convertir tu página web en una máquina de <strong>leads calificados</strong> trabajando en automático para tu equipo de ventas. Sin humo y con ejemplos reales pensados específicamente para el sector industrial B2B.</p>
+<!-- CUERPO -->
+<main class="guia-body">
 
-        <h2>Paso 1: Definí qué es un "lead calificado" para tu industria</h2>
-        <p>Antes de instalar cualquier tecnología o automatizar procesos, tenés que tener muy en claro qué tipo de cliente querés que te llegue. En la industria metalúrgica, no todas las consultas valen lo mismo:</p>
-        <ul>
-            <li>❌ <strong>Un lead NO calificado es:</strong> "Hola, ¿me pasan precio de una caldera?" (Cero datos técnicos, cero contexto).</li>
-            <li>✅ <strong>Un lead SÍ calificado es:</strong> "Necesito una caldera para 10.000 kg/hora, con combustible biomasa, para la industria alimenticia en Córdoba. Mi nombre es Martín y mi teléfono es..."</li>
-        </ul>
+    <!-- INTRO -->
+    <div class="bloque-alerta">
+        <div class="icon"><i class="fa-solid fa-triangle-exclamation"></i></div>
+        <p>El 73% de las PYMES industriales en Argentina tiene web, pero menos del 20% genera consultas calificadas desde ella. La mayoría recibe mensajes de WhatsApp como <em>"¿cuánto cuesta?"</em> que no van a ningún lado. Esta guía explica por qué pasa eso y cómo resolverlo.</p>
+    </div>
 
-        <div class="pain-point">
-            ¿Cuántas horas por semana pierde tu equipo comercial contestando consultas que nunca compran?
+    <!-- PASO 1 -->
+    <div class="paso" id="paso1">
+        <div class="paso-header">
+            <div class="paso-num">1</div>
+            <h2>Definí qué es un "lead calificado" para tu industria</h2>
         </div>
 
-        <p><strong>💡 Acción concreta:</strong> Sentate hoy mismo con tu equipo comercial y definan: ¿Qué datos mínimos y excluyentes necesitan para considerar una consulta como "caliente"?</p>
+        <p>Antes de automatizar nada, tenés que saber qué querés captar. En el mundo industrial B2B, no todas las consultas tienen el mismo valor. La diferencia entre un lead inútil y uno calificado puede ser la diferencia entre perder 3 horas de tu equipo o cerrar un contrato de USD 50.000.</p>
 
-        <h2>Paso 2: Optimizá tu web para captar y filtrar a esos clientes</h2>
-        
-        <img src="formulario.jpg" alt="Ejemplo de formulario B2B para captación de leads" class="article-img">
+        <div class="leads-compare">
+            <div class="lead-card malo">
+                <span class="badge">❌ Lead no calificado</span>
+                <p>"Hola, ¿me pasan precio de una caldera?"</p>
+                <p style="margin-top:10px; color: #666; font-size:0.8rem;">Sin datos técnicos. Sin volumen. Sin urgencia. Sin cargo. Tu equipo pierde 45 minutos para nada.</p>
+            </div>
+            <div class="lead-card bueno">
+                <span class="badge">✅ Lead calificado</span>
+                <p>"Necesito caldera 10.000 kg/h, biomasa, industria alimenticia, Córdoba. Soy Martín López, Jefe de Compras, proyecto Q3 2026."</p>
+                <p style="margin-top:10px; color: #666; font-size:0.8rem;">Cargo, volumen, ubicación, urgencia, contexto. Esto sí vale una llamada.</p>
+            </div>
+        </div>
 
-        <h3>A. Chau al formulario de contacto genérico, hola a los formularios inteligentes</h3>
-        <p>En lugar de tener un único formulario aburrido de "Nombre, Email, Mensaje", creá formularios segmentados según lo que el cliente busca. Probá el siguiente formulario de ejemplo para ver cómo funciona:</p>
+        <div class="bloque-tip">
+            <div class="icon"><i class="fa-solid fa-lightbulb"></i></div>
+            <p><strong>Acción concreta:</strong> Reuníte hoy con tu equipo comercial y definan 3 a 5 preguntas cuya respuesta convierte una consulta en "caliente". Esas preguntas tienen que estar en tu formulario web. Nada más, nada menos.</p>
+        </div>
 
+        <p>Los sectores que mejor responden a este enfoque en Argentina:</p>
+        <ul>
+            <li>🏭 Metalúrgicas y fabricantes de equipos industriales</li>
+            <li>🚛 Empresas de logística y transporte de cargas</li>
+            <li>⚙️ Proveedores de servicios técnicos (mantenimiento, calibración)</li>
+            <li>🌾 Agroindustria y procesamiento de alimentos</li>
+            <li>🔧 Fabricantes de repuestos y autopartes</li>
+        </ul>
+    </div>
+
+    <div class="paso-divider"></div>
+
+    <!-- PASO 2 -->
+    <div class="paso" id="paso2">
+        <div class="paso-header">
+            <div class="paso-num">2</div>
+            <h2>Formularios inteligentes que filtran solos</h2>
+        </div>
+
+        <p>El error más común: un único formulario genérico de "Nombre, Email, Mensaje" para todos los productos y servicios. Eso no filtra nada y genera exactamente el tipo de consulta que describimos arriba.</p>
+        <p>La solución son los <strong>formularios segmentados dinámicos</strong>: según lo que el visitante selecciona, aparecen preguntas específicas para ese producto o servicio. Probá el ejemplo interactivo:</p>
+
+        <!-- FORMULARIO DEMO -->
         <div class="demo-form">
-            <h3>⚙️ Demo de Formulario Inteligente</h3>
-            <p><em>Seleccioná el producto para ver cómo cambian las preguntas técnicas.</em></p>
-            
+            <h4>⚙️ Demo — Formulario de Cotización Inteligente</h4>
+            <p>Seleccioná el rubro para ver cómo cambian los campos técnicos.</p>
+
             <div class="form-group">
-                <label for="producto">¿En qué equipo estás interesado?</label>
-                <select id="producto" onchange="mostrarCampos()">
-                    <option value="">-- Seleccioná una opción --</option>
-                    <option value="calderas">Calderas Industriales</option>
-                    <option value="intercambiadores">Intercambiadores de Calor</option>
+                <label for="rubro">¿Qué servicio o producto necesitás?</label>
+                <select id="rubro" onchange="mostrarCampos()">
+                    <option value="">— Seleccioná una opción —</option>
+                    <option value="metalurgia">Equipos metalúrgicos / industriales</option>
+                    <option value="logistica">Logística y transporte de cargas</option>
+                    <option value="servicios">Servicios técnicos y mantenimiento</option>
                 </select>
             </div>
 
-            <div id="campos-calderas" class="hidden">
+            <!-- METALURGIA -->
+            <div id="campos-metalurgia" class="hidden">
                 <div class="form-group">
-                    <label>Capacidad requerida (kg/h):</label>
-                    <input type="number" placeholder="Ej: 10000">
+                    <label>Tipo de equipo requerido:</label>
+                    <select>
+                        <option>Caldera industrial</option>
+                        <option>Intercambiador de calor</option>
+                        <option>Silo / Tanque</option>
+                        <option>Estructura metálica</option>
+                    </select>
                 </div>
                 <div class="form-group">
-                    <label>Tipo de Combustible:</label>
+                    <label>Capacidad o dimensión aproximada:</label>
+                    <input type="text" placeholder="Ej: 10.000 kg/h · 50m³ · 20 toneladas">
+                </div>
+                <div class="form-group">
+                    <label>Industria de aplicación:</label>
+                    <input type="text" placeholder="Ej: Alimenticia, Petroquímica, Agro">
+                </div>
+            </div>
+
+            <!-- LOGÍSTICA -->
+            <div id="campos-logistica" class="hidden">
+                <div class="form-group">
+                    <label>Tipo de carga:</label>
                     <select>
-                        <option>Gas Natural</option>
-                        <option>Biomasa</option>
-                        <option>Gasoil</option>
+                        <option>Granel seco</option>
+                        <option>Granel líquido</option>
+                        <option>Carga fraccionada</option>
+                        <option>Carga refrigerada</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Origen → Destino:</label>
+                    <input type="text" placeholder="Ej: Santa Fe → Córdoba">
+                </div>
+                <div class="form-group">
+                    <label>Frecuencia estimada:</label>
+                    <select>
+                        <option>Puntual (una vez)</option>
+                        <option>Semanal</option>
+                        <option>Mensual</option>
+                        <option>Contrato anual</option>
                     </select>
                 </div>
             </div>
 
-            <div id="campos-intercambiadores" class="hidden">
+            <!-- SERVICIOS TÉCNICOS -->
+            <div id="campos-servicios" class="hidden">
                 <div class="form-group">
-                    <label>Tipo de fluido a tratar:</label>
-                    <input type="text" placeholder="Ej: Leche, Aceite, Agua">
+                    <label>Tipo de servicio:</label>
+                    <select>
+                        <option>Mantenimiento preventivo</option>
+                        <option>Reparación de urgencia</option>
+                        <option>Calibración y certificación</option>
+                        <option>Instalación de equipos</option>
+                    </select>
                 </div>
                 <div class="form-group">
-                    <label>Temperatura de trabajo estimada (°C):</label>
-                    <input type="number" placeholder="Ej: 80">
+                    <label>Equipo o sistema a intervenir:</label>
+                    <input type="text" placeholder="Ej: Compresor de 200HP · Línea de producción">
+                </div>
+                <div class="form-group">
+                    <label>Urgencia:</label>
+                    <select>
+                        <option>Inmediata (parada de planta)</option>
+                        <option>Esta semana</option>
+                        <option>Próximo mes</option>
+                        <option>Planificación anual</option>
+                    </select>
                 </div>
             </div>
 
-            <div class="form-group">
-                <label>Tu correo corporativo:</label>
-                <input type="email" placeholder="nombre@tuempresa.com">
+            <!-- COMUNES -->
+            <div id="campos-comunes" class="hidden">
+                <div class="form-group">
+                    <label>Tu nombre y cargo:</label>
+                    <input type="text" placeholder="Ej: Martín López — Jefe de Compras">
+                </div>
+                <div class="form-group">
+                    <label>Empresa y provincia:</label>
+                    <input type="text" placeholder="Ej: Aceros del Litoral — Santa Fe">
+                </div>
+                <div class="form-group">
+                    <label>WhatsApp de contacto:</label>
+                    <input type="tel" placeholder="+54 9 342 000 0000">
+                </div>
+                <button class="btn-demo" onclick="submitDemo()">Solicitar cotización técnica →</button>
+                <p class="demo-nota">* Este es un formulario de demo. En tu web real, los datos llegan directo a tu CRM y WhatsApp.</p>
             </div>
-            
-            <button class="cta-button" style="margin-top: 0; padding: 10px 20px;" onclick="window.location.href='contratar.html'">Solicitar Cotización</button>
-        </div>
-        <p class="micro-cta"><em>¿Te gustaría tener un formulario dinámico como este en tu web? <a href="contratar.html">Contanos sobre tu proyecto.</a></em></p>
-
-        <h3>B. Landing pages (páginas de aterrizaje) específicas</h3>
-        <p>No mandes todo el tráfico a la página de inicio de tu empresa. Creá páginas especiales, directas y al grano para cada línea de producto clave. Cada una debe tener su propio formulario, contenido técnico y casos de éxito.</p>
-        
-        <div class="highlight">
-            <strong>Ejemplo real del sector:</strong> Una metalúrgica fabricante de equipos para la industria láctea dejó de enviar tráfico a su "Home" y creó una página específica orientada solo a dueños de queserías. En apenas 3 meses, <strong>las consultas altamente calificadas aumentaron un 40%</strong>.
         </div>
 
-        <h2>Paso 3: Automatizá el primer contacto (Tu vendedor 24/7)</h2>
-        <p>Un gerente de planta o jefe de compras puede estar buscando proveedores a las 11 de la noche. Tu equipo no puede estar disponible 24/7, pero tu sistema sí.</p>
-        <ul>
-            <li><strong>Respuesta automática por Email:</strong> Agradecé el contacto, adjuntá un PDF con la ficha técnica y avisá que un asesor se comunicará en 24 horas hábiles.</li>
-            <li><strong>WhatsApp Business automatizado:</strong> Configurá respuestas rápidas para preguntas frecuentes sobre tiempos de fabricación o garantías.</li>
-        </ul>
-
-        <h2>Paso 4: Integrá tu web con un CRM (El paso donde la mayoría falla)</h2>
-        
-        <img src="crm.png" alt="Dashboard de CRM para metalúrgicas" class="article-img">
-
-        <p>Si los leads que llegan desde tu web quedan perdidos en una bandeja de entrada genérica (info@tuempresa.com), estás perdiendo plata. Conectá tu web directamente con un CRM.</p>
-        
-        <p>En <strong>Avanza Digital</strong> integramos tu web con tu CRM vía API. Esto significa: cuando un lead completa el formulario, <strong>automáticamente</strong> se crea un contacto en tu sistema, se asigna a un vendedor y se dispara un email de seguimiento. Sin planillas, sin pérdidas.</p>
-
-        <h2>Paso 5: Segmentá y hacé seguimiento en piloto automático</h2>
-        <p>No todos los clientes están listos para comprar hoy. Creá embudos de correo electrónico según el interés de cada lead. Si pidió información de silos, que reciba videos de instalaciones. Si pidió repuestos, el catálogo actualizado. Mientras el cliente evalúa opciones, tu sistema lo educa.</p>
-
-        <h2>Paso 6: Medí y optimizá sin parar</h2>
-        <div class="highlight">
-            "Automatizar no es instalar un software y olvidarse. Es un sistema vivo que mejora con el tiempo."
+        <div class="bloque-ejemplo">
+            <div class="label"><i class="fa-solid fa-industry"></i> Ejemplo real</div>
+            <p>Una empresa fabricante de equipos para la industria láctea dejó de enviar tráfico a su home y creó páginas separadas por línea de producto. En 3 meses, <strong>las consultas calificadas aumentaron un 40%</strong> y el tiempo de respuesta bajó de 2 días a 4 horas.</p>
         </div>
-        <p>Medí cuántos leads llegan, cuántos se convierten en ventas y de dónde vienen. Todo se puede ajustar para mejorar el rendimiento comercial de tu empresa.</p>
 
-        <div class="cta-box">
-            <h2>🚀 Tu web puede (y debe) ser tu mejor vendedor</h2>
-            <p>Automatizar la generación de leads no es "comprar tecnología", es una estrategia comercial indispensable. En <strong>Avanza Digital</strong> diseñamos ecosistemas de ventas y sistemas de automatización para PyMEs industriales. Entendemos tu negocio.</p>
-            <p>¿Querés que te ayudemos a implementarlo en tu empresa?</p>
-            <a href="contratar.html" class="cta-button">Solicitar Diagnóstico Gratuito</a>
+        <div class="micro-cta">
+            <p>¿Querés un formulario inteligente como este en tu web?</p>
+            <a href="index.html#contacto">Ver cómo lo implementamos →</a>
         </div>
-        
-        <p class="trust-badge">
-            📍 <em>Trabajamos con metalúrgicas de Rafaela, San Francisco y toda la región.</em>
-        </p>
     </div>
 
-    <footer>
-        <strong>Avanza Digital</strong> · <a href="https://avanzadigital.digital" target="_blank">avanzadigital.digital</a> · <a href="https://www.linkedin.com/in/ivan-galarza-365064205" target="_blank">LinkedIn de Iván Galarza</a>
-    </footer>
+    <div class="paso-divider"></div>
 
-    <script>
-        function mostrarCampos() {
-            var seleccion = document.getElementById("producto").value;
-            
-            // Ocultamos todos primero
-            document.getElementById("campos-calderas").classList.add("hidden");
-            document.getElementById("campos-intercambiadores").classList.add("hidden");
-            
-            // Mostramos el que corresponde
-            if (seleccion === "calderas") {
-                document.getElementById("campos-calderas").classList.remove("hidden");
-            } else if (seleccion === "intercambiadores") {
-                document.getElementById("campos-intercambiadores").classList.remove("hidden");
-            }
+    <!-- PASO 3 -->
+    <div class="paso" id="paso3">
+        <div class="paso-header">
+            <div class="paso-num">3</div>
+            <h2>Automatizá el primer contacto — tu vendedor 24/7</h2>
+        </div>
+
+        <p>Un gerente de planta o jefe de compras puede estar buscando proveedores a las 11 de la noche. Tu equipo no puede estar disponible a esa hora. Tu sistema, sí.</p>
+        <p>El primer contacto automático cumple tres funciones críticas:</p>
+        <ul>
+            <li><strong>Confirmación inmediata:</strong> El lead sabe que llegó su consulta y no va a buscar otra empresa.</li>
+            <li><strong>Precalificación:</strong> Podés pedir información adicional antes de que un vendedor intervenga.</li>
+            <li><strong>Educación:</strong> Mandás contenido técnico relevante mientras el cliente espera.</li>
+        </ul>
+
+        <div class="bloque-destacado">
+            <h4><i class="fa-brands fa-whatsapp" style="color:#4ade80;"></i> Respuesta automática por WhatsApp</h4>
+            <p>Configurás un mensaje que sale en menos de 60 segundos tras recibir una consulta. Ejemplo:<br><br>
+            <em style="color:#4ade80;">"Hola Martín, recibimos tu consulta sobre [caldera 10.000 kg/h]. En las próximas 2 horas hábiles te contacta nuestro equipo técnico. Mientras tanto, te mandamos nuestra ficha de equipos disponibles: [link]. — Avanza Digital"</em></p>
+        </div>
+
+        <div class="bloque-destacado" style="margin-top:16px;">
+            <h4><i class="fa-solid fa-envelope" style="color:#3b82f6;"></i> Email automático de bienvenida</h4>
+            <p>Sale al instante con el PDF técnico del producto consultado, tiempos de fabricación estándar y próximos pasos. No es spam — es información útil en el momento exacto que el cliente la necesita.</p>
+        </div>
+
+        <div class="bloque-alerta">
+            <div class="icon"><i class="fa-solid fa-clock"></i></div>
+            <p>El 78% de los compradores B2B elige al proveedor que responde primero. Si tardás 24 horas en responder, tu competidor ya cerró la reunión.</p>
+        </div>
+    </div>
+
+    <div class="paso-divider"></div>
+
+    <!-- PASO 4 -->
+    <div class="paso" id="paso4">
+        <div class="paso-header">
+            <div class="paso-num">4</div>
+            <h2>Integrá tu web con un CRM — el paso donde la mayoría falla</h2>
+        </div>
+
+        <p>Si los leads que llegan desde tu web quedan en una bandeja de entrada genérica como <strong>ventas@tuempresa.com</strong>, estás perdiendo plata. Sin CRM, dependés de que alguien recuerde responder, asignar y hacer seguimiento. Eso no escala.</p>
+
+        <p>Con la integración web → CRM, el proceso es automático:</p>
+
+        <div class="crm-flujo">
+            <div class="crm-paso">
+                <div class="icon">📋</div>
+                <p>Cliente completa formulario</p>
+            </div>
+            <div class="crm-flecha">→</div>
+            <div class="crm-paso">
+                <div class="icon">👤</div>
+                <p>Se crea contacto en el CRM</p>
+            </div>
+            <div class="crm-flecha">→</div>
+            <div class="crm-paso">
+                <div class="icon">📌</div>
+                <p>Se asigna a un vendedor</p>
+            </div>
+            <div class="crm-flecha">→</div>
+            <div class="crm-paso">
+                <div class="icon">📧</div>
+                <p>Se dispara email de bienvenida</p>
+            </div>
+            <div class="crm-flecha">→</div>
+            <div class="crm-paso">
+                <div class="icon">✅</div>
+                <p>Tarea de seguimiento creada</p>
+            </div>
+        </div>
+
+        <p>Todo eso ocurre en menos de 30 segundos sin que nadie lo haga manualmente. El vendedor solo ve la tarea en su pantalla y hace la llamada.</p>
+
+        <div class="bloque-ejemplo">
+            <div class="label"><i class="fa-solid fa-plug"></i> Herramientas que integramos</div>
+            <p>HubSpot, Pipedrive, Zoho CRM, Notion, Google Sheets avanzado. También integramos con ERP locales como <strong>Tango</strong> y <strong>SAP</strong> para empresas más complejas (Plan Industrial y Estratégico 360).</p>
+        </div>
+
+        <div class="micro-cta">
+            <p>¿Tu empresa no tiene CRM todavía?</p>
+            <a href="index.html#contacto">Te ayudamos a elegir e implementar el correcto →</a>
+        </div>
+    </div>
+
+    <div class="paso-divider"></div>
+
+    <!-- PASO 5 -->
+    <div class="paso" id="paso5">
+        <div class="paso-header">
+            <div class="paso-num">5</div>
+            <h2>Seguimiento automático por etapa del proceso</h2>
+        </div>
+
+        <p>No todos los clientes están listos para comprar hoy. En la industria, los ciclos de venta van de 3 semanas a 18 meses. La clave es no perder el contacto mientras el cliente evalúa opciones.</p>
+        <p>La solución son los <strong>flujos de nurturing</strong>: secuencias automáticas de emails y mensajes según en qué etapa del proceso está cada lead.</p>
+
+        <div class="bloque-destacado">
+            <h4>📬 Ejemplo de secuencia automática — 30 días</h4>
+            <ul style="margin:10px 0 0; padding-left:20px; color:#a1a1aa; font-size:0.9rem; line-height:1.8;">
+                <li><strong style="color:white;">Día 0:</strong> Email de bienvenida + ficha técnica del producto consultado.</li>
+                <li><strong style="color:white;">Día 3:</strong> Caso de éxito de una empresa del mismo sector.</li>
+                <li><strong style="color:white;">Día 7:</strong> Video corto explicando el proceso de implementación.</li>
+                <li><strong style="color:white;">Día 14:</strong> Comparativa vs soluciones tradicionales.</li>
+                <li><strong style="color:white;">Día 21:</strong> WhatsApp automático: "¿Llegaste a revisar la información que te mandamos?"</li>
+                <li><strong style="color:white;">Día 30:</strong> Oferta de diagnóstico gratuito con deadline.</li>
+            </ul>
+        </div>
+
+        <div class="bloque-tip">
+            <div class="icon"><i class="fa-solid fa-lightbulb"></i></div>
+            <p>El objetivo no es perseguir al cliente — es estar presente con información útil cuando está listo para decidir. La empresa que educa, gana.</p>
+        </div>
+    </div>
+
+    <div class="paso-divider"></div>
+
+    <!-- PASO 6 -->
+    <div class="paso" id="paso6">
+        <div class="paso-header">
+            <div class="paso-num">6</div>
+            <h2>Medí y mejorá sin parar</h2>
+        </div>
+
+        <p>Automatizar no es instalar y olvidarse. Es un sistema vivo que mejora con el tiempo. Las métricas que tenés que monitorear cada mes:</p>
+
+        <div class="metricas-grid">
+            <div class="metrica-card">
+                <div class="num">#1</div>
+                <p>Tasa de conversión<br>visita → lead</p>
+            </div>
+            <div class="metrica-card">
+                <div class="num">#2</div>
+                <p>Lead calificado vs<br>lead descartado</p>
+            </div>
+            <div class="metrica-card">
+                <div class="num">#3</div>
+                <p>Tiempo promedio<br>de primer respuesta</p>
+            </div>
+            <div class="metrica-card">
+                <div class="num">#4</div>
+                <p>Fuente de leads<br>(web / WA / referido)</p>
+            </div>
+            <div class="metrica-card">
+                <div class="num">#5</div>
+                <p>Tasa de cierre<br>lead → cliente</p>
+            </div>
+            <div class="metrica-card">
+                <div class="num">#6</div>
+                <p>Costo de adquisición<br>por cliente</p>
+            </div>
+        </div>
+
+        <div class="bloque-ejemplo">
+            <div class="label"><i class="fa-solid fa-chart-simple"></i> Referencia del mercado</div>
+            <p>Una web B2B industrial bien optimizada convierte entre el <strong>2% y el 5%</strong> del tráfico en leads. Si tu web tiene 300 visitas mensuales y no genera ni 3 consultas, hay un problema de conversión que se puede resolver.</p>
+        </div>
+
+        <p>Cada mes hay que revisar cuál formulario convierte más, qué email tiene mejor apertura y de dónde vienen los leads que terminan cerrando. Con esa info, el sistema se ajusta solo en pocas semanas.</p>
+    </div>
+
+    <!-- CTA FINAL -->
+    <div class="cta-final">
+        <span style="font-size:0.75rem; font-weight:700; letter-spacing:2px; text-transform:uppercase; color:#4ade80; display:block; margin-bottom:16px;">Avanza Digital</span>
+        <h2>Tu web puede (y debe) ser tu mejor vendedor</h2>
+        <p>Automatizar la generación de leads no es "comprar tecnología" — es una estrategia comercial. En Avanza Digital construimos este sistema completo para PYMES industriales con un pago único, sin alquiler mensual.</p>
+        <div class="cta-btns">
+            <a href="index.html#contacto" class="btn-primary-guia">Solicitar Diagnóstico Gratuito</a>
+            <a href="https://wa.me/5493424392759" target="_blank" class="btn-wa">
+                <i class="fa-brands fa-whatsapp"></i> Escribir por WhatsApp
+            </a>
+        </div>
+        <p style="font-size:0.8rem; color:#444; margin-top:20px; margin-bottom:0;">📍 Trabajamos con PYMES industriales de Santa Fe, Rosario, Córdoba y toda Argentina.</p>
+    </div>
+
+    <!-- AUTOR -->
+    <div class="autor-box">
+        <div class="autor-avatar"><i class="fa-solid fa-user-tie"></i></div>
+        <div class="autor-info">
+            <h4>Iván Galarza — Fundador de Avanza Digital</h4>
+            <span>ESPECIALISTA EN SISTEMAS COMERCIALES B2B</span>
+            <p>Desarrollamos sistemas de ventas digitales para PYMES industriales en Argentina. Nuestro enfoque no es el diseño estético, sino la eficiencia operativa del proceso comercial.</p>
+        </div>
+    </div>
+
+    <!-- RELACIONADOS -->
+    <div class="relacionados">
+        <h3>Otros recursos que te pueden interesar</h3>
+        <div class="rel-grid">
+            <a href="recursos.html" class="rel-card">
+                <span>Herramienta gratuita</span>
+                <h4>Calculadora de ineficiencia comercial — ¿cuánto perdés por mes?</h4>
+            </a>
+            <a href="alianzas.html" class="rel-card">
+                <span>Programa de aliados</span>
+                <h4>Convertí tu red en comisiones — Avanza Partner Network</h4>
+            </a>
+            <a href="index.html#servicios" class="rel-card">
+                <span>Nuestros planes</span>
+                <h4>Sistemas de ventas B2B desde USD 1.050 — pago único</h4>
+            </a>
+        </div>
+    </div>
+
+</main>
+
+<!-- FOOTER -->
+<footer>
+    <div class="container footer-content" style="flex-direction: column; text-align: center; gap: 20px;">
+        <div class="socials">
+            <a href="https://www.linkedin.com/in/ivan-galarza-365064205/" aria-label="LinkedIn" target="_blank"><i class="fa-brands fa-linkedin"></i></a>
+            <a href="https://www.instagram.com/avanzadigital4/" aria-label="Instagram" target="_blank"><i class="fa-brands fa-instagram"></i></a>
+            <a href="https://wa.me/5493424392759" aria-label="WhatsApp" target="_blank"><i class="fa-brands fa-whatsapp"></i></a>
+        </div>
+        <div style="margin-bottom: 20px; border-bottom: 1px solid #222; padding-bottom: 20px; width: 100%;">
+            <div style="display: flex; gap: 20px; justify-content: center; flex-wrap: wrap; font-size: 0.9rem;">
+                <a href="index.html" style="color:#aaa; text-decoration:none;">Inicio</a>
+                <a href="recursos.html" style="color:#aaa; text-decoration:none;">Recursos</a>
+                <a href="alianzas.html" style="color:#aaa; text-decoration:none;">Programa de Aliados</a>
+                <a href="blog.html" style="color:white; text-decoration:none; font-weight:600;">Blog</a>
+            </div>
+        </div>
+        <p style="color:#555; font-size:0.85rem;">© 2026 Avanza Digital — Sistemas de automatización B2B para PYMES industriales — Santa Fe, Argentina</p>
+    </div>
+</footer>
+
+<script>
+    function mostrarCampos() {
+        const val = document.getElementById('rubro').value;
+        ['metalurgia','logistica','servicios'].forEach(r => {
+            document.getElementById('campos-' + r).classList.add('hidden');
+        });
+        document.getElementById('campos-comunes').classList.add('hidden');
+        if (val) {
+            document.getElementById('campos-' + val).classList.remove('hidden');
+            document.getElementById('campos-comunes').classList.remove('hidden');
         }
-    </script>
+    }
+
+    function submitDemo() {
+        alert('✅ Este es un formulario de demo. En tu web real, este envío crea un contacto en tu CRM y dispara una respuesta automática por WhatsApp en menos de 60 segundos.');
+    }
+</script>
+<script src="script.js"></script>
 </body>
 </html>

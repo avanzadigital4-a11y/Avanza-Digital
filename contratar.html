@@ -40,6 +40,8 @@
                 
                 <input type="hidden" name="plan_seleccionado" id="planInput">
                 <input type="hidden" name="codigo_orden" id="orderId">
+                
+                <input type="hidden" name="precio_usd" id="precioInput">
 
                 <div class="form-group">
                     <label>Razón Social / Nombre Empresa</label>
@@ -84,14 +86,26 @@
         document.getElementById('planDisplay').innerText = plan;
         document.getElementById('planInput').value = plan;
 
-        // 3. Generar ID de Orden (Simulado en Frontend para referencia rápida)
+        // 3. EXTRAER EL PRECIO AUTOMÁTICAMENTE SEGÚN EL NOMBRE DEL PLAN
+        let precio = "0";
+        // Esta línea atrapa cualquier número que esté al lado de "USD" (ej: USD450 o USD7500)
+        let coincidencia = plan.match(/USD\s*(\d+)/i); 
+        
+        if (coincidencia) {
+            precio = coincidencia[1]; // Aquí guarda el 450 o el 7500
+        } else if (params.get('precio')) {
+            precio = params.get('precio'); // Plan B: por si en el futuro mandas el precio separado en la URL
+        }
+        
+        // Asignamos el precio extraído al campo oculto para que viaje en el formulario
+        document.getElementById('precioInput').value = precio;
+
+        // 4. Generar ID de Orden (Simulado en Frontend para referencia rápida)
         const year = new Date().getFullYear();
         const randomCode = Math.floor(1000 + Math.random() * 9000); 
         const orderCode = `AVZ-${year}-${randomCode}`;
         document.getElementById('orderId').value = orderCode;
     </script>
-<!-- Start of HubSpot Embed Code -->
 <script type="text/javascript" id="hs-script-loader" async defer src="//js.hs-scripts.com/51067454.js"></script>
-<!-- End of HubSpot Embed Code -->
 </body>
 </html>

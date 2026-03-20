@@ -1,0 +1,674 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Avanza Partner Portal</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><path d=%22M10 20 L40 50 L10 80 L30 80 L60 50 L30 20 Z%22 fill=%22%230044cc%22/><path d=%22M45 20 L75 50 L45 80 L65 80 L95 50 L65 20 Z%22 fill=%22%2300cccc%22/></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+<style>
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --bg:          #050505;
+    --bg2:         #0a0a0a;
+    --bg3:         #111111;
+    --border:      rgba(255,255,255,0.08);
+    --border-h:    rgba(255,255,255,0.15);
+    --primary:     #3b82f6;
+    --primary-h:   #2563eb;
+    --primary-glow:rgba(59,130,246,0.25);
+    --green:       #4ade80;
+    --green-bg:    rgba(74,222,128,0.1);
+    --green-border:rgba(74,222,128,0.25);
+    --red:         #ef4444;
+    --red-bg:      rgba(239,68,68,0.1);
+    --amber:       #f59e0b;
+    --amber-bg:    rgba(245,158,11,0.1);
+    --text:        #ffffff;
+    --text-muted:  #a1a1aa;
+    --text-dim:    #71717a;
+    --radius:      16px;
+    --radius-sm:   10px;
+  }
+
+  body {
+    font-family: 'Inter', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* LOGIN */
+  #login-screen {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    background: radial-gradient(ellipse at 50% 0%, rgba(59,130,246,0.08) 0%, transparent 60%);
+  }
+
+  .login-box {
+    background: rgba(255,255,255,0.03);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 48px 40px;
+    width: 100%;
+    max-width: 420px;
+    backdrop-filter: blur(20px);
+    animation: zoomIn 0.3s ease;
+  }
+
+  @keyframes zoomIn { from { transform: scale(0.96); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+
+  .login-logo { display: flex; align-items: center; gap: 10px; font-size: 1.4rem; font-weight: 800; margin-bottom: 6px; }
+  .login-logo i { color: var(--primary); }
+
+  .login-badge {
+    display: inline-block;
+    background: var(--green-bg);
+    border: 1px solid var(--green-border);
+    color: var(--green);
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    padding: 4px 12px;
+    border-radius: 50px;
+    margin-bottom: 32px;
+  }
+
+  .field { margin-bottom: 18px; }
+  .field label { display: block; font-size: 0.78rem; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
+
+  .field input {
+    width: 100%;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 13px 16px;
+    color: var(--text);
+    font-size: 0.95rem;
+    font-family: 'Inter', sans-serif;
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+
+  .field input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px var(--primary-glow); }
+  .field input::placeholder { color: var(--text-dim); }
+
+  .btn-primary {
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    width: 100%; background: var(--primary); color: white; border: none;
+    border-radius: var(--radius-sm); padding: 14px; font-size: 0.95rem;
+    font-weight: 700; font-family: 'Inter', sans-serif; cursor: pointer;
+    transition: background 0.2s, transform 0.1s, box-shadow 0.2s;
+    box-shadow: 0 4px 15px rgba(59,130,246,0.3);
+  }
+  .btn-primary:hover { background: var(--primary-h); box-shadow: 0 6px 20px rgba(59,130,246,0.4); }
+  .btn-primary:active { transform: scale(0.98); }
+
+  .login-error {
+    background: var(--red-bg); border: 1px solid rgba(239,68,68,0.3);
+    color: var(--red); font-size: 0.85rem; padding: 12px 16px;
+    border-radius: var(--radius-sm); margin-top: 14px; display: none;
+  }
+
+  .login-footer { margin-top: 28px; text-align: center; font-size: 0.8rem; color: var(--text-dim); }
+  .login-footer a { color: var(--primary); text-decoration: none; }
+
+  /* NAVBAR */
+  #portal-screen { display: none; }
+
+  .navbar-floating {
+    position: fixed; top: 16px; left: 50%; transform: translateX(-50%);
+    z-index: 1000; display: flex; align-items: center; gap: 16px;
+    background: rgba(10,10,10,0.85); border: 1px solid var(--border);
+    border-radius: 50px; padding: 10px 20px; backdrop-filter: blur(20px);
+    white-space: nowrap; max-width: calc(100vw - 32px);
+  }
+
+  .nav-logo { font-size: 1rem; font-weight: 800; color: white; text-decoration: none; display: flex; align-items: center; gap: 8px; }
+  .nav-logo i { color: var(--primary); }
+  .nav-divider { width: 1px; height: 20px; background: var(--border); }
+
+  .nav-nivel {
+    background: var(--green-bg); border: 1px solid var(--green-border);
+    color: var(--green); font-size: 0.72rem; font-weight: 700;
+    letter-spacing: 1px; padding: 4px 12px; border-radius: 50px;
+  }
+
+  .nav-nombre { font-size: 0.85rem; color: var(--text-muted); }
+
+  .btn-nav {
+    background: rgba(255,255,255,0.06); border: 1px solid var(--border);
+    color: var(--text-muted); padding: 7px 16px; border-radius: 50px;
+    font-size: 0.82rem; font-family: 'Inter', sans-serif; cursor: pointer; transition: all 0.2s;
+  }
+  .btn-nav:hover { border-color: var(--border-h); color: var(--text); }
+
+  /* LAYOUT */
+  .page-wrap { max-width: 1080px; margin: 0 auto; padding: 110px 24px 60px; }
+
+  /* TABS */
+  .tabs {
+    display: flex; gap: 4px; background: rgba(255,255,255,0.03);
+    border: 1px solid var(--border); border-radius: 50px; padding: 4px;
+    width: fit-content; margin-bottom: 36px; flex-wrap: wrap;
+  }
+
+  .tab-btn {
+    background: transparent; border: none; color: var(--text-muted);
+    padding: 9px 20px; border-radius: 50px; font-size: 0.88rem;
+    font-weight: 600; font-family: 'Inter', sans-serif; cursor: pointer;
+    transition: all 0.2s; display: flex; align-items: center; gap: 7px;
+  }
+  .tab-btn i { font-size: 0.8rem; }
+  .tab-btn.active { background: var(--primary); color: white; }
+  .tab-btn:not(.active):hover { color: var(--text); background: rgba(255,255,255,0.05); }
+
+  .tab-panel { display: none; animation: fadeIn 0.25s ease; }
+  .tab-panel.active { display: block; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+
+  /* BENTO */
+  .bento-box {
+    background: rgba(255,255,255,0.03); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 28px; transition: border-color 0.2s;
+  }
+  .bento-box:hover { border-color: var(--border-h); }
+
+  /* MÉTRICAS */
+  .metrics-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 24px; }
+
+  .metric-card {
+    background: rgba(255,255,255,0.03); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 24px;
+    transition: border-color 0.2s, transform 0.2s;
+  }
+  .metric-card:hover { border-color: var(--border-h); transform: translateY(-2px); }
+
+  .metric-icon { width: 38px; height: 38px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 0.9rem; margin-bottom: 16px; }
+  .metric-icon.blue { background: rgba(59,130,246,0.1); color: var(--primary); }
+  .metric-icon.green { background: var(--green-bg); color: var(--green); }
+  .metric-icon.amber { background: var(--amber-bg); color: var(--amber); }
+  .metric-icon.purple { background: rgba(168,85,247,0.1); color: #a855f7; }
+
+  .metric-label { font-size: 0.78rem; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
+  .metric-value { font-size: 2rem; font-weight: 800; letter-spacing: -1px; }
+  .metric-value.blue { color: var(--primary); }
+  .metric-value.green { color: var(--green); }
+  .metric-value.amber { color: var(--amber); }
+  .metric-sub { font-size: 0.78rem; color: var(--text-dim); margin-top: 6px; }
+
+  /* NIVEL */
+  .nivel-track { display: flex; align-items: flex-start; margin: 24px 0 16px; }
+  .nivel-step { flex: 1; text-align: center; position: relative; }
+
+  .nivel-dot {
+    width: 40px; height: 40px; border-radius: 50%;
+    background: rgba(255,255,255,0.05); border: 2px solid var(--border);
+    display: flex; align-items: center; justify-content: center;
+    margin: 0 auto 10px; font-size: 0.75rem; font-weight: 800;
+    color: var(--text-dim); position: relative; z-index: 2; transition: all 0.4s;
+  }
+
+  .nivel-step.done .nivel-dot { background: var(--green-bg); border-color: var(--green); color: var(--green); }
+  .nivel-step.active .nivel-dot { background: var(--primary); border-color: var(--primary); color: white; box-shadow: 0 0 20px rgba(59,130,246,0.4); }
+
+  .nivel-name { font-size: 0.72rem; font-weight: 700; color: var(--text-dim); }
+  .nivel-pct { font-size: 0.7rem; color: var(--text-dim); margin-top: 2px; }
+  .nivel-step.done .nivel-name, .nivel-step.done .nivel-pct { color: var(--green); }
+  .nivel-step.active .nivel-name, .nivel-step.active .nivel-pct { color: var(--primary); }
+
+  .nivel-line { flex: 1; height: 2px; background: var(--border); margin-top: 18px; transition: background 0.4s; }
+  .nivel-line.done { background: var(--green); }
+
+  /* REF CARD */
+  .ref-card {
+    background: rgba(59,130,246,0.05); border: 1px solid rgba(59,130,246,0.2);
+    border-radius: var(--radius); padding: 20px 24px;
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 16px; flex-wrap: wrap; margin-bottom: 24px;
+  }
+
+  .ref-label { font-size: 0.72rem; font-weight: 600; color: var(--text-dim); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px; }
+  .ref-url { font-size: 0.88rem; color: var(--primary); font-family: monospace; word-break: break-all; }
+
+  .btn-copy {
+    background: var(--primary); color: white; border: none;
+    border-radius: var(--radius-sm); padding: 10px 20px;
+    font-size: 0.85rem; font-weight: 700; font-family: 'Inter', sans-serif;
+    cursor: pointer; transition: background 0.2s; display: flex; align-items: center; gap: 7px; flex-shrink: 0;
+  }
+  .btn-copy:hover { background: var(--primary-h); }
+
+  /* TABLA */
+  .table-wrap { background: rgba(255,255,255,0.03); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; margin-bottom: 24px; }
+  .table-head { padding: 20px 24px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+  .table-head h3 { font-size: 0.95rem; font-weight: 700; }
+
+  table { width: 100%; border-collapse: collapse; }
+  th { text-align: left; padding: 12px 24px; font-size: 0.72rem; font-weight: 600; color: var(--text-dim); text-transform: uppercase; letter-spacing: 1px; border-bottom: 1px solid var(--border); }
+  td { padding: 15px 24px; font-size: 0.88rem; border-bottom: 1px solid rgba(255,255,255,0.04); color: var(--text-muted); }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: rgba(255,255,255,0.02); color: var(--text); }
+
+  .badge { display: inline-flex; align-items: center; gap: 5px; padding: 3px 10px; border-radius: 50px; font-size: 0.72rem; font-weight: 700; }
+  .badge-green { background: var(--green-bg); color: var(--green); border: 1px solid var(--green-border); }
+  .badge-blue { background: rgba(59,130,246,0.1); color: var(--primary); border: 1px solid rgba(59,130,246,0.2); }
+  .badge-amber { background: var(--amber-bg); color: var(--amber); border: 1px solid rgba(245,158,11,0.25); }
+  .badge-gray { background: rgba(255,255,255,0.05); color: var(--text-dim); border: 1px solid var(--border); }
+
+  .empty-state { text-align: center; padding: 56px 24px; color: var(--text-dim); }
+  .empty-state i { font-size: 2.5rem; margin-bottom: 16px; display: block; opacity: 0.4; }
+  .empty-state p { font-size: 0.9rem; line-height: 1.6; }
+
+  /* FORMULARIO */
+  .form-wrap { max-width: 640px; margin-bottom: 32px; }
+  .form-title { font-size: 1.2rem; font-weight: 800; margin-bottom: 6px; }
+  .form-desc { font-size: 0.88rem; color: var(--text-muted); margin-bottom: 24px; line-height: 1.6; }
+
+  .alert-box {
+    background: rgba(245,158,11,0.08); border: 1px solid rgba(245,158,11,0.25);
+    border-left: 3px solid var(--amber); border-radius: var(--radius-sm);
+    padding: 14px 16px; font-size: 0.85rem; color: var(--amber);
+    margin-bottom: 24px; line-height: 1.6; display: flex; gap: 10px;
+  }
+  .alert-box i { flex-shrink: 0; margin-top: 2px; }
+
+  .form-row { margin-bottom: 18px; }
+  .form-row label { display: block; font-size: 0.78rem; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
+
+  .form-row input, .form-row select, .form-row textarea {
+    width: 100%; background: rgba(255,255,255,0.04); border: 1px solid var(--border);
+    border-radius: var(--radius-sm); padding: 13px 16px; color: var(--text);
+    font-size: 0.92rem; font-family: 'Inter', sans-serif; outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s; resize: vertical;
+  }
+  .form-row select option { background: #111; color: white; }
+  .form-row input:focus, .form-row select:focus, .form-row textarea:focus { border-color: var(--primary); box-shadow: 0 0 0 3px var(--primary-glow); }
+  .form-row input::placeholder, .form-row textarea::placeholder { color: var(--text-dim); }
+
+  .success-box {
+    background: var(--green-bg); border: 1px solid var(--green-border);
+    border-radius: var(--radius-sm); padding: 16px 20px; color: var(--green);
+    font-size: 0.88rem; margin-top: 16px; line-height: 1.7; display: none;
+  }
+
+  /* PLANES COMISIONES */
+  .planes-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin-top: 20px; }
+
+  .plan-card {
+    background: rgba(255,255,255,0.03); border: 1px solid var(--border);
+    border-radius: var(--radius-sm); padding: 20px; transition: border-color 0.2s, transform 0.2s;
+  }
+  .plan-card:hover { border-color: rgba(59,130,246,0.3); transform: translateY(-2px); }
+  .plan-name { font-size: 0.9rem; font-weight: 700; margin-bottom: 4px; }
+  .plan-precio { font-size: 0.75rem; color: var(--text-dim); margin-bottom: 14px; }
+  .plan-comision { font-size: 1.6rem; font-weight: 800; color: var(--green); letter-spacing: -0.5px; }
+  .plan-pct { font-size: 0.72rem; color: var(--text-dim); margin-top: 4px; }
+
+  .spinner { display: inline-block; width: 15px; height: 15px; border: 2px solid rgba(255,255,255,0.3); border-top-color: white; border-radius: 50%; animation: spin 0.7s linear infinite; vertical-align: middle; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  @media (max-width: 600px) {
+    .login-box { padding: 32px 24px; }
+    .navbar-floating { padding: 8px 16px; gap: 10px; }
+    .nav-nombre { display: none; }
+    .page-wrap { padding: 100px 16px 48px; }
+    .tabs { width: 100%; border-radius: var(--radius-sm); }
+    .tab-btn { flex: 1; justify-content: center; padding: 9px 8px; font-size: 0.78rem; }
+    .metric-value { font-size: 1.6rem; }
+    th, td { padding: 12px 16px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="login-screen">
+  <div class="login-box">
+    <div class="login-logo"><i class="fa-solid fa-layer-group"></i> Avanza</div>
+    <div class="login-badge">Partner Network · Portal de Aliado</div>
+    <div class="field">
+      <label><i class="fa-solid fa-id-badge"></i> &nbsp;Tu código de aliado</label>
+      <input type="text" id="login-codigo" placeholder="AL-001" autocomplete="off" onkeydown="if(event.key==='Enter')iniciarSesion()">
+    </div>
+    <div class="field">
+      <label><i class="fa-solid fa-lock"></i> &nbsp;Contraseña</label>
+      <input type="password" id="login-pass" placeholder="••••••••" onkeydown="if(event.key==='Enter')iniciarSesion()">
+    </div>
+    <button class="btn-primary" onclick="iniciarSesion()" id="btn-login">
+      <i class="fa-solid fa-arrow-right-to-bracket"></i> Ingresar al portal
+    </button>
+    <div class="login-error" id="login-error"><i class="fa-solid fa-circle-exclamation"></i> &nbsp;Código no encontrado. Verificá con Avanza Digital.</div>
+    <div class="login-footer">¿No tenés tu código? Escribí al <a href="https://wa.me/5493424392759" target="_blank">+54 9 342 439 2759</a></div>
+  </div>
+</div>
+
+<!-- PORTAL -->
+<div id="portal-screen">
+  <nav class="navbar-floating">
+    <a href="index.html" class="nav-logo"><i class="fa-solid fa-layer-group"></i> Avanza</a>
+    <div class="nav-divider"></div>
+    <span class="nav-nivel" id="nav-nivel">BASIC</span>
+    <span class="nav-nombre" id="nav-nombre">Aliado</span>
+    <button class="btn-nav" onclick="cerrarSesion()"><i class="fa-solid fa-right-from-bracket"></i> Salir</button>
+  </nav>
+
+  <div class="page-wrap">
+    <div class="tabs">
+      <button class="tab-btn active" onclick="cambiarTab('dashboard',this)"><i class="fa-solid fa-chart-line"></i> Dashboard</button>
+      <button class="tab-btn" onclick="cambiarTab('referidos',this)"><i class="fa-solid fa-user-plus"></i> Referidos</button>
+      <button class="tab-btn" onclick="cambiarTab('ventas',this)"><i class="fa-solid fa-handshake"></i> Ventas</button>
+      <button class="tab-btn" onclick="cambiarTab('comisiones',this)"><i class="fa-solid fa-dollar-sign"></i> Comisiones</button>
+    </div>
+
+    <!-- DASHBOARD -->
+    <div id="tab-dashboard" class="tab-panel active">
+      <div class="metrics-grid">
+        <div class="metric-card">
+          <div class="metric-icon blue"><i class="fa-solid fa-layer-group"></i></div>
+          <div class="metric-label">Nivel actual</div>
+          <div class="metric-value blue" id="d-nivel">—</div>
+          <div class="metric-sub" id="d-comision">—</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-icon purple"><i class="fa-solid fa-chart-bar"></i></div>
+          <div class="metric-label">Ventas (6 meses)</div>
+          <div class="metric-value" id="d-ventas6m">—</div>
+          <div class="metric-sub" id="d-prox">—</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-icon green"><i class="fa-solid fa-circle-check"></i></div>
+          <div class="metric-label">Total ganado (USD)</div>
+          <div class="metric-value green" id="d-ganado">—</div>
+          <div class="metric-sub">Comisiones acreditadas</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-icon amber"><i class="fa-solid fa-clock"></i></div>
+          <div class="metric-label">Pendiente de cobro</div>
+          <div class="metric-value amber" id="d-pendiente">—</div>
+          <div class="metric-sub">Se paga en 24h del cierre</div>
+        </div>
+      </div>
+
+      <div class="bento-box" style="margin-bottom:24px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
+          <h3 style="font-size:0.95rem;font-weight:700;">Progreso de nivel</h3>
+          <span style="font-size:0.75rem;color:var(--text-dim);">Ventanas de 6 meses · Ascenso automático</span>
+        </div>
+        <div class="nivel-track">
+          <div class="nivel-step" id="step-BASIC"><div class="nivel-dot">B</div><div class="nivel-name">BASIC</div><div class="nivel-pct">10%</div></div>
+          <div class="nivel-line" id="line-1"></div>
+          <div class="nivel-step" id="step-SILVER"><div class="nivel-dot">S</div><div class="nivel-name">SILVER</div><div class="nivel-pct">12%</div></div>
+          <div class="nivel-line" id="line-2"></div>
+          <div class="nivel-step" id="step-PREMIUM"><div class="nivel-dot">P</div><div class="nivel-name">PREMIUM</div><div class="nivel-pct">15%</div></div>
+          <div class="nivel-line" id="line-3"></div>
+          <div class="nivel-step" id="step-ELITE"><div class="nivel-dot">E</div><div class="nivel-name">ELITE</div><div class="nivel-pct">20%</div></div>
+        </div>
+        <p style="font-size:0.85rem;color:var(--text-muted);" id="d-progreso-text">—</p>
+      </div>
+
+      <div class="ref-card">
+        <div>
+          <div class="ref-label"><i class="fa-solid fa-link"></i> &nbsp;Tu link de referido único</div>
+          <div class="ref-url" id="d-reflink">Cargando...</div>
+        </div>
+        <button class="btn-copy" onclick="copiarLink()"><i class="fa-solid fa-copy"></i> Copiar link</button>
+      </div>
+
+      <div class="bento-box">
+        <h3 style="font-size:0.95rem;font-weight:700;margin-bottom:16px;"><i class="fa-solid fa-star" style="color:var(--amber);"></i> &nbsp;Beneficios de tu nivel</h3>
+        <div id="d-beneficios" style="display:grid;gap:10px;"></div>
+      </div>
+    </div>
+
+    <!-- REFERIDOS -->
+    <div id="tab-referidos" class="tab-panel">
+      <div class="form-wrap">
+        <div class="bento-box">
+          <div class="form-title"><i class="fa-solid fa-user-plus" style="color:var(--primary);"></i> &nbsp;Registrar un referido</div>
+          <div class="form-desc">Completá este formulario <strong style="color:white;">antes de que el cliente pague</strong>. Es el único requisito obligatorio del contrato para que la venta te sea atribuida.</div>
+          <div class="alert-box">
+            <i class="fa-solid fa-triangle-exclamation"></i>
+            <span><strong>Regla crítica:</strong> Si el cliente paga antes de que lo registres acá, la venta no puede atribuirse a tu cuenta. Registrá primero, confirmá el pago después.</span>
+          </div>
+          <div class="form-row">
+            <label>Nombre completo del cliente o empresa</label>
+            <input type="text" id="ref-nombre" placeholder="Ej: Metalúrgica San Martín S.A.">
+          </div>
+          <div class="form-row">
+            <label>Plan elegido</label>
+            <select id="ref-plan">
+              <option value="">— Seleccioná un plan —</option>
+              <option value="Plan Base">Plan Base — USD 1.050</option>
+              <option value="Plan Pro">Plan Pro — USD 2.900</option>
+              <option value="Plan Industrial">Plan Industrial — USD 4.900</option>
+              <option value="Estrategico 360">Estratégico 360 — USD 7.500</option>
+            </select>
+          </div>
+          <div class="form-row">
+            <label>Notas (opcional)</label>
+            <textarea id="ref-notas" rows="3" placeholder="Ej: El cliente evalúa Plan Pro e Industrial, pide demo esta semana..."></textarea>
+          </div>
+          <button class="btn-primary" id="btn-ref" onclick="registrarReferido()" style="max-width:300px;">
+            <i class="fa-solid fa-paper-plane"></i> Registrar referido ahora
+          </button>
+          <div class="success-box" id="ref-success"></div>
+        </div>
+      </div>
+      <div class="table-wrap">
+        <div class="table-head"><h3><i class="fa-solid fa-list-check" style="color:var(--primary);"></i> &nbsp;Mis referidos registrados</h3></div>
+        <div id="tabla-referidos"></div>
+      </div>
+    </div>
+
+    <!-- VENTAS -->
+    <div id="tab-ventas" class="tab-panel">
+      <div class="table-wrap">
+        <div class="table-head"><h3><i class="fa-solid fa-handshake" style="color:var(--green);"></i> &nbsp;Historial de ventas confirmadas</h3></div>
+        <div id="tabla-ventas"></div>
+      </div>
+    </div>
+
+    <!-- COMISIONES -->
+    <div id="tab-comisiones" class="tab-panel">
+      <div class="bento-box" style="margin-bottom:24px;">
+        <h3 style="font-size:0.95rem;font-weight:700;margin-bottom:4px;"><i class="fa-solid fa-calculator" style="color:var(--primary);"></i> &nbsp;Tus comisiones según nivel actual</h3>
+        <p style="font-size:0.82rem;color:var(--text-muted);margin-bottom:0;">Valores para pago único. Comisiones recurrentes: 10% mensual mientras el cliente esté activo.</p>
+        <div class="planes-grid" id="planes-grid"></div>
+      </div>
+      <div class="table-wrap">
+        <div class="table-head"><h3><i class="fa-solid fa-receipt" style="color:var(--amber);"></i> &nbsp;Detalle de comisiones</h3></div>
+        <div id="tabla-comisiones"></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+const API = 'http://127.0.0.1:8000';
+let aliado = null;
+
+const PLANES = { 'Plan Base':1050, 'Plan Pro':2900, 'Plan Industrial':4900, 'Estrategico 360':7500 };
+
+const BENEFICIOS = {
+  BASIC:   ['Kit de bienvenida incluido','Brochure comercial oficial','Guión de ventas','Soporte por email'],
+  SILVER:  ['Todo lo de BASIC','Bono USD 50 en tu primera venta','Acceso al grupo WhatsApp de aliados'],
+  PREMIUM: ['Todo lo de SILVER','Badge Aliado Oficial','WhatsApp directo con asesor de Avanza'],
+  ELITE:   ['Todo lo de PREMIUM','Directorio web como consultor','Sesión estratégica trimestral con Iván'],
+};
+
+function pct(n) { return {BASIC:0.10,SILVER:0.12,PREMIUM:0.15,ELITE:0.20}[n]||0.10; }
+
+async function iniciarSesion() {
+  const codigo = document.getElementById('login-codigo').value.trim().toUpperCase();
+  const btn = document.getElementById('btn-login');
+  const err = document.getElementById('login-error');
+  err.style.display = 'none';
+  if (!codigo) { err.style.display = 'block'; return; }
+  btn.innerHTML = '<span class="spinner"></span> Verificando...';
+  btn.disabled = true;
+  try {
+    const res = await fetch(`${API}/aliados/${codigo}`);
+    if (!res.ok) throw new Error();
+    aliado = await res.json();
+    document.getElementById('login-screen').style.display = 'none';
+    document.getElementById('portal-screen').style.display = 'block';
+    cargarTodo();
+  } catch { err.style.display = 'block'; }
+  btn.innerHTML = '<i class="fa-solid fa-arrow-right-to-bracket"></i> Ingresar al portal';
+  btn.disabled = false;
+}
+
+function cerrarSesion() {
+  aliado = null;
+  document.getElementById('portal-screen').style.display = 'none';
+  document.getElementById('login-screen').style.display = 'flex';
+  document.getElementById('login-codigo').value = '';
+  document.getElementById('login-pass').value = '';
+}
+
+async function cargarTodo() {
+  try { const res = await fetch(`${API}/aliados/${aliado.codigo}`); aliado = await res.json(); } catch {}
+  renderDashboard(); renderReferidos(); renderVentas(); renderComisiones();
+}
+
+function renderDashboard() {
+  const nivel = aliado.nivel_calculado || aliado.nivel_actual || 'BASIC';
+  const p = Math.round(pct(nivel)*100);
+  const v6 = aliado.ventas_6m || 0;
+  document.getElementById('nav-nivel').textContent = nivel;
+  document.getElementById('nav-nombre').textContent = (aliado.nombre||'').split(' ')[0];
+  document.getElementById('d-nivel').textContent = nivel;
+  document.getElementById('d-comision').textContent = `${p}% de comisión`;
+  document.getElementById('d-ventas6m').textContent = v6;
+  document.getElementById('d-ganado').textContent = `USD ${Math.round(aliado.total_ganado||0).toLocaleString()}`;
+  document.getElementById('d-pendiente').textContent = `USD ${Math.round(aliado.total_pendiente||0).toLocaleString()}`;
+  document.getElementById('d-reflink').textContent = aliado.link_ref || '';
+
+  const proxMap = {BASIC:'SILVER (1 venta)',SILVER:'PREMIUM (2 ventas)',PREMIUM:'ELITE (5 ventas)',ELITE:'¡Nivel máximo!'};
+  document.getElementById('d-prox').textContent = `→ Próximo: ${proxMap[nivel]}`;
+
+  const faltan = Math.max({BASIC:1,SILVER:2,PREMIUM:5,ELITE:0}[nivel]-v6, 0);
+  document.getElementById('d-progreso-text').innerHTML = nivel==='ELITE'
+    ? `<i class="fa-solid fa-trophy" style="color:var(--amber);"></i> ¡Nivel máximo alcanzado! Tenés el <strong style="color:white;">20%</strong> en todos los planes.`
+    : `Te ${faltan===1?'falta':'faltan'} <strong style="color:white;">${faltan} ${faltan===1?'venta':'ventas'}</strong> para llegar a <strong style="color:var(--primary);">${proxMap[nivel]}</strong>.`;
+
+  const orden = ['BASIC','SILVER','PREMIUM','ELITE'];
+  const idx = orden.indexOf(nivel);
+  orden.forEach((n,i) => {
+    const s = document.getElementById(`step-${n}`);
+    s.className = 'nivel-step' + (i<idx?' done':i===idx?' active':'');
+    if (i<3) document.getElementById(`line-${i+1}`).className = 'nivel-line'+(i<idx?' done':'');
+  });
+
+  document.getElementById('d-beneficios').innerHTML = (BENEFICIOS[nivel]||BENEFICIOS.BASIC).map(b=>
+    `<div style="display:flex;align-items:center;gap:10px;font-size:0.88rem;color:var(--text-muted);">
+      <i class="fa-solid fa-circle-check" style="color:var(--green);font-size:0.8rem;flex-shrink:0;"></i> ${b}
+    </div>`
+  ).join('');
+}
+
+function copiarLink() {
+  navigator.clipboard.writeText(document.getElementById('d-reflink').textContent).then(()=>{
+    const btn = document.querySelector('.btn-copy');
+    btn.innerHTML='<i class="fa-solid fa-check"></i> ¡Copiado!';
+    setTimeout(()=>{ btn.innerHTML='<i class="fa-solid fa-copy"></i> Copiar link'; },2500);
+  });
+}
+
+function renderReferidos() {
+  const refs = aliado.referidos||[];
+  const el = document.getElementById('tabla-referidos');
+  if (!refs.length) { el.innerHTML=`<div class="empty-state"><i class="fa-solid fa-user-plus"></i><p>Todavía no registraste ningún referido.<br>Usá el formulario de arriba <strong style="color:white;">antes de que el cliente pague</strong>.</p></div>`; return; }
+  el.innerHTML=`<table><thead><tr><th>Cliente / Empresa</th><th>Plan</th><th>Fecha</th><th>Confirmado</th><th>Estado</th></tr></thead><tbody>${refs.map(r=>`<tr>
+    <td style="color:var(--text);font-weight:600;">${r.cliente}</td><td>${r.plan}</td><td>${r.fecha}</td>
+    <td>${r.confirmado?'<span class="badge badge-green"><i class="fa-solid fa-check"></i> Confirmado</span>':'<span class="badge badge-gray">Pendiente</span>'}</td>
+    <td>${r.convertido?'<span class="badge badge-green"><i class="fa-solid fa-handshake"></i> Venta cerrada</span>':'<span class="badge badge-blue"><i class="fa-solid fa-clock"></i> En proceso</span>'}</td>
+  </tr>`).join('')}</tbody></table>`;
+}
+
+function renderVentas() {
+  const ventas = aliado.ventas||[];
+  const el = document.getElementById('tabla-ventas');
+  if (!ventas.length) { el.innerHTML=`<div class="empty-state"><i class="fa-solid fa-handshake"></i><p>Todavía no tenés ventas confirmadas.<br>Cuando Avanza registre tu primera venta, aparecerá acá.</p></div>`; return; }
+  el.innerHTML=`<table><thead><tr><th>Cliente</th><th>Plan</th><th>Valor (USD)</th><th>Tu comisión</th><th>Estado</th><th>Fecha</th></tr></thead><tbody>${ventas.map(v=>`<tr>
+    <td style="color:var(--text);font-weight:600;">${v.cliente}</td><td>${v.plan}</td>
+    <td>USD ${v.valor.toLocaleString()}</td>
+    <td style="color:var(--green);font-weight:800;">USD ${Math.round(v.comision).toLocaleString()}</td>
+    <td>${v.pagada?'<span class="badge badge-green"><i class="fa-solid fa-circle-check"></i> Pagada</span>':'<span class="badge badge-amber"><i class="fa-solid fa-clock"></i> Pendiente 24hs</span>'}</td>
+    <td>${v.fecha||'—'}</td>
+  </tr>`).join('')}</tbody></table>`;
+}
+
+function renderComisiones() {
+  const nivel = aliado.nivel_calculado||aliado.nivel_actual||'BASIC';
+  const p = pct(nivel);
+  document.getElementById('planes-grid').innerHTML = Object.entries(PLANES).map(([plan,precio])=>`
+    <div class="plan-card">
+      <div class="plan-name">${plan}</div>
+      <div class="plan-precio">Precio: USD ${precio.toLocaleString()}</div>
+      <div class="plan-comision">USD ${Math.round(precio*p).toLocaleString()}</div>
+      <div class="plan-pct">Nivel ${nivel} · ${Math.round(p*100)}%</div>
+    </div>`).join('');
+
+  const ventas = aliado.ventas||[];
+  const el = document.getElementById('tabla-comisiones');
+  if (!ventas.length) { el.innerHTML=`<div class="empty-state"><i class="fa-solid fa-receipt"></i><p>Las comisiones de tus ventas confirmadas aparecerán acá.</p></div>`; return; }
+  const totalGanado = ventas.reduce((s,v)=>s+v.comision,0);
+  const pendiente = ventas.filter(v=>!v.pagada).reduce((s,v)=>s+v.comision,0);
+  el.innerHTML=`<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:16px;padding:20px 24px;border-bottom:1px solid var(--border);">
+    <div><div style="font-size:0.72rem;font-weight:600;color:var(--text-dim);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;">Total ganado</div><div style="font-size:1.6rem;font-weight:800;color:var(--green);">USD ${Math.round(totalGanado).toLocaleString()}</div></div>
+    <div><div style="font-size:0.72rem;font-weight:600;color:var(--text-dim);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;">Pendiente</div><div style="font-size:1.6rem;font-weight:800;color:var(--amber);">USD ${Math.round(pendiente).toLocaleString()}</div></div>
+  </div>
+  <table><thead><tr><th>Cliente</th><th>Plan</th><th>Comisión</th><th>Estado</th></tr></thead><tbody>${ventas.map(v=>`<tr>
+    <td style="color:var(--text);font-weight:600;">${v.cliente}</td><td>${v.plan}</td>
+    <td style="color:var(--green);font-weight:800;">USD ${Math.round(v.comision).toLocaleString()}</td>
+    <td>${v.pagada?'<span class="badge badge-green"><i class="fa-solid fa-check"></i> Pagada</span>':'<span class="badge badge-amber"><i class="fa-solid fa-clock"></i> Pendiente 24hs</span>'}</td>
+  </tr>`).join('')}</tbody></table>`;
+}
+
+async function registrarReferido() {
+  const nombre = document.getElementById('ref-nombre').value.trim();
+  const plan = document.getElementById('ref-plan').value;
+  const notas = document.getElementById('ref-notas').value;
+  const btn = document.getElementById('btn-ref');
+  const success = document.getElementById('ref-success');
+  if (!nombre||!plan) { alert('Completá el nombre del cliente y el plan elegido.'); return; }
+  btn.innerHTML='<span class="spinner"></span> Registrando...'; btn.disabled=true; success.style.display='none';
+  try {
+    const res = await fetch(`${API}/referidos/registrar?ref_code=${aliado.ref_code}&nombre_cliente=${encodeURIComponent(nombre)}&plan_elegido=${encodeURIComponent(plan)}&notas=${encodeURIComponent(notas)}`,{method:'POST'});
+    const data = await res.json();
+    if (res.ok) {
+      const comision = Math.round(PLANES[plan]*pct(aliado.nivel_calculado||'BASIC'));
+      success.innerHTML=`<i class="fa-solid fa-circle-check"></i> <strong>Referido registrado.</strong> Avanza Digital fue notificado.<br>Comisión estimada si se cierra: <strong>USD ${comision.toLocaleString()}</strong>.`;
+      success.style.display='block';
+      document.getElementById('ref-nombre').value='';
+      document.getElementById('ref-plan').value='';
+      document.getElementById('ref-notas').value='';
+      setTimeout(cargarTodo,800);
+    } else { alert(data.detail||'Error al registrar'); }
+  } catch { alert('Error de conexión. Verificá que el servidor esté activo.'); }
+  btn.innerHTML='<i class="fa-solid fa-paper-plane"></i> Registrar referido ahora'; btn.disabled=false;
+}
+
+function cambiarTab(tab,btn) {
+  document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById(`tab-${tab}`).classList.add('active');
+  btn.classList.add('active');
+}
+</script>
+</body>
+</html>
