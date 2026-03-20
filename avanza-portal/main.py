@@ -45,6 +45,10 @@ def generar_codigo_aliado(db: Session) -> str:
 def root():
     return {"status": "Avanza Partner Portal activo", "version": "1.0"}
 
+@app.get("/health")
+def health():
+    return {"status": "ok"}
+
 
 # ─── ENDPOINTS DE ALIADOS ────────────────────────────────────────────────────
 
@@ -166,7 +170,7 @@ def registrar_referido(
     notas: str = "",
     db: Session = Depends(get_db)
 ):
-    """El aliado registra un prospecto ANTES de que pague — paso crítico del contrato"""
+    """El aliado registra un prospecto ANTES de que pague"""
     aliado = db.query(Aliado).filter(Aliado.ref_code == ref_code).first()
     if not aliado:
         raise HTTPException(status_code=404, detail="Código de referido inválido")
@@ -197,7 +201,7 @@ def registrar_referido(
 
 @app.get("/referidos/pendientes")
 def referidos_pendientes(db: Session = Depends(get_db)):
-    """Lista referidos que aún no tuvieron acuse de recibo — para admin"""
+    """Lista referidos sin acuse de recibo — para admin"""
     pendientes = db.query(Referido).filter(Referido.acuse_recibo == False).all()
     return [
         {
@@ -262,13 +266,11 @@ def registrar_venta(
     )
     db.add(venta)
 
-    # Marcar referido como convertido si viene de uno
     if referido_id:
         ref = db.query(Referido).filter(Referido.id == referido_id).first()
         if ref:
             ref.convertido = True
 
-    # Actualizar nivel del aliado automáticamente
     aliado.nivel = aliado.nivel_calculado
     db.commit()
 
@@ -280,7 +282,6 @@ def registrar_venta(
         "plan": plan,
         "valor_usd": valor,
         "comision_usd": comision_usd,
-        "bono_primera_venta": comision_usd == 1 and aliado.nivel == "SILVER",
     }
 
 

@@ -169,26 +169,38 @@ def importar():
         }
 
         try:
-            res = requests.post(f"{API}/aliados/crear", params=params, timeout=10)
-            data = res.json()
+            res = requests.post(
+                f"{API}/aliados/crear",
+                json=params,
+                timeout=10
+            )
+
+            # Intentar parsear JSON
+            try:
+                data = res.json()
+            except ValueError:
+                print(f"  ❌ ERROR {res.status_code} — {a['nombre']} (respuesta no JSON)")
+                print(f"     Respuesta: {res.text[:200]}")
+                fallidos += 1
+                continue
 
             if res.status_code == 200:
                 print(f"  ✅ {data['codigo']} — {a['nombre']}")
                 print(f"     Link: {data['link_ref']}")
                 exitosos += 1
+
             elif "Ya existe" in str(data.get("detail", "")):
                 print(f"  ⚠️  SALTADO — {a['nombre']} (ya existe en el sistema)")
                 saltados += 1
+
             else:
-                print(f"  ❌ ERROR — {a['nombre']}: {data.get('detail','Error desconocido')}")
+                print(f"  ❌ ERROR {res.status_code} — {a['nombre']}")
+                print(f"     Detalle: {data.get('detail', 'No detail')}")
+                print(f"     Respuesta completa: {data}")
                 fallidos += 1
 
-        except requests.exceptions.ConnectionError:
-            print(f"\n❌ No se puede conectar con el servidor.")
-            print("   Asegurate de que esté corriendo: uvicorn main:app --reload")
-            return
         except Exception as e:
-            print(f"  ❌ ERROR — {a['nombre']}: {str(e)}")
+            print(f"  ❌ EXCEPCIÓN — {a['nombre']}: {str(e)}")
             fallidos += 1
 
         time.sleep(0.1)  # pequeña pausa entre requests
@@ -203,7 +215,6 @@ def importar():
     if exitosos > 0:
         print(f"\n🎉 ¡Listo! Los aliados ya están en el sistema.")
         print(f"   Abrí admin.html y verificalos en la tab Aliados.\n")
-
 
 if __name__ == "__main__":
     importar()
