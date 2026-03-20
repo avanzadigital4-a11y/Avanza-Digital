@@ -3,12 +3,24 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 import os
 
-# En Railway el directorio actual no tiene permisos de escritura.
-# /tmp siempre es escribible en cualquier entorno.
-DB_PATH = os.environ.get("DATABASE_PATH", "/tmp/avanza.db")
-DATABASE_URL = f"sqlite:///{DB_PATH}"
+# Railway inyecta DATABASE_URL automáticamente cuando agregás PostgreSQL.
+# Si no existe (desarrollo local), cae a SQLite en /tmp.
+DATABASE_URL = os.environ.get("DATABASE_URL")
 
-engine = create_engine(DATABASE_URL, connect_args={"check_same_thread": False})
+if DATABASE_URL:
+    # Railway a veces pone "postgres://" en lugar de "postgresql://"
+    # SQLAlchemy 2.x solo acepta "postgresql://"
+    if DATABASE_URL.startswith("postgres://"):
+        DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
+    engine = create_engine(DATABASE_URL)
+else:
+    # Fallback local
+    DB_PATH = "/tmp/avanza.db"
+    engine = create_engine(
+        f"sqlite:///{DB_PATH}",
+        connect_args={"check_same_thread": False}
+    )
+
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
 
