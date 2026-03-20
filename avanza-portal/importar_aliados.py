@@ -7,7 +7,7 @@ Ejecutar desde la carpeta avanza-portal:
 import requests
 import time
 
-API = "http://127.0.0.1:8000"
+API = "https://avanza-digital-production.up.railway.app"
 
 # Los 15 aliados del Excel
 ALIADOS = [
