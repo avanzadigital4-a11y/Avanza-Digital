@@ -1,8 +1,12 @@
 from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
+import os
 
-DATABASE_URL = "sqlite:///./avanza.db"
+# En Railway el directorio actual no tiene permisos de escritura.
+# /tmp siempre es escribible en cualquier entorno.
+DB_PATH = os.environ.get("DATABASE_PATH", "/tmp/avanza.db")
+DATABASE_URL = f"sqlite:///{DB_PATH}"
 
 engine = create_engine(DATABASE_URL, connect_args={"check_same_thread": False})
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
