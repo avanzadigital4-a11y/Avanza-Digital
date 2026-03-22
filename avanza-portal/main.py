@@ -148,7 +148,6 @@ def ver_aliado(codigo: str, db: Session = Depends(get_db)):
         ],
         "ventas": [
             {
-                "id": v.id,
                 "cliente": v.nombre_cliente,
                 "plan": v.plan,
                 "valor": v.valor_usd,
@@ -162,6 +161,49 @@ def ver_aliado(codigo: str, db: Session = Depends(get_db)):
 
 
 # ─── ENDPOINTS DE REFERIDOS ──────────────────────────────────────────────────
+
+@app.post("/aliados/{codigo}/suspender")
+def suspender_aliado(codigo: str, db: Session = Depends(get_db)):
+    """Admin suspende/da de baja a un aliado — desaparece de todas las listas"""
+    aliado = db.query(Aliado).filter(Aliado.codigo == codigo).first()
+    if not aliado:
+        raise HTTPException(status_code=404, detail="Aliado no encontrado")
+    aliado.activo = False
+    db.commit()
+    return {"mensaje": f"Aliado {aliado.nombre} suspendido correctamente"}
+
+@app.post("/aliados/{codigo}/activar")
+def activar_aliado(codigo: str, db: Session = Depends(get_db)):
+    """Admin reactiva un aliado suspendido"""
+    aliado = db.query(Aliado).filter(Aliado.codigo == codigo).first()
+    if not aliado:
+        raise HTTPException(status_code=404, detail="Aliado no encontrado")
+    aliado.activo = True
+    db.commit()
+    return {"mensaje": f"Aliado {aliado.nombre} reactivado correctamente"}
+
+@app.get("/aliados/suspendidos")
+def listar_suspendidos(db: Session = Depends(get_db)):
+    """Lista todos los aliados suspendidos/dados de baja"""
+    aliados = db.query(Aliado).filter(Aliado.activo == False).all()
+    return [
+        {
+            "codigo": a.codigo,
+            "nombre": a.nombre,
+            "email": a.email,
+            "whatsapp": a.whatsapp,
+            "ciudad": a.ciudad,
+            "nivel": a.nivel_calculado,
+            "ventas_6m": a.ventas_6_meses,
+            "total_ganado": round(a.total_ganado, 2),
+            "ref_code": a.ref_code,
+            "fecha_firma": a.fecha_firma,
+            "suspendido": True,
+        }
+        for a in aliados
+    ]
+
+
 
 @app.post("/referidos/registrar")
 def registrar_referido(
