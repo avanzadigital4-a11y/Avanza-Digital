@@ -160,17 +160,17 @@ def ver_aliado(codigo: str, db: Session = Depends(get_db)):
     }
 
 
-# ─── ENDPOINTS DE REFERIDOS ──────────────────────────────────────────────────
+# ─── ENDPOINTS DE ALIADOS — SUSPENDER / ACTIVAR / ELIMINAR ──────────────────
 
 @app.post("/aliados/{codigo}/suspender")
 def suspender_aliado(codigo: str, db: Session = Depends(get_db)):
-    """Admin suspende/da de baja a un aliado — desaparece de todas las listas"""
+    """Admin suspende un aliado — no puede entrar al portal"""
     aliado = db.query(Aliado).filter(Aliado.codigo == codigo).first()
     if not aliado:
         raise HTTPException(status_code=404, detail="Aliado no encontrado")
     aliado.activo = False
     db.commit()
-    return {"mensaje": f"Aliado {aliado.nombre} suspendido correctamente"}
+    return {"mensaje": f"Aliado {aliado.nombre} suspendido"}
 
 @app.post("/aliados/{codigo}/activar")
 def activar_aliado(codigo: str, db: Session = Depends(get_db)):
@@ -180,11 +180,24 @@ def activar_aliado(codigo: str, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="Aliado no encontrado")
     aliado.activo = True
     db.commit()
-    return {"mensaje": f"Aliado {aliado.nombre} reactivado correctamente"}
+    return {"mensaje": f"Aliado {aliado.nombre} reactivado"}
+
+@app.delete("/aliados/{codigo}/eliminar")
+def eliminar_aliado(codigo: str, db: Session = Depends(get_db)):
+    """Admin elimina permanentemente un aliado — libera el código para reusar"""
+    aliado = db.query(Aliado).filter(Aliado.codigo == codigo).first()
+    if not aliado:
+        raise HTTPException(status_code=404, detail="Aliado no encontrado")
+    # Eliminar referidos y ventas asociadas primero
+    db.query(Referido).filter(Referido.aliado_id == aliado.id).delete()
+    db.query(Venta).filter(Venta.aliado_id == aliado.id).delete()
+    db.delete(aliado)
+    db.commit()
+    return {"mensaje": f"Aliado {codigo} eliminado permanentemente"}
 
 @app.get("/aliados/suspendidos")
 def listar_suspendidos(db: Session = Depends(get_db)):
-    """Lista todos los aliados suspendidos/dados de baja"""
+    """Lista aliados suspendidos"""
     aliados = db.query(Aliado).filter(Aliado.activo == False).all()
     return [
         {
@@ -198,12 +211,11 @@ def listar_suspendidos(db: Session = Depends(get_db)):
             "total_ganado": round(a.total_ganado, 2),
             "ref_code": a.ref_code,
             "fecha_firma": a.fecha_firma,
-            "suspendido": True,
         }
         for a in aliados
     ]
 
-
+# ─── ENDPOINTS DE REFERIDOS ──────────────────────────────────────────────────
 
 @app.post("/referidos/registrar")
 def registrar_referido(
