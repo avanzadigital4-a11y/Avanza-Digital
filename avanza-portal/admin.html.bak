@@ -648,7 +648,6 @@ function pct(n) { return {BASIC:.10,SILVER:.12,PREMIUM:.15,ELITE:.20}[n]||.10; }
 
 let todosAliados = [];
 let _apiKey = '';
-let _apiKey = '';
 let todosReferidos = [];
 let todasVentas = [];
 let _confirmCallback = null;
@@ -681,14 +680,6 @@ function logoutAdmin() {
 document.getElementById('login-pass').addEventListener('keydown', e => { if(e.key==='Enter') loginAdmin(); });
 
 // ── DATOS ──────────────────────────────────────────────────────────────────
-
-
-// ── API FETCH CON AUTH ──────────────────────────────────────────────────────
-function apiFetch(url, opts = {}) {
-  opts.headers = opts.headers || {};
-  if (_apiKey) opts.headers['X-API-Key'] = _apiKey;
-  return fetch(url, opts);
-}
 
 
 // ── API FETCH CON AUTH ──────────────────────────────────────────────────────
