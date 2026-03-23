@@ -154,8 +154,16 @@
   }
   .btn-nav:hover { border-color: var(--border-h); color: var(--text); }
 
+  .btn-nav-support {
+    background: rgba(74,222,128,0.08); border: 1px solid var(--green-border);
+    color: var(--green); padding: 7px 16px; border-radius: 50px;
+    font-size: 0.82rem; font-family: 'Inter', sans-serif; cursor: pointer; transition: all 0.2s;
+    display: flex; align-items: center; gap: 6px; text-decoration: none;
+  }
+  .btn-nav-support:hover { background: rgba(74,222,128,0.15); }
+
   /* LAYOUT */
-  .page-wrap { max-width: 1080px; margin: 0 auto; padding: 110px 24px 60px; }
+  .page-wrap { max-width: 1080px; margin: 0 auto; padding: 110px 24px 100px; }
 
   /* TABS */
   .tabs {
@@ -185,6 +193,27 @@
   }
   .bento-box:hover { border-color: var(--border-h); }
 
+  /* WELCOME HEADER */
+  .welcome-header {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 24px; flex-wrap: wrap; gap: 12px;
+  }
+  .welcome-name { font-size: 1.5rem; font-weight: 800; }
+  .welcome-name span { color: var(--primary); }
+  .welcome-sub { font-size: 0.88rem; color: var(--text-muted); margin-top: 2px; }
+
+  /* MOTIVATIONAL BANNER */
+  .motive-banner {
+    display: flex; align-items: center; gap: 14px;
+    background: linear-gradient(135deg, rgba(59,130,246,0.08), rgba(74,222,128,0.05));
+    border: 1px solid rgba(59,130,246,0.18);
+    border-radius: var(--radius); padding: 16px 20px; margin-bottom: 24px;
+    animation: fadeIn 0.4s ease;
+  }
+  .motive-icon { font-size: 1.6rem; flex-shrink: 0; }
+  .motive-text { font-size: 0.9rem; color: var(--text-muted); line-height: 1.5; }
+  .motive-text strong { color: var(--text); }
+
   /* MÉTRICAS */
   .metrics-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 24px; }
 
@@ -194,6 +223,7 @@
     transition: border-color 0.2s, transform 0.2s;
   }
   .metric-card:hover { border-color: var(--border-h); transform: translateY(-2px); }
+  .metric-card.highlight { border-color: rgba(74,222,128,0.25); background: rgba(74,222,128,0.04); }
 
   .metric-icon { width: 38px; height: 38px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 0.9rem; margin-bottom: 16px; }
   .metric-icon.blue { background: rgba(59,130,246,0.1); color: var(--primary); }
@@ -208,28 +238,32 @@
   .metric-value.amber { color: var(--amber); }
   .metric-sub { font-size: 0.78rem; color: var(--text-dim); margin-top: 6px; }
 
-  /* NIVEL */
-  .nivel-track { display: flex; align-items: flex-start; margin: 24px 0 16px; }
-  .nivel-step { flex: 1; text-align: center; position: relative; }
+  /* PROGRESS BAR NIVEL */
+  .nivel-progress-wrap { margin: 20px 0 8px; }
+  .nivel-progress-labels { display: flex; justify-content: space-between; margin-bottom: 10px; }
+  .nivel-progress-label { font-size: 0.72rem; font-weight: 700; color: var(--text-dim); display: flex; flex-direction: column; align-items: center; gap: 3px; }
+  .nivel-progress-label.active { color: var(--primary); }
+  .nivel-progress-label.done { color: var(--green); }
+  .nivel-progress-label span { font-size: 0.65rem; opacity: .7; }
 
-  .nivel-dot {
-    width: 40px; height: 40px; border-radius: 50%;
-    background: rgba(255,255,255,0.05); border: 2px solid var(--border);
-    display: flex; align-items: center; justify-content: center;
-    margin: 0 auto 10px; font-size: 0.75rem; font-weight: 800;
-    color: var(--text-dim); position: relative; z-index: 2; transition: all 0.4s;
+  .nivel-bar-track {
+    height: 8px; background: rgba(255,255,255,0.06); border-radius: 50px;
+    overflow: hidden; position: relative;
   }
-
-  .nivel-step.done .nivel-dot { background: var(--green-bg); border-color: var(--green); color: var(--green); }
-  .nivel-step.active .nivel-dot { background: var(--primary); border-color: var(--primary); color: white; box-shadow: 0 0 20px rgba(59,130,246,0.4); }
-
-  .nivel-name { font-size: 0.72rem; font-weight: 700; color: var(--text-dim); }
-  .nivel-pct { font-size: 0.7rem; color: var(--text-dim); margin-top: 2px; }
-  .nivel-step.done .nivel-name, .nivel-step.done .nivel-pct { color: var(--green); }
-  .nivel-step.active .nivel-name, .nivel-step.active .nivel-pct { color: var(--primary); }
-
-  .nivel-line { flex: 1; height: 2px; background: var(--border); margin-top: 18px; transition: background 0.4s; }
-  .nivel-line.done { background: var(--green); }
+  .nivel-bar-fill {
+    height: 100%; border-radius: 50px;
+    background: linear-gradient(90deg, var(--green), var(--primary));
+    transition: width 0.8s cubic-bezier(.4,0,.2,1);
+    position: relative;
+  }
+  .nivel-bar-fill::after {
+    content: ''; position: absolute; right: 0; top: 50%;
+    transform: translateY(-50%);
+    width: 12px; height: 12px; border-radius: 50%;
+    background: white; box-shadow: 0 0 8px rgba(59,130,246,0.6);
+  }
+  .nivel-progress-caption { font-size: 0.84rem; color: var(--text-muted); margin-top: 12px; }
+  .nivel-progress-caption strong { color: var(--text); }
 
   /* REF CARD */
   .ref-card {
@@ -319,15 +353,72 @@
   .spinner { display: inline-block; width: 15px; height: 15px; border: 2px solid rgba(255,255,255,0.3); border-top-color: white; border-radius: 50%; animation: spin 0.7s linear infinite; vertical-align: middle; }
   @keyframes spin { to { transform: rotate(360deg); } }
 
+  /* FLOATING SUPPORT */
+  .float-support {
+    position: fixed; bottom: 28px; right: 24px; z-index: 900;
+    background: var(--green); color: #050505; border: none;
+    border-radius: 50px; padding: 13px 20px; font-size: 0.85rem; font-weight: 800;
+    font-family: 'Inter', sans-serif; cursor: pointer;
+    box-shadow: 0 6px 24px rgba(74,222,128,0.35);
+    display: flex; align-items: center; gap: 8px;
+    text-decoration: none; transition: transform 0.2s, box-shadow 0.2s;
+    animation: popIn 0.5s 1s cubic-bezier(.4,0,.2,1) both;
+  }
+  .float-support:hover { transform: translateY(-3px); box-shadow: 0 10px 32px rgba(74,222,128,0.45); }
+  @keyframes popIn { from{transform:scale(0.5) translateY(20px);opacity:0} to{transform:scale(1) translateY(0);opacity:1} }
+
+  /* ONBOARDING MODAL */
+  .modal-overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.9); backdrop-filter: blur(8px);
+    z-index: 9999; display: none; align-items: center; justify-content: center; padding: 20px;
+  }
+  .modal-overlay.open { display: flex; }
+
+  .onboarding-box {
+    background: #0d0d0d; border: 1px solid rgba(59,130,246,0.25);
+    border-radius: var(--radius); padding: 0; width: 100%; max-width: 560px;
+    position: relative; animation: zoomIn 0.3s ease; overflow: hidden;
+  }
+
+  .onboard-header {
+    background: linear-gradient(135deg, rgba(59,130,246,0.12), rgba(74,222,128,0.06));
+    border-bottom: 1px solid var(--border); padding: 28px 32px 24px;
+    text-align: center;
+  }
+  .onboard-logo { font-size: 2rem; margin-bottom: 8px; }
+  .onboard-title { font-size: 1.3rem; font-weight: 800; margin-bottom: 6px; }
+  .onboard-sub { font-size: 0.88rem; color: var(--text-muted); }
+
+  .onboard-steps { padding: 24px 32px; display: flex; flex-direction: column; gap: 16px; }
+  .onboard-step {
+    display: flex; align-items: flex-start; gap: 14px;
+    background: rgba(255,255,255,0.02); border: 1px solid var(--border);
+    border-radius: var(--radius-sm); padding: 16px;
+  }
+  .onboard-step-num {
+    width: 32px; height: 32px; border-radius: 50%;
+    background: var(--primary); color: white; font-size: 0.8rem; font-weight: 800;
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+  }
+  .onboard-step-title { font-size: 0.9rem; font-weight: 700; margin-bottom: 3px; }
+  .onboard-step-desc { font-size: 0.82rem; color: var(--text-muted); line-height: 1.5; }
+
+  .onboard-footer { padding: 0 32px 28px; }
+  .onboard-footer .btn-primary { border-radius: var(--radius-sm); }
+
   @media (max-width: 600px) {
     .login-box { padding: 32px 24px; }
     .navbar-floating { padding: 8px 16px; gap: 10px; }
     .nav-nombre { display: none; }
-    .page-wrap { padding: 100px 16px 48px; }
+    .btn-nav-support span { display: none; }
+    .page-wrap { padding: 100px 16px 100px; }
     .tabs { width: 100%; border-radius: var(--radius-sm); }
     .tab-btn { flex: 1; justify-content: center; padding: 9px 8px; font-size: 0.78rem; }
     .metric-value { font-size: 1.6rem; }
     th, td { padding: 12px 16px; }
+    .welcome-header { flex-direction: column; align-items: flex-start; }
+    .onboarding-box { max-height: 90vh; overflow-y: auto; }
+    .onboard-header, .onboard-steps, .onboard-footer { padding-left: 20px; padding-right: 20px; }
   }
 </style>
 </head>
@@ -361,10 +452,12 @@
     <div class="nav-divider"></div>
     <span class="nav-nivel" id="nav-nivel">BASIC</span>
     <span class="nav-nombre" id="nav-nombre">Aliado</span>
+    <a href="https://wa.me/5493424392759" target="_blank" class="btn-nav-support"><i class="fa-brands fa-whatsapp"></i> <span>Soporte</span></a>
     <button class="btn-nav" onclick="cerrarSesion()"><i class="fa-solid fa-right-from-bracket"></i> Salir</button>
   </nav>
 
   <div class="page-wrap">
+
     <div class="tabs">
       <button class="tab-btn active" onclick="cambiarTab('dashboard',this)"><i class="fa-solid fa-chart-line"></i> Dashboard</button>
       <button class="tab-btn" onclick="cambiarTab('referidos',this)"><i class="fa-solid fa-user-plus"></i> Referidos</button>
@@ -374,20 +467,24 @@
 
     <!-- DASHBOARD -->
     <div id="tab-dashboard" class="tab-panel active">
+
+      <!-- WELCOME HEADER -->
+      <div class="welcome-header">
+        <div>
+          <div class="welcome-name">Hola, <span id="d-firstname">aliado</span> 👋</div>
+          <div class="welcome-sub" id="d-welcome-sub">Nivel actual: — · Comisión: —</div>
+        </div>
+      </div>
+
+      <!-- MOTIVATIONAL BANNER -->
+      <div class="motive-banner" id="motive-banner">
+        <div class="motive-icon" id="motive-icon">🚀</div>
+        <div class="motive-text" id="motive-text">Cargando tu estado...</div>
+      </div>
+
+      <!-- MÉTRICAS GRANDES -->
       <div class="metrics-grid">
-        <div class="metric-card">
-          <div class="metric-icon blue"><i class="fa-solid fa-layer-group"></i></div>
-          <div class="metric-label">Nivel actual</div>
-          <div class="metric-value blue" id="d-nivel">—</div>
-          <div class="metric-sub" id="d-comision">—</div>
-        </div>
-        <div class="metric-card">
-          <div class="metric-icon purple"><i class="fa-solid fa-chart-bar"></i></div>
-          <div class="metric-label">Ventas (6 meses)</div>
-          <div class="metric-value" id="d-ventas6m">—</div>
-          <div class="metric-sub" id="d-prox">—</div>
-        </div>
-        <div class="metric-card">
+        <div class="metric-card highlight">
           <div class="metric-icon green"><i class="fa-solid fa-circle-check"></i></div>
           <div class="metric-label">Total ganado (USD)</div>
           <div class="metric-value green" id="d-ganado">—</div>
@@ -399,33 +496,50 @@
           <div class="metric-value amber" id="d-pendiente">—</div>
           <div class="metric-sub">Se paga en 24h del cierre</div>
         </div>
+        <div class="metric-card">
+          <div class="metric-icon purple"><i class="fa-solid fa-chart-bar"></i></div>
+          <div class="metric-label">Ventas (6 meses)</div>
+          <div class="metric-value" id="d-ventas6m">—</div>
+          <div class="metric-sub" id="d-prox">—</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-icon blue"><i class="fa-solid fa-users"></i></div>
+          <div class="metric-label">Referidos activos</div>
+          <div class="metric-value blue" id="d-refs-activos">—</div>
+          <div class="metric-sub">En proceso de cierre</div>
+        </div>
       </div>
 
-      <div class="bento-box" style="margin-bottom:24px;">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
-          <h3 style="font-size:0.95rem;font-weight:700;">Progreso de nivel</h3>
-          <span style="font-size:0.75rem;color:var(--text-dim);">Ventanas de 6 meses · Ascenso automático</span>
-        </div>
-        <div class="nivel-track">
-          <div class="nivel-step" id="step-BASIC"><div class="nivel-dot">B</div><div class="nivel-name">BASIC</div><div class="nivel-pct">10%</div></div>
-          <div class="nivel-line" id="line-1"></div>
-          <div class="nivel-step" id="step-SILVER"><div class="nivel-dot">S</div><div class="nivel-name">SILVER</div><div class="nivel-pct">12%</div></div>
-          <div class="nivel-line" id="line-2"></div>
-          <div class="nivel-step" id="step-PREMIUM"><div class="nivel-dot">P</div><div class="nivel-name">PREMIUM</div><div class="nivel-pct">15%</div></div>
-          <div class="nivel-line" id="line-3"></div>
-          <div class="nivel-step" id="step-ELITE"><div class="nivel-dot">E</div><div class="nivel-name">ELITE</div><div class="nivel-pct">20%</div></div>
-        </div>
-        <p style="font-size:0.85rem;color:var(--text-muted);" id="d-progreso-text">—</p>
-      </div>
-
+      <!-- REF LINK — siempre visible y destacado -->
       <div class="ref-card">
-        <div>
-          <div class="ref-label"><i class="fa-solid fa-link"></i> &nbsp;Tu link de referido único</div>
+        <div style="flex:1;">
+          <div class="ref-label"><i class="fa-solid fa-link"></i> &nbsp;Tu link de referido — compartilo con cada cliente</div>
           <div class="ref-url" id="d-reflink">Cargando...</div>
         </div>
-        <button class="btn-copy" onclick="copiarLink()"><i class="fa-solid fa-copy"></i> Copiar link</button>
+        <button class="btn-copy" onclick="copiarLink()"><i class="fa-solid fa-copy"></i> Copiar</button>
       </div>
 
+      <!-- PROGRESO DE NIVEL (barra) -->
+      <div class="bento-box" style="margin-bottom:24px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
+          <h3 style="font-size:0.95rem;font-weight:700;"><i class="fa-solid fa-trophy" style="color:var(--amber);margin-right:6px;"></i>Progreso de nivel</h3>
+          <span style="font-size:0.75rem;color:var(--text-dim);">Ventanas de 6 meses · Ascenso automático</span>
+        </div>
+        <div class="nivel-progress-wrap">
+          <div class="nivel-progress-labels">
+            <div class="nivel-progress-label" id="plbl-BASIC"><i class="fa-solid fa-circle" style="font-size:.4rem;"></i> BASIC <span>10%</span></div>
+            <div class="nivel-progress-label" id="plbl-SILVER"><i class="fa-solid fa-circle" style="font-size:.4rem;"></i> SILVER <span>12%</span></div>
+            <div class="nivel-progress-label" id="plbl-PREMIUM"><i class="fa-solid fa-circle" style="font-size:.4rem;"></i> PREMIUM <span>15%</span></div>
+            <div class="nivel-progress-label" id="plbl-ELITE"><i class="fa-solid fa-star" style="font-size:.55rem;"></i> ELITE <span>20%</span></div>
+          </div>
+          <div class="nivel-bar-track">
+            <div class="nivel-bar-fill" id="nivel-bar" style="width:0%;"></div>
+          </div>
+        </div>
+        <p class="nivel-progress-caption" id="d-progreso-text">—</p>
+      </div>
+
+      <!-- BENEFICIOS -->
       <div class="bento-box">
         <h3 style="font-size:0.95rem;font-weight:700;margin-bottom:16px;"><i class="fa-solid fa-star" style="color:var(--amber);"></i> &nbsp;Beneficios de tu nivel</h3>
         <div id="d-beneficios" style="display:grid;gap:10px;"></div>
@@ -496,6 +610,57 @@
   </div>
 </div>
 
+<!-- BOTÓN FLOTANTE SOPORTE -->
+<a href="https://wa.me/5493424392759" target="_blank" class="float-support" id="float-support" style="display:none;">
+  <i class="fa-brands fa-whatsapp"></i> Soporte Avanza
+</a>
+
+<!-- ONBOARDING MODAL (primer login) -->
+<div class="modal-overlay" id="modal-onboarding">
+  <div class="onboarding-box">
+    <div class="onboard-header">
+      <div class="onboard-logo">🎉</div>
+      <div class="onboard-title">¡Bienvenido al programa!</div>
+      <div class="onboard-sub">Todo lo que necesitás saber para empezar a ganar.</div>
+    </div>
+    <div class="onboard-steps">
+      <div class="onboard-step">
+        <div class="onboard-step-num">1</div>
+        <div>
+          <div class="onboard-step-title">Compartí tu link personal</div>
+          <div class="onboard-step-desc">En el Dashboard vas a encontrar tu link único. Enviáselo a cada cliente potencial antes de que hablen con Avanza.</div>
+        </div>
+      </div>
+      <div class="onboard-step">
+        <div class="onboard-step-num">2</div>
+        <div>
+          <div class="onboard-step-title">Registrá el referido primero</div>
+          <div class="onboard-step-desc">Antes de que el cliente pague, usá la pestaña "Referidos" para registrarlo. Sin esto, la venta no se puede atribuir.</div>
+        </div>
+      </div>
+      <div class="onboard-step">
+        <div class="onboard-step-num">3</div>
+        <div>
+          <div class="onboard-step-title">Cobrás en 24hs del cierre</div>
+          <div class="onboard-step-desc">Cuando Avanza confirma la venta, tu comisión se procesa en 24 horas. Podés ver el estado en "Ventas" y "Comisiones".</div>
+        </div>
+      </div>
+      <div class="onboard-step">
+        <div class="onboard-step-num">4</div>
+        <div>
+          <div class="onboard-step-title">Subi de nivel acumulando ventas</div>
+          <div class="onboard-step-desc">Con 1 venta llegás a SILVER (12%), con 2 a PREMIUM (15%), con 5 a ELITE (20%). ¡El sistema sube tu nivel solo!</div>
+        </div>
+      </div>
+    </div>
+    <div class="onboard-footer">
+      <button class="btn-primary" onclick="cerrarOnboarding()">
+        <i class="fa-solid fa-rocket"></i> ¡Entendido, a vender!
+      </button>
+    </div>
+  </div>
+</div>
+
 <script>
 const API = 'https://avanza-digital-production.up.railway.app';
 let aliado = null;
@@ -513,20 +678,24 @@ function pct(n) { return {BASIC:0.10,SILVER:0.12,PREMIUM:0.15,ELITE:0.20}[n]||0.
 
 async function iniciarSesion() {
   const codigo = document.getElementById('login-codigo').value.trim().toUpperCase();
+  const pass   = document.getElementById('login-pass').value;
   const btn = document.getElementById('btn-login');
   const err = document.getElementById('login-error');
   err.style.display = 'none';
-  if (!codigo) { err.style.display = 'block'; return; }
+  if (!codigo || !pass) { err.style.display = 'block'; return; }
   btn.innerHTML = '<span class="spinner"></span> Verificando...';
   btn.disabled = true;
   try {
-    const res = await fetch(`${API}/aliados/${codigo}`);
+    const url = `${API}/aliados/login?codigo=${encodeURIComponent(codigo)}&password=${encodeURIComponent(pass)}`;
+    const res = await fetch(url, { method: 'POST' });
     if (!res.ok) throw new Error();
     aliado = await res.json();
     document.getElementById('login-screen').style.display = 'none';
     document.getElementById('portal-screen').style.display = 'block';
     cargarTodo();
-  } catch { err.style.display = 'block'; }
+  } catch {
+    err.style.display = 'block';
+  }
   btn.innerHTML = '<i class="fa-solid fa-arrow-right-to-bracket"></i> Ingresar al portal';
   btn.disabled = false;
 }
@@ -537,42 +706,104 @@ function cerrarSesion() {
   document.getElementById('login-screen').style.display = 'flex';
   document.getElementById('login-codigo').value = '';
   document.getElementById('login-pass').value = '';
+  document.getElementById('float-support').style.display = 'none';
 }
 
 async function cargarTodo() {
-  try { const res = await fetch(`${API}/aliados/${aliado.codigo}`); aliado = await res.json(); } catch {}
+  try { const res = await fetch(`${API}/aliados/${aliado.codigo}`); if(res.ok) aliado = await res.json(); } catch {}
   renderDashboard(); renderReferidos(); renderVentas(); renderComisiones();
+
+  // Mostrar botón flotante de soporte
+  document.getElementById('float-support').style.display = 'flex';
+
+  // Onboarding primer login
+  const key = `portal_onboarded_${aliado.codigo}`;
+  if (!localStorage.getItem(key)) {
+    setTimeout(() => document.getElementById('modal-onboarding').classList.add('open'), 600);
+  }
+}
+
+function cerrarOnboarding() {
+  document.getElementById('modal-onboarding').classList.remove('open');
+  if (aliado) localStorage.setItem(`portal_onboarded_${aliado.codigo}`, '1');
+}
+
+// Cierra modal si se hace click fuera
+document.getElementById('modal-onboarding').addEventListener('click', e => {
+  if (e.target === document.getElementById('modal-onboarding')) cerrarOnboarding();
+});
+
+function getMotivationalMsg(aliado) {
+  const v6   = aliado.ventas_6m || 0;
+  const refs = (aliado.referidos||[]).filter(r=>!r.convertido).length;
+  const nivel = aliado.nivel_calculado || aliado.nivel_actual || 'BASIC';
+  if (nivel === 'ELITE') return { icon:'🏆', text:`<strong>¡Sos ELITE!</strong> Tenés el máximo 20% en todos los planes. Seguís rompiendo récords.` };
+  if (v6 >= 3) return { icon:'🔥', text:`<strong>${v6} ventas</strong> en los últimos 6 meses. Estás a ${5-v6} de nivel ELITE y 20% de comisión.` };
+  if (v6 === 2) return { icon:'⚡', text:`¡Bien! ${v6} ventas cerradas. <strong>Solo 1 más</strong> para llegar a PREMIUM (15%).` };
+  if (v6 === 1) return { icon:'💡', text:`<strong>Primera venta lograda.</strong> Agregá 1 más para subir a SILVER y ganar más en cada cierre.` };
+  if (refs > 0) return { icon:'👀', text:`Tenés <strong>${refs} referido${refs>1?'s':''} en proceso</strong>. El próximo cierre puede ser el tuyo. ¡Hacé seguimiento!` };
+  return { icon:'🚀', text:`<strong>Tu primer referido te espera.</strong> Registrá un cliente hoy y empezá a acumular comisiones.` };
 }
 
 function renderDashboard() {
   const nivel = aliado.nivel_calculado || aliado.nivel_actual || 'BASIC';
   const p = Math.round(pct(nivel)*100);
   const v6 = aliado.ventas_6m || 0;
+  const refsActivos = (aliado.referidos||[]).filter(r=>!r.convertido).length;
+
   document.getElementById('nav-nivel').textContent = nivel;
   document.getElementById('nav-nombre').textContent = (aliado.nombre||'').split(' ')[0];
-  document.getElementById('d-nivel').textContent = nivel;
-  document.getElementById('d-comision').textContent = `${p}% de comisión`;
+  document.getElementById('d-firstname').textContent = (aliado.nombre||'aliado').split(' ')[0];
+  document.getElementById('d-welcome-sub').textContent = `Nivel: ${nivel} · Comisión: ${p}% · Código: ${aliado.codigo}`;
   document.getElementById('d-ventas6m').textContent = v6;
   document.getElementById('d-ganado').textContent = `USD ${Math.round(aliado.total_ganado||0).toLocaleString()}`;
   document.getElementById('d-pendiente').textContent = `USD ${Math.round(aliado.total_pendiente||0).toLocaleString()}`;
+  document.getElementById('d-refs-activos').textContent = refsActivos;
   document.getElementById('d-reflink').textContent = aliado.link_ref || '';
 
   const proxMap = {BASIC:'SILVER (1 venta)',SILVER:'PREMIUM (2 ventas)',PREMIUM:'ELITE (5 ventas)',ELITE:'¡Nivel máximo!'};
   document.getElementById('d-prox').textContent = `→ Próximo: ${proxMap[nivel]}`;
 
-  const faltan = Math.max({BASIC:1,SILVER:2,PREMIUM:5,ELITE:0}[nivel]-v6, 0);
-  document.getElementById('d-progreso-text').innerHTML = nivel==='ELITE'
-    ? `<i class="fa-solid fa-trophy" style="color:var(--amber);"></i> ¡Nivel máximo alcanzado! Tenés el <strong style="color:white;">20%</strong> en todos los planes.`
-    : `Te ${faltan===1?'falta':'faltan'} <strong style="color:white;">${faltan} ${faltan===1?'venta':'ventas'}</strong> para llegar a <strong style="color:var(--primary);">${proxMap[nivel]}</strong>.`;
+  // Banner motivacional
+  const { icon, text } = getMotivationalMsg(aliado);
+  document.getElementById('motive-icon').textContent = icon;
+  document.getElementById('motive-text').innerHTML = text;
 
-  const orden = ['BASIC','SILVER','PREMIUM','ELITE'];
-  const idx = orden.indexOf(nivel);
-  orden.forEach((n,i) => {
-    const s = document.getElementById(`step-${n}`);
-    s.className = 'nivel-step' + (i<idx?' done':i===idx?' active':'');
-    if (i<3) document.getElementById(`line-${i+1}`).className = 'nivel-line'+(i<idx?' done':'');
+  // Barra de progreso
+  const nivelOrden = ['BASIC','SILVER','PREMIUM','ELITE'];
+  const maxVentas  = [1, 2, 5, Infinity];
+  const idx = nivelOrden.indexOf(nivel);
+  const prevMax = idx > 0 ? maxVentas[idx-1] : 0;
+  const nextMax = maxVentas[idx];
+  let pctBar = 0;
+  const segmentWidth = 100 / 3;
+
+  if (nivel === 'ELITE') {
+    pctBar = 100;
+  } else {
+    const ventasEnSegmento = Math.min(v6, nextMax) - prevMax;
+    const rangoSegmento = nextMax - prevMax;
+    const pctEnSegmento = Math.min(ventasEnSegmento / rangoSegmento, 1);
+    pctBar = idx * segmentWidth + pctEnSegmento * segmentWidth;
+  }
+
+  setTimeout(() => {
+    document.getElementById('nivel-bar').style.width = Math.max(pctBar, 2) + '%';
+  }, 200);
+
+  // Labels de la barra
+  nivelOrden.forEach((n, i) => {
+    const lbl = document.getElementById(`plbl-${n}`);
+    lbl.className = 'nivel-progress-label' + (i < idx ? ' done' : i === idx ? ' active' : '');
   });
 
+  // Caption de progreso
+  const faltan = Math.max(nextMax - v6, 0);
+  document.getElementById('d-progreso-text').innerHTML = nivel === 'ELITE'
+    ? `<i class="fa-solid fa-trophy" style="color:var(--amber);"></i> ¡Nivel máximo alcanzado! Tenés el <strong style="color:white;">20%</strong> en todos los planes.`
+    : `Te ${faltan===1?'falta':'faltan'} <strong style="color:white;">${faltan} ${faltan===1?'venta':'ventas'}</strong> para llegar a <strong style="color:var(--primary);">${proxMap[nivel].split(' ')[0]}</strong>.`;
+
+  // Beneficios
   document.getElementById('d-beneficios').innerHTML = (BENEFICIOS[nivel]||BENEFICIOS.BASIC).map(b=>
     `<div style="display:flex;align-items:center;gap:10px;font-size:0.88rem;color:var(--text-muted);">
       <i class="fa-solid fa-circle-check" style="color:var(--green);font-size:0.8rem;flex-shrink:0;"></i> ${b}
@@ -584,7 +815,7 @@ function copiarLink() {
   navigator.clipboard.writeText(document.getElementById('d-reflink').textContent).then(()=>{
     const btn = document.querySelector('.btn-copy');
     btn.innerHTML='<i class="fa-solid fa-check"></i> ¡Copiado!';
-    setTimeout(()=>{ btn.innerHTML='<i class="fa-solid fa-copy"></i> Copiar link'; },2500);
+    setTimeout(()=>{ btn.innerHTML='<i class="fa-solid fa-copy"></i> Copiar'; },2500);
   });
 }
 
@@ -592,11 +823,18 @@ function renderReferidos() {
   const refs = aliado.referidos||[];
   const el = document.getElementById('tabla-referidos');
   if (!refs.length) { el.innerHTML=`<div class="empty-state"><i class="fa-solid fa-user-plus"></i><p>Todavía no registraste ningún referido.<br>Usá el formulario de arriba <strong style="color:white;">antes de que el cliente pague</strong>.</p></div>`; return; }
-  el.innerHTML=`<table><thead><tr><th>Cliente / Empresa</th><th>Plan</th><th>Fecha</th><th>Confirmado</th><th>Estado</th></tr></thead><tbody>${refs.map(r=>`<tr>
-    <td style="color:var(--text);font-weight:600;">${r.cliente}</td><td>${r.plan}</td><td>${r.fecha}</td>
-    <td>${r.confirmado?'<span class="badge badge-green"><i class="fa-solid fa-check"></i> Confirmado</span>':'<span class="badge badge-gray">Pendiente</span>'}</td>
-    <td>${r.convertido?'<span class="badge badge-green"><i class="fa-solid fa-handshake"></i> Venta cerrada</span>':'<span class="badge badge-blue"><i class="fa-solid fa-clock"></i> En proceso</span>'}</td>
-  </tr>`).join('')}</tbody></table>`;
+  el.innerHTML=`<table><thead><tr><th>Cliente / Empresa</th><th>Plan</th><th>Comisión est.</th><th>Fecha</th><th>Confirmado</th><th>Estado</th></tr></thead><tbody>${refs.map(r=>{
+    const nivel = aliado.nivel_calculado || aliado.nivel_actual || 'BASIC';
+    const comEst = Math.round((PLANES[r.plan]||0)*pct(nivel));
+    return `<tr>
+      <td style="color:var(--text);font-weight:600;">${r.cliente}</td>
+      <td><span class="badge badge-blue">${r.plan}</span></td>
+      <td style="color:var(--green);font-weight:700;">${comEst>0?'USD '+comEst.toLocaleString():'—'}</td>
+      <td style="font-size:.82rem;color:var(--text-dim);">${r.fecha}</td>
+      <td>${r.confirmado?'<span class="badge badge-green"><i class="fa-solid fa-check"></i> Confirmado</span>':'<span class="badge badge-gray"><i class="fa-solid fa-clock"></i> Pendiente</span>'}</td>
+      <td>${r.convertido?'<span class="badge badge-green"><i class="fa-solid fa-handshake"></i> Venta cerrada</span>':'<span class="badge badge-blue"><i class="fa-solid fa-clock"></i> En proceso</span>'}</td>
+    </tr>`;
+  }).join('')}</tbody></table>`;
 }
 
 function renderVentas() {
@@ -608,7 +846,7 @@ function renderVentas() {
     <td>USD ${v.valor.toLocaleString()}</td>
     <td style="color:var(--green);font-weight:800;">USD ${Math.round(v.comision).toLocaleString()}</td>
     <td>${v.pagada?'<span class="badge badge-green"><i class="fa-solid fa-circle-check"></i> Pagada</span>':'<span class="badge badge-amber"><i class="fa-solid fa-clock"></i> Pendiente 24hs</span>'}</td>
-    <td>${v.fecha||'—'}</td>
+    <td style="font-size:.82rem;color:var(--text-dim);">${v.fecha||'—'}</td>
   </tr>`).join('')}</tbody></table>`;
 }
 

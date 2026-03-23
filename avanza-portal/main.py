@@ -1,17 +1,17 @@
-from fastapi import FastAPI, Depends, HTTPException, status
+from fastapi import FastAPI, Depends, HTTPException, Request, status
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
 from passlib.context import CryptContext
-from datetime import datetime
-import random, string
+from datetime import datetime, timedelta
+import random, string, os
 
 from database import engine, get_db, Base
 from models import Aliado, Admin, Venta, Referido, PLANES, NIVELES
 
-# Crear todas las tablas
 Base.metadata.create_all(bind=engine)
 
-app = FastAPI(title="Avanza Partner Portal", version="1.0")
+app = FastAPI(title="Avanza Partner Portal", version="1.1")
 
 app.add_middleware(
     CORSMiddleware,
@@ -22,359 +22,319 @@ app.add_middleware(
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
+# ─── API KEY ─────────────────────────────────────────────────────────────────
+ADMIN_API_KEY = os.environ.get("ADMIN_API_KEY", "")
 
-def hash_password(password: str) -> str:
-    return pwd_context.hash(password)
+RUTAS_ADMIN = {
+    ("POST",   "/aliados/crear"),
+    ("POST",   "/admin/setup"),
+    ("GET",    "/aliados"),
+    ("GET",    "/aliados/suspendidos"),
+    ("GET",    "/aliados/inactivos"),
+    ("PATCH",  "/aliados/{codigo}/nivel"),
+    ("GET",    "/referidos/pendientes"),
+    ("POST",   "/ventas/registrar"),
+    ("GET",    "/dashboard"),
+}
 
-def verify_password(plain: str, hashed: str) -> bool:
-    return pwd_context.verify(plain, hashed)
+def _es_ruta_admin(method: str, path: str) -> bool:
+    segmentos_path = path.rstrip("/").split("/")
+    for m, patron in RUTAS_ADMIN:
+        if m != method:
+            continue
+        segmentos_patron = patron.rstrip("/").split("/")
+        if len(segmentos_patron) != len(segmentos_path):
+            continue
+        if all(p == s or p.startswith("{") for p, s in zip(segmentos_patron, segmentos_path)):
+            return True
+    return False
 
-def generar_ref_code(nombre: str) -> str:
+@app.middleware("http")
+async def verificar_api_key(request: Request, call_next):
+    if _es_ruta_admin(request.method, request.url.path):
+        if not ADMIN_API_KEY:
+            return JSONResponse(status_code=503, content={"detail": "ADMIN_API_KEY no configurada."})
+        if request.headers.get("X-API-Key", "") != ADMIN_API_KEY:
+            return JSONResponse(status_code=401, content={"detail": "API key inválida."})
+    return await call_next(request)
+
+
+# ─── HELPERS ─────────────────────────────────────────────────────────────────
+
+def hash_password(p): return pwd_context.hash(p)
+def verify_password(plain, hashed): return pwd_context.verify(plain, hashed)
+
+def generar_ref_code(nombre):
     base = nombre.split()[0].lower()[:6]
-    sufijo = ''.join(random.choices(string.digits, k=4))
-    return f"{base}{sufijo}"
+    return f"{base}{''.join(random.choices(string.digits, k=4))}"
 
-def generar_codigo_aliado(db: Session) -> str:
-    total = db.query(Aliado).count()
-    return f"AL-{str(total + 1).zfill(3)}"
+def generar_codigo_aliado(db):
+    return f"AL-{str(db.query(Aliado).count() + 1).zfill(3)}"
 
 
-# ─── ENDPOINTS DE SALUD ─────────────────────────────────────────────────────
+# ─── SALUD ───────────────────────────────────────────────────────────────────
 
 @app.get("/")
-def root():
-    return {"status": "Avanza Partner Portal activo", "version": "1.0"}
+def root(): return {"status": "Avanza Partner Portal activo", "version": "1.1"}
 
 @app.get("/health")
-def health():
-    return {"status": "ok"}
+def health(): return {"status": "ok"}
 
 
-# ─── ENDPOINTS DE ALIADOS ────────────────────────────────────────────────────
+# ─── ADMIN SETUP ─────────────────────────────────────────────────────────────
 
-@app.post("/aliados/crear")
-def crear_aliado(
-    nombre: str,
-    email: str,
-    whatsapp: str,
-    ciudad: str,
-    dni: str = "",
-    perfil: str = "",
-    fecha_firma: str = "",
-    password: str = "avanza2026",
-    db: Session = Depends(get_db)
-):
-    """Crea un nuevo aliado (solo admin)"""
-    existe = db.query(Aliado).filter(Aliado.email == email).first()
-    if existe:
-        raise HTTPException(status_code=400, detail="Ya existe un aliado con ese email")
-
-    aliado = Aliado(
-        codigo=generar_codigo_aliado(db),
-        nombre=nombre,
-        email=email,
-        dni=dni,
-        whatsapp=whatsapp,
-        ciudad=ciudad,
-        perfil=perfil,
-        fecha_firma=fecha_firma or datetime.now().strftime("%d/%m/%Y"),
-        ref_code=generar_ref_code(nombre),
-        password_hash=hash_password(password),
-    )
-    db.add(aliado)
+@app.post("/admin/setup")
+def crear_admin_inicial(username: str, password: str, db: Session = Depends(get_db)):
+    """Crea el primer admin. Solo funciona si no existe ninguno. Requiere X-API-Key."""
+    if db.query(Admin).count() > 0:
+        raise HTTPException(400, "Ya existe al menos un admin.")
+    db.add(Admin(username=username, password_hash=hash_password(password)))
     db.commit()
-    db.refresh(aliado)
-    return {
-        "mensaje": f"Aliado {aliado.codigo} creado exitosamente",
-        "codigo": aliado.codigo,
-        "ref_code": aliado.ref_code,
-        "link_ref": f"https://avanzadigital.digital/alianzas?ref={aliado.ref_code}"
-    }
+    return {"mensaje": f"Admin '{username}' creado correctamente."}
+
+
+# ─── LOGIN ALIADO ─────────────────────────────────────────────────────────────
+
+@app.post("/aliados/login")
+def login_aliado(codigo: str, password: str, db: Session = Depends(get_db)):
+    """Portal del aliado: login con código + contraseña."""
+    a = db.query(Aliado).filter(Aliado.codigo == codigo, Aliado.activo == True).first()
+    if not a:
+        raise HTTPException(404, "Código no encontrado.")
+    if not verify_password(password, a.password_hash):
+        raise HTTPException(401, "Contraseña incorrecta.")
+    return _aliado_detalle(a)
+
+
+# ─── ALIADOS — RUTAS FIJAS (deben ir ANTES de /{codigo}) ─────────────────────
+
+@app.get("/aliados/suspendidos")
+def listar_suspendidos(db: Session = Depends(get_db)):
+    return [_aliado_row(a) for a in db.query(Aliado).filter(Aliado.activo == False).all()]
+
+
+@app.get("/aliados/inactivos")
+def aliados_inactivos(dias: int = 30, db: Session = Depends(get_db)):
+    """Aliados sin actividad en los últimos N días. Para sistema de reactivación."""
+    corte = datetime.now() - timedelta(days=dias)
+    resultado = []
+    for a in db.query(Aliado).filter(Aliado.activo == True).all():
+        ref_rec = any(r.registrado_en >= corte for r in a.referidos)
+        vta_rec = any(v.fecha_venta and v.fecha_venta >= corte for v in a.ventas if v.confirmada)
+        if not ref_rec and not vta_rec:
+            fechas = ([r.registrado_en for r in a.referidos] +
+                      [v.fecha_venta for v in a.ventas if v.confirmada and v.fecha_venta])
+            ultimo = max(fechas) if fechas else None
+            resultado.append({
+                "codigo": a.codigo, "nombre": a.nombre,
+                "whatsapp": a.whatsapp, "email": a.email,
+                "ciudad": a.ciudad, "perfil": a.perfil,
+                "nivel": a.nivel_calculado,
+                "dias_inactivo": (datetime.now() - ultimo).days if ultimo else None,
+                "total_ganado": round(a.total_ganado, 2),
+                "ventas_totales": len([v for v in a.ventas if v.confirmada]),
+                "fecha_firma": a.fecha_firma,
+            })
+    resultado.sort(key=lambda x: x["dias_inactivo"] or 9999, reverse=True)
+    return {"filtro_dias": dias, "total": len(resultado), "aliados": resultado}
 
 
 @app.get("/aliados")
 def listar_aliados(db: Session = Depends(get_db)):
-    """Lista todos los aliados con su estado actual"""
-    aliados = db.query(Aliado).filter(Aliado.activo == True).all()
-    return [
-        {
-            "codigo": a.codigo,
-            "nombre": a.nombre,
-            "email": a.email,
-            "whatsapp": a.whatsapp,
-            "ciudad": a.ciudad,
-            "perfil": a.perfil,
-            "nivel": a.nivel_calculado,
-            "ventas_6m": a.ventas_6_meses,
-            "total_ganado": round(a.total_ganado, 2),
-            "total_pendiente": round(a.total_pendiente, 2),
-            "ref_code": a.ref_code,
-            "fecha_firma": a.fecha_firma,
-        }
-        for a in aliados
-    ]
+    return [_aliado_row(a) for a in db.query(Aliado).filter(Aliado.activo == True).all()]
 
 
-@app.get("/aliados/{codigo}")
-def ver_aliado(codigo: str, db: Session = Depends(get_db)):
-    """Detalle completo de un aliado"""
-    aliado = db.query(Aliado).filter(Aliado.codigo == codigo).first()
-    if not aliado:
-        raise HTTPException(status_code=404, detail="Aliado no encontrado")
+@app.post("/aliados/crear")
+def crear_aliado(nombre: str, email: str, whatsapp: str, ciudad: str,
+                 dni: str = "", perfil: str = "", fecha_firma: str = "",
+                 password: str = "avanza2026", db: Session = Depends(get_db)):
+    if db.query(Aliado).filter(Aliado.email == email).first():
+        raise HTTPException(400, "Ya existe un aliado con ese email.")
+    a = Aliado(
+        codigo=generar_codigo_aliado(db), nombre=nombre, email=email,
+        dni=dni, whatsapp=whatsapp, ciudad=ciudad, perfil=perfil,
+        fecha_firma=fecha_firma or datetime.now().strftime("%d/%m/%Y"),
+        ref_code=generar_ref_code(nombre), password_hash=hash_password(password),
+    )
+    db.add(a); db.commit(); db.refresh(a)
     return {
-        "codigo": aliado.codigo,
-        "nombre": aliado.nombre,
-        "email": aliado.email,
-        "whatsapp": aliado.whatsapp,
-        "ciudad": aliado.ciudad,
-        "perfil": aliado.perfil,
-        "nivel_actual": aliado.nivel,
-        "nivel_calculado": aliado.nivel_calculado,
-        "comision_pct": aliado.comision_pct * 100,
-        "ventas_6m": aliado.ventas_6_meses,
-        "total_ventas": len(aliado.ventas),
-        "total_ganado": round(aliado.total_ganado, 2),
-        "total_pendiente": round(aliado.total_pendiente, 2),
-        "link_ref": f"https://avanzadigital.digital/alianzas?ref={aliado.ref_code}",
-        "referidos": [
-            {
-                "cliente": r.nombre_cliente,
-                "plan": r.plan_elegido,
-                "fecha": r.registrado_en.strftime("%d/%m/%Y"),
-                "confirmado": r.acuse_recibo,
-                "convertido": r.convertido,
-            }
-            for r in aliado.referidos
-        ],
-        "ventas": [
-            {
-                "cliente": v.nombre_cliente,
-                "plan": v.plan,
-                "valor": v.valor_usd,
-                "comision": v.comision_usd,
-                "pagada": v.pagada,
-                "fecha": v.fecha_venta.strftime("%d/%m/%Y") if v.fecha_venta else None,
-            }
-            for v in aliado.ventas if v.confirmada
-        ]
+        "mensaje": f"Aliado {a.codigo} creado", "codigo": a.codigo,
+        "ref_code": a.ref_code, "password_inicial": password,
+        "link_ref": f"https://avanzadigital.digital/alianzas?ref={a.ref_code}",
     }
 
 
-# ─── ENDPOINTS DE ALIADOS — SUSPENDER / ACTIVAR / ELIMINAR ──────────────────
+# ─── ALIADOS — RUTAS CON {codigo} ────────────────────────────────────────────
+
+@app.get("/aliados/{codigo}")
+def ver_aliado(codigo: str, db: Session = Depends(get_db)):
+    a = db.query(Aliado).filter(Aliado.codigo == codigo).first()
+    if not a: raise HTTPException(404, "Aliado no encontrado.")
+    return _aliado_detalle(a)
+
 
 @app.post("/aliados/{codigo}/suspender")
 def suspender_aliado(codigo: str, db: Session = Depends(get_db)):
-    """Admin suspende un aliado — no puede entrar al portal"""
-    aliado = db.query(Aliado).filter(Aliado.codigo == codigo).first()
-    if not aliado:
-        raise HTTPException(status_code=404, detail="Aliado no encontrado")
-    aliado.activo = False
-    db.commit()
-    return {"mensaje": f"Aliado {aliado.nombre} suspendido"}
+    a = _get_aliado(codigo, db)
+    a.activo = False; db.commit()
+    return {"mensaje": f"{a.nombre} suspendido."}
+
 
 @app.post("/aliados/{codigo}/activar")
 def activar_aliado(codigo: str, db: Session = Depends(get_db)):
-    """Admin reactiva un aliado suspendido"""
-    aliado = db.query(Aliado).filter(Aliado.codigo == codigo).first()
-    if not aliado:
-        raise HTTPException(status_code=404, detail="Aliado no encontrado")
-    aliado.activo = True
-    db.commit()
-    return {"mensaje": f"Aliado {aliado.nombre} reactivado"}
+    a = _get_aliado(codigo, db)
+    a.activo = True; db.commit()
+    return {"mensaje": f"{a.nombre} reactivado."}
+
 
 @app.delete("/aliados/{codigo}/eliminar")
 def eliminar_aliado(codigo: str, db: Session = Depends(get_db)):
-    """Admin elimina permanentemente un aliado — libera el código para reusar"""
-    aliado = db.query(Aliado).filter(Aliado.codigo == codigo).first()
-    if not aliado:
-        raise HTTPException(status_code=404, detail="Aliado no encontrado")
-    # Eliminar referidos y ventas asociadas primero
-    db.query(Referido).filter(Referido.aliado_id == aliado.id).delete()
-    db.query(Venta).filter(Venta.aliado_id == aliado.id).delete()
-    db.delete(aliado)
-    db.commit()
-    return {"mensaje": f"Aliado {codigo} eliminado permanentemente"}
+    a = _get_aliado(codigo, db)
+    db.query(Referido).filter(Referido.aliado_id == a.id).delete()
+    db.query(Venta).filter(Venta.aliado_id == a.id).delete()
+    db.delete(a); db.commit()
+    return {"mensaje": f"{codigo} eliminado permanentemente."}
 
-@app.get("/aliados/suspendidos")
-def listar_suspendidos(db: Session = Depends(get_db)):
-    """Lista aliados suspendidos"""
-    aliados = db.query(Aliado).filter(Aliado.activo == False).all()
-    return [
-        {
-            "codigo": a.codigo,
-            "nombre": a.nombre,
-            "email": a.email,
-            "whatsapp": a.whatsapp,
-            "ciudad": a.ciudad,
-            "nivel": a.nivel_calculado,
-            "ventas_6m": a.ventas_6_meses,
-            "total_ganado": round(a.total_ganado, 2),
-            "ref_code": a.ref_code,
-            "fecha_firma": a.fecha_firma,
-        }
-        for a in aliados
-    ]
 
-# ─── ENDPOINTS DE REFERIDOS ──────────────────────────────────────────────────
+@app.patch("/aliados/{codigo}/nivel")
+def cambiar_nivel(codigo: str, nivel: str, db: Session = Depends(get_db)):
+    if nivel not in NIVELES:
+        raise HTTPException(400, f"Nivel inválido. Opciones: {list(NIVELES.keys())}")
+    a = _get_aliado(codigo, db)
+    anterior = a.nivel; a.nivel = nivel; db.commit()
+    return {"mensaje": f"{a.nombre}: {anterior} → {nivel}", "comision": f"{NIVELES[nivel]['comision']*100:.0f}%"}
+
+
+# ─── REFERIDOS ───────────────────────────────────────────────────────────────
 
 @app.post("/referidos/registrar")
-def registrar_referido(
-    ref_code: str,
-    nombre_cliente: str,
-    plan_elegido: str,
-    notas: str = "",
-    db: Session = Depends(get_db)
-):
-    """El aliado registra un prospecto ANTES de que pague"""
-    aliado = db.query(Aliado).filter(Aliado.ref_code == ref_code).first()
-    if not aliado:
-        raise HTTPException(status_code=404, detail="Código de referido inválido")
-
-    if plan_elegido not in PLANES:
-        raise HTTPException(status_code=400, detail=f"Plan inválido. Opciones: {list(PLANES.keys())}")
-
-    referido = Referido(
-        aliado_id=aliado.id,
-        nombre_cliente=nombre_cliente,
-        plan_elegido=plan_elegido,
-        notas=notas,
-    )
-    db.add(referido)
-    db.commit()
-    db.refresh(referido)
+def registrar_referido(ref_code: str, nombre_cliente: str, plan_elegido: str,
+                        notas: str = "", db: Session = Depends(get_db)):
+    a = db.query(Aliado).filter(Aliado.ref_code == ref_code).first()
+    if not a: raise HTTPException(404, "Código de referido inválido.")
+    if plan_elegido not in PLANES: raise HTTPException(400, f"Plan inválido.")
+    r = Referido(aliado_id=a.id, nombre_cliente=nombre_cliente, plan_elegido=plan_elegido, notas=notas)
+    db.add(r); db.commit(); db.refresh(r)
     return {
-        "mensaje": "Referido registrado. Avanza Digital fue notificado.",
-        "id_referido": referido.id,
-        "aliado": aliado.nombre,
-        "cliente": nombre_cliente,
-        "plan": plan_elegido,
+        "mensaje": "Referido registrado.", "id_referido": r.id,
+        "aliado": a.nombre, "cliente": nombre_cliente, "plan": plan_elegido,
         "valor_plan": PLANES[plan_elegido],
-        "comision_estimada": round(PLANES[plan_elegido] * aliado.comision_pct, 2),
-        "registrado_en": referido.registrado_en.strftime("%d/%m/%Y %H:%M"),
+        "comision_estimada": round(PLANES[plan_elegido] * a.comision_pct, 2),
+        "registrado_en": r.registrado_en.strftime("%d/%m/%Y %H:%M"),
     }
 
 
 @app.get("/referidos/pendientes")
 def referidos_pendientes(db: Session = Depends(get_db)):
-    """Lista referidos sin acuse de recibo — para admin"""
-    pendientes = db.query(Referido).filter(Referido.acuse_recibo == False).all()
     return [
-        {
-            "id": r.id,
-            "aliado": r.aliado.nombre,
-            "cliente": r.nombre_cliente,
-            "plan": r.plan_elegido,
-            "registrado_en": r.registrado_en.strftime("%d/%m/%Y %H:%M"),
-        }
-        for r in pendientes
+        {"id": r.id, "aliado": r.aliado.nombre, "aliado_codigo": r.aliado.codigo,
+         "cliente": r.nombre_cliente, "plan": r.plan_elegido,
+         "registrado_en": r.registrado_en.strftime("%d/%m/%Y %H:%M")}
+        for r in db.query(Referido).filter(Referido.acuse_recibo == False).all()
     ]
 
 
 @app.post("/referidos/{id}/confirmar")
 def confirmar_referido(id: int, db: Session = Depends(get_db)):
-    """Admin confirma que recibió el aviso del aliado"""
-    referido = db.query(Referido).filter(Referido.id == id).first()
-    if not referido:
-        raise HTTPException(status_code=404, detail="Referido no encontrado")
-    referido.acuse_recibo = True
-    db.commit()
-    return {"mensaje": f"Referido de '{referido.nombre_cliente}' confirmado"}
+    r = db.query(Referido).filter(Referido.id == id).first()
+    if not r: raise HTTPException(404, "Referido no encontrado.")
+    r.acuse_recibo = True; db.commit()
+    return {"mensaje": f"Referido de '{r.nombre_cliente}' confirmado."}
 
 
-# ─── ENDPOINTS DE VENTAS ─────────────────────────────────────────────────────
+# ─── VENTAS ──────────────────────────────────────────────────────────────────
 
 @app.post("/ventas/registrar")
-def registrar_venta(
-    codigo_aliado: str,
-    nombre_cliente: str,
-    plan: str,
-    modalidad_pago: str = "ARS MEP",
-    referido_id: int = None,
-    notas: str = "",
-    db: Session = Depends(get_db)
-):
-    """Admin registra una venta cerrada"""
-    aliado = db.query(Aliado).filter(Aliado.codigo == codigo_aliado).first()
-    if not aliado:
-        raise HTTPException(status_code=404, detail="Aliado no encontrado")
-
-    if plan not in PLANES:
-        raise HTTPException(status_code=400, detail=f"Plan inválido. Opciones: {list(PLANES.keys())}")
-
+def registrar_venta(codigo_aliado: str, nombre_cliente: str, plan: str,
+                    modalidad_pago: str = "ARS MEP", referido_id: int = None,
+                    notas: str = "", db: Session = Depends(get_db)):
+    a = _get_aliado(codigo_aliado, db)
+    if plan not in PLANES: raise HTTPException(400, "Plan inválido.")
     valor = PLANES[plan]
-    comision_pct = aliado.comision_pct
-    comision_usd = round(valor * comision_pct, 2)
-
-    venta = Venta(
-        aliado_id=aliado.id,
-        referido_id=referido_id,
-        nombre_cliente=nombre_cliente,
-        plan=plan,
-        valor_usd=valor,
-        comision_pct=comision_pct,
-        comision_usd=comision_usd,
-        confirmada=True,
-        pagada=False,
-        fecha_venta=datetime.now(),
-        modalidad_pago=modalidad_pago,
-        notas=notas,
-    )
-    db.add(venta)
-
+    comision_usd = round(valor * a.comision_pct, 2)
+    v = Venta(aliado_id=a.id, referido_id=referido_id, nombre_cliente=nombre_cliente,
+              plan=plan, valor_usd=valor, comision_pct=a.comision_pct,
+              comision_usd=comision_usd, confirmada=True, pagada=False,
+              fecha_venta=datetime.now(), modalidad_pago=modalidad_pago, notas=notas)
+    db.add(v)
     if referido_id:
         ref = db.query(Referido).filter(Referido.id == referido_id).first()
-        if ref:
-            ref.convertido = True
-
-    aliado.nivel = aliado.nivel_calculado
+        if ref: ref.convertido = True
+    a.nivel = a.nivel_calculado
     db.commit()
-
-    return {
-        "mensaje": "Venta registrada exitosamente",
-        "aliado": aliado.nombre,
-        "nivel_nuevo": aliado.nivel_calculado,
-        "cliente": nombre_cliente,
-        "plan": plan,
-        "valor_usd": valor,
-        "comision_usd": comision_usd,
-    }
+    return {"mensaje": "Venta registrada.", "aliado": a.nombre, "nivel_nuevo": a.nivel_calculado,
+            "valor_usd": valor, "comision_usd": comision_usd}
 
 
 @app.post("/ventas/{id}/pagar")
 def marcar_pagada(id: int, modalidad: str = "ARS MEP", db: Session = Depends(get_db)):
-    """Admin marca una comisión como pagada"""
-    venta = db.query(Venta).filter(Venta.id == id).first()
-    if not venta:
-        raise HTTPException(status_code=404, detail="Venta no encontrada")
-    venta.pagada = True
-    venta.fecha_pago = datetime.now()
-    venta.modalidad_pago = modalidad
+    v = db.query(Venta).filter(Venta.id == id).first()
+    if not v: raise HTTPException(404, "Venta no encontrada.")
+    v.pagada = True; v.fecha_pago = datetime.now(); v.modalidad_pago = modalidad
     db.commit()
-    return {"mensaje": f"Comisión de USD {venta.comision_usd} marcada como pagada a {venta.aliado.nombre}"}
+    return {"mensaje": f"USD {v.comision_usd} pagados a {v.aliado.nombre}."}
 
 
-# ─── RESUMEN GENERAL ─────────────────────────────────────────────────────────
+# ─── DASHBOARD + LEADERBOARD ─────────────────────────────────────────────────
 
 @app.get("/dashboard")
 def dashboard(db: Session = Depends(get_db)):
-    """KPIs generales del programa — vista admin"""
     aliados = db.query(Aliado).filter(Aliado.activo == True).all()
-    ventas = db.query(Venta).filter(Venta.confirmada == True).all()
-
-    total_vendido = sum(v.valor_usd for v in ventas)
-    total_comisiones = sum(v.comision_usd for v in ventas)
-    pendiente_pagar = sum(v.comision_usd for v in ventas if not v.pagada)
-
+    ventas  = db.query(Venta).filter(Venta.confirmada == True).all()
     niveles = {"BASIC": 0, "SILVER": 0, "PREMIUM": 0, "ELITE": 0}
-    for a in aliados:
-        niveles[a.nivel_calculado] = niveles.get(a.nivel_calculado, 0) + 1
-
+    for a in aliados: niveles[a.nivel_calculado] = niveles.get(a.nivel_calculado, 0) + 1
+    leaderboard = sorted(
+        [{"codigo": a.codigo, "nombre": a.nombre, "nivel": a.nivel_calculado,
+          "ventas_6m": a.ventas_6_meses, "total_ganado": round(a.total_ganado, 2)}
+         for a in aliados],
+        key=lambda x: x["ventas_6m"], reverse=True
+    )[:10]
     return {
         "total_aliados": len(aliados),
         "total_ventas": len(ventas),
-        "total_vendido_usd": round(total_vendido, 2),
-        "total_comisiones_usd": round(total_comisiones, 2),
-        "pendiente_pagar_usd": round(pendiente_pagar, 2),
+        "total_vendido_usd": round(sum(v.valor_usd for v in ventas), 2),
+        "total_comisiones_usd": round(sum(v.comision_usd for v in ventas), 2),
+        "pendiente_pagar_usd": round(sum(v.comision_usd for v in ventas if not v.pagada), 2),
         "distribucion_niveles": niveles,
         "referidos_sin_confirmar": db.query(Referido).filter(Referido.acuse_recibo == False).count(),
+        "leaderboard": leaderboard,
+    }
+
+
+# ─── HELPERS PRIVADOS ────────────────────────────────────────────────────────
+
+def _get_aliado(codigo, db):
+    a = db.query(Aliado).filter(Aliado.codigo == codigo).first()
+    if not a: raise HTTPException(404, "Aliado no encontrado.")
+    return a
+
+def _aliado_row(a):
+    return {
+        "codigo": a.codigo, "nombre": a.nombre, "email": a.email,
+        "whatsapp": a.whatsapp, "ciudad": a.ciudad, "perfil": a.perfil,
+        "nivel": a.nivel_calculado, "ventas_6m": a.ventas_6_meses,
+        "total_ganado": round(a.total_ganado, 2),
+        "total_pendiente": round(a.total_pendiente, 2),
+        "ref_code": a.ref_code, "fecha_firma": a.fecha_firma,
+    }
+
+def _aliado_detalle(a):
+    return {
+        "codigo": a.codigo, "nombre": a.nombre, "email": a.email,
+        "whatsapp": a.whatsapp, "ciudad": a.ciudad, "perfil": a.perfil,
+        "nivel_actual": a.nivel, "nivel_calculado": a.nivel_calculado,
+        "comision_pct": a.comision_pct * 100,
+        "ventas_6m": a.ventas_6_meses, "total_ventas": len(a.ventas),
+        "total_ganado": round(a.total_ganado, 2),
+        "total_pendiente": round(a.total_pendiente, 2),
+        "link_ref": f"https://avanzadigital.digital/alianzas?ref={a.ref_code}",
+        "referidos": [{"cliente": r.nombre_cliente, "plan": r.plan_elegido,
+                       "fecha": r.registrado_en.strftime("%d/%m/%Y"),
+                       "confirmado": r.acuse_recibo, "convertido": r.convertido}
+                      for r in a.referidos],
+        "ventas": [{"cliente": v.nombre_cliente, "plan": v.plan,
+                    "valor": v.valor_usd, "comision": v.comision_usd,
+                    "pagada": v.pagada,
+                    "fecha": v.fecha_venta.strftime("%d/%m/%Y") if v.fecha_venta else None}
+                   for v in a.ventas if v.confirmada],
     }

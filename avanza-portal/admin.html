@@ -330,6 +330,11 @@ tr:hover td { background:rgba(255,255,255,0.02); }
       <label><i class="fa-solid fa-lock"></i> &nbsp;Contraseña</label>
       <input type="password" id="login-pass" placeholder="••••••••" onkeydown="if(event.key==='Enter')loginAdmin()">
     </div>
+
+    <div class="field">
+      <label>API Key de admin</label>
+      <input type="password" id="login-apikey" placeholder="••••••••" autocomplete="off">
+    </div>
     <button class="btn-admin" onclick="loginAdmin()" id="btn-login">
       <i class="fa-solid fa-layer-group"></i> Ingresar al panel
     </button>
@@ -642,6 +647,7 @@ const PLANES = { 'Plan Base':1050, 'Plan Pro':2900, 'Plan Industrial':4900, 'Est
 function pct(n) { return {BASIC:.10,SILVER:.12,PREMIUM:.15,ELITE:.20}[n]||.10; }
 
 let todosAliados = [];
+let _apiKey = '';
 let todosReferidos = [];
 let todasVentas = [];
 let _confirmCallback = null;
@@ -651,9 +657,11 @@ let _confirmCallback = null;
 function loginAdmin() {
   const user = document.getElementById('login-user').value.trim();
   const pass = document.getElementById('login-pass').value;
+  const apikey = document.getElementById('login-apikey') ? document.getElementById('login-apikey').value.trim() : '';
   const err  = document.getElementById('login-error');
   err.style.display = 'none';
   if (_authOk(user, pass)) {
+    _apiKey = apikey;
     document.getElementById('login-screen').style.display = 'none';
     document.getElementById('admin-screen').style.display = 'block';
     cargarTodo();
@@ -673,6 +681,14 @@ document.getElementById('login-pass').addEventListener('keydown', e => { if(e.ke
 
 // ── DATOS ──────────────────────────────────────────────────────────────────
 
+
+// ── API FETCH CON AUTH ──────────────────────────────────────────────────────
+function apiFetch(url, opts = {}) {
+  opts.headers = opts.headers || {};
+  if (_apiKey) opts.headers['X-API-Key'] = _apiKey;
+  return fetch(url, opts);
+}
+
 async function cargarTodo() {
   await Promise.all([cargarAliados(), cargarReferidos(), cargarVentas(), cargarSuspendidos()]);
   renderDashboard();
@@ -684,7 +700,7 @@ async function cargarTodo() {
 }
 
 async function cargarAliados() {
-  try { const r = await fetch(`${API}/aliados`); todosAliados = await r.json(); } catch {}
+  try { const r = await apiFetch(`${API}/aliados`); todosAliados = await r.json(); } catch {}
 }
 
 async function cargarReferidos() {
@@ -692,7 +708,7 @@ async function cargarReferidos() {
     todosReferidos = [];
     const resultados = await Promise.all(
       todosAliados.map(a =>
-        fetch(`${API}/aliados/${a.codigo}`)
+        apiFetch(`${API}/aliados/${a.codigo}`)
           .then(r => r.json())
           .then(det => ({ a, det }))
           .catch(() => null)
@@ -713,7 +729,7 @@ async function cargarVentas() {
   try {
     const resultados = await Promise.all(
       todosAliados.map(a =>
-        fetch(`${API}/aliados/${a.codigo}`)
+        apiFetch(`${API}/aliados/${a.codigo}`)
           .then(r => r.json())
           .then(det => ({ a, det }))
           .catch(() => null)
@@ -881,12 +897,12 @@ function filtrarAliados() {
 let aliadosSuspendidos = [];
 
 async function cargarSuspendidos() {
-  try { const r = await fetch(`${API}/aliados/suspendidos`); aliadosSuspendidos = await r.json(); } catch {}
+  try { const r = await apiFetch(`${API}/aliados/suspendidos`); aliadosSuspendidos = await r.json(); } catch {}
 }
 
 async function suspenderAliado(codigo) {
   try {
-    await fetch(`${API}/aliados/${codigo}/suspender`, {method:'POST'});
+    await apiFetch(`${API}/aliados/${codigo}/suspender`, {method:'POST'});
     mostrarToast('Aliado suspendido — aparece en la tab Suspendidos', 'amber');
     await cargarAliados(); await cargarSuspendidos();
     renderAliados(); renderSuspendidos(); renderDashboard();
@@ -895,7 +911,7 @@ async function suspenderAliado(codigo) {
 
 async function activarAliado(codigo) {
   try {
-    await fetch(`${API}/aliados/${codigo}/activar`, {method:'POST'});
+    await apiFetch(`${API}/aliados/${codigo}/activar`, {method:'POST'});
     mostrarToast('Aliado reactivado y devuelto a la lista activa', 'green');
     await cargarAliados(); await cargarSuspendidos();
     renderAliados(); renderSuspendidos(); renderDashboard();
@@ -904,7 +920,7 @@ async function activarAliado(codigo) {
 
 async function eliminarAliado(codigo, nombre) {
   try {
-    await fetch(`${API}/aliados/${codigo}/eliminar`, {method:'DELETE'});
+    await apiFetch(`${API}/aliados/${codigo}/eliminar`, {method:'DELETE'});
     mostrarToast(`${nombre} eliminado permanentemente — código ${codigo} liberado`, 'green');
     await cargarSuspendidos();
     renderSuspendidos();
@@ -957,7 +973,7 @@ async function guardarComision() {
   const codigo = document.getElementById('mc-codigo').value;
   const nuevoNivel = document.getElementById('mc-nivel').value;
   try {
-    await fetch(`${API}/aliados/${codigo}/nivel?nivel=${nuevoNivel}`, {method:'PATCH'});
+    await apiFetch(`${API}/aliados/${codigo}/nivel?nivel=${nuevoNivel}`, {method:'PATCH'});
     mostrarToast(`Nivel actualizado a ${nuevoNivel}`, 'green');
     cerrarModal('modal-comision');
     await cargarAliados(); renderAliados(); renderDashboard();
@@ -968,7 +984,7 @@ async function guardarComision() {
 }
 
 async function verAliado(codigo) {
-  const res = await fetch(`${API}/aliados/${codigo}`);
+  const res = await apiFetch(`${API}/aliados/${codigo}`);
   const a = await res.json();
   const nivel = a.nivel_calculado || a.nivel_actual || 'BASIC';
   document.getElementById('modal-aliado-content').innerHTML = `
@@ -1045,11 +1061,11 @@ function renderReferidos(tipo) {
 async function confirmarReferidoByIndex(idx) {
   const ref = todosReferidos[idx];
   try {
-    const r = await fetch(`${API}/referidos/pendientes`);
+    const r = await apiFetch(`${API}/referidos/pendientes`);
     const pendientes = await r.json();
     const match = pendientes.find(p => p.aliado === ref.aliado_nombre && p.cliente === ref.cliente);
     if (match) {
-      await fetch(`${API}/referidos/${match.id}/confirmar`, {method:'POST'});
+      await apiFetch(`${API}/referidos/${match.id}/confirmar`, {method:'POST'});
       mostrarToast('Referido confirmado correctamente', 'green');
       await cargarReferidos();
       renderReferidos(filtroActual);
@@ -1062,11 +1078,11 @@ async function confirmarReferidoByIndex(idx) {
 
 async function confirmarReferidoByNombre(aliado, cliente) {
   try {
-    const r = await fetch(`${API}/referidos/pendientes`);
+    const r = await apiFetch(`${API}/referidos/pendientes`);
     const pendientes = await r.json();
     const match = pendientes.find(p => p.aliado === aliado && p.cliente === cliente);
     if (match) {
-      await fetch(`${API}/referidos/${match.id}/confirmar`, {method:'POST'});
+      await apiFetch(`${API}/referidos/${match.id}/confirmar`, {method:'POST'});
       mostrarToast('Referido confirmado', 'green');
       await cargarReferidos();
       renderDashboard();
@@ -1099,7 +1115,7 @@ function renderVentas() {
 async function marcarPagada(idx) {
   const v = todasVentas[idx];
   try {
-    const r = await fetch(`${API}/aliados/${v.aliado_codigo}`);
+    const r = await apiFetch(`${API}/aliados/${v.aliado_codigo}`);
     const det = await r.json();
     const ventaAPI = det.ventas?.find(vv => vv.cliente === v.cliente && vv.plan === v.plan && !vv.pagada);
     if (!ventaAPI) {
@@ -1107,7 +1123,7 @@ async function marcarPagada(idx) {
       return;
     }
     if (ventaAPI.id) {
-      const res = await fetch(`${API}/ventas/${ventaAPI.id}/pagar`, { method: 'POST' });
+      const res = await apiFetch(`${API}/ventas/${ventaAPI.id}/pagar`, { method: 'POST' });
       if (res.ok) {
         mostrarToast(`✅ Comisión pagada a ${v.aliado_nombre} — USD ${Math.round(v.comision).toLocaleString()}`, 'green');
         await cargarVentas();
@@ -1165,7 +1181,7 @@ async function registrarVenta() {
   if (!codigo||!cliente||!plan) { alert('Completá todos los campos obligatorios.'); return; }
   btn.innerHTML='<span class="spinner"></span> Registrando...'; btn.disabled=true;
   try {
-    const res = await fetch(`${API}/ventas/registrar?codigo_aliado=${codigo}&nombre_cliente=${encodeURIComponent(cliente)}&plan=${encodeURIComponent(plan)}&modalidad_pago=${encodeURIComponent(modalidad)}`,{method:'POST'});
+    const res = await apiFetch(`${API}/ventas/registrar?codigo_aliado=${codigo}&nombre_cliente=${encodeURIComponent(cliente)}&plan=${encodeURIComponent(plan)}&modalidad_pago=${encodeURIComponent(modalidad)}`,{method:'POST'});
     const data = await res.json();
     if (res.ok) {
       mostrarToast(`Venta registrada. Comisión: USD ${Math.round(data.comision_usd)}`, 'green');
@@ -1198,7 +1214,7 @@ async function crearAliado() {
 
   try {
     const url = `${API}/aliados/crear?nombre=${encodeURIComponent(nombre)}&email=${encodeURIComponent(email)}&whatsapp=${encodeURIComponent(whatsapp)}&ciudad=${encodeURIComponent(ciudad)}&dni=${encodeURIComponent(dni)}&perfil=${encodeURIComponent(perfil)}&fecha_firma=${encodeURIComponent(fecha)}&password=${encodeURIComponent(pass)}`;
-    const res = await fetch(url, {method:'POST'});
+    const res = await apiFetch(url, {method:'POST'});
     const data = await res.json();
     if (res.ok) {
       result.innerHTML = `<i class="fa-solid fa-circle-check"></i> <strong>¡Aliado creado exitosamente!</strong><br>

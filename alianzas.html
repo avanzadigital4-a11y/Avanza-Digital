@@ -25,6 +25,16 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <link rel="stylesheet" href="style.min.css">
+    <style>
+        @media (min-width: 769px) {
+            .nav-mobile-login { display: none !important; }
+            .navbar-floating { width: auto !important; max-width: 95vw !important; }
+            .navbar-floating .nav-links { gap: 6px !important; }
+            .navbar-floating .nav-links a { font-size: 0.82rem !important; padding: 4px 8px !important; }
+            .nav-desktop-buttons { gap: 10px !important; }
+            .nav-desktop-buttons a { font-size: 0.82rem !important; }
+        }
+    </style>
 </head>
 <body>
     <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-P499M76P" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
@@ -35,13 +45,31 @@
                 <i class="fa-solid fa-layer-group"></i> Avanza
             </a>
         </div>
-        <ul class="nav-links">
+        
+        <ul class="nav-links" id="nav-links">
             <li><a href="index.html#servicios">Planes</a></li>
             <li><a href="index.html#portafolio">Demos</a></li>
             <li><a href="blog.html">Blog</a></li>
-            <li><a href="recursos.html" style="color: var(--primary-color); font-weight: 600;">Recursos</a></li>
+            <li><a href="recursos.html">Recursos</a></li>
+            <li><a href="alianzas.html" style="color: var(--primary-color); font-weight: 600;">Alianzas</a></li>
+            
+            <li class="nav-mobile-login">
+                <a href="avanza-portal/portal.html" style="color: #4ade80; font-weight: 700; border: 1px solid rgba(74,222,128,0.3); border-radius: 8px; margin-top: 10px;">
+                    <i class="fa-solid fa-right-to-bracket"></i> Ingresar al Portal
+                </a>
+            </li>
         </ul>
-        <a href="#contacto-partner" class="btn-nav">Ser Aliado</a>
+    
+        <div class="nav-desktop-buttons" style="display: flex; gap: 15px; align-items: center;">
+            <a href="avanza-portal/portal.html" style="color: #a1a1aa; font-size: 0.85rem; font-weight: 600; text-decoration: none; transition: 0.3s;" onmouseover="this.style.color='white'" onmouseout="this.style.color='#a1a1aa'">
+                <i class="fa-solid fa-right-to-bracket"></i> Ingresar
+            </a>
+            <a href="#contacto-partner" class="btn-nav">Ser Aliado</a>
+        </div>
+    
+        <button class="nav-hamburger" id="nav-hamburger" aria-label="Menú" onclick="toggleNav()">
+            <span></span><span></span><span></span>
+        </button>
     </nav>
 
     <section class="hero-section" style="padding-top: 160px; padding-bottom: 60px;">
@@ -603,6 +631,7 @@
                         <input type="hidden" name="_subject" value="¡Nuevo Lead - Partner Network!">
                         <input type="hidden" name="origen" value="Landing Alianzas">
                         <input type="hidden" name="_captcha" value="false">
+                        <input type="hidden" name="ref_aliado" id="ref_aliado" value="">
 
                         <div class="form-row">
                             <input type="text" name="nombre" placeholder="Tu Nombre Completo" required>
@@ -659,5 +688,33 @@
     </footer>
     
     <script src="script.js"></script>
-</body>
+    <script>
+      // Captura ?ref= de la URL y lo guarda en el formulario + localStorage
+      (function() {
+        const params = new URLSearchParams(window.location.search);
+        const ref = params.get('ref');
+        if (ref) {
+          // Guarda en el campo oculto del formulario
+          const campo = document.getElementById('ref_aliado');
+          if (campo) campo.value = ref;
+
+          // Guarda en localStorage por si el cliente navega antes de llenar el form
+          localStorage.setItem('avanza_ref', ref);
+
+          // Muestra banner sutil indicando que viene referido
+          const banner = document.createElement('div');
+          banner.style.cssText = 'position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:rgba(74,222,128,0.12);border:1px solid rgba(74,222,128,0.3);color:#4ade80;padding:10px 20px;border-radius:50px;font-size:0.82rem;font-family:Inter,sans-serif;z-index:9999;backdrop-filter:blur(10px);white-space:nowrap;';
+          banner.innerHTML = '<i class="fa-solid fa-handshake" style="margin-right:8px;"></i>Accediste a través de un aliado Avanza';
+          document.body.appendChild(banner);
+          setTimeout(() => banner.remove(), 5000);
+        } else {
+          // Si no hay ref en URL, intentar recuperar del localStorage
+          const refGuardado = localStorage.getItem('avanza_ref');
+          if (refGuardado) {
+            const campo = document.getElementById('ref_aliado');
+            if (campo) campo.value = refGuardado;
+          }
+        }
+      })();
+    </script>
 </html>
