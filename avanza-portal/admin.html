@@ -648,30 +648,54 @@ function pct(n) { return {BASIC:.10,SILVER:.12,PREMIUM:.15,ELITE:.20}[n]||.10; }
 
 let todosAliados = [];
 let _apiKey = '';
-let _apiKey = '';
 let todosReferidos = [];
 let todasVentas = [];
 let _confirmCallback = null;
 
 // ── LOGIN ──────────────────────────────────────────────────────────────────
 
-function loginAdmin() {
-  const user = document.getElementById('login-user').value.trim();
-  const pass = document.getElementById('login-pass').value;
-  const apikey = document.getElementById('login-apikey') ? document.getElementById('login-apikey').value.trim() : '';
-  const err  = document.getElementById('login-error');
-  err.style.display = 'none';
-  if (_authOk(user, pass)) {
-    _apiKey = apikey;
+// Al cargar la página: si hay sesión guardada, restaurarla automáticamente
+(function restaurarSesion() {
+  const savedKey = sessionStorage.getItem('avanza_api_key');
+  if (savedKey) {
+    _apiKey = savedKey;
     document.getElementById('login-screen').style.display = 'none';
     document.getElementById('admin-screen').style.display = 'block';
     cargarTodo();
-  } else {
+  }
+})();
+
+async function loginAdmin() {
+  const user   = document.getElementById('login-user').value.trim();
+  const pass   = document.getElementById('login-pass').value;
+  const apikey = document.getElementById('login-apikey') ? document.getElementById('login-apikey').value.trim() : '';
+  const err    = document.getElementById('login-error');
+  err.style.display = 'none';
+
+  // Verificar credenciales contra la API usando la key ingresada
+  if (!apikey) { err.style.display = 'block'; return; }
+
+  try {
+    const res = await fetch(`${API}/aliados`, {
+      headers: { 'X-API-Key': apikey }
+    });
+    if (res.ok) {
+      _apiKey = apikey;
+      sessionStorage.setItem('avanza_api_key', apikey); // persiste durante la sesión
+      document.getElementById('login-screen').style.display = 'none';
+      document.getElementById('admin-screen').style.display = 'block';
+      cargarTodo();
+    } else {
+      err.style.display = 'block';
+    }
+  } catch {
     err.style.display = 'block';
   }
 }
 
 function logoutAdmin() {
+  sessionStorage.removeItem('avanza_api_key');
+  _apiKey = '';
   document.getElementById('admin-screen').style.display = 'none';
   document.getElementById('login-screen').style.display = 'flex';
   document.getElementById('login-user').value = '';
@@ -681,14 +705,6 @@ function logoutAdmin() {
 document.getElementById('login-pass').addEventListener('keydown', e => { if(e.key==='Enter') loginAdmin(); });
 
 // ── DATOS ──────────────────────────────────────────────────────────────────
-
-
-// ── API FETCH CON AUTH ──────────────────────────────────────────────────────
-function apiFetch(url, opts = {}) {
-  opts.headers = opts.headers || {};
-  if (_apiKey) opts.headers['X-API-Key'] = _apiKey;
-  return fetch(url, opts);
-}
 
 
 // ── API FETCH CON AUTH ──────────────────────────────────────────────────────
@@ -709,7 +725,11 @@ async function cargarTodo() {
 }
 
 async function cargarAliados() {
-  try { const r = await apiFetch(`${API}/aliados`); todosAliados = await r.json(); } catch {}
+  try {
+    const r = await apiFetch(`${API}/aliados`);
+    if (r.status === 401) { logoutAdmin(); return; }
+    todosAliados = await r.json();
+  } catch {}
 }
 
 async function cargarReferidos() {
