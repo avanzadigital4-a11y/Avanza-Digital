@@ -549,6 +549,29 @@
         <h3 style="font-size:0.95rem;font-weight:700;margin-bottom:16px;"><i class="fa-solid fa-star" style="color:var(--amber);"></i> &nbsp;Beneficios de tu nivel</h3>
         <div id="d-beneficios" style="display:grid;gap:10px;"></div>
       </div>
+
+      <div class="bento-box" style="margin-top:24px;">
+        <h3 style="font-size:0.95rem;font-weight:700;margin-bottom:16px;">
+          <i class="fa-solid fa-ranking-star" style="color:var(--amber);"></i> &nbsp;Top Aliados — Salón de la Fama
+        </h3>
+        <p style="font-size:0.8rem;color:var(--text-muted);margin-bottom:16px;">El ranking se actualiza con cada venta cerrada. ¡Sumá ventas para entrar al Top 10!</p>
+        <div class="table-wrap" style="margin-bottom:0; border:none; background:transparent;">
+          <table style="width:100%; border-collapse:collapse; font-size:0.85rem;">
+            <thead>
+              <tr style="border-bottom:1px solid var(--border); color:var(--text-dim); text-transform:uppercase; font-size:0.7rem; letter-spacing:1px;">
+                <th style="padding:10px 8px; text-align:center; width:40px;">#</th>
+                <th style="padding:10px 8px; text-align:left;">Aliado</th>
+                <th style="padding:10px 8px; text-align:center;">Nivel</th>
+                <th style="padding:10px 8px; text-align:center;">Ventas (6m)</th>
+                <th style="padding:10px 8px; text-align:right;">Comisiones</th>
+              </tr>
+            </thead>
+            <tbody id="tabla-leaderboard">
+               <tr><td colspan="5" style="text-align:center;padding:20px;color:var(--text-dim);">Cargando ranking...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
     </div>
 
     <div id="tab-herramientas" class="tab-panel">
@@ -796,6 +819,7 @@ function cerrarSesion() {
 async function cargarTodo() {
   try { const res = await fetch(`${API}/aliados/${aliado.codigo}`); if(res.ok) aliado = await res.json(); } catch {}
   renderDashboard(); renderReferidos(); renderVentas(); renderComisiones();
+  renderLeaderboard();
 
   // Mostrar botón flotante de soporte
   document.getElementById('float-support').style.display = 'flex';
@@ -1140,6 +1164,35 @@ async function guardarNota(id) {
       if(p) p.nota = nota;
     }
   } catch {}
+}
+
+async function renderLeaderboard() {
+  try {
+    const res = await fetch(`${API}/leaderboard`);
+    if (!res.ok) return;
+    const lb = await res.json();
+    const tbody = document.getElementById('tabla-leaderboard');
+    const coloresNivel = {BASIC:'var(--text-muted)', SILVER:'#94a3b8', PREMIUM:'var(--primary)', ELITE:'var(--amber)'};
+    
+    tbody.innerHTML = lb.map(item => {
+      let medalla = item.posicion;
+      if (item.posicion === 1) medalla = '🥇';
+      if (item.posicion === 2) medalla = '🥈';
+      if (item.posicion === 3) medalla = '🥉';
+      
+      const esYo = item.codigo === aliado.codigo;
+      const bg = esYo ? 'rgba(59,130,246,0.1)' : 'transparent';
+      const border = esYo ? 'border-left: 3px solid var(--primary);' : 'border-left: 3px solid transparent;';
+
+      return `<tr style="background:${bg}; border-bottom:1px solid rgba(255,255,255,0.02);">
+        <td style="${border} text-align:center;font-weight:800;font-size:1.1rem;padding:12px 8px;">${medalla}</td>
+        <td style="font-weight:600;color:${esYo ? 'var(--primary)' : 'var(--text)'};padding:12px 8px;">${item.nombre} ${esYo ? '<span style="font-size:0.7rem;color:var(--primary);">(Vos)</span>' : ''}</td>
+        <td style="text-align:center;padding:12px 8px;"><span style="font-size:0.65rem;font-weight:800;color:${coloresNivel[item.nivel]||'var(--text-muted)'}; border:1px solid ${coloresNivel[item.nivel]||'var(--text-muted)'}40; padding:3px 8px; border-radius:50px; background:${coloresNivel[item.nivel]||'var(--text-muted)'}10;">${item.nivel}</span></td>
+        <td style="text-align:center;font-weight:700;padding:12px 8px;">${item.ventas_6m}</td>
+        <td style="text-align:right;font-weight:700;color:var(--green);padding:12px 8px;">USD ${item.total_ganado.toLocaleString()}</td>
+      </tr>`;
+    }).join('');
+  } catch(e) { console.warn('Error cargando leaderboard', e); }
 }
 </script>
 </body>

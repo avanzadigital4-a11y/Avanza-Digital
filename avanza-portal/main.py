@@ -502,3 +502,42 @@ def _aliado_detalle(a):
                     "fecha": v.fecha_venta.strftime("%d/%m/%Y") if v.fecha_venta else None}
                    for v in a.ventas if v.confirmada],
     }
+    # ─── RANKING PÚBLICO (Gamificación) ──────────────────────────────────────────
+
+@app.get("/leaderboard")
+def obtener_leaderboard(db: Session = Depends(get_db)):
+    """Ranking de aliados (reales + ficticios para motivación)."""
+    aliados = db.query(Aliado).filter(Aliado.activo == True).all()
+    lista_reales = []
+    
+    for a in aliados:
+        # Ocultar apellidos completos por privacidad (Ej: Juan P.)
+        partes = a.nombre.split()
+        nombre_corto = a.nombre
+        if len(partes) > 1:
+            nombre_corto = f"{partes[0]} {partes[1][0]}."
+            
+        lista_reales.append({
+            "codigo": a.codigo,
+            "nombre": nombre_corto,
+            "nivel": a.nivel_calculado,
+            "ventas_6m": a.ventas_6_meses,
+            "total_ganado": round(a.total_ganado, 2)
+        })
+        
+    # Aquí configuras a tus "Top Aliados" ficticios
+    lista_ficticios = [
+        {"codigo": "AL-991", "nombre": "Martín G.", "nivel": "ELITE", "ventas_6m": 12, "total_ganado": 5850.0},
+        {"codigo": "AL-842", "nombre": "Sofía L.", "nivel": "PREMIUM", "ventas_6m": 8, "total_ganado": 3100.0},
+        {"codigo": "AL-705", "nombre": "Lucas P.", "nivel": "PREMIUM", "ventas_6m": 5, "total_ganado": 1950.0},
+        {"codigo": "AL-613", "nombre": "Camila R.", "nivel": "SILVER", "ventas_6m": 3, "total_ganado": 870.0},
+    ]
+    
+    # Mezclamos todos y los ordenamos por quién ganó más plata
+    completo = sorted(lista_reales + lista_ficticios, key=lambda x: x["total_ganado"], reverse=True)
+    
+    # Asignamos el número de posición
+    for i, item in enumerate(completo):
+        item["posicion"] = i + 1
+        
+    return completo[:10]  # Devolvemos solo el Top 10
