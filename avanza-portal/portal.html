@@ -7,7 +7,7 @@
 <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><path d=%22M10 20 L40 50 L10 80 L30 80 L60 50 L30 20 Z%22 fill=%22%230044cc%22/><path d=%22M45 20 L75 50 L45 80 L65 80 L95 50 L65 20 Z%22 fill=%22%2300cccc%22/></svg>">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800;900&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
 <style>
@@ -27,8 +27,9 @@
     --green-border:rgba(74,222,128,0.25);
     --red:         #ef4444;
     --red-bg:      rgba(239,68,68,0.1);
-    --amber:       #f59e0b;
-    --amber-bg:    rgba(245,158,11,0.1);
+    --amber:       #facc15;
+    --amber-bg:    rgba(250,204,21,0.1);
+    --orange:      #f97316;
     --text:        #ffffff;
     --text-muted:  #a1a1aa;
     --text-dim:    #71717a;
@@ -170,6 +171,7 @@
     display: flex; gap: 4px; background: rgba(255,255,255,0.03);
     border: 1px solid var(--border); border-radius: 50px; padding: 4px;
     width: fit-content; margin-bottom: 36px; flex-wrap: wrap;
+    position: sticky; top: 80px; z-index: 100; backdrop-filter: blur(10px);
   }
 
   .tab-btn {
@@ -284,7 +286,7 @@
   }
   .btn-copy:hover { background: var(--primary-h); }
 
-  /* TABLA */
+  /* TABLAS SECUNDARIAS */
   .table-wrap { background: rgba(255,255,255,0.03); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; margin-bottom: 24px; }
   .table-head { padding: 20px 24px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
   .table-head h3 { font-size: 0.95rem; font-weight: 700; }
@@ -418,6 +420,68 @@
   .toast.red   { border-color:rgba(239,68,68,0.3); color:var(--red); }
   .toast.amber { border-color:rgba(245,158,11,0.3); color:var(--amber); }
 
+  /* ─── SALÓN DE LA FAMA (LEADERBOARD) CSS ─── */
+  .lb-header { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 24px; flex-wrap: wrap; gap: 16px; }
+  .lb-title { font-size: 1.4rem; font-weight: 900; letter-spacing: -0.5px; display: flex; align-items: center; gap: 10px; }
+  .lb-title i { color: var(--amber); filter: drop-shadow(0 0 8px rgba(250,204,21,0.4)); }
+  .lb-dynamic-msg { background: rgba(249,115,22,0.1); border: 1px solid rgba(249,115,22,0.2); color: var(--orange); padding: 8px 16px; border-radius: 50px; font-size: 0.85rem; font-weight: 700; display: inline-flex; align-items: center; gap: 8px; animation: pulseGlow 2s infinite alternate; }
+  @keyframes pulseGlow { from { box-shadow: 0 0 0 0 rgba(249,115,22,0); } to { box-shadow: 0 0 10px 0 rgba(249,115,22,0.2); } }
+  
+  .podium-wrap { display: flex; align-items: flex-end; justify-content: center; gap: 16px; margin-bottom: 40px; padding-top: 30px; }
+  .podium-card { background: rgba(255,255,255,0.03); border: 1px solid var(--border); border-radius: 16px; padding: 20px 16px; text-align: center; position: relative; width: 160px; transition: transform 0.3s; display: flex; flex-direction: column; justify-content: flex-end; }
+  .podium-card:hover { transform: translateY(-5px); border-color: var(--border-h); }
+  
+  .podium-1 { border-color: rgba(250,204,21,0.4); background: linear-gradient(to top, rgba(250,204,21,0.08), rgba(0,0,0,0)); height: 190px; z-index: 3; }
+  .podium-2 { border-color: rgba(148,163,184,0.3); background: linear-gradient(to top, rgba(148,163,184,0.05), rgba(0,0,0,0)); height: 160px; z-index: 2; }
+  .podium-3 { border-color: rgba(217,119,6,0.3); background: linear-gradient(to top, rgba(217,119,6,0.05), rgba(0,0,0,0)); height: 140px; z-index: 1; }
+  
+  .avatar { width: 56px; height: 56px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 1.3rem; margin: 0 auto 12px; position: absolute; top: -28px; left: 50%; transform: translateX(-50%); border: 4px solid #050505; box-shadow: 0 4px 10px rgba(0,0,0,0.5); }
+  .avatar-1 { background: linear-gradient(135deg, #fde047, #ca8a04); color: #422006; }
+  .avatar-2 { background: linear-gradient(135deg, #cbd5e1, #64748b); color: #0f172a; }
+  .avatar-3 { background: linear-gradient(135deg, #fcd34d, #b45309); color: #451a03; }
+  
+  .podium-name { font-weight: 800; font-size: 1rem; margin-bottom: 2px; }
+  .podium-sales { font-size: 0.75rem; color: var(--text-dim); margin-bottom: 8px; }
+  .podium-comision { font-size: 1.1rem; font-weight: 900; color: var(--green); display: flex; align-items: center; justify-content: center; gap: 4px; }
+  .podium-medal { position: absolute; top: -10px; right: -10px; font-size: 1.5rem; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5)); }
+
+  .lb-list-wrap { display: flex; flex-direction: column; gap: 8px; }
+  .lb-row { display: flex; align-items: center; gap: 16px; padding: 16px 20px; background: rgba(255,255,255,0.015); border: 1px solid var(--border); border-radius: 12px; transition: all 0.2s; }
+  .lb-row:hover { background: rgba(255,255,255,0.03); border-color: rgba(255,255,255,0.1); transform: scale(1.01); }
+  .lb-row.is-me { background: rgba(59,130,246,0.08); border-color: var(--primary); box-shadow: 0 0 20px rgba(59,130,246,0.15); }
+  .lb-row.is-me:hover { transform: scale(1.02); }
+  
+  .lb-pos { width: 30px; font-weight: 800; font-size: 1.1rem; color: var(--text-muted); text-align: center; }
+  .lb-avatar-mini { width: 40px; height: 40px; border-radius: 50%; background: rgba(255,255,255,0.08); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.9rem; color: white; flex-shrink: 0; }
+  .lb-info { flex: 1; min-width: 0; }
+  .lb-name { font-weight: 700; font-size: 0.95rem; display: flex; align-items: center; gap: 8px; }
+  .lb-badge-me { background: var(--primary); color: white; font-size: 0.65rem; padding: 2px 6px; border-radius: 4px; text-transform: uppercase; font-weight: 800; letter-spacing: 0.5px; }
+  .lb-stats { display: flex; gap: 12px; font-size: 0.8rem; color: var(--text-dim); margin-top: 2px; }
+  
+  .lb-nivel { font-size: 0.65rem; font-weight: 800; padding: 3px 8px; border-radius: 50px; text-transform: uppercase; letter-spacing: 0.5px; }
+  .nivel-BASIC { background: rgba(255,255,255,0.05); color: var(--text-muted); border: 1px solid rgba(255,255,255,0.1); }
+  .nivel-SILVER { background: rgba(148,163,184,0.1); color: #cbd5e1; border: 1px solid rgba(148,163,184,0.2); }
+  .nivel-PREMIUM { background: rgba(59,130,246,0.1); color: #93c5fd; border: 1px solid rgba(59,130,246,0.2); }
+  .nivel-ELITE { background: rgba(250,204,21,0.1); color: #fde047; border: 1px solid rgba(250,204,21,0.2); }
+
+  .lb-money { font-weight: 900; font-size: 1.1rem; color: var(--green); text-align: right; display: flex; align-items: center; gap: 6px; }
+
+  .skeleton { background: linear-gradient(90deg, rgba(255,255,255,0.03) 25%, rgba(255,255,255,0.08) 50%, rgba(255,255,255,0.03) 75%); background-size: 200% 100%; animation: loading 1.5s infinite; border-radius: 8px; }
+  @keyframes loading { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+
+  @media (max-width: 700px) {
+    .podium-wrap { align-items: center; flex-direction: column; gap: 32px; padding-top: 10px; }
+    .podium-card { width: 100%; max-width: 300px; height: auto !important; padding: 24px; }
+    .podium-1 { order: -1; border-color: rgba(250,204,21,0.5); }
+    .avatar { top: -20px; left: 24px; transform: none; width: 40px; height: 40px; font-size: 1rem; }
+    .podium-medal { top: 10px; right: 10px; font-size: 1.2rem; }
+    .podium-card { text-align: left; display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 10px; }
+    .podium-comision { justify-content: flex-end; }
+    .lb-row { flex-wrap: wrap; padding: 14px; }
+    .lb-money { width: 100%; text-align: left; margin-top: 8px; justify-content: flex-start; padding-left: 46px; }
+    .lb-pos { width: 20px; }
+  }
+
   @media (max-width: 600px) {
     .login-box { padding: 32px 24px; }
     .navbar-floating { padding: 8px 16px; gap: 10px; }
@@ -550,26 +614,26 @@
         <div id="d-beneficios" style="display:grid;gap:10px;"></div>
       </div>
 
-      <div class="bento-box" style="margin-top:24px;">
-        <h3 style="font-size:0.95rem;font-weight:700;margin-bottom:16px;">
-          <i class="fa-solid fa-ranking-star" style="color:var(--amber);"></i> &nbsp;Top Aliados — Salón de la Fama
-        </h3>
-        <p style="font-size:0.8rem;color:var(--text-muted);margin-bottom:16px;">El ranking se actualiza con cada venta cerrada. ¡Sumá ventas para entrar al Top 10!</p>
-        <div class="table-wrap" style="margin-bottom:0; border:none; background:transparent;">
-          <table style="width:100%; border-collapse:collapse; font-size:0.85rem;">
-            <thead>
-              <tr style="border-bottom:1px solid var(--border); color:var(--text-dim); text-transform:uppercase; font-size:0.7rem; letter-spacing:1px;">
-                <th style="padding:10px 8px; text-align:center; width:40px;">#</th>
-                <th style="padding:10px 8px; text-align:left;">Aliado</th>
-                <th style="padding:10px 8px; text-align:center;">Nivel</th>
-                <th style="padding:10px 8px; text-align:center;">Ventas (6m)</th>
-                <th style="padding:10px 8px; text-align:right;">Comisiones</th>
-              </tr>
-            </thead>
-            <tbody id="tabla-leaderboard">
-               <tr><td colspan="5" style="text-align:center;padding:20px;color:var(--text-dim);">Cargando ranking...</td></tr>
-            </tbody>
-          </table>
+      <div class="bento-box" style="margin-top:40px; padding:32px;">
+        <div class="lb-header">
+          <div>
+            <div class="lb-title"><i class="fa-solid fa-trophy"></i> Salón de la Fama</div>
+            <p style="font-size:0.85rem; color:var(--text-dim); margin-top:4px;">Compite con otros aliados. El ranking se basa en ganancias totales.</p>
+          </div>
+          <div id="lb-dynamic-msg" class="lb-dynamic-msg">
+            <div class="skeleton" style="width:200px; height:16px;"></div>
+          </div>
+        </div>
+
+        <div class="podium-wrap" id="lb-podium">
+           <div class="podium-card podium-2"><div class="avatar skeleton"></div><div class="skeleton" style="width:80%;height:14px;margin:0 auto 10px;"></div></div>
+           <div class="podium-card podium-1"><div class="avatar skeleton"></div><div class="skeleton" style="width:80%;height:14px;margin:0 auto 10px;"></div></div>
+           <div class="podium-card podium-3"><div class="avatar skeleton"></div><div class="skeleton" style="width:80%;height:14px;margin:0 auto 10px;"></div></div>
+        </div>
+
+        <div class="lb-list-wrap" id="lb-list">
+           <div class="lb-row"><div class="skeleton" style="width:100%;height:40px;"></div></div>
+           <div class="lb-row"><div class="skeleton" style="width:100%;height:40px;"></div></div>
         </div>
       </div>
     </div>
@@ -786,10 +850,10 @@ function mostrarToast(msg, tipo='green') {
 async function iniciarSesion() {
   const codigo = document.getElementById('login-codigo').value.trim().toUpperCase();
   const pass   = document.getElementById('login-pass').value;
-  const btn = document.getElementById('btn-login');
   const err = document.getElementById('login-error');
   err.style.display = 'none';
   if (!codigo || !pass) { err.style.display = 'block'; return; }
+  const btn = document.getElementById('btn-login');
   btn.innerHTML = '<span class="spinner"></span> Verificando...';
   btn.disabled = true;
   try {
@@ -807,7 +871,15 @@ async function iniciarSesion() {
   btn.disabled = false;
 }
 
-function cerrarSesion() {
+function cambiarTab(tab, btn) {
+  document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById(`tab-${tab}`).classList.add('active');
+  btn.classList.add('active');
+  if(tab==='prospectos') cargarProspectos();
+}
+
+function cerrarSesion() { 
   aliado = null;
   document.getElementById('portal-screen').style.display = 'none';
   document.getElementById('login-screen').style.display = 'flex';
@@ -818,7 +890,11 @@ function cerrarSesion() {
 
 async function cargarTodo() {
   try { const res = await fetch(`${API}/aliados/${aliado.codigo}`); if(res.ok) aliado = await res.json(); } catch {}
-  renderDashboard(); renderReferidos(); renderVentas(); renderComisiones();
+  
+  renderDashboard(); 
+  renderReferidos(); 
+  renderVentas(); 
+  renderComisiones();
   renderLeaderboard();
 
   // Mostrar botón flotante de soporte
@@ -1023,14 +1099,6 @@ async function registrarReferido() {
   btn.innerHTML='<i class="fa-solid fa-paper-plane"></i> Registrar referido ahora'; btn.disabled=false;
 }
 
-function cambiarTab(tab,btn) {
-  document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));
-  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
-  document.getElementById(`tab-${tab}`).classList.add('active');
-  btn.classList.add('active');
-  if(tab==='prospectos') cargarProspectos();
-}
-
 // ── PROSPECTOS ──────────────────────────────────────────────────────────────
 
 let todosProspectos = [];
@@ -1166,32 +1234,106 @@ async function guardarNota(id) {
   } catch {}
 }
 
+// ─── LÓGICA DEL LEADERBOARD GAMIFICADO ───
+function getInitials(name) {
+  const parts = name.split(' ');
+  if (parts.length >= 2) return (parts[0][0] + parts[1][0]).toUpperCase();
+  return name.substring(0, 2).toUpperCase();
+}
+
 async function renderLeaderboard() {
   try {
     const res = await fetch(`${API}/leaderboard`);
     if (!res.ok) return;
     const lb = await res.json();
-    const tbody = document.getElementById('tabla-leaderboard');
-    const coloresNivel = {BASIC:'var(--text-muted)', SILVER:'#94a3b8', PREMIUM:'var(--primary)', ELITE:'var(--amber)'};
     
-    tbody.innerHTML = lb.map(item => {
-      let medalla = item.posicion;
-      if (item.posicion === 1) medalla = '🥇';
-      if (item.posicion === 2) medalla = '🥈';
-      if (item.posicion === 3) medalla = '🥉';
-      
-      const esYo = item.codigo === aliado.codigo;
-      const bg = esYo ? 'rgba(59,130,246,0.1)' : 'transparent';
-      const border = esYo ? 'border-left: 3px solid var(--primary);' : 'border-left: 3px solid transparent;';
+    // 1. Encontrar al usuario actual
+    const myPosIndex = lb.findIndex(x => x.codigo === aliado.codigo);
+    const me = lb[myPosIndex];
 
-      return `<tr style="background:${bg}; border-bottom:1px solid rgba(255,255,255,0.02);">
-        <td style="${border} text-align:center;font-weight:800;font-size:1.1rem;padding:12px 8px;">${medalla}</td>
-        <td style="font-weight:600;color:${esYo ? 'var(--primary)' : 'var(--text)'};padding:12px 8px;">${item.nombre} ${esYo ? '<span style="font-size:0.7rem;color:var(--primary);">(Vos)</span>' : ''}</td>
-        <td style="text-align:center;padding:12px 8px;"><span style="font-size:0.65rem;font-weight:800;color:${coloresNivel[item.nivel]||'var(--text-muted)'}; border:1px solid ${coloresNivel[item.nivel]||'var(--text-muted)'}40; padding:3px 8px; border-radius:50px; background:${coloresNivel[item.nivel]||'var(--text-muted)'}10;">${item.nivel}</span></td>
-        <td style="text-align:center;font-weight:700;padding:12px 8px;">${item.ventas_6m}</td>
-        <td style="text-align:right;font-weight:700;color:var(--green);padding:12px 8px;">USD ${item.total_ganado.toLocaleString()}</td>
-      </tr>`;
+    // 2. Calcular Mensaje Dinámico
+    let msg = "¡Sumá ventas para escalar posiciones!";
+    if (me) {
+        if (me.posicion === 1) {
+            msg = "¡Sos el #1! Defendé tu corona. 👑";
+        } else if (me.posicion <= 3) {
+            msg = "¡Estás en el podio! A un paso de la gloria. 🔥";
+        } else if (me.posicion <= 10) {
+            const diff = lb[2].ventas_6m - me.ventas_6m;
+            msg = diff > 0 
+                ? `Estás en el Top 10. ¡A solo ${diff} venta${diff>1?'s':''} del podio! 🚀` 
+                : `¡Estás empatado en ventas con el podio! Cerrá una más para subir. 🚀`;
+        } else {
+            const top10 = lb[9];
+            if(top10) {
+               const diff = top10.ventas_6m - me.ventas_6m;
+               msg = `Estás a ${Math.max(1, diff)} venta${diff>1?'s':''} de entrar al codiciado Top 10. ¡Vos podés!`;
+            }
+        }
+    }
+    document.getElementById('lb-dynamic-msg').innerHTML = `<i class="fa-solid fa-fire"></i> ${msg}`;
+
+    // 3. Renderizar Podio (Top 3)
+    const podiumContainer = document.getElementById('lb-podium');
+    let podiumHtml = '';
+    
+    // Orden visual del podio: Segundo (Izq), Primero (Centro), Tercero (Der)
+    const podiumOrder = [
+        { rank: 2, obj: lb[1], cls: 'podium-2', medal: '🥈' },
+        { rank: 1, obj: lb[0], cls: 'podium-1', medal: '🥇' },
+        { rank: 3, obj: lb[2], cls: 'podium-3', medal: '🥉' }
+    ];
+
+    podiumOrder.forEach(p => {
+        if (!p.obj) return;
+        const isMe = p.obj.codigo === aliado.codigo;
+        podiumHtml += `
+        <div class="podium-card ${p.cls} ${isMe ? 'is-me' : ''}">
+           <div class="podium-medal">${p.medal}</div>
+           <div class="avatar avatar-${p.rank}">${getInitials(p.obj.nombre)}</div>
+           <div style="flex:1;">
+               <div class="podium-name">${p.obj.nombre} ${isMe ? '<br><span class="lb-badge-me">Vos</span>' : ''}</div>
+               <div class="podium-sales">${p.obj.ventas_6m} ventas</div>
+           </div>
+           <div class="podium-comision"><i class="fa-solid fa-sack-dollar" style="font-size:0.8rem;"></i> ${p.obj.total_ganado.toLocaleString()}</div>
+        </div>`;
+    });
+    podiumContainer.innerHTML = podiumHtml;
+
+    // 4. Renderizar Lista (Resto)
+    const listContainer = document.getElementById('lb-list');
+    const rest = lb.slice(3);
+    
+    listContainer.innerHTML = rest.map(item => {
+        const isMe = item.codigo === aliado.codigo;
+        return `
+        <div class="lb-row ${isMe ? 'is-me' : ''}">
+            <div class="lb-pos">#${item.posicion}</div>
+            <div class="lb-avatar-mini">${getInitials(item.nombre)}</div>
+            <div class="lb-info">
+                <div class="lb-name">
+                    ${item.nombre} 
+                    ${isMe ? '<span class="lb-badge-me">Vos</span>' : ''}
+                    <span class="lb-nivel nivel-${item.nivel}">${item.nivel}</span>
+                </div>
+                <div class="lb-stats">
+                    <span><i class="fa-solid fa-chart-line"></i> ${item.ventas_6m} ventas</span>
+                </div>
+            </div>
+            <div class="lb-money"><i class="fa-solid fa-sack-dollar" style="font-size:0.9rem; color:var(--text-dim);"></i> USD ${item.total_ganado.toLocaleString()}</div>
+        </div>`;
     }).join('');
+
+    // 5. UX: Hacer scroll suave hacia la fila del usuario si no está en el top 3
+    if (me && me.posicion > 3) {
+        setTimeout(() => {
+            const myRow = document.querySelector('.lb-row.is-me');
+            if (myRow) {
+                myRow.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+        }, 500);
+    }
+
   } catch(e) { console.warn('Error cargando leaderboard', e); }
 }
 </script>

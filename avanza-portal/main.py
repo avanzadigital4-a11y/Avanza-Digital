@@ -540,4 +540,5 @@ def obtener_leaderboard(db: Session = Depends(get_db)):
     for i, item in enumerate(completo):
         item["posicion"] = i + 1
         
-    return completo[:10]  # Devolvemos solo el Top 10
+    # DEVOLVEMOS LA LISTA COMPLETA, SIN CORTARLA
+    return completo
