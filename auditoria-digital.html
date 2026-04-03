@@ -827,13 +827,34 @@ async function submitEmailGate(){
         console.warn('Formspree error:', e);
     }
 
+    // ─────────────────────────────────────────────────────────────────
+    // NUEVO: Guardar en nuestro propio backend de Railway (con email)
+    // ─────────────────────────────────────────────────────────────────
+    try {
+        const score = pendingReportData ? pendingReportData.overall_score : 0;
+        const ref = window._auditRef || '';
+        await fetch(`https://avanza-digital-production.up.railway.app/auditorias/log?dominio=${encodeURIComponent(currentDomain)}&score=${score}&ref_code=${encodeURIComponent(ref)}&email=${encodeURIComponent(email)}`, { method: 'POST' });
+    } catch(e) { console.warn('Error logging audit:', e); }
+
     window.emailGatePassed = true;
     if(pendingReportData) renderReport(pendingReportData, pendingReportMx);
 }
 
 function skipEmailGate(){
     window.emailGatePassed = true;
-    if(pendingReportData) renderReport(pendingReportData, pendingReportMx);
+    
+    // ─────────────────────────────────────────────────────────────────
+    // NUEVO: Guardar en nuestro propio backend de Railway (anónimo)
+    // ─────────────────────────────────────────────────────────────────
+    if(pendingReportData) {
+        try {
+            const score = pendingReportData.overall_score;
+            const ref = window._auditRef || '';
+            fetch(`https://avanza-digital-production.up.railway.app/auditorias/log?dominio=${encodeURIComponent(currentDomain)}&score=${score}&ref_code=${encodeURIComponent(ref)}`, { method: 'POST' }).catch(e=>console.warn(e));
+        } catch(e) { console.warn('Error logging audit:', e); }
+        
+        renderReport(pendingReportData, pendingReportMx);
+    }
 }
 
 document.getElementById('domain-input').addEventListener('keydown',e=>{if(e.key==='Enter')startAudit();});

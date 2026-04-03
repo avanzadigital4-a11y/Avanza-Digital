@@ -24,6 +24,7 @@ class Aliado(Base):
 
     ventas = relationship("Venta", back_populates="aliado")
     referidos = relationship("Referido", back_populates="aliado")
+    prospectos = relationship("Prospecto", back_populates="aliado")
 
     @property
     def comision_pct(self):
@@ -103,6 +104,40 @@ class Admin(Base):
     username = Column(String, unique=True)
     password_hash = Column(String)
     creado_en = Column(DateTime, default=func.now())
+
+
+class Prospecto(Base):
+    """Prospecto cargado por un aliado — CRM mínimo"""
+    __tablename__ = "prospectos"
+
+    id          = Column(Integer, primary_key=True, index=True)
+    aliado_id   = Column(Integer, ForeignKey("aliados.id"))
+    nombre      = Column(String, nullable=False)      # Nombre empresa/persona
+    contacto    = Column(String)                      # WhatsApp / email / teléfono
+    plan_interes= Column(String)                      # Plan que le interesaría
+    estado      = Column(String, default="sin_contactar")  # sin_contactar | contactado | respondio
+    nota        = Column(Text)                        # Nota libre del aliado
+    interesante = Column(Boolean, default=False)      # Flag 🔥
+    fecha_contacto  = Column(DateTime, nullable=True)
+    fecha_respuesta = Column(DateTime, nullable=True)
+    creado_en   = Column(DateTime, default=func.now())
+
+    aliado = relationship("Aliado", back_populates="prospectos")
+
+
+class AuditoriaLog(Base):
+    """Registro de uso de la herramienta de auditoría gratuita"""
+    __tablename__ = "auditorias_log"
+
+    id = Column(Integer, primary_key=True, index=True)
+    aliado_id = Column(Integer, ForeignKey("aliados.id"), nullable=True)
+    ref_code = Column(String, index=True)
+    dominio = Column(String, index=True)
+    score = Column(Integer)
+    email_capturado = Column(String, nullable=True)
+    creado_en = Column(DateTime, default=func.now())
+
+    aliado = relationship("Aliado")
 
 
 # Planes y precios según contrato v3

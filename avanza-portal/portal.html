@@ -406,6 +406,18 @@
   .onboard-footer { padding: 0 32px 28px; }
   .onboard-footer .btn-primary { border-radius: var(--radius-sm); }
 
+  /* TOAST */
+  .toast {
+    position:fixed; bottom:24px; left:50%; transform:translateX(-50%); z-index:99999;
+    background:var(--bg3); border:1px solid var(--border); border-radius:var(--radius-sm);
+    padding:14px 20px; font-size:.88rem; display:flex; align-items:center; gap:10px;
+    animation:slideIn .3s ease; box-shadow:0 8px 32px rgba(0,0,0,0.4);
+  }
+  @keyframes slideIn { from{transform:translate(-50%, 20px);opacity:0} to{transform:translate(-50%, 0);opacity:1} }
+  .toast.green { border-color:var(--green-border); color:var(--green); }
+  .toast.red   { border-color:rgba(239,68,68,0.3); color:var(--red); }
+  .toast.amber { border-color:rgba(245,158,11,0.3); color:var(--amber); }
+
   @media (max-width: 600px) {
     .login-box { padding: 32px 24px; }
     .navbar-floating { padding: 8px 16px; gap: 10px; }
@@ -424,7 +436,6 @@
 </head>
 <body>
 
-<!-- LOGIN -->
 <div id="login-screen">
   <div class="login-box">
     <div class="login-logo"><i class="fa-solid fa-layer-group"></i> Avanza</div>
@@ -440,12 +451,11 @@
     <button class="btn-primary" onclick="iniciarSesion()" id="btn-login">
       <i class="fa-solid fa-arrow-right-to-bracket"></i> Ingresar al portal
     </button>
-    <div class="login-error" id="login-error"><i class="fa-solid fa-circle-exclamation"></i> &nbsp;Código no encontrado. Verificá con Avanza Digital.</div>
+    <div class="login-error" id="login-error"><i class="fa-solid fa-circle-exclamation"></i> &nbsp;Código no encontrado o contraseña incorrecta.</div>
     <div class="login-footer">¿No tenés tu código? Escribí al <a href="https://wa.me/5493424392759" target="_blank">+54 9 342 439 2759</a></div>
   </div>
 </div>
 
-<!-- PORTAL -->
 <div id="portal-screen">
   <nav class="navbar-floating">
     <a href="index.html" class="nav-logo"><i class="fa-solid fa-layer-group"></i> Avanza</a>
@@ -460,15 +470,15 @@
 
     <div class="tabs">
       <button class="tab-btn active" onclick="cambiarTab('dashboard',this)"><i class="fa-solid fa-chart-line"></i> Dashboard</button>
+      <button class="tab-btn" onclick="cambiarTab('herramientas',this)"><i class="fa-solid fa-magnifying-glass"></i> Auditoría</button>
+      <button class="tab-btn" onclick="cambiarTab('prospectos',this)"><i class="fa-solid fa-bullseye"></i> Prospectos</button>
       <button class="tab-btn" onclick="cambiarTab('referidos',this)"><i class="fa-solid fa-user-plus"></i> Referidos</button>
       <button class="tab-btn" onclick="cambiarTab('ventas',this)"><i class="fa-solid fa-handshake"></i> Ventas</button>
       <button class="tab-btn" onclick="cambiarTab('comisiones',this)"><i class="fa-solid fa-dollar-sign"></i> Comisiones</button>
     </div>
 
-    <!-- DASHBOARD -->
     <div id="tab-dashboard" class="tab-panel active">
 
-      <!-- WELCOME HEADER -->
       <div class="welcome-header">
         <div>
           <div class="welcome-name">Hola, <span id="d-firstname">aliado</span> 👋</div>
@@ -476,13 +486,11 @@
         </div>
       </div>
 
-      <!-- MOTIVATIONAL BANNER -->
       <div class="motive-banner" id="motive-banner">
         <div class="motive-icon" id="motive-icon">🚀</div>
         <div class="motive-text" id="motive-text">Cargando tu estado...</div>
       </div>
 
-      <!-- MÉTRICAS GRANDES -->
       <div class="metrics-grid">
         <div class="metric-card highlight">
           <div class="metric-icon green"><i class="fa-solid fa-circle-check"></i></div>
@@ -510,16 +518,14 @@
         </div>
       </div>
 
-      <!-- REF LINK — siempre visible y destacado -->
       <div class="ref-card">
         <div style="flex:1;">
-          <div class="ref-label"><i class="fa-solid fa-link"></i> &nbsp;Tu link de referido — compartilo con cada cliente</div>
+          <div class="ref-label"><i class="fa-solid fa-link"></i> &nbsp;Tu link de referido directo</div>
           <div class="ref-url" id="d-reflink">Cargando...</div>
         </div>
         <button class="btn-copy" onclick="copiarLink()"><i class="fa-solid fa-copy"></i> Copiar</button>
       </div>
 
-      <!-- PROGRESO DE NIVEL (barra) -->
       <div class="bento-box" style="margin-bottom:24px;">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
           <h3 style="font-size:0.95rem;font-weight:700;"><i class="fa-solid fa-trophy" style="color:var(--amber);margin-right:6px;"></i>Progreso de nivel</h3>
@@ -539,14 +545,37 @@
         <p class="nivel-progress-caption" id="d-progreso-text">—</p>
       </div>
 
-      <!-- BENEFICIOS -->
       <div class="bento-box">
         <h3 style="font-size:0.95rem;font-weight:700;margin-bottom:16px;"><i class="fa-solid fa-star" style="color:var(--amber);"></i> &nbsp;Beneficios de tu nivel</h3>
         <div id="d-beneficios" style="display:grid;gap:10px;"></div>
       </div>
     </div>
 
-    <!-- REFERIDOS -->
+    <div id="tab-herramientas" class="tab-panel">
+      <div class="bento-box" style="margin-bottom:24px;">
+        <h3 style="font-size:1.1rem;font-weight:800;margin-bottom:8px;"><i class="fa-solid fa-magnifying-glass" style="color:var(--primary);"></i> Herramienta: Auditoría Digital B2B</h3>
+        <p style="color:var(--text-muted);font-size:0.9rem;margin-bottom:20px;">Usá esta herramienta para prospectar clientes en frío aportando valor. Enviales tu enlace: podrán auditar el estado técnico de su sitio gratis, y cuando dejen sus datos, <strong>los leads quedarán asignados a tu cuenta automáticamente.</strong></p>
+        
+        <div class="ref-card" style="background:rgba(74,222,128,0.05); border:1px solid rgba(74,222,128,0.2);">
+          <div style="flex:1;">
+            <div class="ref-label" style="color:var(--green);"><i class="fa-solid fa-share-nodes"></i> &nbsp;Tu enlace único de Auditoría</div>
+            <div class="ref-url" id="d-auditlink" style="color:var(--text);">Cargando...</div>
+          </div>
+          <button class="btn-copy" style="background:var(--green);color:#000;" onclick="copiarAuditLink()"><i class="fa-solid fa-copy"></i> Copiar enlace</button>
+        </div>
+
+        <div style="background:rgba(255,255,255,0.03); padding:20px; border-radius:10px; border:1px solid var(--border);">
+          <h4 style="font-size:0.85rem; margin-bottom:12px; display:flex; align-items:center; gap:8px;"><i class="fa-brands fa-whatsapp" style="color:var(--green);font-size:1.2rem;"></i> Mensaje sugerido para romper el hielo en WhatsApp/Email:</h4>
+          <div style="background:rgba(0,0,0,0.3); padding:16px; border-radius:8px; border-left:3px solid var(--primary);">
+            <p style="font-size:0.85rem; color:var(--text-dim); font-style:italic; line-height:1.6;" id="d-mensaje-wpp">
+              "Hola [Nombre], estuve revisando la web de [Empresa] y noté algunos detalles técnicos que podrían estar costándoles consultas de potenciales clientes.<br><br>Corrí este reporte gratuito de Google para que vean el estado real de la página en velocidad y celular. Te lo dejo por si les sirve de guía:<br><br><span style="color:var(--primary);" id="d-wpp-link">...</span>"
+            </p>
+          </div>
+          <button onclick="copiarMensajeWpp()" style="background:transparent; color:var(--text-muted); border:1px solid var(--border); padding:8px 16px; border-radius:6px; font-size:0.8rem; margin-top:12px; cursor:pointer; transition:all 0.2s;"><i class="fa-regular fa-copy"></i> Copiar plantilla de mensaje</button>
+        </div>
+      </div>
+    </div>
+
     <div id="tab-referidos" class="tab-panel">
       <div class="form-wrap">
         <div class="bento-box">
@@ -586,7 +615,6 @@
       </div>
     </div>
 
-    <!-- VENTAS -->
     <div id="tab-ventas" class="tab-panel">
       <div class="table-wrap">
         <div class="table-head"><h3><i class="fa-solid fa-handshake" style="color:var(--green);"></i> &nbsp;Historial de ventas confirmadas</h3></div>
@@ -594,7 +622,6 @@
       </div>
     </div>
 
-    <!-- COMISIONES -->
     <div id="tab-comisiones" class="tab-panel">
       <div class="bento-box" style="margin-bottom:24px;">
         <h3 style="font-size:0.95rem;font-weight:700;margin-bottom:4px;"><i class="fa-solid fa-calculator" style="color:var(--primary);"></i> &nbsp;Tus comisiones según nivel actual</h3>
@@ -607,15 +634,64 @@
       </div>
     </div>
 
-  </div>
+    <div id="tab-prospectos" class="tab-panel">
+
+      <div id="prosp-alertas"></div>
+
+      <div class="bento-box" style="margin-bottom:24px;">
+        <h3 style="font-size:0.95rem;font-weight:700;margin-bottom:16px;"><i class="fa-solid fa-plus" style="color:var(--primary);"></i> &nbsp;Cargar nuevo prospecto manual</h3>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+          <div>
+            <label style="font-size:.75rem;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;display:block;margin-bottom:6px;">Nombre / Empresa *</label>
+            <input type="text" id="np-nombre" placeholder="Ej: Metalúrgica San Martín" style="width:100%;background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px 14px;color:var(--text);font-size:.9rem;font-family:'Inter',sans-serif;outline:none;">
+          </div>
+          <div>
+            <label style="font-size:.75rem;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;display:block;margin-bottom:6px;">Contacto (WA / email)</label>
+            <input type="text" id="np-contacto" placeholder="3424000000 o mail@empresa.com" style="width:100%;background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px 14px;color:var(--text);font-size:.9rem;font-family:'Inter',sans-serif;outline:none;">
+          </div>
+          <div>
+            <label style="font-size:.75rem;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;display:block;margin-bottom:6px;">Plan de interés</label>
+            <select id="np-plan" style="width:100%;background:#111;border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px 14px;color:var(--text);font-size:.9rem;font-family:'Inter',sans-serif;outline:none;">
+              <option value="">— No sé aún —</option>
+              <option value="Plan Base">Plan Base (USD 1.050)</option>
+              <option value="Plan Pro">Plan Pro (USD 2.900)</option>
+              <option value="Plan Industrial">Plan Industrial (USD 4.900)</option>
+              <option value="Estrategico 360">Estratégico 360 (USD 7.500)</option>
+            </select>
+          </div>
+          <div>
+            <label style="font-size:.75rem;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;display:block;margin-bottom:6px;">Nota inicial</label>
+            <input type="text" id="np-nota" placeholder="Ej: pide info, evalúa con socio..." style="width:100%;background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px 14px;color:var(--text);font-size:.9rem;font-family:'Inter',sans-serif;outline:none;">
+          </div>
+        </div>
+        <div style="margin-top:14px;display:flex;gap:10px;align-items:center;">
+          <button onclick="crearProspecto()" style="background:var(--primary);color:white;border:none;border-radius:var(--radius-sm);padding:10px 22px;font-size:.88rem;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif;">
+            <i class="fa-solid fa-plus"></i> &nbsp;Agregar prospecto
+          </button>
+          <span id="np-msg" style="font-size:.82rem;color:var(--green);display:none;"><i class="fa-solid fa-check"></i> Cargado correctamente</span>
+        </div>
+      </div>
+
+      <div class="table-wrap">
+        <div class="table-head">
+          <h3><i class="fa-solid fa-users" style="color:var(--primary);"></i> &nbsp;Mis prospectos</h3>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;">
+            <button onclick="filtrarProspectos('todos',this)" id="pfiltro-todos" style="background:var(--primary);color:white;border:none;border-radius:6px;padding:5px 12px;font-size:.78rem;font-weight:600;cursor:pointer;">Todos</button>
+            <button onclick="filtrarProspectos('sin_contactar',this)" id="pfiltro-sin" style="background:transparent;color:var(--text-muted);border:1px solid var(--border);border-radius:6px;padding:5px 12px;font-size:.78rem;font-weight:600;cursor:pointer;">Sin contactar</button>
+            <button onclick="filtrarProspectos('contactado',this)" id="pfiltro-cont" style="background:transparent;color:var(--text-muted);border:1px solid var(--border);border-radius:6px;padding:5px 12px;font-size:.78rem;font-weight:600;cursor:pointer;">Contactados</button>
+            <button onclick="filtrarProspectos('respondio',this)" id="pfiltro-resp" style="background:transparent;color:var(--text-muted);border:1px solid var(--border);border-radius:6px;padding:5px 12px;font-size:.78rem;font-weight:600;cursor:pointer;">Respondieron</button>
+          </div>
+        </div>
+        <div id="lista-prospectos" style="padding:0 4px 8px;"></div>
+      </div>
+
+    </div></div>
 </div>
 
-<!-- BOTÓN FLOTANTE SOPORTE -->
 <a href="https://wa.me/5493424392759" target="_blank" class="float-support" id="float-support" style="display:none;">
   <i class="fa-brands fa-whatsapp"></i> Soporte Avanza
 </a>
 
-<!-- ONBOARDING MODAL (primer login) -->
 <div class="modal-overlay" id="modal-onboarding">
   <div class="onboarding-box">
     <div class="onboard-header">
@@ -627,8 +703,8 @@
       <div class="onboard-step">
         <div class="onboard-step-num">1</div>
         <div>
-          <div class="onboard-step-title">Compartí tu link personal</div>
-          <div class="onboard-step-desc">En el Dashboard vas a encontrar tu link único. Enviáselo a cada cliente potencial antes de que hablen con Avanza.</div>
+          <div class="onboard-step-title">Prospectá con la Auditoría Gratis</div>
+          <div class="onboard-step-desc">En la pestaña <strong>Auditoría</strong> vas a encontrar tu enlace único. Enviáselo a prospectos para romper el hielo y aportar valor de inmediato.</div>
         </div>
       </div>
       <div class="onboard-step">
@@ -668,13 +744,21 @@ let aliado = null;
 const PLANES = { 'Plan Base':1050, 'Plan Pro':2900, 'Plan Industrial':4900, 'Estrategico 360':7500 };
 
 const BENEFICIOS = {
-  BASIC:   ['Kit de bienvenida incluido','Brochure comercial oficial','Guión de ventas','Soporte por email'],
+  BASIC:   ['Kit de bienvenida incluido','Brochure comercial oficial','Herramienta de Auditoría B2B','Soporte por email'],
   SILVER:  ['Todo lo de BASIC','Bono USD 50 en tu primera venta','Acceso al grupo WhatsApp de aliados'],
   PREMIUM: ['Todo lo de SILVER','Badge Aliado Oficial','WhatsApp directo con asesor de Avanza'],
   ELITE:   ['Todo lo de PREMIUM','Directorio web como consultor','Sesión estratégica trimestral con Iván'],
 };
 
 function pct(n) { return {BASIC:0.10,SILVER:0.12,PREMIUM:0.15,ELITE:0.20}[n]||0.10; }
+
+function mostrarToast(msg, tipo='green') {
+  const t = document.createElement('div');
+  t.className = `toast ${tipo}`;
+  t.innerHTML = `<i class="fa-solid ${tipo==='green'?'fa-circle-check':'fa-circle-info'}"></i> ${msg}`;
+  document.body.appendChild(t);
+  setTimeout(()=>t.remove(), 3500);
+}
 
 async function iniciarSesion() {
   const codigo = document.getElementById('login-codigo').value.trim().toUpperCase();
@@ -728,7 +812,6 @@ function cerrarOnboarding() {
   if (aliado) localStorage.setItem(`portal_onboarded_${aliado.codigo}`, '1');
 }
 
-// Cierra modal si se hace click fuera
 document.getElementById('modal-onboarding').addEventListener('click', e => {
   if (e.target === document.getElementById('modal-onboarding')) cerrarOnboarding();
 });
@@ -742,7 +825,7 @@ function getMotivationalMsg(aliado) {
   if (v6 === 2) return { icon:'⚡', text:`¡Bien! ${v6} ventas cerradas. <strong>Solo 1 más</strong> para llegar a PREMIUM (15%).` };
   if (v6 === 1) return { icon:'💡', text:`<strong>Primera venta lograda.</strong> Agregá 1 más para subir a SILVER y ganar más en cada cierre.` };
   if (refs > 0) return { icon:'👀', text:`Tenés <strong>${refs} referido${refs>1?'s':''} en proceso</strong>. El próximo cierre puede ser el tuyo. ¡Hacé seguimiento!` };
-  return { icon:'🚀', text:`<strong>Tu primer referido te espera.</strong> Registrá un cliente hoy y empezá a acumular comisiones.` };
+  return { icon:'🚀', text:`<strong>Prospectá hoy mismo.</strong> Usá tu enlace de auditoría y envíaselo a empresas industriales. ¡Funciona!` };
 }
 
 function renderDashboard() {
@@ -759,7 +842,13 @@ function renderDashboard() {
   document.getElementById('d-ganado').textContent = `USD ${Math.round(aliado.total_ganado||0).toLocaleString()}`;
   document.getElementById('d-pendiente').textContent = `USD ${Math.round(aliado.total_pendiente||0).toLocaleString()}`;
   document.getElementById('d-refs-activos').textContent = refsActivos;
-  document.getElementById('d-reflink').textContent = aliado.link_ref || '';
+  
+  const linkGeneral = aliado.link_ref || '';
+  const linkAuditoria = linkGeneral.replace('alianzas', 'auditoria-digital.html');
+  
+  document.getElementById('d-reflink').textContent = linkGeneral;
+  document.getElementById('d-auditlink').textContent = linkAuditoria;
+  document.getElementById('d-wpp-link').textContent = linkAuditoria;
 
   const proxMap = {BASIC:'SILVER (1 venta)',SILVER:'PREMIUM (2 ventas)',PREMIUM:'ELITE (5 ventas)',ELITE:'¡Nivel máximo!'};
   document.getElementById('d-prox').textContent = `→ Próximo: ${proxMap[nivel]}`;
@@ -787,9 +876,7 @@ function renderDashboard() {
     pctBar = idx * segmentWidth + pctEnSegmento * segmentWidth;
   }
 
-  setTimeout(() => {
-    document.getElementById('nivel-bar').style.width = Math.max(pctBar, 2) + '%';
-  }, 200);
+  setTimeout(() => { document.getElementById('nivel-bar').style.width = Math.max(pctBar, 2) + '%'; }, 200);
 
   // Labels de la barra
   nivelOrden.forEach((n, i) => {
@@ -813,9 +900,20 @@ function renderDashboard() {
 
 function copiarLink() {
   navigator.clipboard.writeText(document.getElementById('d-reflink').textContent).then(()=>{
-    const btn = document.querySelector('.btn-copy');
-    btn.innerHTML='<i class="fa-solid fa-check"></i> ¡Copiado!';
-    setTimeout(()=>{ btn.innerHTML='<i class="fa-solid fa-copy"></i> Copiar'; },2500);
+    mostrarToast('Link copiado', 'green');
+  });
+}
+
+function copiarAuditLink() {
+  navigator.clipboard.writeText(document.getElementById('d-auditlink').textContent).then(()=>{
+    mostrarToast('Enlace de auditoría copiado', 'green');
+  });
+}
+
+function copiarMensajeWpp() {
+  const texto = document.getElementById('d-mensaje-wpp').innerText;
+  navigator.clipboard.writeText(texto).then(()=>{
+    mostrarToast('Plantilla copiada', 'green');
   });
 }
 
@@ -906,6 +1004,142 @@ function cambiarTab(tab,btn) {
   document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
   document.getElementById(`tab-${tab}`).classList.add('active');
   btn.classList.add('active');
+  if(tab==='prospectos') cargarProspectos();
+}
+
+// ── PROSPECTOS ──────────────────────────────────────────────────────────────
+
+let todosProspectos = [];
+let filtroProspActivo = 'todos';
+
+async function cargarProspectos() {
+  try {
+    const res = await fetch(`${API}/prospectos/aliado/${aliado.codigo}`);
+    if(!res.ok) return;
+    todosProspectos = await res.json();
+    renderAlertas();
+    renderProspectos();
+  } catch {}
+}
+
+function renderAlertas() {
+  const sinContactar = todosProspectos.filter(p=>p.estado==='sin_contactar').length;
+  const sinSeguimiento = todosProspectos.filter(p=>p.estado==='contactado').length;
+  let html = '';
+  if(sinContactar>0)
+    html += `<div style="background:rgba(239,68,68,0.12);border:1px solid rgba(239,68,68,0.3);border-radius:10px;padding:12px 16px;margin-bottom:12px;font-size:.88rem;font-weight:600;color:#ef4444;">
+      <i class="fa-solid fa-circle-exclamation"></i> &nbsp;Tenés <strong>${sinContactar}</strong> prospecto${sinContactar>1?'s':''} sin contactar
+    </div>`;
+  if(sinSeguimiento>0)
+    html += `<div style="background:rgba(245,158,11,0.1);border:1px solid rgba(245,158,11,0.25);border-radius:10px;padding:12px 16px;margin-bottom:16px;font-size:.88rem;font-weight:600;color:#f59e0b;">
+      <i class="fa-solid fa-clock"></i> &nbsp;Tenés <strong>${sinSeguimiento}</strong> sin seguimiento — contactaste pero no respondieron
+    </div>`;
+  document.getElementById('prosp-alertas').innerHTML = html;
+}
+
+function filtrarProspectos(filtro, btn) {
+  filtroProspActivo = filtro;
+  document.querySelectorAll('[id^="pfiltro-"]').forEach(b=>{
+    b.style.background='transparent'; b.style.color='var(--text-muted)'; b.style.border='1px solid var(--border)';
+  });
+  btn.style.background='var(--primary)'; btn.style.color='white'; btn.style.border='none';
+  renderProspectos();
+}
+
+function renderProspectos() {
+  const lista = filtroProspActivo==='todos'
+    ? todosProspectos
+    : todosProspectos.filter(p=>p.estado===filtroProspActivo);
+
+  const contenedor = document.getElementById('lista-prospectos');
+  if(!lista.length) {
+    contenedor.innerHTML = `<div style="padding:32px;text-align:center;color:var(--text-muted);font-size:.88rem;">
+      ${filtroProspActivo==='todos'?'Todavía no cargaste ningún prospecto o lead.':'No hay prospectos en este estado.'}
+    </div>`;
+    return;
+  }
+
+  const estadoLabel = { sin_contactar:'Sin contactar', contactado:'Contactado', respondio:'Respondió' };
+  const estadoColor = { sin_contactar:'var(--red)', contactado:'var(--amber)', respondio:'var(--green)' };
+
+  contenedor.innerHTML = lista.map(p=>`
+    <div id="prosp-card-${p.id}" style="border-bottom:1px solid var(--border);padding:16px 8px;display:grid;gap:10px;">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap;">
+        <div style="flex:1;min-width:0;">
+          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+            <span style="font-weight:700;font-size:.95rem;">${p.nombre}</span>
+            ${p.interesante?'<span title="Buen prospecto" style="font-size:1rem;">🔥</span>':''}
+            <span style="font-size:.72rem;font-weight:700;padding:2px 9px;border-radius:50px;background:rgba(0,0,0,0.3);border:1px solid ${estadoColor[p.estado]};color:${estadoColor[p.estado]};">${estadoLabel[p.estado]}</span>
+          </div>
+          ${p.contacto?`<div style="font-size:.8rem;color:var(--text-muted);margin-top:3px;"><i class="fa-solid fa-phone" style="font-size:.7rem;"></i> ${p.contacto}</div>`:''}
+          ${p.plan_interes?`<div style="font-size:.8rem;color:var(--text-muted);"><i class="fa-solid fa-tag" style="font-size:.7rem;"></i> ${p.plan_interes}</div>`:''}
+          ${p.fecha_contacto?`<div style="font-size:.75rem;color:var(--text-dim);">Contactado: ${p.fecha_contacto}${p.fecha_respuesta?' · Respondió: '+p.fecha_respuesta:''}</div>`:''}
+        </div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;">
+          ${p.estado==='sin_contactar'?`<button onclick="accionProspecto(${p.id},'contactar')" style="background:var(--primary);color:white;border:none;border-radius:8px;padding:7px 13px;font-size:.78rem;font-weight:700;cursor:pointer;white-space:nowrap;"><i class="fa-solid fa-paper-plane"></i> Contacté</button>`:''}
+          ${p.estado==='contactado'?`<button onclick="accionProspecto(${p.id},'respondio')" style="background:rgba(74,222,128,0.15);color:var(--green);border:1px solid var(--green-border);border-radius:8px;padding:7px 13px;font-size:.78rem;font-weight:700;cursor:pointer;white-space:nowrap;"><i class="fa-solid fa-reply"></i> Respondió</button>`:''}
+          ${p.estado==='sin_contactar'?'':`<button onclick="accionProspecto(${p.id},'seguimiento')" style="background:rgba(245,158,11,0.12);color:var(--amber);border:1px solid rgba(245,158,11,0.3);border-radius:8px;padding:7px 13px;font-size:.78rem;font-weight:700;cursor:pointer;white-space:nowrap;"><i class="fa-solid fa-rotate-right"></i> Seguimiento</button>`}
+          <button onclick="toggleInteresante(${p.id},${p.interesante})" title="${p.interesante?'Quitar flag':'Marcar como interesante'}" style="background:${p.interesante?'rgba(245,158,11,0.15)':'rgba(255,255,255,0.04)'};color:${p.interesante?'var(--amber)':'var(--text-dim)'};border:1px solid ${p.interesante?'rgba(245,158,11,0.3)':'var(--border)'};border-radius:8px;padding:7px 10px;font-size:.82rem;cursor:pointer;">🔥</button>
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;">
+        <input type="text" id="nota-input-${p.id}" value="${p.nota||''}" placeholder="Agregar nota... (ej: pidió demo, evalúa con su socio)"
+          style="flex:1;background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:8px;padding:7px 12px;color:var(--text);font-size:.82rem;font-family:'Inter',sans-serif;outline:none;">
+        <button onclick="guardarNota(${p.id})" style="background:rgba(255,255,255,0.06);color:var(--text-muted);border:1px solid var(--border);border-radius:8px;padding:7px 12px;font-size:.78rem;font-weight:600;cursor:pointer;white-space:nowrap;">Guardar</button>
+        <span id="nota-ok-${p.id}" style="font-size:.75rem;color:var(--green);display:none;"><i class="fa-solid fa-check"></i></span>
+      </div>
+    </div>
+  `).join('');
+}
+
+async function crearProspecto() {
+  const nombre = document.getElementById('np-nombre').value.trim();
+  if(!nombre) { alert('El nombre es obligatorio.'); return; }
+  const contacto    = document.getElementById('np-contacto').value.trim();
+  const plan        = document.getElementById('np-plan').value;
+  const nota        = document.getElementById('np-nota').value.trim();
+  const url = `${API}/prospectos/crear?codigo_aliado=${aliado.codigo}&nombre=${encodeURIComponent(nombre)}&contacto=${encodeURIComponent(contacto)}&plan_interes=${encodeURIComponent(plan)}&nota=${encodeURIComponent(nota)}`;
+  try {
+    const res = await fetch(url, {method:'POST'});
+    if(res.ok) {
+      document.getElementById('np-nombre').value='';
+      document.getElementById('np-contacto').value='';
+      document.getElementById('np-plan').value='';
+      document.getElementById('np-nota').value='';
+      const msg = document.getElementById('np-msg');
+      msg.style.display='inline'; setTimeout(()=>msg.style.display='none',2500);
+      await cargarProspectos();
+    } else { const d=await res.json(); alert(d.detail||'Error al cargar.'); }
+  } catch { alert('Error de conexión.'); }
+}
+
+async function accionProspecto(id, accion) {
+  const endpoint = accion==='seguimiento' ? 'contactar' : accion;
+  try {
+    const res = await fetch(`${API}/prospectos/${id}/${endpoint}`,{method:'PATCH'});
+    if(res.ok) await cargarProspectos();
+  } catch {}
+}
+
+async function toggleInteresante(id, actual) {
+  try {
+    const res = await fetch(`${API}/prospectos/${id}/interesante`,{method:'PATCH'});
+    if(res.ok) await cargarProspectos();
+  } catch {}
+}
+
+async function guardarNota(id) {
+  const nota = document.getElementById(`nota-input-${id}`).value;
+  try {
+    const res = await fetch(`${API}/prospectos/${id}/nota?nota=${encodeURIComponent(nota)}`,{method:'PATCH'});
+    if(res.ok) {
+      const ok = document.getElementById(`nota-ok-${id}`);
+      ok.style.display='inline'; setTimeout(()=>ok.style.display='none',2000);
+      // update local cache sin recargar toda la lista
+      const p = todosProspectos.find(x=>x.id===id);
+      if(p) p.nota = nota;
+    }
+  } catch {}
 }
 </script>
 </body>

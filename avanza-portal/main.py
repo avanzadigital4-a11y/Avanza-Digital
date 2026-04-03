@@ -7,7 +7,7 @@ from datetime import datetime, timedelta
 import random, string, os
 
 from database import engine, get_db, Base
-from models import Aliado, Admin, Venta, Referido, PLANES, NIVELES
+from models import Aliado, Admin, Venta, Referido, Prospecto, AuditoriaLog, PLANES, NIVELES
 
 Base.metadata.create_all(bind=engine)
 
@@ -35,6 +35,8 @@ RUTAS_ADMIN = {
     ("GET",    "/referidos/pendientes"),
     ("POST",   "/ventas/registrar"),
     ("GET",    "/dashboard"),
+    ("GET",    "/admin/prospectos"),
+    ("GET",    "/admin/auditorias"),
 }
 
 def _es_ruta_admin(method: str, path: str) -> bool:
@@ -301,12 +303,174 @@ def dashboard(db: Session = Depends(get_db)):
     }
 
 
+
+# ─── PROSPECTOS ──────────────────────────────────────────────────────────────
+
+@app.post("/prospectos/crear")
+def crear_prospecto(codigo_aliado: str, nombre: str, contacto: str = "",
+                    plan_interes: str = "", nota: str = "", db: Session = Depends(get_db)):
+    """El aliado carga un prospecto nuevo."""
+    a = _get_aliado(codigo_aliado, db)
+    p = Prospecto(aliado_id=a.id, nombre=nombre, contacto=contacto,
+                  plan_interes=plan_interes, nota=nota)
+    db.add(p); db.commit(); db.refresh(p)
+    return {"mensaje": "Prospecto cargado.", "id": p.id, "nombre": p.nombre}
+
+
+@app.get("/prospectos/aliado/{codigo}")
+def listar_prospectos_aliado(codigo: str, db: Session = Depends(get_db)):
+    """Portal: prospectos del aliado logueado."""
+    a = _get_aliado(codigo, db)
+    return [_prospecto_row(p) for p in sorted(a.prospectos, key=lambda x: x.creado_en, reverse=True)]
+
+
+@app.patch("/prospectos/{id}/contactar")
+def marcar_contactado(id: int, db: Session = Depends(get_db)):
+    p = _get_prospecto(id, db)
+    p.estado = "contactado"
+    p.fecha_contacto = datetime.now()
+    db.commit()
+    return {"mensaje": "Marcado como contactado.", "estado": p.estado}
+
+
+@app.patch("/prospectos/{id}/respondio")
+def marcar_respondio(id: int, db: Session = Depends(get_db)):
+    p = _get_prospecto(id, db)
+    p.estado = "respondio"
+    p.fecha_respuesta = datetime.now()
+    if not p.fecha_contacto:
+        p.fecha_contacto = datetime.now()
+    db.commit()
+    return {"mensaje": "Marcado como respondió.", "estado": p.estado}
+
+
+@app.patch("/prospectos/{id}/nota")
+def actualizar_nota(id: int, nota: str, db: Session = Depends(get_db)):
+    p = _get_prospecto(id, db)
+    p.nota = nota; db.commit()
+    return {"mensaje": "Nota guardada."}
+
+
+@app.patch("/prospectos/{id}/interesante")
+def toggle_interesante(id: int, db: Session = Depends(get_db)):
+    p = _get_prospecto(id, db)
+    p.interesante = not p.interesante; db.commit()
+    return {"interesante": p.interesante}
+
+
+@app.delete("/prospectos/{id}/eliminar")
+def eliminar_prospecto(id: int, db: Session = Depends(get_db)):
+    p = _get_prospecto(id, db)
+    db.delete(p); db.commit()
+    return {"mensaje": "Prospecto eliminado."}
+
+
+@app.get("/admin/prospectos")
+def admin_prospectos(db: Session = Depends(get_db)):
+    """Admin: resumen de prospectos por aliado + lista completa."""
+    aliados = db.query(Aliado).filter(Aliado.activo == True).all()
+    resumen = []
+    for a in aliados:
+        ps = a.prospectos
+        if not ps:
+            continue
+        ultima = max((p.creado_en for p in ps), default=None)
+        resumen.append({
+            "codigo": a.codigo, "nombre": a.nombre,
+            "total": len(ps),
+            "sin_contactar": sum(1 for p in ps if p.estado == "sin_contactar"),
+            "contactados":   sum(1 for p in ps if p.estado == "contactado"),
+            "respondieron":  sum(1 for p in ps if p.estado == "respondio"),
+            "interesantes":  sum(1 for p in ps if p.interesante),
+            "ultima_actividad": ultima.strftime("%d/%m/%Y") if ultima else None,
+            "prospectos": [_prospecto_row(p) for p in sorted(ps, key=lambda x: x.creado_en, reverse=True)],
+        })
+    resumen.sort(key=lambda x: x["ultima_actividad"] or "", reverse=True)
+    totales = {
+        "total":         sum(r["total"] for r in resumen),
+        "sin_contactar": sum(r["sin_contactar"] for r in resumen),
+        "contactados":   sum(r["contactados"] for r in resumen),
+        "respondieron":  sum(r["respondieron"] for r in resumen),
+        "interesantes":  sum(r["interesantes"] for r in resumen),
+    }
+    return {"totales": totales, "por_aliado": resumen}
+
+
+# ─── AUDITORÍAS ──────────────────────────────────────────────────────────────
+
+@app.post("/auditorias/log")
+def log_auditoria(dominio: str, score: int, ref_code: str = "", email: str = "", db: Session = Depends(get_db)):
+    """Guarda el log cuando se genera un reporte o se captura un email."""
+    aliado_id = None
+    if ref_code:
+        a = db.query(Aliado).filter(Aliado.ref_code == ref_code).first()
+        if a:
+            aliado_id = a.id
+    
+    log = AuditoriaLog(aliado_id=aliado_id, ref_code=ref_code, dominio=dominio, score=score, email_capturado=email)
+    db.add(log)
+    db.commit()
+    return {"status": "ok"}
+
+
+@app.get("/admin/auditorias")
+def admin_auditorias(db: Session = Depends(get_db)):
+    """Métricas de uso de la herramienta para el admin."""
+    logs = db.query(AuditoriaLog).all()
+    aliados = db.query(Aliado).filter(Aliado.activo == True).all()
+    
+    usos_por_aliado = {}
+    for log in logs:
+        if log.aliado_id:
+            if log.aliado_id not in usos_por_aliado:
+                usos_por_aliado[log.aliado_id] = []
+            usos_por_aliado[log.aliado_id].append({
+                "dominio": log.dominio,
+                "score": log.score,
+                "email": log.email_capturado,
+                "fecha": log.creado_en.strftime("%d/%m/%Y")
+            })
+
+    resumen_aliados = []
+    for a in aliados:
+        historial = usos_por_aliado.get(a.id, [])
+        resumen_aliados.append({
+            "codigo": a.codigo,
+            "nombre": a.nombre,
+            "usos_totales": len(historial),
+            "ultimo_uso": historial[-1]["fecha"] if historial else None,
+            "historial": historial
+        })
+    
+    return {
+        "total_auditorias": len(logs),
+        "aliados_activos_uso": len([a for a in resumen_aliados if a["usos_totales"] > 0]),
+        "aliados_sin_uso": len([a for a in resumen_aliados if a["usos_totales"] == 0]),
+        "detalle": sorted(resumen_aliados, key=lambda x: x["usos_totales"], reverse=True)
+    }
+
+
 # ─── HELPERS PRIVADOS ────────────────────────────────────────────────────────
 
 def _get_aliado(codigo, db):
     a = db.query(Aliado).filter(Aliado.codigo == codigo).first()
     if not a: raise HTTPException(404, "Aliado no encontrado.")
     return a
+
+def _get_prospecto(id, db):
+    p = db.query(Prospecto).filter(Prospecto.id == id).first()
+    if not p: raise HTTPException(404, "Prospecto no encontrado.")
+    return p
+
+def _prospecto_row(p):
+    return {
+        "id": p.id, "nombre": p.nombre, "contacto": p.contacto,
+        "plan_interes": p.plan_interes, "estado": p.estado,
+        "nota": p.nota, "interesante": p.interesante,
+        "fecha_contacto":  p.fecha_contacto.strftime("%d/%m/%Y") if p.fecha_contacto else None,
+        "fecha_respuesta": p.fecha_respuesta.strftime("%d/%m/%Y") if p.fecha_respuesta else None,
+        "creado_en": p.creado_en.strftime("%d/%m/%Y") if p.creado_en else None,
+    }
 
 def _aliado_row(a):
     return {

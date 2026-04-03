@@ -317,7 +317,6 @@ tr:hover td { background:rgba(255,255,255,0.02); }
 </head>
 <body>
 
-<!-- LOGIN ADMIN -->
 <div id="login-screen">
   <div class="login-box">
     <div class="login-logo"><i class="fa-solid fa-layer-group"></i> Avanza</div>
@@ -342,7 +341,6 @@ tr:hover td { background:rgba(255,255,255,0.02); }
   </div>
 </div>
 
-<!-- PANEL ADMIN -->
 <div id="admin-screen">
 
   <nav class="navbar-floating">
@@ -355,19 +353,18 @@ tr:hover td { background:rgba(255,255,255,0.02); }
 
   <div class="page-wrap">
 
-    <!-- TABS -->
     <div class="tabs">
       <button class="tab-btn active" onclick="cambiarTab('dashboard',this)"><i class="fa-solid fa-chart-pie"></i> Dashboard</button>
       <button class="tab-btn" onclick="cambiarTab('aliados',this)"><i class="fa-solid fa-users"></i> Aliados</button>
       <button class="tab-btn" onclick="cambiarTab('referidos',this)"><i class="fa-solid fa-bell"></i> Referidos <span id="badge-ref" style="display:none;background:var(--red);color:white;font-size:.65rem;font-weight:800;padding:2px 7px;border-radius:50px;margin-left:2px;">0</span></button>
       <button class="tab-btn" onclick="cambiarTab('ventas',this)"><i class="fa-solid fa-handshake"></i> Ventas</button>
+      <button class="tab-btn" onclick="cambiarTab('prospectos',this)"><i class="fa-solid fa-bullseye"></i> Prospectos <span id="badge-prosp" style="display:none;background:var(--red);color:white;font-size:.65rem;font-weight:800;padding:2px 7px;border-radius:50px;margin-left:2px;">0</span></button>
+      <button class="tab-btn" onclick="cambiarTab('auditorias',this)"><i class="fa-solid fa-magnifying-glass"></i> Auditorías</button>
       <button class="tab-btn" onclick="cambiarTab('nuevo-aliado',this)"><i class="fa-solid fa-user-plus"></i> Nuevo aliado</button>
     </div>
 
-    <!-- DASHBOARD -->
     <div id="tab-dashboard" class="tab-panel active">
 
-      <!-- KPIs PRINCIPALES -->
       <div class="metrics-grid" id="kpi-grid">
         <div class="metric-card highlight">
           <div class="metric-icon mi-green"><i class="fa-solid fa-dollar-sign"></i></div>
@@ -407,10 +404,9 @@ tr:hover td { background:rgba(255,255,255,0.02); }
         </div>
       </div>
 
-      <!-- ACCIONES RÁPIDAS -->
       <div class="quick-actions">
         <span class="quick-actions-label"><i class="fa-solid fa-zap"></i> Acciones rápidas:</span>
-        <button class="btn-primary" onclick="cambiarTab('nuevo-aliado',document.querySelectorAll('.tab-btn')[4])">
+        <button class="btn-primary" onclick="cambiarTab('nuevo-aliado',document.querySelectorAll('.tab-btn')[6])">
           <i class="fa-solid fa-user-plus"></i> Nuevo aliado
         </button>
         <button class="btn-primary" onclick="abrirModalVenta()">
@@ -421,16 +417,13 @@ tr:hover td { background:rgba(255,255,255,0.02); }
         </button>
       </div>
 
-      <!-- Distribución de niveles -->
       <div class="table-wrap">
         <div class="table-head"><h3><i class="fa-solid fa-layer-group" style="color:#3b82f6;"></i> Distribución por nivel</h3></div>
         <div id="niveles-dist" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:0;"></div>
       </div>
 
-      <!-- Grid: pendientes + actividad reciente -->
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;flex-wrap:wrap;" id="dash-bottom-grid">
 
-        <!-- Últimos referidos sin confirmar -->
         <div class="table-wrap" style="margin-bottom:0;">
           <div class="table-head">
             <h3><i class="fa-solid fa-triangle-exclamation" style="color:var(--amber);"></i> Pendientes de confirmación</h3>
@@ -439,7 +432,6 @@ tr:hover td { background:rgba(255,255,255,0.02); }
           <div id="dash-referidos-pending"></div>
         </div>
 
-        <!-- Actividad reciente -->
         <div class="table-wrap" style="margin-bottom:0;">
           <div class="table-head">
             <h3><i class="fa-solid fa-clock-rotate-left" style="color:var(--primary);"></i> Actividad reciente</h3>
@@ -450,7 +442,6 @@ tr:hover td { background:rgba(255,255,255,0.02); }
       </div>
     </div>
 
-    <!-- ALIADOS -->
     <div id="tab-aliados" class="tab-panel">
       <div class="table-wrap">
         <div class="table-head">
@@ -466,7 +457,7 @@ tr:hover td { background:rgba(255,255,255,0.02); }
               <option value="PREMIUM">PREMIUM</option>
               <option value="ELITE">ELITE</option>
             </select>
-            <button class="btn-primary" onclick="cambiarTab('nuevo-aliado',document.querySelectorAll('.tab-btn')[4])"><i class="fa-solid fa-user-plus"></i> Nuevo aliado</button>
+            <button class="btn-primary" onclick="cambiarTab('nuevo-aliado',document.querySelectorAll('.tab-btn')[6])"><i class="fa-solid fa-user-plus"></i> Nuevo aliado</button>
           </div>
         </div>
         <div style="overflow-x:auto;">
@@ -481,7 +472,6 @@ tr:hover td { background:rgba(255,255,255,0.02); }
       </div>
     </div>
 
-    <!-- REFERIDOS -->
     <div id="tab-referidos" class="tab-panel">
       <div class="table-wrap">
         <div class="table-head">
@@ -503,7 +493,6 @@ tr:hover td { background:rgba(255,255,255,0.02); }
       </div>
     </div>
 
-    <!-- VENTAS -->
     <div id="tab-ventas" class="tab-panel">
       <div class="table-wrap">
         <div class="table-head">
@@ -522,7 +511,6 @@ tr:hover td { background:rgba(255,255,255,0.02); }
       </div>
     </div>
 
-    <!-- NUEVO ALIADO -->
     <div id="tab-nuevo-aliado" class="tab-panel">
       <div style="max-width:640px;">
         <div class="table-wrap" style="padding:32px;">
@@ -555,10 +543,68 @@ tr:hover td { background:rgba(255,255,255,0.02); }
       </div>
     </div>
 
+    <div id="tab-prospectos" class="tab-panel">
+
+      <div id="prosp-kpis" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-bottom:24px;"></div>
+
+      <div class="table-wrap" style="margin-bottom:24px;">
+        <div class="section-header" style="padding:20px 24px 0;">
+          <div>
+            <div class="section-title"><i class="fa-solid fa-table" style="color:var(--primary);"></i> &nbsp;Prospectos por aliado</div>
+            <div class="section-sub">Quién carga, quién contacta, quién tiene respuestas</div>
+          </div>
+          <button onclick="cargarAdminProspectos()" style="background:transparent;border:1px solid var(--border);color:var(--text-muted);border-radius:8px;padding:7px 14px;font-size:.8rem;cursor:pointer;"><i class="fa-solid fa-rotate-right"></i> Actualizar</button>
+        </div>
+        <div style="overflow-x:auto;padding:0 8px 8px;">
+          <table style="width:100%;border-collapse:collapse;font-size:.85rem;" id="tabla-prosp-aliados">
+            <thead>
+              <tr style="border-bottom:1px solid var(--border);color:var(--text-muted);font-size:.75rem;text-transform:uppercase;letter-spacing:.8px;">
+                <th style="padding:10px 12px;text-align:left;font-weight:600;">Aliado</th>
+                <th style="padding:10px 12px;text-align:center;font-weight:600;">Total</th>
+                <th style="padding:10px 12px;text-align:center;font-weight:600;color:var(--red);">Sin contactar</th>
+                <th style="padding:10px 12px;text-align:center;font-weight:600;color:var(--amber);">Contactados</th>
+                <th style="padding:10px 12px;text-align:center;font-weight:600;color:var(--green);">Respondieron</th>
+                <th style="padding:10px 12px;text-align:center;font-weight:600;">🔥 Interes.</th>
+                <th style="padding:10px 12px;text-align:left;font-weight:600;">Última actividad</th>
+                <th style="padding:10px 12px;text-align:center;font-weight:600;"></th>
+              </tr>
+            </thead>
+            <tbody id="tabla-prosp-body">
+              <tr><td colspan="8" style="padding:32px;text-align:center;color:var(--text-muted);">Cargando...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div id="prosp-detalle-container"></div>
+
+    </div><div id="tab-auditorias" class="tab-panel">
+      <div class="metrics-grid" id="audit-kpis"></div>
+      
+      <div class="table-wrap">
+        <div class="section-header" style="padding:20px 24px 0;">
+          <div>
+            <div class="section-title"><i class="fa-solid fa-magnifying-glass" style="color:var(--primary);"></i> &nbsp;Uso de la Herramienta por Aliado</div>
+            <div class="section-sub">Dominios auditados y emails capturados</div>
+          </div>
+          <button onclick="cargarAuditoriasAdmin()" style="background:transparent;border:1px solid var(--border);color:var(--text-muted);border-radius:8px;padding:7px 14px;font-size:.8rem;cursor:pointer;"><i class="fa-solid fa-rotate-right"></i> Actualizar</button>
+        </div>
+        <div style="overflow-x:auto;">
+          <table>
+            <thead><tr>
+              <th>Aliado</th><th>Usos Totales</th><th>Último uso</th><th>Historial de Dominios Auditados</th>
+            </tr></thead>
+            <tbody id="tabla-auditorias-body">
+              <tr><td colspan="4" style="padding:32px;text-align:center;color:var(--text-muted);">Cargando...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
   </div>
 </div>
 
-<!-- MODAL REGISTRAR VENTA -->
 <div class="modal-overlay" id="modal-venta">
   <div class="modal-box">
     <button class="modal-close" onclick="cerrarModal('modal-venta')">&times;</button>
@@ -594,7 +640,6 @@ tr:hover td { background:rgba(255,255,255,0.02); }
   </div>
 </div>
 
-<!-- MODAL VER ALIADO -->
 <div class="modal-overlay" id="modal-aliado">
   <div class="modal-box">
     <button class="modal-close" onclick="cerrarModal('modal-aliado')">&times;</button>
@@ -602,7 +647,6 @@ tr:hover td { background:rgba(255,255,255,0.02); }
   </div>
 </div>
 
-<!-- MODAL EDITAR COMISIÓN -->
 <div class="modal-overlay" id="modal-comision">
   <div class="modal-box" style="max-width:400px;">
     <button class="modal-close" onclick="cerrarModal('modal-comision')">&times;</button>
@@ -624,7 +668,6 @@ tr:hover td { background:rgba(255,255,255,0.02); }
   </div>
 </div>
 
-<!-- MODAL CONFIRMACIÓN (genérico) -->
 <div class="modal-overlay" id="modal-confirm">
   <div class="modal-confirm-box">
     <span class="confirm-icon" id="confirm-icon">⚠️</span>
@@ -639,9 +682,6 @@ tr:hover td { background:rgba(255,255,255,0.02); }
 
 <script>
 const API = 'https://avanza-digital-production.up.railway.app';
-// Credenciales ofuscadas — validación local (sin backend de auth)
-const _AH = ['aXZhbg==', 'YXZhbnphMjAyNg=='];
-function _authOk(u, p) { try { return btoa(u) === _AH[0] && btoa(p) === _AH[1]; } catch { return false; } }
 
 const PLANES = { 'Plan Base':1050, 'Plan Pro':2900, 'Plan Industrial':4900, 'Estrategico 360':7500 };
 function pct(n) { return {BASIC:.10,SILVER:.12,PREMIUM:.15,ELITE:.20}[n]||.10; }
@@ -654,7 +694,6 @@ let _confirmCallback = null;
 
 // ── LOGIN ──────────────────────────────────────────────────────────────────
 
-// Al cargar la página: si hay sesión guardada, restaurarla automáticamente
 (function restaurarSesion() {
   const savedKey = sessionStorage.getItem('avanza_api_key');
   if (savedKey) {
@@ -666,13 +705,10 @@ let _confirmCallback = null;
 })();
 
 async function loginAdmin() {
-  const user   = document.getElementById('login-user').value.trim();
-  const pass   = document.getElementById('login-pass').value;
   const apikey = document.getElementById('login-apikey') ? document.getElementById('login-apikey').value.trim() : '';
   const err    = document.getElementById('login-error');
   err.style.display = 'none';
 
-  // Verificar credenciales contra la API usando la key ingresada
   if (!apikey) { err.style.display = 'block'; return; }
 
   try {
@@ -681,7 +717,7 @@ async function loginAdmin() {
     });
     if (res.ok) {
       _apiKey = apikey;
-      sessionStorage.setItem('avanza_api_key', apikey); // persiste durante la sesión
+      sessionStorage.setItem('avanza_api_key', apikey);
       document.getElementById('login-screen').style.display = 'none';
       document.getElementById('admin-screen').style.display = 'block';
       cargarTodo();
@@ -703,9 +739,6 @@ function logoutAdmin() {
 }
 
 document.getElementById('login-pass').addEventListener('keydown', e => { if(e.key==='Enter') loginAdmin(); });
-
-// ── DATOS ──────────────────────────────────────────────────────────────────
-
 
 // ── API FETCH CON AUTH ──────────────────────────────────────────────────────
 function apiFetch(url, opts = {}) {
@@ -862,7 +895,6 @@ function renderDashboard() {
       </div>`).join('');
   }
 
-  // Responsive grid
   if (window.innerWidth < 700) {
     document.getElementById('dash-bottom-grid').style.gridTemplateColumns = '1fr';
   }
@@ -1163,8 +1195,7 @@ async function marcarPagada(idx) {
         mostrarToast(err.detail || 'Error al marcar como pagada', 'red');
       }
     } else {
-      // La API aún no expone el ID en el listado → fallback informativo
-      mostrarToast('La API no retorna ID de venta. Marcá manualmente en /docs → ventas/{id}/pagar', 'amber');
+      mostrarToast('La API no retorna ID de venta. Marcá manualmente en /docs', 'amber');
     }
   } catch { mostrarToast('Error de conexión al marcar pago', 'red'); }
 }
@@ -1302,7 +1333,170 @@ function cambiarTab(tab, btn) {
   document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
   document.getElementById(`tab-${tab}`).classList.add('active');
   btn.classList.add('active');
+  if(tab==='prospectos') cargarAdminProspectos();
+  if(tab==='auditorias') cargarAuditoriasAdmin();
 }
+
+// ── PROSPECTOS ADMIN ────────────────────────────────────────────────────────
+
+let datosProspectos = null;
+let detalleAbierto = null;
+
+async function cargarAdminProspectos() {
+  try {
+    const res = await apiFetch(`${API}/admin/prospectos`);
+    if(!res.ok) return;
+    datosProspectos = await res.json();
+    renderKpisProspectos();
+    renderTablaProspectos();
+    // badge en el tab
+    const sinContactar = datosProspectos.totales.sin_contactar;
+    const badge = document.getElementById('badge-prosp');
+    if(sinContactar>0){ badge.textContent=sinContactar; badge.style.display='inline'; }
+    else badge.style.display='none';
+  } catch(e){ console.error(e); }
+}
+
+function renderKpisProspectos() {
+  const t = datosProspectos.totales;
+  const pct = (n,d) => d>0 ? Math.round(n/d*100)+'%' : '—';
+  const kpis = [
+    { label:'Total prospectos', value:t.total, color:'var(--primary)' },
+    { label:'Sin contactar', value:t.sin_contactar, color:'var(--red)' },
+    { label:'Contactados', value:t.contactados, color:'var(--amber)' },
+    { label:'Respondieron', value:t.respondieron, color:'var(--green)' },
+    { label:'Tasa contacto', value:pct(t.contactados+t.respondieron, t.total), color:'var(--text-muted)' },
+    { label:'Tasa respuesta', value:pct(t.respondieron, t.contactados+t.respondieron), color:'var(--text-muted)' },
+    { label:'🔥 Interesantes', value:t.interesantes, color:'var(--amber)' },
+  ];
+  document.getElementById('prosp-kpis').innerHTML = kpis.map(k=>`
+    <div style="background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:12px;padding:16px 18px;">
+      <div style="font-size:.72rem;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:.8px;margin-bottom:6px;">${k.label}</div>
+      <div style="font-size:1.8rem;font-weight:800;color:${k.color};line-height:1;">${k.value}</div>
+    </div>
+  `).join('');
+}
+
+function renderTablaProspectos() {
+  const tbody = document.getElementById('tabla-prosp-body');
+  if(!datosProspectos.por_aliado.length){
+    tbody.innerHTML='<tr><td colspan="8" style="padding:32px;text-align:center;color:var(--text-muted);">Ningún aliado tiene prospectos cargados todavía.</td></tr>';
+    return;
+  }
+  tbody.innerHTML = datosProspectos.por_aliado.map(a=>`
+    <tr style="border-bottom:1px solid var(--border);transition:background .15s;" onmouseover="this.style.background='rgba(255,255,255,0.03)'" onmouseout="this.style.background='transparent'">
+      <td style="padding:12px 12px;">
+        <div style="font-weight:700;font-size:.88rem;">${a.nombre}</div>
+        <div style="font-size:.72rem;color:var(--text-dim);">${a.codigo}</div>
+      </td>
+      <td style="padding:12px;text-align:center;font-weight:700;">${a.total}</td>
+      <td style="padding:12px;text-align:center;font-weight:700;color:${a.sin_contactar>0?'var(--red)':'var(--text-dim)'};">${a.sin_contactar}</td>
+      <td style="padding:12px;text-align:center;font-weight:700;color:${a.contactados>0?'var(--amber)':'var(--text-dim)'};">${a.contactados}</td>
+      <td style="padding:12px;text-align:center;font-weight:700;color:${a.respondieron>0?'var(--green)':'var(--text-dim)'};">${a.respondieron}</td>
+      <td style="padding:12px;text-align:center;">${a.interesantes>0?`<strong style="color:var(--amber);">${a.interesantes}</strong>`:'—'}</td>
+      <td style="padding:12px;font-size:.8rem;color:var(--text-muted);">${a.ultima_actividad||'—'}</td>
+      <td style="padding:12px;text-align:center;">
+        <button onclick="toggleDetalleAliado('${a.codigo}')" style="background:transparent;border:1px solid var(--border);color:var(--text-muted);border-radius:6px;padding:5px 11px;font-size:.75rem;cursor:pointer;" id="btn-det-${a.codigo}">
+          Ver detalle
+        </button>
+      </td>
+    </tr>
+  `).join('');
+}
+
+function toggleDetalleAliado(codigo) {
+  const contenedor = document.getElementById('prosp-detalle-container');
+  if(detalleAbierto===codigo){ contenedor.innerHTML=''; detalleAbierto=null; return; }
+  detalleAbierto = codigo;
+  const aliado = datosProspectos.por_aliado.find(a=>a.codigo===codigo);
+  if(!aliado) return;
+
+  const estadoLabel = { sin_contactar:'Sin contactar', contactado:'Contactado', respondio:'Respondió' };
+  const estadoColor = { sin_contactar:'var(--red)', contactado:'var(--amber)', respondio:'var(--green)' };
+
+  contenedor.innerHTML = `
+    <div class="table-wrap" style="margin-bottom:24px;animation:fadeIn .2s ease;">
+      <div class="section-header" style="padding:20px 24px 0;">
+        <div>
+          <div class="section-title">Prospectos de ${aliado.nombre}</div>
+          <div class="section-sub">${aliado.codigo} · ${aliado.total} prospectos en total</div>
+        </div>
+        <button onclick="toggleDetalleAliado('${codigo}')" style="background:transparent;border:1px solid var(--border);color:var(--text-muted);border-radius:8px;padding:7px 14px;font-size:.8rem;cursor:pointer;">✕ Cerrar</button>
+      </div>
+      <div style="padding:16px 20px;">
+        ${aliado.prospectos.map(p=>`
+          <div style="border-bottom:1px solid var(--border);padding:14px 8px;display:flex;align-items:flex-start;gap:16px;flex-wrap:wrap;">
+            <div style="flex:1;min-width:200px;">
+              <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:4px;">
+                <span style="font-weight:700;font-size:.9rem;">${p.nombre}</span>
+                ${p.interesante?'<span>🔥</span>':''}
+                <span style="font-size:.7rem;font-weight:700;padding:2px 8px;border-radius:50px;border:1px solid ${estadoColor[p.estado]};color:${estadoColor[p.estado]};">${estadoLabel[p.estado]}</span>
+              </div>
+              ${p.contacto?`<div style="font-size:.78rem;color:var(--text-muted);">📞 ${p.contacto}</div>`:''}
+              ${p.plan_interes?`<div style="font-size:.78rem;color:var(--text-muted);">📦 ${p.plan_interes}</div>`:''}
+              ${p.nota?`<div style="font-size:.78rem;color:var(--text-dim);margin-top:4px;font-style:italic;">"${p.nota}"</div>`:''}
+            </div>
+            <div style="font-size:.75rem;color:var(--text-dim);text-align:right;white-space:nowrap;">
+              <div>Cargado: ${p.creado_en||'—'}</div>
+              ${p.fecha_contacto?`<div>Contacto: ${p.fecha_contacto}</div>`:''}
+              ${p.fecha_respuesta?`<div style="color:var(--green);">Respondió: ${p.fecha_respuesta}</div>`:''}
+            </div>
+          </div>
+        `).join('')}
+      </div>
+    </div>
+  `;
+}
+
+// ── AUDITORIAS ADMIN ────────────────────────────────────────────────────────
+
+async function cargarAuditoriasAdmin() {
+  try {
+    const res = await apiFetch(`${API}/admin/auditorias`);
+    if(!res.ok) return;
+    const data = await res.json();
+    
+    // Render KPIs
+    document.getElementById('audit-kpis').innerHTML = `
+      <div class="metric-card">
+        <div class="metric-label">Total Auditorías Generadas</div>
+        <div class="metric-value mv-blue">${data.total_auditorias}</div>
+      </div>
+      <div class="metric-card highlight">
+        <div class="metric-label">Aliados Usando la Herramienta</div>
+        <div class="metric-value mv-green">${data.aliados_activos_uso}</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-label">Aliados Sin Usarla (Inactivos)</div>
+        <div class="metric-value mv-red">${data.aliados_sin_uso}</div>
+      </div>
+    `;
+
+    // Render Table
+    const tbody = document.getElementById('tabla-auditorias-body');
+    if(!data.detalle.length) {
+      tbody.innerHTML = '<tr><td colspan="4"><div class="empty-state">No hay datos todavía.</div></td></tr>';
+      return;
+    }
+    
+    tbody.innerHTML = data.detalle.map(a => `
+      <tr style="border-bottom:1px solid var(--border); transition:background .15s;" onmouseover="this.style.background='rgba(255,255,255,0.03)'" onmouseout="this.style.background='transparent'">
+        <td style="padding:14px 20px;">
+          <strong style="display:block; font-size:0.9rem;">${a.nombre}</strong>
+          <span style="font-size:0.75rem;color:var(--text-dim);">${a.codigo}</span>
+        </td>
+        <td style="padding:14px 20px; font-weight:700; color:${a.usos_totales > 0 ? 'var(--green)' : 'var(--text-dim)'}; text-align:center;">
+          ${a.usos_totales > 0 ? `<span style="font-size:1.2rem;">${a.usos_totales}</span>` : '0'}
+        </td>
+        <td style="padding:14px 20px; color:var(--text-muted); text-align:center;">${a.ultimo_uso || '—'}</td>
+        <td style="padding:14px 20px; font-size:0.8rem; color:var(--text-muted);">
+          ${a.historial.slice().reverse().map(h => `<div style="margin-bottom:6px; padding-bottom:6px; border-bottom:1px dashed rgba(255,255,255,0.05);"><i class="fa-solid fa-magnifying-glass" style="color:var(--text-dim); margin-right:4px;"></i> <strong>${h.dominio}</strong> <span style="color:var(--primary); font-family:monospace; margin-left:6px;">Score: ${h.score}</span> <br> <span style="color:var(--text-dim); font-size:0.7rem;">${h.fecha}</span> ${h.email ? `<span style="color:var(--green); margin-left:8px;"><i class="fa-solid fa-envelope"></i> ${h.email}</span>` : ''}</div>`).join('') || '<span style="color:var(--text-dim); font-style:italic;">Sin auditorías</span>'}
+        </td>
+      </tr>
+    `).join('');
+  } catch(e) { console.error(e); }
+}
+
 </script>
 </body>
 </html>
