@@ -116,7 +116,7 @@ def login_aliado(codigo: str, password: str, db: Session = Depends(get_db)):
     if not verify_password(password, a.password_hash):
         raise HTTPException(401, "Contraseña incorrecta.")
     
-    # TRACKING: Registramos que acaba de entrar (con protección de errores)
+    # TRACKING: Registramos que acaba de entrar (CON ESCUDO PROTECTOR)
     try:
         a.ultimo_login = datetime.now()
         a.cantidad_logins = (getattr(a, 'cantidad_logins', 0) or 0) + 1
