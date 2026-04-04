@@ -21,6 +21,10 @@ class Aliado(Base):
     activo = Column(Boolean, default=True)
     ref_code = Column(String, unique=True)                 # Código ?ref= único
     creado_en = Column(DateTime, default=func.now())
+    
+    # --- TRACKING DE LOGIN ---
+    ultimo_login = Column(DateTime, nullable=True)
+    cantidad_logins = Column(Integer, default=0)
 
     ventas = relationship("Venta", back_populates="aliado")
     referidos = relationship("Referido", back_populates="aliado")
