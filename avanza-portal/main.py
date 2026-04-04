@@ -12,14 +12,21 @@ from models import Aliado, Admin, Venta, Referido, Prospecto, AuditoriaLog, PLAN
 
 Base.metadata.create_all(bind=engine)
 
-# Auto-migración para agregar las columnas a la base existente sin borrar nada
+# Auto-migración SEGURA: Un try para CADA columna
 try:
     with engine.connect() as conn:
         conn.execute(text("ALTER TABLE aliados ADD COLUMN ultimo_login DATETIME"))
+        conn.commit()
+except Exception:
+    pass # Si ya existe, lo ignoramos
+
+try:
+    with engine.connect() as conn:
         conn.execute(text("ALTER TABLE aliados ADD COLUMN cantidad_logins INTEGER DEFAULT 0"))
         conn.commit()
 except Exception:
-    pass # Si las columnas ya existen, simplemente ignora el error
+    pass # Si ya existe, lo ignoramos
+
 
 app = FastAPI(title="Avanza Partner Portal", version="1.1")
 
