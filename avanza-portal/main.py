@@ -116,10 +116,14 @@ def login_aliado(codigo: str, password: str, db: Session = Depends(get_db)):
     if not verify_password(password, a.password_hash):
         raise HTTPException(401, "Contraseña incorrecta.")
     
-    # TRACKING: Registramos que acaba de entrar
-    a.ultimo_login = datetime.now()
-    a.cantidad_logins = (a.cantidad_logins or 0) + 1
-    db.commit()
+    # TRACKING: Registramos que acaba de entrar (con protección de errores)
+    try:
+        a.ultimo_login = datetime.now()
+        a.cantidad_logins = (getattr(a, 'cantidad_logins', 0) or 0) + 1
+        db.commit()
+    except Exception as e:
+        db.rollback() # Si la base de datos falla, aborta el tracking pero PERMITE el login
+        print(f"Error guardando tracking de login: {e}")
     
     return _aliado_detalle(a)
 
