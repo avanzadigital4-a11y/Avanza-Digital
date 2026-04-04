@@ -12,19 +12,20 @@ from models import Aliado, Admin, Venta, Referido, Prospecto, AuditoriaLog, PLAN
 
 Base.metadata.create_all(bind=engine)
 
-# Auto-migración SEGURA: Un try para CADA columna
+# Auto-migración SEGURA: Corregido para PostgreSQL (Railway)
 try:
     with engine.connect() as conn:
-        conn.execute(text("ALTER TABLE aliados ADD COLUMN ultimo_login DATETIME"))
+        # PostgreSQL usa TIMESTAMP en lugar de DATETIME. Esto causaba el crash.
+        conn.execute(text("ALTER TABLE aliados ADD COLUMN ultimo_login TIMESTAMP"))
         conn.commit()
-except Exception:
+except Exception as e:
     pass # Si ya existe, lo ignoramos
 
 try:
     with engine.connect() as conn:
         conn.execute(text("ALTER TABLE aliados ADD COLUMN cantidad_logins INTEGER DEFAULT 0"))
         conn.commit()
-except Exception:
+except Exception as e:
     pass # Si ya existe, lo ignoramos
 
 
