@@ -2,6 +2,7 @@ from fastapi import FastAPI, Depends, HTTPException, Request, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
+from sqlalchemy import text  # IMPORTANTE: Agregado para la migración
 from passlib.context import CryptContext
 from datetime import datetime, timedelta
 import random, string, os
@@ -10,6 +11,15 @@ from database import engine, get_db, Base
 from models import Aliado, Admin, Venta, Referido, Prospecto, AuditoriaLog, PLANES, NIVELES
 
 Base.metadata.create_all(bind=engine)
+
+# Auto-migración para agregar las columnas a la base existente sin borrar nada
+try:
+    with engine.connect() as conn:
+        conn.execute(text("ALTER TABLE aliados ADD COLUMN ultimo_login DATETIME"))
+        conn.execute(text("ALTER TABLE aliados ADD COLUMN cantidad_logins INTEGER DEFAULT 0"))
+        conn.commit()
+except Exception:
+    pass # Si las columnas ya existen, simplemente ignora el error
 
 app = FastAPI(title="Avanza Partner Portal", version="1.1")
 
@@ -105,6 +115,12 @@ def login_aliado(codigo: str, password: str, db: Session = Depends(get_db)):
         raise HTTPException(404, "Código no encontrado.")
     if not verify_password(password, a.password_hash):
         raise HTTPException(401, "Contraseña incorrecta.")
+    
+    # TRACKING: Registramos que acaba de entrar
+    a.ultimo_login = datetime.now()
+    a.cantidad_logins = (a.cantidad_logins or 0) + 1
+    db.commit()
+    
     return _aliado_detalle(a)
 
 
@@ -480,6 +496,8 @@ def _aliado_row(a):
         "total_ganado": round(a.total_ganado, 2),
         "total_pendiente": round(a.total_pendiente, 2),
         "ref_code": a.ref_code, "fecha_firma": a.fecha_firma,
+        "ultimo_login": a.ultimo_login.strftime("%d/%m/%Y %H:%M") if getattr(a, "ultimo_login", None) else "Nunca",
+        "cantidad_logins": getattr(a, "cantidad_logins", 0),
     }
 
 def _aliado_detalle(a):
@@ -502,7 +520,8 @@ def _aliado_detalle(a):
                     "fecha": v.fecha_venta.strftime("%d/%m/%Y") if v.fecha_venta else None}
                    for v in a.ventas if v.confirmada],
     }
-    # ─── RANKING PÚBLICO (Gamificación) ──────────────────────────────────────────
+
+# ─── RANKING PÚBLICO (Gamificación) ──────────────────────────────────────────
 
 @app.get("/leaderboard")
 def obtener_leaderboard(db: Session = Depends(get_db)):
