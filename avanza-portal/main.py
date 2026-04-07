@@ -89,7 +89,21 @@ def generar_ref_code(nombre):
     return f"{base}{''.join(random.choices(string.digits, k=4))}"
 
 def generar_codigo_aliado(db):
-    return f"AL-{str(db.query(Aliado).count() + 1).zfill(3)}"
+    # Buscamos el último aliado creado ordenando por ID de forma descendente
+    ultimo_aliado = db.query(Aliado).order_by(Aliado.id.desc()).first()
+    
+    if not ultimo_aliado:
+        return "AL-001"
+    
+    try:
+        # Extraemos el número del último código (ej: de "AL-020" o "AL-21" sacamos el 20 o 21)
+        numero_actual = int(ultimo_aliado.codigo.split('-')[1])
+        siguiente_numero = numero_actual + 1
+    except (IndexError, ValueError):
+        # Si por alguna razón el código anterior tiene un formato diferente, usamos su ID como base segura
+        siguiente_numero = ultimo_aliado.id + 1
+        
+    return f"AL-{str(siguiente_numero).zfill(3)}"
 
 
 # ─── SALUD ───────────────────────────────────────────────────────────────────
