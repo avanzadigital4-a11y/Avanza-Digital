@@ -89,7 +89,21 @@ def generar_ref_code(nombre):
     return f"{base}{''.join(random.choices(string.digits, k=4))}"
 
 def generar_codigo_aliado(db):
-    return f"AL-{str(db.query(Aliado).count() + 1).zfill(3)}"
+    # Obtener el número más alto existente en los códigos
+    from sqlalchemy import func
+    resultado = db.query(func.max(Aliado.codigo)).scalar()
+
+    if not resultado:
+        # Si no hay aliados, empezar en AL-1
+        return "AL-1"
+
+    try:
+        # Extraer el número del código (ej: "AL-20" → 20)
+        numero = int(resultado.split('-')[1])
+        return f"AL-{numero + 1}"
+    except (IndexError, ValueError):
+        # Fallback si el formato es inválido
+        return f"AL-{db.query(Aliado).count() + 1}"
 
 
 # ─── SALUD ───────────────────────────────────────────────────────────────────
