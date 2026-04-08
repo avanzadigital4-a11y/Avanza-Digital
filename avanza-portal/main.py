@@ -204,6 +204,7 @@ def crear_aliado(nombre: str, email: str, whatsapp: str, ciudad: str,
     return {
         "mensaje": f"Aliado {a.codigo} creado", "codigo": a.codigo,
         "ref_code": a.ref_code, "password_inicial": password,
+        "ref_code": a.ref_code,
         "link_ref": f"https://avanzadigital.digital/alianzas?ref={a.ref_code}",
     }
 
@@ -535,6 +536,7 @@ def _aliado_detalle(a):
         "ventas_6m": a.ventas_6_meses, "total_ventas": len(a.ventas),
         "total_ganado": round(a.total_ganado, 2),
         "total_pendiente": round(a.total_pendiente, 2),
+        "ref_code": a.ref_code,
         "link_ref": f"https://avanzadigital.digital/alianzas?ref={a.ref_code}",
         "referidos": [{"cliente": r.nombre_cliente, "plan": r.plan_elegido,
                        "fecha": r.registrado_en.strftime("%d/%m/%Y"),
