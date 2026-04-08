@@ -749,6 +749,10 @@ document.getElementById('login-pass').addEventListener('keydown', e => { if(e.ke
 function apiFetch(url, opts = {}) {
   opts.headers = opts.headers || {};
   if (_apiKey) opts.headers['X-API-Key'] = _apiKey;
+  
+  // Esta línea obliga al navegador a pedir SIEMPRE datos frescos al servidor
+  opts.cache = 'no-store'; 
+  
   return fetch(url, opts);
 }
 
