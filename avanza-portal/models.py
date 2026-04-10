@@ -2,6 +2,7 @@ from sqlalchemy import Column, Integer, String, Float, Boolean, DateTime, Foreig
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 from database import Base
+from datetime import datetime
 
 
 class Aliado(Base):
