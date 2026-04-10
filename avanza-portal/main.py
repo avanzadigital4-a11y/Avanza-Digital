@@ -5,8 +5,6 @@ from sqlalchemy.orm import Session
 from sqlalchemy import text  # IMPORTANTE: Agregado para la migración
 from passlib.context import CryptContext
 from datetime import datetime, timedelta
-from pydantic import BaseModel
-from models import Aliado, Admin, Venta, Referido, Prospecto, AuditoriaLog, LeadBolsa, PLANES, NIVELES
 import random, string, os
 
 from database import engine, get_db, Base
@@ -60,8 +58,9 @@ RUTAS_ADMIN = {
     ("POST",   "/admin/bolsa"),
     ("GET",    "/admin/bolsa"),
     ("POST",   "/admin/bolsa/{id}/revocar"),
-
 }
+
+
 
 def _es_ruta_admin(method: str, path: str) -> bool:
     segmentos_path = path.rstrip("/").split("/")
@@ -210,7 +209,6 @@ def crear_aliado(nombre: str, email: str, whatsapp: str, ciudad: str,
     return {
         "mensaje": f"Aliado {a.codigo} creado", "codigo": a.codigo,
         "ref_code": a.ref_code, "password_inicial": password,
-        "ref_code": a.ref_code,
         "link_ref": f"https://avanzadigital.digital/alianzas?ref={a.ref_code}",
     }
 
