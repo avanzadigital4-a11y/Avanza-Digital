@@ -35,6 +35,15 @@
             .nav-desktop-buttons a { font-size: 0.82rem !important; }
         }
     </style>
+    <!-- MailerLite Universal -->
+    <script>
+        (function(w,d,e,u,f,l,n){w[f]=w[f]||function(){(w[f].q=w[f].q||[])
+        .push(arguments);},l=d.createElement(e),l.async=1,l.src=u,
+        n=d.getElementsByTagName(e)[0],n.parentNode.insertBefore(l,n);})
+        (window,document,'script','https://assets.mailerlite.com/js/universal.js','ml');
+        ml('account', '2246059');
+    </script>
+    <!-- End MailerLite Universal -->
 </head>
 <body>
     <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-P499M76P" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
@@ -659,6 +668,11 @@
                         <button type="submit" class="btn-primary" style="background: white; color: black; border: none; font-size: 1.1rem; padding: 15px;">Activar mi cuenta de Partner</button>
                     </form>
                     <p style="font-size: 0.8rem; color: #666; margin-top: 15px;">* Recibirás el brochure, el acuerdo y acceso a la comunidad Silver si activas el bono.</p>
+
+                    <!-- MailerLite: formulario oculto para suscripción automática -->
+                    <div id="ml-aliados-form" style="display:none;position:absolute;pointer-events:none;opacity:0;">
+                        <div class="ml-embedded" data-form="uof7pj"></div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -716,5 +730,21 @@
           }
         }
       })();
+
+      // ── MailerLite: suscribir al aliado automáticamente al enviar el form ──
+      document.querySelector('.contact-form')?.addEventListener('submit', function() {
+          try {
+              const email = this.querySelector('input[name="email"]')?.value || '';
+              const nombre = this.querySelector('input[name="nombre"]')?.value || '';
+              const mlEmail = document.querySelector('#ml-aliados-form input[type="email"]');
+              const mlName  = document.querySelector('#ml-aliados-form input[name="fields[name]"]');
+              const mlBtn   = document.querySelector('#ml-aliados-form button[type="submit"]');
+              if (mlEmail && mlBtn) {
+                  mlEmail.value = email;
+                  if (mlName) mlName.value = nombre;
+                  mlBtn.click();
+              }
+          } catch(e) { console.warn('MailerLite aliados error:', e); }
+      });
     </script>
 </html>

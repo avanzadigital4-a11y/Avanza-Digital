@@ -158,3 +158,21 @@ NIVELES = {
     "PREMIUM": {"comision": 0.15, "requisito": 2,  "bono": False},
     "ELITE":   {"comision": 0.20, "requisito": 5,  "bono": False},
 }
+
+# --- Agregar al final de models.py ---
+
+class LeadBolsa(Base):
+    __tablename__ = "bolsa_leads"
+
+    id = Column(Integer, primary_key=True, index=True)
+    empresa = Column(String, nullable=False)
+    rubro = Column(String, nullable=False)
+    telefono = Column(String, nullable=False)
+    email = Column(String, nullable=True)
+    estado = Column(String, default="disponible") # Estados: disponible, reclamado, contactado
+    aliado_id = Column(Integer, ForeignKey("aliados.id"), nullable=True)
+    fecha_carga = Column(DateTime, default=datetime.now)
+    fecha_reclamo = Column(DateTime, nullable=True)
+
+    # Relación para saber quién lo reclamó
+    aliado = relationship("Aliado", backref="leads_bolsa")

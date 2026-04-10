@@ -346,6 +346,7 @@ tr:hover td { background:rgba(255,255,255,0.02); }
       <button class="tab-btn" onclick="cambiarTab('ventas',this)"><i class="fa-solid fa-handshake"></i> Ventas</button>
       <button class="tab-btn" onclick="cambiarTab('prospectos',this)"><i class="fa-solid fa-bullseye"></i> Prospectos <span id="badge-prosp" style="display:none;background:var(--red);color:white;font-size:.65rem;font-weight:800;padding:2px 7px;border-radius:50px;margin-left:2px;">0</span></button>
       <button class="tab-btn" onclick="cambiarTab('auditorias',this)"><i class="fa-solid fa-magnifying-glass"></i> Auditorías</button>
+      <button class="tab-btn" onclick="cambiarTab('bolsa',this)"><i class="fa-solid fa-bullhorn"></i> Bolsa de Leads</button>
       <button class="tab-btn" onclick="cambiarTab('nuevo-aliado',this)"><i class="fa-solid fa-user-plus"></i> Nuevo aliado</button>
     </div>
 
@@ -576,6 +577,43 @@ tr:hover td { background:rgba(255,255,255,0.02); }
         </div>
       </div>
     </div>
+    
+    <div id="tab-bolsa" class="tab-panel">
+      
+      <div class="metrics-grid" id="bolsa-kpis"></div>
+
+      <div class="table-wrap" style="margin-bottom:24px; padding: 24px;">
+        <div class="section-title"><i class="fa-solid fa-plus" style="color:var(--green);"></i> &nbsp;Cargar Nuevos Leads a la Bolsa</div>
+        <div class="section-sub">Estos contactos estarán disponibles públicamente para que los aliados los reclamen.</div>
+        
+        <div class="form-2col" style="margin-top:16px;">
+          <div class="form-row"><label>Empresa *</label><input type="text" id="bl-empresa" placeholder="Ej: Metalúrgica San Martín"></div>
+          <div class="form-row"><label>Rubro *</label><input type="text" id="bl-rubro" placeholder="Ej: Industria Automotriz"></div>
+        </div>
+        <div class="form-2col">
+          <div class="form-row"><label>Teléfono *</label><input type="text" id="bl-telefono" placeholder="+54 9..."></div>
+          <div class="form-row"><label>Email (Opcional)</label><input type="email" id="bl-email" placeholder="contacto@empresa.com"></div>
+        </div>
+        <button class="btn-green" onclick="cargarLeadBolsa()"><i class="fa-solid fa-upload"></i> Subir a la Bolsa</button>
+      </div>
+
+      <div class="table-wrap">
+        <div class="table-head">
+          <h3><i class="fa-solid fa-briefcase" style="color:var(--primary);"></i> Monitor de Reclamos</h3>
+          <button onclick="cargarAdminBolsa()" style="background:transparent;border:1px solid var(--border);color:var(--text-muted);border-radius:8px;padding:7px 14px;font-size:.8rem;cursor:pointer;"><i class="fa-solid fa-rotate-right"></i> Actualizar</button>
+        </div>
+        <div style="overflow-x:auto;">
+          <table>
+            <thead><tr>
+              <th>Empresa</th><th>Rubro</th><th>Estado</th><th>Asignado A</th><th>Tiempo</th><th>Acción</th>
+            </tr></thead>
+            <tbody id="tabla-bolsa-body">
+              <tr><td colspan="6" style="text-align:center;padding:32px;color:var(--text-muted);">Cargando...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
 
     <div id="tab-nuevo-aliado" class="tab-panel">
       <div style="max-width:640px;">
@@ -757,7 +795,13 @@ function apiFetch(url, opts = {}) {
 }
 
 async function cargarTodo() {
-  await Promise.all([cargarAliados(), cargarReferidos(), cargarVentas(), cargarSuspendidos()]);
+  // 1. PRIMERO cargamos los aliados y esperamos a que termine
+  await cargarAliados(); 
+  
+  // 2. LUEGO cargamos el resto (que ahora sí pueden usar la lista de 'todosAliados')
+  await Promise.all([cargarReferidos(), cargarVentas(), cargarSuspendidos()]);
+  
+  // 3. Finalmente renderizamos la interfaz
   renderDashboard();
   renderAliados();
   renderSuspendidos();
@@ -1347,6 +1391,7 @@ function cambiarTab(tab, btn) {
   btn.classList.add('active');
   if(tab==='prospectos') cargarAdminProspectos();
   if(tab==='auditorias') cargarAuditoriasAdmin();
+  if(tab==='bolsa') cargarAdminBolsa(); // <-- Agrega esta línea
 }
 
 // ── PROSPECTOS ADMIN ────────────────────────────────────────────────────────
@@ -1507,6 +1552,99 @@ async function cargarAuditoriasAdmin() {
       </tr>
     `).join('');
   } catch(e) { console.error(e); }
+}
+
+// ── BOLSA DE LEADS ADMIN ──────────────────────────────────────────────────
+
+async function cargarAdminBolsa() {
+  try {
+    const res = await apiFetch(`${API}/admin/bolsa`);
+    if(!res.ok) return;
+    const data = await res.json();
+    
+    // Renderizar KPIs
+    document.getElementById('bolsa-kpis').innerHTML = `
+      <div class="metric-card">
+        <div class="metric-label">Total en Bolsa</div>
+        <div class="metric-value mv-blue">${data.kpis.total}</div>
+      </div>
+      <div class="metric-card highlight">
+        <div class="metric-label">Disponibles</div>
+        <div class="metric-value mv-green">${data.kpis.disponibles}</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-label">Reclamados (Sin llamar)</div>
+        <div class="metric-value mv-amber">${data.kpis.reclamados}</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-label">Tasa de Contacto</div>
+        <div class="metric-value mv-purple">${data.kpis.tasa_contacto}%</div>
+        <div class="metric-sub">De los reclamados</div>
+      </div>
+    `;
+
+    // Renderizar Tabla
+    const tbody = document.getElementById('tabla-bolsa-body');
+    if(!data.leads.length) {
+      tbody.innerHTML = '<tr><td colspan="6"><div class="empty-state">No hay leads en la bolsa. Sube algunos para motivar a tus aliados.</div></td></tr>';
+      return;
+    }
+
+    tbody.innerHTML = data.leads.map(l => {
+      let estadoBadge = '';
+      if(l.estado === 'disponible') estadoBadge = '<span class="badge badge-green"><i class="fa-solid fa-unlock"></i> Disponible</span>';
+      if(l.estado === 'reclamado') estadoBadge = '<span class="badge badge-amber"><i class="fa-solid fa-lock"></i> Reclamado</span>';
+      if(l.estado === 'contactado') estadoBadge = '<span class="badge badge-blue"><i class="fa-solid fa-phone"></i> Contactado</span>';
+
+      return `<tr style="border-bottom:1px solid var(--border); transition:background .15s;" onmouseover="this.style.background='rgba(255,255,255,0.03)'" onmouseout="this.style.background='transparent'">
+        <td style="font-weight:700; color:var(--text);">${l.empresa}</td>
+        <td>${l.rubro}</td>
+        <td>${estadoBadge}</td>
+        <td style="color:var(--text-muted); font-weight:600;">${l.asignado_a || '<span style="color:var(--text-dim);font-weight:400;">—</span>'}</td>
+        <td style="font-size:.8rem; color:var(--text-dim);">${l.tiempo_transcurrido || '—'}</td>
+        <td>
+          ${l.estado === 'reclamado' ? `<button class="btn-outline" style="border-color:rgba(239,68,68,0.3);color:var(--red);padding:5px 10px;font-size:.75rem;" onclick="confirmarAccion('¿Revocar este lead?', 'Se le quitará al aliado y volverá a la bolsa para que otro lo tome.', 'fa-rotate-left', 'red', () => revocarLead(${l.id}))"><i class="fa-solid fa-rotate-left"></i> Revocar</button>` : '<span style="color:var(--text-dim);">—</span>'}
+        </td>
+      </tr>`;
+    }).join('');
+  } catch(e) { console.error("Error cargando bolsa:", e); }
+}
+
+async function cargarLeadBolsa() {
+  const empresa = document.getElementById('bl-empresa').value.trim();
+  const rubro = document.getElementById('bl-rubro').value.trim();
+  const telefono = document.getElementById('bl-telefono').value.trim();
+  const email = document.getElementById('bl-email').value.trim();
+
+  if(!empresa || !rubro || !telefono) {
+    mostrarToast('Empresa, Rubro y Teléfono son obligatorios.', 'amber');
+    return;
+  }
+
+  try {
+    const res = await apiFetch(`${API}/admin/bolsa`, {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({empresa, rubro, telefono, email})
+    });
+    if(res.ok) {
+      mostrarToast('¡Lead agregado a la bolsa exitosamente!', 'green');
+      ['bl-empresa', 'bl-rubro', 'bl-telefono', 'bl-email'].forEach(id => document.getElementById(id).value = '');
+      cargarAdminBolsa();
+    } else {
+      mostrarToast('Error al cargar el lead', 'red');
+    }
+  } catch(e) { mostrarToast('Error de conexión', 'red'); }
+}
+
+async function revocarLead(id) {
+  try {
+    const res = await apiFetch(`${API}/admin/bolsa/${id}/revocar`, {method: 'POST'});
+    if(res.ok) {
+      mostrarToast('Lead revocado. Vuelve a estar disponible.', 'green');
+      cargarAdminBolsa();
+    }
+  } catch(e) { mostrarToast('Error al revocar lead', 'red'); }
 }
 
 </script>

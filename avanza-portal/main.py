@@ -5,6 +5,8 @@ from sqlalchemy.orm import Session
 from sqlalchemy import text  # IMPORTANTE: Agregado para la migración
 from passlib.context import CryptContext
 from datetime import datetime, timedelta
+from pydantic import BaseModel
+from models import Aliado, Admin, Venta, Referido, Prospecto, AuditoriaLog, LeadBolsa, PLANES, NIVELES
 import random, string, os
 
 from database import engine, get_db, Base
@@ -55,6 +57,10 @@ RUTAS_ADMIN = {
     ("GET",    "/dashboard"),
     ("GET",    "/admin/prospectos"),
     ("GET",    "/admin/auditorias"),
+    ("POST",   "/admin/bolsa"),
+    ("GET",    "/admin/bolsa"),
+    ("POST",   "/admin/bolsa/{id}/revocar"),
+
 }
 
 def _es_ruta_admin(method: str, path: str) -> bool:
@@ -589,3 +595,147 @@ def obtener_leaderboard(db: Session = Depends(get_db)):
         
     # DEVOLVEMOS LA LISTA COMPLETA, SIN CORTARLA
     return completo
+    # ─── BOLSA DE LEADS (ADMIN) ──────────────────────────────────────────────────
+
+class LeadBolsaCreate(BaseModel):
+    empresa: str
+    rubro: str
+    telefono: str
+    email: str = ""
+
+def _aplicar_caducidad_bolsa(db: Session):
+    """LA REGLA DE ORO: Libera los leads reclamados hace más de 48h sin contactar"""
+    limite = datetime.now() - timedelta(hours=48)
+    vencidos = db.query(LeadBolsa).filter(
+        LeadBolsa.estado == "reclamado",
+        LeadBolsa.fecha_reclamo < limite
+    ).all()
+    
+    for lead in vencidos:
+        lead.estado = "disponible"
+        lead.aliado_id = None
+        lead.fecha_reclamo = None
+    
+    if vencidos:
+        db.commit()
+
+@app.post("/admin/bolsa")
+def cargar_lead_bolsa(lead: LeadBolsaCreate, db: Session = Depends(get_db)):
+    nuevo = LeadBolsa(
+        empresa=lead.empresa,
+        rubro=lead.rubro,
+        telefono=lead.telefono,
+        email=lead.email,
+        estado="disponible"
+    )
+    db.add(nuevo)
+    db.commit()
+    return {"mensaje": "Lead subido a la bolsa."}
+
+@app.get("/admin/bolsa")
+def monitor_bolsa(db: Session = Depends(get_db)):
+    # 1. Limpiamos los leads vencidos antes de mostrar la data
+    _aplicar_caducidad_bolsa(db) 
+    
+    # 2. Traemos todos los leads
+    leads = db.query(LeadBolsa).order_by(LeadBolsa.fecha_carga.desc()).all()
+    
+    # 3. Calculamos KPIs
+    total = len(leads)
+    disponibles = sum(1 for l in leads if l.estado == "disponible")
+    reclamados = sum(1 for l in leads if l.estado == "reclamado")
+    contactados = sum(1 for l in leads if l.estado == "contactado")
+    
+    tasa = round((contactados / (reclamados + contactados)) * 100) if (reclamados + contactados) > 0 else 0
+
+    # 4. Formateamos la tabla
+    detalle = []
+    for l in leads:
+        tiempo_txt = ""
+        if l.estado == "reclamado" and l.fecha_reclamo:
+            horas = (datetime.now() - l.fecha_reclamo).total_seconds() / 3600
+            tiempo_txt = f"{int(horas)}h / 48h"
+            
+        detalle.append({
+            "id": l.id,
+            "empresa": l.empresa,
+            "rubro": l.rubro,
+            "estado": l.estado,
+            "asignado_a": l.aliado.nombre if l.aliado else None,
+            "tiempo_transcurrido": tiempo_txt
+        })
+
+    return {
+        "kpis": {
+            "total": total,
+            "disponibles": disponibles,
+            "reclamados": reclamados,
+            "tasa_contacto": tasa
+        },
+        "leads": detalle
+    }
+
+@app.post("/admin/bolsa/{id}/revocar")
+def revocar_lead_bolsa(id: int, db: Session = Depends(get_db)):
+    """Modo Dios: El admin quita el lead manualmente"""
+    lead = db.query(LeadBolsa).filter(LeadBolsa.id == id).first()
+    if not lead:
+        raise HTTPException(404, "Lead no encontrado")
+    
+    lead.estado = "disponible"
+    lead.aliado_id = None
+    lead.fecha_reclamo = None
+    db.commit()
+    return {"mensaje": "Lead revocado con éxito"}
+    # ─── BOLSA DE LEADS (PORTAL ALIADO) ──────────────────────────────────────────
+
+@app.get("/aliados/{codigo}/bolsa")
+def ver_bolsa_aliado(codigo: str, db: Session = Depends(get_db)):
+    """Muestra los leads disponibles y los que este aliado ya reclamó."""
+    a = _get_aliado(codigo, db)
+    _aplicar_caducidad_bolsa(db) # Limpiamos antes de mostrar
+    
+    disponibles = db.query(LeadBolsa).filter(LeadBolsa.estado == "disponible").all()
+    mis_reclamos = db.query(LeadBolsa).filter(LeadBolsa.aliado_id == a.id).order_by(LeadBolsa.fecha_reclamo.desc()).all()
+    
+    reclamos_formateados = []
+    for l in mis_reclamos:
+        horas_restantes = 0
+        if l.estado == "reclamado" and l.fecha_reclamo:
+            horas_pasadas = (datetime.now() - l.fecha_reclamo).total_seconds() / 3600
+            horas_restantes = max(0, 48 - int(horas_pasadas))
+            
+        reclamos_formateados.append({
+            "id": l.id, "empresa": l.empresa, "rubro": l.rubro,
+            "telefono": l.telefono, "email": l.email, "estado": l.estado,
+            "horas_restantes": horas_restantes
+        })
+        
+    return {
+        "disponibles": [{"id": l.id, "empresa": l.empresa, "rubro": l.rubro} for l in disponibles],
+        "mis_reclamos": reclamos_formateados
+    }
+
+@app.post("/bolsa/{id}/reclamar")
+def reclamar_lead(id: int, codigo_aliado: str, db: Session = Depends(get_db)):
+    a = _get_aliado(codigo_aliado, db)
+    lead = db.query(LeadBolsa).filter(LeadBolsa.id == id, LeadBolsa.estado == "disponible").first()
+    if not lead:
+        raise HTTPException(400, "El lead ya no está disponible. ¡Alguien fue más rápido!")
+    
+    lead.estado = "reclamado"
+    lead.aliado_id = a.id
+    lead.fecha_reclamo = datetime.now()
+    db.commit()
+    return {"mensaje": "¡Lead reclamado exitosamente!"}
+
+@app.patch("/bolsa/{id}/contactar")
+def contactar_lead_bolsa(id: int, codigo_aliado: str, db: Session = Depends(get_db)):
+    a = _get_aliado(codigo_aliado, db)
+    lead = db.query(LeadBolsa).filter(LeadBolsa.id == id, LeadBolsa.aliado_id == a.id).first()
+    if not lead:
+        raise HTTPException(404, "Lead no encontrado o no te pertenece.")
+    
+    lead.estado = "contactado"
+    db.commit()
+    return {"mensaje": "¡Excelente! Lead marcado como contactado."}

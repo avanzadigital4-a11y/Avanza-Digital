@@ -186,6 +186,15 @@
             .cta-box{padding:32px 24px;}
         }
     </style>
+    <!-- MailerLite Universal -->
+    <script>
+        (function(w,d,e,u,f,l,n){w[f]=w[f]||function(){(w[f].q=w[f].q||[])
+        .push(arguments);},l=d.createElement(e),l.async=1,l.src=u,
+        n=d.getElementsByTagName(e)[0],n.parentNode.insertBefore(l,n);})
+        (window,document,'script','https://assets.mailerlite.com/js/universal.js','ml');
+        ml('account', '2246059');
+    </script>
+    <!-- End MailerLite Universal -->
 </head>
 <body>
 
@@ -838,6 +847,18 @@ async function submitEmailGate(){
 
     window.emailGatePassed = true;
     if(pendingReportData) renderReport(pendingReportData, pendingReportMx);
+
+    // ── MailerLite: suscribir al lead automáticamente ──
+    try {
+        const mlEmailInput = document.querySelector('#ml-hidden-form input[type="email"]');
+        const mlNameInput  = document.querySelector('#ml-hidden-form input[name="fields[name]"]');
+        const mlSubmitBtn  = document.querySelector('#ml-hidden-form button[type="submit"]');
+        if(mlEmailInput && mlSubmitBtn){
+            mlEmailInput.value = email;
+            if(mlNameInput) mlNameInput.value = name || '';
+            mlSubmitBtn.click();
+        }
+    } catch(e){ console.warn('MailerLite subscribe error:', e); }
 }
 
 function skipEmailGate(){
@@ -872,5 +893,11 @@ document.getElementById('domain-input').addEventListener('keydown',e=>{if(e.key=
 })();
 document.getElementById('gate-email')?.addEventListener('keydown',e=>{if(e.key==='Enter')submitEmailGate();});
 </script>
+
+<!-- MailerLite: formulario oculto para suscripción automática -->
+<div id="ml-hidden-form" style="display:none;position:absolute;pointer-events:none;opacity:0;">
+    <div class="ml-embedded" data-form="LX1nNV"></div>
+</div>
+
 </body>
 </html>

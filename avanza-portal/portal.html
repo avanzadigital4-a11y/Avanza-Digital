@@ -536,6 +536,7 @@
       <button class="tab-btn active" onclick="cambiarTab('dashboard',this)"><i class="fa-solid fa-chart-line"></i> Dashboard</button>
       <button class="tab-btn" onclick="cambiarTab('herramientas',this)"><i class="fa-solid fa-magnifying-glass"></i> Auditoría</button>
       <button class="tab-btn" onclick="cambiarTab('prospectos',this)"><i class="fa-solid fa-bullseye"></i> Prospectos</button>
+      <button class="tab-btn" onclick="cambiarTab('bolsa',this)"><i class="fa-solid fa-bullhorn"></i> Bolsa de Leads <span style="background:var(--green);color:#000;font-size:.6rem;font-weight:800;padding:2px 6px;border-radius:4px;margin-left:4px;">NUEVO</span></button>
       <button class="tab-btn" onclick="cambiarTab('referidos',this)"><i class="fa-solid fa-user-plus"></i> Referidos</button>
       <button class="tab-btn" onclick="cambiarTab('ventas',this)"><i class="fa-solid fa-handshake"></i> Ventas</button>
       <button class="tab-btn" onclick="cambiarTab('comisiones',this)"><i class="fa-solid fa-dollar-sign"></i> Comisiones</button>
@@ -821,6 +822,49 @@
         <i class="fa-solid fa-rocket"></i> ¡Entendido, a vender!
       </button>
     </div>
+  </div>
+</div>
+<div id="tab-bolsa" class="tab-panel">
+  <div style="background:rgba(59,130,246,0.08); border:1px solid rgba(59,130,246,0.2); border-radius:var(--radius); padding:20px; margin-bottom:24px;">
+    <h3 style="color:#3b82f6; font-size:1rem; margin-bottom:8px;"><i class="fa-solid fa-bullseye"></i> Consigue Clientes Servidos</h3>
+    <p style="font-size:.85rem; color:var(--text-muted); line-height:1.6;">Reclama empresas que ya pre-filtramos para ti. <strong>Atención:</strong> Una vez que reclames un contacto, tienes <strong style="color:var(--amber);">48 horas para contactarlo</strong>. Si no cambias su estado a "Contactado" en ese tiempo, el sistema te lo quitará y lo devolverá a la bolsa pública.</p>
+  </div>
+
+  <div style="display:grid; grid-template-columns:1fr; gap:24px;">
+    
+    <div class="table-wrap" style="margin-bottom:0;">
+      <div class="table-head">
+        <h3><i class="fa-solid fa-lock" style="color:var(--amber);"></i> Mis Leads Reclamados</h3>
+      </div>
+      <div style="overflow-x:auto;">
+        <table>
+          <thead><tr>
+            <th>Empresa</th><th>Rubro</th><th>Datos de Contacto</th><th>Estado / Tiempo</th><th>Acción</th>
+          </tr></thead>
+          <tbody id="tabla-mis-reclamos">
+            <tr><td colspan="5" style="text-align:center;padding:24px;color:var(--text-dim);">Cargando...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="table-wrap" style="margin-bottom:0;">
+      <div class="table-head">
+        <h3><i class="fa-solid fa-unlock" style="color:var(--green);"></i> Disponibles en la Bolsa</h3>
+        <button onclick="cargarBolsa()" style="background:transparent;border:1px solid var(--border);color:var(--text-muted);border-radius:8px;padding:7px 14px;font-size:.8rem;cursor:pointer;"><i class="fa-solid fa-rotate-right"></i> Refrescar</button>
+      </div>
+      <div style="overflow-x:auto;">
+        <table>
+          <thead><tr>
+            <th>Empresa</th><th>Rubro</th><th>Teléfono / Email</th><th>Acción</th>
+          </tr></thead>
+          <tbody id="tabla-bolsa-disponibles">
+            <tr><td colspan="4" style="text-align:center;padding:24px;color:var(--text-dim);">Cargando...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
   </div>
 </div>
 
@@ -1335,6 +1379,85 @@ async function renderLeaderboard() {
     }
 
   } catch(e) { console.warn('Error cargando leaderboard', e); }
+}
+// ── BOLSA DE LEADS (ALIADO) ──────────────────────────────────────────────────
+
+async function cargarBolsa() {
+  if(!_aliado) return;
+  try {
+    const res = await fetch(`${API}/aliados/${_aliado.codigo}/bolsa`);
+    if(!res.ok) return;
+    const data = await res.json();
+
+    // 1. Renderizar Mis Reclamos
+    const tbodyReclamos = document.getElementById('tabla-mis-reclamos');
+    if(!data.mis_reclamos.length) {
+      tbodyReclamos.innerHTML = '<tr><td colspan="5"><div class="empty-state" style="padding:20px;"><p>No tienes leads reclamados. ¡Aprovecha la bolsa!</p></div></td></tr>';
+    } else {
+      tbodyReclamos.innerHTML = data.mis_reclamos.map(l => {
+        let tiempoHtml = '';
+        let accionHtml = '<span style="color:var(--text-dim);font-size:.8rem;"><i class="fa-solid fa-check-double"></i> Gestionado</span>';
+        
+        if (l.estado === 'reclamado') {
+           const colorReloj = l.horas_restantes < 12 ? 'var(--red)' : 'var(--amber)';
+           tiempoHtml = `<div style="color:${colorReloj}; font-weight:700; font-size:.8rem;"><i class="fa-solid fa-hourglass-half"></i> Quedan ${l.horas_restantes}h</div>`;
+           accionHtml = `<button class="btn-green" style="padding:6px 12px; font-size:.75rem;" onclick="marcarContactadoBolsa(${l.id})"><i class="fa-solid fa-phone"></i> Ya lo contacté</button>`;
+        } else if (l.estado === 'contactado') {
+           tiempoHtml = `<span class="badge badge-blue">Contactado</span>`;
+        }
+
+        return `<tr style="background: ${l.estado==='reclamado' ? 'rgba(245,158,11,0.03)' : 'transparent'};">
+          <td style="font-weight:700; color:var(--text);">${l.empresa}</td>
+          <td>${l.rubro}</td>
+          <td style="font-family:monospace; color:var(--primary);">${l.telefono} <br> <span style="color:var(--text-dim);font-size:.75rem;">${l.email||''}</span></td>
+          <td>${tiempoHtml}</td>
+          <td>${accionHtml}</td>
+        </tr>`;
+      }).join('');
+    }
+
+    // 2. Renderizar Disponibles
+    const tbodyDisp = document.getElementById('tabla-bolsa-disponibles');
+    if(!data.disponibles.length) {
+      tbodyDisp.innerHTML = '<tr><td colspan="4"><div class="empty-state" style="padding:20px;"><p>No hay leads disponibles en este momento. Vuelve más tarde.</p></div></td></tr>';
+    } else {
+      tbodyDisp.innerHTML = data.disponibles.map(l => `
+        <tr>
+          <td style="font-weight:700; color:var(--text);">${l.empresa}</td>
+          <td>${l.rubro}</td>
+          <td style="color:var(--text-dim); font-style:italic; font-size:.8rem;"><i class="fa-solid fa-lock"></i> Oculto hasta reclamar</td>
+          <td>
+            <button class="btn-primary" style="padding:6px 12px; font-size:.75rem;" onclick="reclamarLead(${l.id})"><i class="fa-solid fa-hand-sparkles"></i> Reclamar Lead</button>
+          </td>
+        </tr>
+      `).join('');
+    }
+  } catch(e) { console.error(e); }
+}
+
+async function reclamarLead(id) {
+  if(!confirm("¿Estás seguro de reclamar este lead? Recuerda que tendrás 48 horas para llamarlo.")) return;
+  
+  try {
+    const res = await fetch(`${API}/bolsa/${id}/reclamar?codigo_aliado=${_aliado.codigo}`, { method: 'POST' });
+    const data = await res.json();
+    if(res.ok) {
+      mostrarToast('¡Lead reclamado! Tienes 48 horas para contactarlo.', 'green');
+      cargarBolsa(); // Recarga las tablas
+    } else {
+      mostrarToast(data.detail || 'Error al reclamar', 'red');
+    }
+  } catch(e) { mostrarToast('Error de conexión', 'red'); }
+}
+
+async function marcarContactadoBolsa(id) {
+  try {
+    const res = await fetch(`${API}/bolsa/${id}/contactar?codigo_aliado=${_aliado.codigo}`, { method: 'PATCH' });
+    if(res.ok) {
+      mostrarToast('¡Excelente! Lead asegurado.', 'green');
+      cargarBolsa();
+    }
+  } catch(e) { mostrarToast('Error al actualizar', 'red'); }
 }
 </script>
 </body>
