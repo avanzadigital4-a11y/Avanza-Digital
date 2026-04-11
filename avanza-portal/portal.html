@@ -825,9 +825,15 @@
   </div>
 </div>
 <div id="tab-bolsa" class="tab-panel">
-  <div style="background:rgba(59,130,246,0.08); border:1px solid rgba(59,130,246,0.2); border-radius:var(--radius); padding:20px; margin-bottom:24px;">
-    <h3 style="color:#3b82f6; font-size:1rem; margin-bottom:8px;"><i class="fa-solid fa-bullseye"></i> Consigue Clientes Servidos</h3>
-    <p style="font-size:.85rem; color:var(--text-muted); line-height:1.6;">Reclama empresas que ya pre-filtramos para ti. <strong>Atención:</strong> Una vez que reclames un contacto, tienes <strong style="color:var(--amber);">48 horas para contactarlo</strong>. Si no cambias su estado a "Contactado" en ese tiempo, el sistema te lo quitará y lo devolverá a la bolsa pública.</p>
+  <div style="background:rgba(59,130,246,0.08); border:1px solid rgba(59,130,246,0.2); border-radius:var(--radius); padding:20px; margin-bottom:24px; display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:16px;">
+    <div>
+      <h3 style="color:#3b82f6; font-size:1rem; margin-bottom:8px;"><i class="fa-solid fa-bullseye"></i> Conseguí Clientes Servidos</h3>
+      <p style="font-size:.85rem; color:var(--text-muted); line-height:1.6;">Reclamá empresas que ya pre-filtramos para vos. <strong>Atención:</strong> Una vez que reclames un contacto, tenés <strong style="color:var(--amber);">48 horas para contactarlo</strong>. Si no cambiás su estado a "Contactado" en ese tiempo, el sistema te lo quitará y lo devolverá a la bolsa.</p>
+    </div>
+    <div id="bolsa-limite-badge" style="display:none; flex-shrink:0; text-align:center; background:rgba(0,0,0,0.25); border:1px solid var(--border); border-radius:10px; padding:12px 20px; min-width:120px;">
+      <div style="font-size:1.6rem; font-weight:900;" id="bolsa-limite-num">0/3</div>
+      <div style="font-size:.72rem; color:var(--text-muted); margin-top:2px;">reclamos activos</div>
+    </div>
   </div>
 
   <div style="display:grid; grid-template-columns:1fr; gap:24px;">
@@ -921,6 +927,7 @@ function cambiarTab(tab, btn) {
   document.getElementById(`tab-${tab}`).classList.add('active');
   btn.classList.add('active');
   if(tab==='prospectos') cargarProspectos();
+  if(tab==='bolsa') { cargarBolsa(); cargarHistorialBolsa(); }
 }
 
 function cerrarSesion() { 
@@ -1389,10 +1396,23 @@ async function cargarBolsa() {
     if(!res.ok) return;
     const data = await res.json();
 
+    // Actualizar badge de límite
+    const activos = data.reclamos_activos ?? 0;
+    const limite  = data.limite_reclamos ?? 3;
+    const badge   = document.getElementById('bolsa-limite-badge');
+    const numEl   = document.getElementById('bolsa-limite-num');
+    if(badge && numEl) {
+      badge.style.display = 'block';
+      numEl.textContent   = `${activos}/${limite}`;
+      numEl.style.color   = activos >= limite ? 'var(--red)' : activos === limite - 1 ? 'var(--amber)' : 'var(--green)';
+      badge.style.borderColor = activos >= limite ? 'rgba(239,68,68,0.4)' : 'var(--border)';
+    }
+    const limitAlcanzado = activos >= limite;
+
     // 1. Renderizar Mis Reclamos
     const tbodyReclamos = document.getElementById('tabla-mis-reclamos');
     if(!data.mis_reclamos.length) {
-      tbodyReclamos.innerHTML = '<tr><td colspan="5"><div class="empty-state" style="padding:20px;"><p>No tienes leads reclamados. ¡Aprovecha la bolsa!</p></div></td></tr>';
+      tbodyReclamos.innerHTML = '<tr><td colspan="5"><div class="empty-state" style="padding:20px;"><p>No tenés leads reclamados. ¡Aprovechá la bolsa!</p></div></td></tr>';
     } else {
       tbodyReclamos.innerHTML = data.mis_reclamos.map(l => {
         let tiempoHtml = '';
@@ -1419,19 +1439,33 @@ async function cargarBolsa() {
     // 2. Renderizar Disponibles
     const tbodyDisp = document.getElementById('tabla-bolsa-disponibles');
     if(!data.disponibles.length) {
-      tbodyDisp.innerHTML = '<tr><td colspan="4"><div class="empty-state" style="padding:20px;"><p>No hay leads disponibles en este momento. Vuelve más tarde.</p></div></td></tr>';
+      tbodyDisp.innerHTML = '<tr><td colspan="4"><div class="empty-state" style="padding:20px;"><p>No hay leads disponibles en este momento. Volvé más tarde.</p></div></td></tr>';
     } else {
-      tbodyDisp.innerHTML = data.disponibles.map(l => `
-        <tr>
+      tbodyDisp.innerHTML = data.disponibles.map(l => {
+        const btnReclamar = limitAlcanzado
+          ? `<button disabled style="padding:6px 12px; font-size:.75rem; opacity:.45; cursor:not-allowed; background:var(--border); color:var(--text-dim); border:none; border-radius:6px;"><i class="fa-solid fa-lock"></i> Límite alcanzado</button>`
+          : `<button class="btn-primary" style="padding:6px 12px; font-size:.75rem;" onclick="reclamarLead(${l.id})"><i class="fa-solid fa-hand-sparkles"></i> Reclamar Lead</button>`;
+        return `<tr>
           <td style="font-weight:700; color:var(--text);">${l.empresa}</td>
           <td>${l.rubro}</td>
           <td style="color:var(--text-dim); font-style:italic; font-size:.8rem;"><i class="fa-solid fa-lock"></i> Oculto hasta reclamar</td>
-          <td>
-            <button class="btn-primary" style="padding:6px 12px; font-size:.75rem;" onclick="reclamarLead(${l.id})"><i class="fa-solid fa-hand-sparkles"></i> Reclamar Lead</button>
-          </td>
-        </tr>
-      `).join('');
+          <td>${btnReclamar}</td>
+        </tr>`;
+      }).join('');
     }
+
+    // Banner de límite alcanzado
+    const bannerExist = document.getElementById('bolsa-banner-limite');
+    if(limitAlcanzado && !bannerExist) {
+      const banner = document.createElement('div');
+      banner.id = 'bolsa-banner-limite';
+      banner.style.cssText = 'background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);border-radius:8px;padding:14px 18px;margin-bottom:16px;font-size:.85rem;color:#f87171;display:flex;align-items:center;gap:10px;';
+      banner.innerHTML = `<i class="fa-solid fa-hand" style="font-size:1.1rem;"></i> <span><strong>Límite alcanzado:</strong> Tenés 3 leads reclamados activos. Marcá al menos uno como "Ya lo contacté" para poder reclamar más.</span>`;
+      tbodyDisp.closest('.table-wrap').before(banner);
+    } else if(!limitAlcanzado && bannerExist) {
+      bannerExist.remove();
+    }
+
   } catch(e) { console.error(e); }
 }
 
@@ -1450,14 +1484,87 @@ async function reclamarLead(id) {
   } catch(e) { mostrarToast('Error de conexión', 'red'); }
 }
 
-async function marcarContactadoBolsa(id) {
+async function marcarContactadoBolsa(id, empresa) {
+  // Mostrar modal de calificación
+  const overlay = document.createElement('div');
+  overlay.id = 'modal-resultado';
+  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:9999;display:flex;align-items:center;justify-content:center;';
+  overlay.innerHTML = `
+    <div style="background:#1e293b;border:1px solid rgba(255,255,255,0.1);border-radius:16px;padding:32px;max-width:400px;width:90%;text-align:center;">
+      <div style="font-size:2rem;margin-bottom:12px;">📋</div>
+      <h3 style="margin-bottom:6px;font-size:1.1rem;">¿Cómo fue el contacto?</h3>
+      <p style="font-size:.83rem;color:var(--text-muted);margin-bottom:24px;">Calificá a <strong>${empresa}</strong> para que podamos mejorar la calidad de los leads.</p>
+      <div style="display:flex;flex-direction:column;gap:10px;">
+        <button onclick="confirmarResultado(${id},'exitoso')" style="padding:12px;border-radius:10px;border:none;background:rgba(16,185,129,0.15);border:1px solid rgba(16,185,129,0.3);color:#10b981;font-weight:700;cursor:pointer;font-size:.9rem;">
+          ✅ Exitoso — Está interesado / quedamos en hablar
+        </button>
+        <button onclick="confirmarResultado(${id},'no_interesado')" style="padding:12px;border-radius:10px;border:none;background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.2);color:#f87171;font-weight:700;cursor:pointer;font-size:.9rem;">
+          ❌ No le interesó
+        </button>
+        <button onclick="confirmarResultado(${id},'no_contesto')" style="padding:12px;border-radius:10px;border:none;background:rgba(245,158,11,0.1);border:1px solid rgba(245,158,11,0.2);color:#f59e0b;font-weight:700;cursor:pointer;font-size:.9rem;">
+          📵 No contestó
+        </button>
+      </div>
+      <button onclick="document.getElementById('modal-resultado').remove()" style="margin-top:16px;background:transparent;border:none;color:var(--text-dim);cursor:pointer;font-size:.8rem;">Cancelar</button>
+    </div>
+  `;
+  document.body.appendChild(overlay);
+}
+
+async function confirmarResultado(id, resultado) {
+  const modal = document.getElementById('modal-resultado');
+  if(modal) modal.remove();
   try {
-    const res = await fetch(`${API}/bolsa/${id}/contactar?codigo_aliado=${_aliado.codigo}`, { method: 'PATCH' });
+    const res = await fetch(`${API}/bolsa/${id}/contactar?codigo_aliado=${_aliado.codigo}&resultado=${resultado}`, { method: 'PATCH' });
+    const data = await res.json();
     if(res.ok) {
-      mostrarToast('¡Excelente! Lead asegurado.', 'green');
+      const colores = { exitoso: 'green', no_interesado: 'red', no_contesto: 'amber' };
+      mostrarToast(data.mensaje, colores[resultado] || 'green');
       cargarBolsa();
+      cargarHistorialBolsa();
+    } else {
+      mostrarToast(data.detail || 'Error al actualizar', 'red');
     }
-  } catch(e) { mostrarToast('Error al actualizar', 'red'); }
+  } catch(e) { mostrarToast('Error de conexión', 'red'); }
+}
+
+async function cargarHistorialBolsa() {
+  if(!_aliado) return;
+  try {
+    const res = await fetch(`${API}/aliados/${_aliado.codigo}/historial-bolsa`);
+    if(!res.ok) return;
+    const data = await res.json();
+    const s = data.stats;
+
+    // KPIs
+    const kpis = document.getElementById('historial-kpis');
+    if(kpis) kpis.innerHTML = `
+      <div class="metric-card"><div class="metric-label">Total reclamados</div><div class="metric-value blue">${s.total_reclamados}</div></div>
+      <div class="metric-card highlight"><div class="metric-label">Exitosos</div><div class="metric-value mv-green">${s.exitosos}</div></div>
+      <div class="metric-card"><div class="metric-label">No interesados</div><div class="metric-value" style="color:var(--red);">${s.no_interesados}</div></div>
+      <div class="metric-card"><div class="metric-label">No contestaron</div><div class="metric-value" style="color:var(--amber);">${s.no_contestaron}</div></div>
+      <div class="metric-card"><div class="metric-label">Tasa de éxito</div><div class="metric-value mv-purple">${s.tasa_exito}%</div></div>
+    `;
+
+    // Tabla
+    const tbody = document.getElementById('historial-bolsa-body');
+    if(!tbody) return;
+    if(!data.leads.length) {
+      tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:24px;color:var(--text-dim);">Todavía no reclamaste ningún lead.</td></tr>';
+      return;
+    }
+    const iconRes = { exitoso:'✅', no_interesado:'❌', no_contesto:'📵' };
+    const labelRes = { exitoso:'Exitoso', no_interesado:'No interesado', no_contesto:'No contestó' };
+    tbody.innerHTML = data.leads.map(l => `
+      <tr style="border-bottom:1px solid var(--border);">
+        <td style="font-weight:700;">${l.empresa}</td>
+        <td style="color:var(--text-muted);">${l.rubro}</td>
+        <td style="font-size:.8rem;color:var(--text-dim);">${l.fecha_reclamo || '—'}</td>
+        <td>${l.estado === 'reclamado' ? '<span class="badge badge-amber">Activo</span>' : '<span class="badge badge-blue">Cerrado</span>'}</td>
+        <td>${l.resultado ? `${iconRes[l.resultado]||''} ${labelRes[l.resultado]||l.resultado}` : '<span style="color:var(--text-dim);">—</span>'}</td>
+      </tr>
+    `).join('');
+  } catch(e) { console.error(e); }
 }
 </script>
 </body>

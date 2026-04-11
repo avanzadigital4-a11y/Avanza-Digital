@@ -7,7 +7,10 @@ from passlib.context import CryptContext
 from datetime import datetime, timedelta
 from pydantic import BaseModel
 from models import Aliado, Admin, Venta, Referido, Prospecto, AuditoriaLog, LeadBolsa, PLANES, NIVELES
-import random, string, os
+import random, string, os, smtplib
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
+from apscheduler.schedulers.background import BackgroundScheduler
 
 from database import engine, get_db, Base
 from models import Aliado, Admin, Venta, Referido, Prospecto, AuditoriaLog, PLANES, NIVELES
@@ -29,6 +32,88 @@ try:
         conn.commit()
 except Exception as e:
     pass # Si ya existe, lo ignoramos
+
+# Migraciones para columnas nuevas de LeadBolsa
+for col_sql in [
+    "ALTER TABLE bolsa_leads ADD COLUMN resultado VARCHAR",
+    "ALTER TABLE bolsa_leads ADD COLUMN notif_24h_enviada BOOLEAN DEFAULT FALSE",
+]:
+    try:
+        with engine.connect() as conn:
+            conn.execute(text(col_sql))
+            conn.commit()
+    except Exception:
+        pass
+
+
+# ─── EMAIL HELPER ─────────────────────────────────────────────────────────────
+SMTP_HOST     = os.environ.get("SMTP_HOST", "")
+SMTP_PORT     = int(os.environ.get("SMTP_PORT", "587"))
+SMTP_USER     = os.environ.get("SMTP_USER", "")
+SMTP_PASS     = os.environ.get("SMTP_PASS", "")
+EMAIL_FROM    = os.environ.get("EMAIL_FROM", SMTP_USER)
+
+def enviar_email(destinatario: str, asunto: str, cuerpo_html: str):
+    """Envía un email. Si no hay SMTP configurado, solo loguea y no falla."""
+    if not SMTP_HOST or not SMTP_USER or not SMTP_PASS:
+        print(f"[EMAIL - sin SMTP configurado] Para: {destinatario} | Asunto: {asunto}")
+        return
+    try:
+        msg = MIMEMultipart("alternative")
+        msg["Subject"] = asunto
+        msg["From"]    = EMAIL_FROM
+        msg["To"]      = destinatario
+        msg.attach(MIMEText(cuerpo_html, "html"))
+        with smtplib.SMTP(SMTP_HOST, SMTP_PORT) as server:
+            server.starttls()
+            server.login(SMTP_USER, SMTP_PASS)
+            server.sendmail(EMAIL_FROM, destinatario, msg.as_string())
+        print(f"[EMAIL] Enviado a {destinatario}: {asunto}")
+    except Exception as e:
+        print(f"[EMAIL ERROR] {e}")
+
+
+# ─── SCHEDULER: NOTIFICACIÓN 24HS ────────────────────────────────────────────
+def job_notificaciones_24h():
+    """Corre cada hora. Detecta leads reclamados hace 24hs sin contactar y avisa al aliado."""
+    from database import SessionLocal
+    db = SessionLocal()
+    try:
+        ahora = datetime.now()
+        limite_inf = ahora - timedelta(hours=25)  # entre 24 y 25 hs
+        limite_sup = ahora - timedelta(hours=24)
+
+        pendientes = db.query(LeadBolsa).filter(
+            LeadBolsa.estado == "reclamado",
+            LeadBolsa.notif_24h_enviada == False,
+            LeadBolsa.fecha_reclamo <= limite_sup,
+            LeadBolsa.fecha_reclamo >= limite_inf,
+        ).all()
+
+        for lead in pendientes:
+            if lead.aliado and lead.aliado.email:
+                horas_rest = max(0, int(48 - (ahora - lead.fecha_reclamo).total_seconds() / 3600))
+                html = f"""
+                <div style="font-family:sans-serif;max-width:520px;margin:auto;padding:32px;background:#0f172a;color:#e2e8f0;border-radius:12px;">
+                  <h2 style="color:#f59e0b;margin-bottom:8px;">⏰ ¡Te quedan {horas_rest} horas!</h2>
+                  <p>Hola <strong>{lead.aliado.nombre}</strong>,</p>
+                  <p>Reclamaste el lead <strong>{lead.empresa}</strong> hace 24 horas y todavía no lo marcaste como contactado.</p>
+                  <p style="color:#f87171;">Si no actualizás su estado en las próximas <strong>{horas_rest} horas</strong>, el sistema lo devolverá a la bolsa pública automáticamente.</p>
+                  <a href="https://avanza-digital-production.up.railway.app/portal.html" style="display:inline-block;margin-top:16px;padding:12px 24px;background:#3b82f6;color:#fff;border-radius:8px;text-decoration:none;font-weight:700;">Ir al Portal →</a>
+                  <p style="margin-top:24px;font-size:.8rem;color:#64748b;">Avanza Digital · Partner Network</p>
+                </div>
+                """
+                enviar_email(lead.aliado.email, f"⏰ Avanza: Tenés {horas_rest}hs para contactar a {lead.empresa}", html)
+                lead.notif_24h_enviada = True
+        db.commit()
+    except Exception as e:
+        print(f"[SCHEDULER ERROR] {e}")
+    finally:
+        db.close()
+
+scheduler = BackgroundScheduler()
+scheduler.add_job(job_notificaciones_24h, "interval", hours=1)
+scheduler.start()
 
 
 app = FastAPI(title="Avanza Partner Portal", version="1.1")
@@ -60,6 +145,7 @@ RUTAS_ADMIN = {
     ("POST",   "/admin/bolsa"),
     ("GET",    "/admin/bolsa"),
     ("POST",   "/admin/bolsa/{id}/revocar"),
+    ("GET",    "/admin/historial-bolsa"),
 
 }
 
@@ -713,12 +799,25 @@ def ver_bolsa_aliado(codigo: str, db: Session = Depends(get_db)):
         
     return {
         "disponibles": [{"id": l.id, "empresa": l.empresa, "rubro": l.rubro} for l in disponibles],
-        "mis_reclamos": reclamos_formateados
+        "mis_reclamos": reclamos_formateados,
+        "reclamos_activos": sum(1 for r in reclamos_formateados if r["estado"] == "reclamado"),
+        "limite_reclamos": 3
     }
+
+LIMITE_RECLAMOS_ACTIVOS = 3  # Máximo de reclamos simultáneos por aliado
 
 @app.post("/bolsa/{id}/reclamar")
 def reclamar_lead(id: int, codigo_aliado: str, db: Session = Depends(get_db)):
     a = _get_aliado(codigo_aliado, db)
+
+    # Verificar límite de reclamos activos simultáneos
+    reclamos_activos = db.query(LeadBolsa).filter(
+        LeadBolsa.aliado_id == a.id,
+        LeadBolsa.estado == "reclamado"
+    ).count()
+    if reclamos_activos >= LIMITE_RECLAMOS_ACTIVOS:
+        raise HTTPException(400, f"Límite alcanzado: ya tenés {LIMITE_RECLAMOS_ACTIVOS} leads reclamados activos. Marcá al menos uno como contactado antes de reclamar otro.")
+
     lead = db.query(LeadBolsa).filter(LeadBolsa.id == id, LeadBolsa.estado == "disponible").first()
     if not lead:
         raise HTTPException(400, "El lead ya no está disponible. ¡Alguien fue más rápido!")
@@ -730,12 +829,89 @@ def reclamar_lead(id: int, codigo_aliado: str, db: Session = Depends(get_db)):
     return {"mensaje": "¡Lead reclamado exitosamente!"}
 
 @app.patch("/bolsa/{id}/contactar")
-def contactar_lead_bolsa(id: int, codigo_aliado: str, db: Session = Depends(get_db)):
+def contactar_lead_bolsa(id: int, codigo_aliado: str, resultado: str = "exitoso", db: Session = Depends(get_db)):
+    """
+    Marca un lead como contactado. 
+    resultado puede ser: exitoso | no_interesado | no_contesto
+    """
+    RESULTADOS_VALIDOS = {"exitoso", "no_interesado", "no_contesto"}
+    if resultado not in RESULTADOS_VALIDOS:
+        raise HTTPException(400, f"Resultado inválido. Opciones: {', '.join(RESULTADOS_VALIDOS)}")
+
     a = _get_aliado(codigo_aliado, db)
     lead = db.query(LeadBolsa).filter(LeadBolsa.id == id, LeadBolsa.aliado_id == a.id).first()
     if not lead:
         raise HTTPException(404, "Lead no encontrado o no te pertenece.")
-    
-    lead.estado = "contactado"
+
+    lead.estado    = "contactado"
+    lead.resultado = resultado
     db.commit()
-    return {"mensaje": "¡Excelente! Lead marcado como contactado."}
+
+    mensajes = {
+        "exitoso":       "¡Excelente! Lead marcado como exitoso. ¡A cerrar la venta!",
+        "no_interesado": "Anotado. El lead quedó marcado como no interesado.",
+        "no_contesto":   "Anotado. Si conseguís contactarlo después, podés actualizar el estado.",
+    }
+    return {"mensaje": mensajes[resultado]}
+
+
+@app.get("/aliados/{codigo}/historial-bolsa")
+def historial_bolsa_aliado(codigo: str, db: Session = Depends(get_db)):
+    """Historial completo de leads de un aliado con estadísticas."""
+    a = _get_aliado(codigo, db)
+    leads = db.query(LeadBolsa).filter(LeadBolsa.aliado_id == a.id).order_by(LeadBolsa.fecha_reclamo.desc()).all()
+
+    total          = len(leads)
+    exitosos       = sum(1 for l in leads if l.resultado == "exitoso")
+    no_interesados = sum(1 for l in leads if l.resultado == "no_interesado")
+    no_contestaron = sum(1 for l in leads if l.resultado == "no_contesto")
+    activos        = sum(1 for l in leads if l.estado == "reclamado")
+    tasa_exito     = round((exitosos / total * 100), 1) if total else 0
+
+    return {
+        "stats": {
+            "total_reclamados": total,
+            "exitosos": exitosos,
+            "no_interesados": no_interesados,
+            "no_contestaron": no_contestaron,
+            "activos": activos,
+            "tasa_exito": tasa_exito,
+        },
+        "leads": [
+            {
+                "id": l.id,
+                "empresa": l.empresa,
+                "rubro": l.rubro,
+                "telefono": l.telefono,
+                "estado": l.estado,
+                "resultado": l.resultado,
+                "fecha_reclamo": l.fecha_reclamo.strftime("%d/%m/%Y %H:%M") if l.fecha_reclamo else None,
+            }
+            for l in leads
+        ]
+    }
+
+
+@app.get("/admin/historial-bolsa")
+def historial_bolsa_admin(db: Session = Depends(get_db)):
+    """Admin: resumen de rendimiento de todos los aliados en la bolsa."""
+    aliados = db.query(Aliado).filter(Aliado.activo == True).all()
+    resumen = []
+    for a in aliados:
+        leads = [l for l in a.leads_bolsa]
+        total = len(leads)
+        if total == 0:
+            continue
+        exitosos = sum(1 for l in leads if l.resultado == "exitoso")
+        resumen.append({
+            "codigo": a.codigo,
+            "nombre": a.nombre,
+            "total_reclamados": total,
+            "exitosos": exitosos,
+            "no_interesados": sum(1 for l in leads if l.resultado == "no_interesado"),
+            "no_contestaron": sum(1 for l in leads if l.resultado == "no_contesto"),
+            "activos": sum(1 for l in leads if l.estado == "reclamado"),
+            "tasa_exito": round(exitosos / total * 100, 1) if total else 0,
+        })
+    resumen.sort(key=lambda x: x["exitosos"], reverse=True)
+    return {"aliados": resumen}

@@ -170,10 +170,12 @@ class LeadBolsa(Base):
     rubro = Column(String, nullable=False)
     telefono = Column(String, nullable=False)
     email = Column(String, nullable=True)
-    estado = Column(String, default="disponible") # Estados: disponible, reclamado, contactado
+    estado = Column(String, default="disponible") # disponible | reclamado | contactado
+    resultado = Column(String, nullable=True)      # exitoso | no_interesado | no_contesto
     aliado_id = Column(Integer, ForeignKey("aliados.id"), nullable=True)
     fecha_carga = Column(DateTime, default=datetime.now)
     fecha_reclamo = Column(DateTime, nullable=True)
+    notif_24h_enviada = Column(Boolean, default=False)  # Para no mandar el email dos veces
 
     # Relación para saber quién lo reclamó
     aliado = relationship("Aliado", backref="leads_bolsa")
