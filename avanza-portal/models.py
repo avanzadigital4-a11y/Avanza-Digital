@@ -176,6 +176,16 @@ class LeadBolsa(Base):
     fecha_carga = Column(DateTime, default=datetime.now)
     fecha_reclamo = Column(DateTime, nullable=True)
     notif_24h_enviada = Column(Boolean, default=False)  # Para no mandar el email dos veces
+    # Campos enriquecidos
+    nombre_contacto = Column(String, nullable=True)   # Dueño o responsable
+    whatsapp        = Column(String, nullable=True)   # WA si es distinto al tel
+    instagram       = Column(String, nullable=True)
+    facebook        = Column(String, nullable=True)
+    web             = Column(String, nullable=True)
+    horario         = Column(String, nullable=True)
+    rating          = Column(String, nullable=True)   # Ej: "4.8"
+    resenas         = Column(String, nullable=True)   # Cantidad de reseñas Maps
+    extra           = Column(Text,   nullable=True)   # Notas adicionales
 
     # Relación para saber quién lo reclamó
     aliado = relationship("Aliado", backref="leads_bolsa")

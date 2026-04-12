@@ -582,10 +582,23 @@ tr:hover td { background:rgba(255,255,255,0.02); }
       
       <div class="metrics-grid" id="bolsa-kpis"></div>
 
-      <div class="table-wrap" style="margin-bottom:24px; padding: 24px;">
-        <div class="section-title"><i class="fa-solid fa-plus" style="color:var(--green);"></i> &nbsp;Cargar Nuevos Leads a la Bolsa</div>
+      <!-- TABS: Individual vs Masivo vs Fichas -->
+      <div style="display:flex; gap:8px; margin-bottom:16px; flex-wrap:wrap;">
+        <button id="btn-modo-individual" onclick="setModoCarga('individual')" style="padding:8px 18px;border-radius:8px;border:none;cursor:pointer;font-weight:700;font-size:.85rem;background:var(--primary);color:#fff;">
+          <i class="fa-solid fa-plus"></i> Individual
+        </button>
+        <button id="btn-modo-masivo" onclick="setModoCarga('masivo')" style="padding:8px 18px;border-radius:8px;border:1px solid var(--border);cursor:pointer;font-weight:700;font-size:.85rem;background:transparent;color:var(--text-muted);">
+          <i class="fa-solid fa-paste"></i> Importar Masivo
+        </button>
+        <button id="btn-modo-fichas" onclick="setModoCarga('fichas')" style="padding:8px 18px;border-radius:8px;border:1px solid var(--border);cursor:pointer;font-weight:700;font-size:.85rem;background:transparent;color:var(--text-muted);">
+          <i class="fa-solid fa-wand-magic-sparkles"></i> Actualizar Fichas IA
+        </button>
+      </div>
+
+      <!-- MODO INDIVIDUAL -->
+      <div id="modo-individual" class="table-wrap" style="margin-bottom:24px; padding: 24px;">
+        <div class="section-title"><i class="fa-solid fa-plus" style="color:var(--green);"></i> &nbsp;Cargar Nuevo Lead</div>
         <div class="section-sub">Estos contactos estarán disponibles públicamente para que los aliados los reclamen.</div>
-        
         <div class="form-2col" style="margin-top:16px;">
           <div class="form-row"><label>Empresa *</label><input type="text" id="bl-empresa" placeholder="Ej: Metalúrgica San Martín"></div>
           <div class="form-row"><label>Rubro *</label><input type="text" id="bl-rubro" placeholder="Ej: Industria Automotriz"></div>
@@ -597,6 +610,93 @@ tr:hover td { background:rgba(255,255,255,0.02); }
         <button class="btn-green" onclick="cargarLeadBolsa()"><i class="fa-solid fa-upload"></i> Subir a la Bolsa</button>
       </div>
 
+      <!-- MODO MASIVO -->
+      <div id="modo-masivo" class="table-wrap" style="margin-bottom:24px; padding: 24px; display:none;">
+        <div class="section-title"><i class="fa-solid fa-paste" style="color:var(--primary);"></i> &nbsp;Importación Masiva</div>
+        <div class="section-sub" style="margin-bottom:12px;">Pegá tu lista de contactos. El sistema detecta los rubros por los encabezados (🔩 METALÚRGICAS, 🌾 AGRO, etc.) y carga todos los leads de una sola vez.</div>
+
+        <div style="background:rgba(255,255,255,0.03);border:1px dashed var(--border);border-radius:8px;padding:12px;font-size:.78rem;color:var(--text-muted);margin-bottom:14px;line-height:1.8;">
+          <strong style="color:var(--text);">Formato aceptado:</strong><br>
+          🔩 METALÚRGICAS — Santa Fe Capital<br>
+          EmpresaDirecciónTeléfono<br>
+          Tornería Metalúrgica VergnaniAv. Zuviría 5661+54 342 631-7101<br>
+          ...<br>
+          🌾 AGRO — Santa Fe Capital<br>
+          EmpresaDirecciónTeléfono<br>
+          Stamatti Denis SemilleríaRuta 11 km 478+54 342 490-5249
+        </div>
+
+        <textarea id="bulk-texto" rows="12" style="width:100%;background:rgba(0,0,0,0.3);border:1px solid var(--border);border-radius:8px;color:var(--text);padding:14px;font-size:.83rem;resize:vertical;font-family:monospace;" placeholder="Pegá acá tu lista de contactos..."></textarea>
+
+        <div style="display:flex;align-items:center;gap:12px;margin-top:12px;flex-wrap:wrap;">
+          <button class="btn-green" onclick="previsualizarMasivo()" style="display:flex;align-items:center;gap:6px;">
+            <i class="fa-solid fa-eye"></i> Previsualizar
+          </button>
+          <button id="btn-importar-masivo" onclick="importarMasivo()" style="display:none;padding:10px 20px;background:var(--primary);color:#fff;border:none;border-radius:8px;font-weight:700;cursor:pointer;font-size:.9rem;">
+            <i class="fa-solid fa-upload"></i> Importar todos (<span id="count-masivo">0</span>)
+          </button>
+          <span id="bulk-status" style="font-size:.82rem;color:var(--text-muted);"></span>
+        </div>
+
+        <!-- Tabla de previsualización -->
+        <div id="bulk-preview" style="display:none;margin-top:18px;">
+          <div style="font-weight:700;margin-bottom:8px;color:var(--text);">Vista previa — revisá antes de importar:</div>
+          <div style="overflow-x:auto;max-height:320px;overflow-y:auto;">
+            <table style="width:100%;font-size:.82rem;">
+              <thead><tr>
+                <th style="padding:8px;text-align:left;border-bottom:1px solid var(--border);">Empresa</th>
+                <th style="padding:8px;text-align:left;border-bottom:1px solid var(--border);">Rubro</th>
+                <th style="padding:8px;text-align:left;border-bottom:1px solid var(--border);">Teléfono</th>
+              </tr></thead>
+              <tbody id="bulk-preview-body"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- MODO FICHAS IA -->
+      <div id="modo-fichas" class="table-wrap" style="margin-bottom:24px; padding:24px; display:none;">
+        <div class="section-title"><i class="fa-solid fa-wand-magic-sparkles" style="color:var(--amber);"></i> &nbsp;Actualizar Fichas desde IA</div>
+        <div class="section-sub" style="margin-bottom:14px;">
+          Pedile a la IA las fichas enriquecidas de tus empresas. Cuando te dé el HTML, pegalo acá y el sistema actualiza automáticamente los datos de contacto, horario, rating y redes sociales de cada lead en la bolsa.
+        </div>
+
+        <div style="background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.2);border-radius:8px;padding:12px 16px;font-size:.8rem;color:var(--amber);margin-bottom:16px;line-height:1.7;">
+          <strong>¿Cómo usarlo?</strong><br>
+          1. Pedile a ChatGPT o Claude: <em>"Buscame en Maps, Instagram y Facebook estos datos para cada empresa: nombre del contacto, WhatsApp, Instagram, Facebook, web, horario, rating y reseñas. Devolveme el resultado como HTML con una variable JS llamada <code>empresas</code> igual que las fichas anteriores."</em><br>
+          2. Pegá el HTML que te devuelve en el campo de abajo<br>
+          3. Hacé clic en Previsualizar → revisá → Actualizar
+        </div>
+
+        <textarea id="fichas-html" rows="10" style="width:100%;background:rgba(0,0,0,0.3);border:1px solid var(--border);border-radius:8px;color:var(--text);padding:14px;font-size:.82rem;resize:vertical;font-family:monospace;" placeholder="Pegá acá el HTML con las fichas de la IA..."></textarea>
+
+        <div style="display:flex;align-items:center;gap:12px;margin-top:12px;flex-wrap:wrap;">
+          <button class="btn-green" onclick="previsualizarFichas()">
+            <i class="fa-solid fa-eye"></i> Previsualizar
+          </button>
+          <button id="btn-actualizar-fichas" onclick="actualizarFichas()" style="display:none;padding:10px 20px;background:var(--amber);color:#000;border:none;border-radius:8px;font-weight:700;cursor:pointer;font-size:.9rem;">
+            <i class="fa-solid fa-wand-magic-sparkles"></i> Actualizar <span id="count-fichas">0</span> leads
+          </button>
+          <span id="fichas-status" style="font-size:.82rem;color:var(--text-muted);"></span>
+        </div>
+
+        <!-- Preview table -->
+        <div id="fichas-preview" style="display:none;margin-top:18px;">
+          <div style="font-weight:700;margin-bottom:8px;color:var(--text);">Vista previa — campos a actualizar:</div>
+          <div style="overflow-x:auto;max-height:340px;overflow-y:auto;">
+            <table style="width:100%;font-size:.8rem;">
+              <thead><tr>
+                <th style="padding:8px;text-align:left;border-bottom:1px solid var(--border);">Empresa</th>
+                <th style="padding:8px;text-align:left;border-bottom:1px solid var(--border);">Contacto</th>
+                <th style="padding:8px;text-align:left;border-bottom:1px solid var(--border);">Horario</th>
+                <th style="padding:8px;text-align:left;border-bottom:1px solid var(--border);">Rating</th>
+                <th style="padding:8px;text-align:left;border-bottom:1px solid var(--border);">Redes</th>
+              </tr></thead>
+              <tbody id="fichas-preview-body"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
       <div class="table-wrap">
         <div class="table-head">
           <h3><i class="fa-solid fa-briefcase" style="color:var(--primary);"></i> Monitor de Reclamos</h3>
@@ -1555,6 +1655,259 @@ async function cargarAuditoriasAdmin() {
 }
 
 // ── BOLSA DE LEADS ADMIN ──────────────────────────────────────────────────
+
+let _leadsMasivos = []; // Cache de leads parseados para importar
+
+function setModoCarga(modo) {
+  const individual = document.getElementById('modo-individual');
+  const masivo     = document.getElementById('modo-masivo');
+  const fichas     = document.getElementById('modo-fichas');
+  const btnInd     = document.getElementById('btn-modo-individual');
+  const btnMas     = document.getElementById('btn-modo-masivo');
+  const btnFic     = document.getElementById('btn-modo-fichas');
+
+  // Reset all
+  [individual, masivo, fichas].forEach(el => el.style.display = 'none');
+  [btnInd, btnMas, btnFic].forEach(btn => {
+    btn.style.background = 'transparent';
+    btn.style.color      = 'var(--text-muted)';
+    btn.style.border     = '1px solid var(--border)';
+  });
+
+  // Activate selected
+  const color = modo === 'fichas' ? 'var(--amber)' : 'var(--primary)';
+  if (modo === 'individual') { individual.style.display = 'block'; btnInd.style.background = color; btnInd.style.color = '#fff'; btnInd.style.border = 'none'; }
+  if (modo === 'masivo')     { masivo.style.display = 'block';     btnMas.style.background = color; btnMas.style.color = '#fff'; btnMas.style.border = 'none'; }
+  if (modo === 'fichas')     { fichas.style.display = 'block';     btnFic.style.background = color; btnFic.style.color = '#000'; btnFic.style.border = 'none'; }
+}
+
+// ── ACTUALIZAR FICHAS IA ────────────────────────────────────────────────────
+
+let _fichasData = [];
+
+function parsearFichasHTML(html) {
+  // Extraer el array de empresas del HTML pegado
+  const match = html.match(/const\s+empresas\s*=\s*(\[[\s\S]*?\]);/);
+  if (!match) return null;
+  try {
+    // Evaluar el array de forma segura usando Function
+    const arr = new Function('return ' + match[1])();
+    return arr;
+  } catch(e) {
+    console.error('Error parseando fichas:', e);
+    return null;
+  }
+}
+
+function previsualizarFichas() {
+  const html = document.getElementById('fichas-html').value;
+  const status = document.getElementById('fichas-status');
+  const preview = document.getElementById('fichas-preview');
+  const btnAct = document.getElementById('btn-actualizar-fichas');
+
+  if (!html.trim()) { status.textContent = '⚠️ Pegá el HTML primero.'; return; }
+
+  const empresas = parsearFichasHTML(html);
+  if (!empresas || !empresas.length) {
+    status.textContent = '❌ No se encontró el array de empresas. Verificá el formato del HTML.';
+    preview.style.display = 'none';
+    btnAct.style.display = 'none';
+    return;
+  }
+
+  _fichasData = empresas;
+  document.getElementById('count-fichas').textContent = empresas.length;
+  status.textContent = `✅ ${empresas.length} fichas detectadas.`;
+
+  const tbody = document.getElementById('fichas-preview-body');
+  tbody.innerHTML = empresas.map(e => `
+    <tr style="border-bottom:1px solid var(--border);">
+      <td style="padding:7px 8px;font-weight:700;">${e.nombre || ''}</td>
+      <td style="padding:7px 8px;color:var(--amber);">${e.contacto || '—'}</td>
+      <td style="padding:7px 8px;font-size:.75rem;color:var(--text-muted);">${e.horario || '—'}</td>
+      <td style="padding:7px 8px;">${e.rating ? '⭐ ' + e.rating + ' (' + (e.resenas||0) + ')' : '—'}</td>
+      <td style="padding:7px 8px;font-size:.75rem;">
+        ${e.instagram ? '<span style="color:#E1306C;">IG</span> ' : ''}
+        ${e.facebook  ? '<span style="color:#1877F2;">FB</span> ' : ''}
+        ${e.web       ? '🌐' : ''}
+      </td>
+    </tr>
+  `).join('');
+
+  preview.style.display = 'block';
+  btnAct.style.display = 'inline-flex';
+}
+
+async function actualizarFichas() {
+  if (!_fichasData.length) return;
+
+  const btnAct = document.getElementById('btn-actualizar-fichas');
+  const status = document.getElementById('fichas-status');
+  btnAct.disabled = true;
+  btnAct.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Actualizando...';
+
+  // Convertir al formato que espera la API
+  const payload = _fichasData.map(e => ({
+    empresa:         e.nombre    || '',
+    rubro:           e.rubro     || '',
+    telefono:        e.telefono  || '',
+    email:           e.email     || '',
+    nombre_contacto: e.contacto  || '',
+    whatsapp:        e.whatsapp  || '',
+    instagram:       e.instagram || '',
+    facebook:        e.facebook  || '',
+    web:             e.web       || '',
+    horario:         e.horario   || '',
+    rating:          e.rating    || '',
+    resenas:         e.resenas   || '',
+    extra:           e.extra     || ''
+  }));
+
+  try {
+    const res = await apiFetch(`${API}/admin/bolsa/bulk-update`, {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify(payload)
+    });
+    const data = await res.json();
+
+    if (res.ok) {
+      const noEnc = data.no_encontrados?.length ? ` | No encontrados: ${data.no_encontrados.join(', ')}` : '';
+      mostrarToast(`✅ ${data.actualizados} leads actualizados${noEnc}`, 'green');
+      status.textContent = `Actualizados: ${data.actualizados}${noEnc}`;
+      document.getElementById('fichas-html').value = '';
+      document.getElementById('fichas-preview').style.display = 'none';
+      btnAct.style.display = 'none';
+      _fichasData = [];
+    } else {
+      mostrarToast('Error al actualizar fichas', 'red');
+    }
+  } catch(e) {
+    mostrarToast('Error de conexión', 'red');
+  }
+
+  btnAct.disabled = false;
+  btnAct.innerHTML = `<i class="fa-solid fa-wand-magic-sparkles"></i> Actualizar <span id="count-fichas">${_fichasData.length}</span> leads`;
+}
+
+function parsearTextoMasivo(texto) {
+  const leads = [];
+  let norm = texto
+    .replace(/([\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}])/gu, '\n$1')
+    .replace(/(\+54[\s\d\-\(\)]{5,})/g, '\n$1\n')
+    .replace(/(\b0\d{2,4}[\s\-]?\d{6,8})/g, '\n$1\n')
+    .split('\n').map(l => l.trim()).filter(l => l.length > 2);
+
+  const EMOJIS       = /^[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}]/u;
+  const HEADER_TABLA = /^empresa\s*direcci/i;
+  const TELEFONO_RE  = /^(\+?54[\d\s\-\(\)]{5,}|\+?[\d][\d\s\-\(\)]{8,})/;
+  const DIR_KEYWORDS = /^(Av\.|Ruta\s|Calle\s|Gral\.|Gdor\.|G\.\s+de|Gorriti|Suipacha|Sarmiento|Necochea|Urquiza|Rivadavia|Misiones|Blas\s+P|Pedro\s+de|C\.18|1\u00b0|25\s+de|27\s+de|Francia\s+\d|C\u00f3rdoba\s+\d|Lamadrid|Esqui\u00fa)/i;
+
+  let rubroActual = '';
+  let empresaActual = '';
+
+  for (const linea of norm) {
+    if (EMOJIS.test(linea) || (/\u2014|\-\-/.test(linea) && !TELEFONO_RE.test(linea) && linea.length < 100)) {
+      rubroActual = linea.replace(/^[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}\s]+/u, '').replace(/\s*[-—–]+.*$/, '').trim();
+      empresaActual = '';
+      continue;
+    }
+    if (HEADER_TABLA.test(linea)) { empresaActual = ''; continue; }
+    if (TELEFONO_RE.test(linea)) {
+      const tel = linea.replace(/📱/g, '').trim();
+      if (empresaActual && rubroActual) {
+        leads.push({ empresa: empresaActual, rubro: rubroActual, telefono: tel, email: '' });
+      }
+      empresaActual = '';
+      continue;
+    }
+    if (DIR_KEYWORDS.test(linea)) continue;
+    if (rubroActual && linea.length > 2 && linea.length < 120) {
+      // Separar empresa de dirección si vienen pegadas
+      let emp = linea;
+      // Cortar antes de Av., Gral., Calle, o número de calle grande
+      emp = emp.replace(/(Gral\.|Gdor\.|Av\.|Bv\.|Pje\.|Ruta\s+\d|Calle\s+|Blas\s|Delf|Zuvir|Pellegrini|Lavalle|Lamas|Zeballos|Saavedra|Quiroga|Huergo|Mayo\s+\d|Junín|Belgrano\s+\d|Esquiú|Gorriti|Rivadavia|Urquiza|Francia\s+\d|Suipacha|Necochea|Sarmiento\s+\d|\bSF\b|,\s*Santa).*$/i, '');
+      emp = emp.replace(/\s*\d{4,}.*$/, ''); // cortar ante número de calle largo
+      emp = emp.replace(/,.*$/, '');           // cortar ante coma
+      emp = emp.replace(/\s+/g, ' ').trim();
+      empresaActual = emp;
+    }
+  }
+  return leads;
+}
+
+function previsualizarMasivo() {
+  const texto = document.getElementById('bulk-texto').value;
+  if (!texto.trim()) {
+    document.getElementById('bulk-status').textContent = '⚠️ Pegá el texto primero.';
+    return;
+  }
+
+  _leadsMasivos = parsearTextoMasivo(texto);
+
+  const preview = document.getElementById('bulk-preview');
+  const tbody   = document.getElementById('bulk-preview-body');
+  const status  = document.getElementById('bulk-status');
+  const btnImp  = document.getElementById('btn-importar-masivo');
+  const count   = document.getElementById('count-masivo');
+
+  if (_leadsMasivos.length === 0) {
+    status.textContent = '❌ No se detectaron contactos. Verificá el formato.';
+    preview.style.display = 'none';
+    btnImp.style.display  = 'none';
+    return;
+  }
+
+  tbody.innerHTML = _leadsMasivos.map((l, i) => `
+    <tr style="border-bottom:1px solid var(--border);">
+      <td style="padding:7px 8px; font-weight:600;">${l.empresa}</td>
+      <td style="padding:7px 8px; color:var(--text-muted);">${l.rubro}</td>
+      <td style="padding:7px 8px;">${l.telefono}</td>
+    </tr>
+  `).join('');
+
+  count.textContent    = _leadsMasivos.length;
+  status.textContent   = `✅ ${_leadsMasivos.length} contactos detectados.`;
+  preview.style.display = 'block';
+  btnImp.style.display  = 'inline-flex';
+}
+
+async function importarMasivo() {
+  if (!_leadsMasivos.length) return;
+
+  const btnImp = document.getElementById('btn-importar-masivo');
+  const status = document.getElementById('bulk-status');
+  btnImp.disabled = true;
+  btnImp.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Importando...';
+
+  let ok = 0, err = 0;
+
+  for (const lead of _leadsMasivos) {
+    try {
+      const res = await apiFetch(`${API}/admin/bolsa`, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify(lead)
+      });
+      if (res.ok) ok++; else err++;
+    } catch { err++; }
+  }
+
+  btnImp.disabled = false;
+  btnImp.innerHTML = `<i class="fa-solid fa-upload"></i> Importar todos (<span id="count-masivo">${_leadsMasivos.length}</span>)`;
+
+  if (err === 0) {
+    mostrarToast(`✅ ${ok} leads importados correctamente.`, 'green');
+    document.getElementById('bulk-texto').value = '';
+    document.getElementById('bulk-preview').style.display = 'none';
+    btnImp.style.display = 'none';
+    status.textContent = '';
+    _leadsMasivos = [];
+    cargarAdminBolsa();
+  } else {
+    mostrarToast(`Importados: ${ok} ✅ — Fallidos: ${err} ❌`, 'amber');
+  }
+}
 
 async function cargarAdminBolsa() {
   try {

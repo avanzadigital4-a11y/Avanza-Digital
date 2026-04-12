@@ -37,6 +37,15 @@ except Exception as e:
 for col_sql in [
     "ALTER TABLE bolsa_leads ADD COLUMN resultado VARCHAR",
     "ALTER TABLE bolsa_leads ADD COLUMN notif_24h_enviada BOOLEAN DEFAULT FALSE",
+    "ALTER TABLE bolsa_leads ADD COLUMN nombre_contacto VARCHAR",
+    "ALTER TABLE bolsa_leads ADD COLUMN whatsapp VARCHAR",
+    "ALTER TABLE bolsa_leads ADD COLUMN instagram VARCHAR",
+    "ALTER TABLE bolsa_leads ADD COLUMN facebook VARCHAR",
+    "ALTER TABLE bolsa_leads ADD COLUMN web VARCHAR",
+    "ALTER TABLE bolsa_leads ADD COLUMN horario VARCHAR",
+    "ALTER TABLE bolsa_leads ADD COLUMN rating VARCHAR",
+    "ALTER TABLE bolsa_leads ADD COLUMN resenas VARCHAR",
+    "ALTER TABLE bolsa_leads ADD COLUMN extra TEXT",
 ]:
     try:
         with engine.connect() as conn:
@@ -146,6 +155,8 @@ RUTAS_ADMIN = {
     ("GET",    "/admin/bolsa"),
     ("POST",   "/admin/bolsa/{id}/revocar"),
     ("GET",    "/admin/historial-bolsa"),
+    ("POST",   "/admin/bolsa/bulk-update"),
+    ("PATCH",  "/admin/bolsa/{id}/enriquecer"),
 
 }
 
@@ -688,6 +699,15 @@ class LeadBolsaCreate(BaseModel):
     rubro: str
     telefono: str
     email: str = ""
+    nombre_contacto: str = ""
+    whatsapp: str = ""
+    instagram: str = ""
+    facebook: str = ""
+    web: str = ""
+    horario: str = ""
+    rating: str = ""
+    resenas: str = ""
+    extra: str = ""
 
 def _aplicar_caducidad_bolsa(db: Session):
     """LA REGLA DE ORO: Libera los leads reclamados hace más de 48h sin contactar"""
@@ -718,6 +738,38 @@ def cargar_lead_bolsa(lead: LeadBolsaCreate, db: Session = Depends(get_db)):
     db.commit()
     return {"mensaje": "Lead subido a la bolsa."}
 
+
+
+@app.patch("/admin/bolsa/{id}/enriquecer")
+def enriquecer_lead(id: int, lead: LeadBolsaCreate, db: Session = Depends(get_db)):
+    """Admin: actualiza los campos enriquecidos de un lead existente."""
+    l = db.query(LeadBolsa).filter(LeadBolsa.id == id).first()
+    if not l:
+        raise HTTPException(404, "Lead no encontrado.")
+    for field in ["nombre_contacto","whatsapp","instagram","facebook","web","horario","rating","resenas","extra","empresa","rubro","telefono","email"]:
+        val = getattr(lead, field, None)
+        if val is not None:
+            setattr(l, field, val)
+    db.commit()
+    return {"mensaje": "Lead actualizado."}
+
+@app.post("/admin/bolsa/bulk-update")
+def bulk_update_leads(leads: list[LeadBolsaCreate], db: Session = Depends(get_db)):
+    """Admin: actualiza masivamente leads por nombre de empresa."""
+    updated = 0
+    not_found = []
+    for lead_data in leads:
+        l = db.query(LeadBolsa).filter(LeadBolsa.empresa.ilike(f"%{lead_data.empresa}%")).first()
+        if l:
+            for field in ["nombre_contacto","whatsapp","instagram","facebook","web","horario","rating","resenas","extra"]:
+                val = getattr(lead_data, field, None)
+                if val:
+                    setattr(l, field, val)
+            updated += 1
+        else:
+            not_found.append(lead_data.empresa)
+    db.commit()
+    return {"actualizados": updated, "no_encontrados": not_found}
 @app.get("/admin/bolsa")
 def monitor_bolsa(db: Session = Depends(get_db)):
     # 1. Limpiamos los leads vencidos antes de mostrar la data
