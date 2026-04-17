@@ -582,16 +582,13 @@ tr:hover td { background:rgba(255,255,255,0.02); }
       
       <div class="metrics-grid" id="bolsa-kpis"></div>
 
-      <!-- TABS: Individual vs Masivo vs Fichas -->
-      <div style="display:flex; gap:8px; margin-bottom:16px; flex-wrap:wrap;">
+      <!-- TABS: Individual vs Masivo -->
+      <div style="display:flex; gap:8px; margin-bottom:16px;">
         <button id="btn-modo-individual" onclick="setModoCarga('individual')" style="padding:8px 18px;border-radius:8px;border:none;cursor:pointer;font-weight:700;font-size:.85rem;background:var(--primary);color:#fff;">
           <i class="fa-solid fa-plus"></i> Individual
         </button>
         <button id="btn-modo-masivo" onclick="setModoCarga('masivo')" style="padding:8px 18px;border-radius:8px;border:1px solid var(--border);cursor:pointer;font-weight:700;font-size:.85rem;background:transparent;color:var(--text-muted);">
           <i class="fa-solid fa-paste"></i> Importar Masivo
-        </button>
-        <button id="btn-modo-fichas" onclick="setModoCarga('fichas')" style="padding:8px 18px;border-radius:8px;border:1px solid var(--border);cursor:pointer;font-weight:700;font-size:.85rem;background:transparent;color:var(--text-muted);">
-          <i class="fa-solid fa-wand-magic-sparkles"></i> Actualizar Fichas IA
         </button>
       </div>
 
@@ -606,6 +603,31 @@ tr:hover td { background:rgba(255,255,255,0.02); }
         <div class="form-2col">
           <div class="form-row"><label>Teléfono *</label><input type="text" id="bl-telefono" placeholder="+54 9..."></div>
           <div class="form-row"><label>Email (Opcional)</label><input type="email" id="bl-email" placeholder="contacto@empresa.com"></div>
+        </div>
+        <!-- v1.3: Tier + costo -->
+        <div class="form-2col">
+          <div class="form-row">
+            <label>Tier del lead</label>
+            <select id="bl-tier" onchange="actualizarCostoLead()" style="background:#111; border:1px solid var(--border); color:white; padding:10px; border-radius:8px; width:100%;">
+              <option value="basico">🆓 Básico (gratis, free-for-all)</option>
+              <option value="calificado">⭐ Calificado (se paga con créditos)</option>
+              <option value="premium">💎 Premium (más datos, más caro)</option>
+            </select>
+          </div>
+          <div class="form-row">
+            <label>Costo en créditos <span id="bl-costo-hint" style="font-size:.72rem; color:var(--text-dim);">(deja 0 si es básico)</span></label>
+            <input type="number" id="bl-costo" placeholder="0" min="0" value="0">
+          </div>
+        </div>
+        <div class="form-2col">
+          <div class="form-row">
+            <label>Score de calidad (0-100)</label>
+            <input type="number" id="bl-score" placeholder="50" min="0" max="100" value="50">
+          </div>
+          <div class="form-row">
+            <label>Notas de calificación</label>
+            <input type="text" id="bl-notas" placeholder="Ej: Ya pidió presupuesto, budget confirmado">
+          </div>
         </div>
         <button class="btn-green" onclick="cargarLeadBolsa()"><i class="fa-solid fa-upload"></i> Subir a la Bolsa</button>
       </div>
@@ -654,49 +676,6 @@ tr:hover td { background:rgba(255,255,255,0.02); }
         </div>
       </div>
 
-      <!-- MODO FICHAS IA -->
-      <div id="modo-fichas" class="table-wrap" style="margin-bottom:24px; padding:24px; display:none;">
-        <div class="section-title"><i class="fa-solid fa-wand-magic-sparkles" style="color:var(--amber);"></i> &nbsp;Actualizar Fichas desde IA</div>
-        <div class="section-sub" style="margin-bottom:14px;">
-          Pedile a la IA las fichas enriquecidas de tus empresas. Cuando te dé el HTML, pegalo acá y el sistema actualiza automáticamente los datos de contacto, horario, rating y redes sociales de cada lead en la bolsa.
-        </div>
-
-        <div style="background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.2);border-radius:8px;padding:12px 16px;font-size:.8rem;color:var(--amber);margin-bottom:16px;line-height:1.7;">
-          <strong>¿Cómo usarlo?</strong><br>
-          1. Pedile a ChatGPT o Claude: <em>"Buscame en Maps, Instagram y Facebook estos datos para cada empresa: nombre del contacto, WhatsApp, Instagram, Facebook, web, horario, rating y reseñas. Devolveme el resultado como HTML con una variable JS llamada <code>empresas</code> igual que las fichas anteriores."</em><br>
-          2. Pegá el HTML que te devuelve en el campo de abajo<br>
-          3. Hacé clic en Previsualizar → revisá → Actualizar
-        </div>
-
-        <textarea id="fichas-html" rows="10" style="width:100%;background:rgba(0,0,0,0.3);border:1px solid var(--border);border-radius:8px;color:var(--text);padding:14px;font-size:.82rem;resize:vertical;font-family:monospace;" placeholder="Pegá acá el HTML con las fichas de la IA..."></textarea>
-
-        <div style="display:flex;align-items:center;gap:12px;margin-top:12px;flex-wrap:wrap;">
-          <button class="btn-green" onclick="previsualizarFichas()">
-            <i class="fa-solid fa-eye"></i> Previsualizar
-          </button>
-          <button id="btn-actualizar-fichas" onclick="actualizarFichas()" style="display:none;padding:10px 20px;background:var(--amber);color:#000;border:none;border-radius:8px;font-weight:700;cursor:pointer;font-size:.9rem;">
-            <i class="fa-solid fa-wand-magic-sparkles"></i> Actualizar <span id="count-fichas">0</span> leads
-          </button>
-          <span id="fichas-status" style="font-size:.82rem;color:var(--text-muted);"></span>
-        </div>
-
-        <!-- Preview table -->
-        <div id="fichas-preview" style="display:none;margin-top:18px;">
-          <div style="font-weight:700;margin-bottom:8px;color:var(--text);">Vista previa — campos a actualizar:</div>
-          <div style="overflow-x:auto;max-height:340px;overflow-y:auto;">
-            <table style="width:100%;font-size:.8rem;">
-              <thead><tr>
-                <th style="padding:8px;text-align:left;border-bottom:1px solid var(--border);">Empresa</th>
-                <th style="padding:8px;text-align:left;border-bottom:1px solid var(--border);">Contacto</th>
-                <th style="padding:8px;text-align:left;border-bottom:1px solid var(--border);">Horario</th>
-                <th style="padding:8px;text-align:left;border-bottom:1px solid var(--border);">Rating</th>
-                <th style="padding:8px;text-align:left;border-bottom:1px solid var(--border);">Redes</th>
-              </tr></thead>
-              <tbody id="fichas-preview-body"></tbody>
-            </table>
-          </div>
-        </div>
-      </div>
       <div class="table-wrap">
         <div class="table-head">
           <h3><i class="fa-solid fa-briefcase" style="color:var(--primary);"></i> Monitor de Reclamos</h3>
@@ -1092,6 +1071,7 @@ function renderAliados(lista) {
         <div style="display:flex;gap:6px;flex-wrap:wrap;">
           <button class="btn-outline" title="Ver detalle" onclick="verAliado('${a.codigo}')"><i class="fa-solid fa-eye"></i></button>
           <a href="https://wa.me/${(a.whatsapp||'').replace(/[^0-9]/g,'')}" target="_blank" class="btn-outline" style="text-decoration:none;" title="WhatsApp"><i class="fa-brands fa-whatsapp" style="color:var(--green);"></i></a>
+          <button class="btn-outline" style="color:var(--amber); border-color:rgba(250,204,21,0.3);" title="Asignar créditos" onclick="asignarCreditosAliado('${a.codigo}','${a.nombre.replace(/'/g,"\\'")}')"><i class="fa-solid fa-coins"></i></button>
           ${estado !== 'suspendido'
             ? `<button class="btn-red" style="padding:6px 10px;" title="Suspender cuenta" onclick="confirmarAccion('¿Suspender a ${a.nombre}?','El aliado no podrá acceder al portal hasta que lo reactives.','fa-user-slash','red',()=>suspenderAliado('${a.codigo}'))"><i class="fa-solid fa-user-slash"></i></button>`
             : `<button class="btn-green" style="padding:6px 10px;" title="Reactivar cuenta" onclick="confirmarAccion('¿Reactivar a ${a.nombre}?','El aliado podrá volver a acceder al portal.','fa-user-check','green',()=>activarAliado('${a.codigo}'))"><i class="fa-solid fa-user-check"></i></button>`
@@ -1661,133 +1641,28 @@ let _leadsMasivos = []; // Cache de leads parseados para importar
 function setModoCarga(modo) {
   const individual = document.getElementById('modo-individual');
   const masivo     = document.getElementById('modo-masivo');
-  const fichas     = document.getElementById('modo-fichas');
   const btnInd     = document.getElementById('btn-modo-individual');
   const btnMas     = document.getElementById('btn-modo-masivo');
-  const btnFic     = document.getElementById('btn-modo-fichas');
 
-  // Reset all
-  [individual, masivo, fichas].forEach(el => el.style.display = 'none');
-  [btnInd, btnMas, btnFic].forEach(btn => {
-    btn.style.background = 'transparent';
-    btn.style.color      = 'var(--text-muted)';
-    btn.style.border     = '1px solid var(--border)';
-  });
-
-  // Activate selected
-  const color = modo === 'fichas' ? 'var(--amber)' : 'var(--primary)';
-  if (modo === 'individual') { individual.style.display = 'block'; btnInd.style.background = color; btnInd.style.color = '#fff'; btnInd.style.border = 'none'; }
-  if (modo === 'masivo')     { masivo.style.display = 'block';     btnMas.style.background = color; btnMas.style.color = '#fff'; btnMas.style.border = 'none'; }
-  if (modo === 'fichas')     { fichas.style.display = 'block';     btnFic.style.background = color; btnFic.style.color = '#000'; btnFic.style.border = 'none'; }
-}
-
-// ── ACTUALIZAR FICHAS IA ────────────────────────────────────────────────────
-
-let _fichasData = [];
-
-function parsearFichasHTML(html) {
-  // Extraer el array de empresas del HTML pegado
-  const match = html.match(/const\s+empresas\s*=\s*(\[[\s\S]*?\]);/);
-  if (!match) return null;
-  try {
-    // Evaluar el array de forma segura usando Function
-    const arr = new Function('return ' + match[1])();
-    return arr;
-  } catch(e) {
-    console.error('Error parseando fichas:', e);
-    return null;
+  if (modo === 'individual') {
+    individual.style.display = 'block';
+    masivo.style.display     = 'none';
+    btnInd.style.background  = 'var(--primary)';
+    btnInd.style.color       = '#fff';
+    btnInd.style.border      = 'none';
+    btnMas.style.background  = 'transparent';
+    btnMas.style.color       = 'var(--text-muted)';
+    btnMas.style.border      = '1px solid var(--border)';
+  } else {
+    individual.style.display = 'none';
+    masivo.style.display     = 'block';
+    btnMas.style.background  = 'var(--primary)';
+    btnMas.style.color       = '#fff';
+    btnMas.style.border      = 'none';
+    btnInd.style.background  = 'transparent';
+    btnInd.style.color       = 'var(--text-muted)';
+    btnInd.style.border      = '1px solid var(--border)';
   }
-}
-
-function previsualizarFichas() {
-  const html = document.getElementById('fichas-html').value;
-  const status = document.getElementById('fichas-status');
-  const preview = document.getElementById('fichas-preview');
-  const btnAct = document.getElementById('btn-actualizar-fichas');
-
-  if (!html.trim()) { status.textContent = '⚠️ Pegá el HTML primero.'; return; }
-
-  const empresas = parsearFichasHTML(html);
-  if (!empresas || !empresas.length) {
-    status.textContent = '❌ No se encontró el array de empresas. Verificá el formato del HTML.';
-    preview.style.display = 'none';
-    btnAct.style.display = 'none';
-    return;
-  }
-
-  _fichasData = empresas;
-  document.getElementById('count-fichas').textContent = empresas.length;
-  status.textContent = `✅ ${empresas.length} fichas detectadas.`;
-
-  const tbody = document.getElementById('fichas-preview-body');
-  tbody.innerHTML = empresas.map(e => `
-    <tr style="border-bottom:1px solid var(--border);">
-      <td style="padding:7px 8px;font-weight:700;">${e.nombre || ''}</td>
-      <td style="padding:7px 8px;color:var(--amber);">${e.contacto || '—'}</td>
-      <td style="padding:7px 8px;font-size:.75rem;color:var(--text-muted);">${e.horario || '—'}</td>
-      <td style="padding:7px 8px;">${e.rating ? '⭐ ' + e.rating + ' (' + (e.resenas||0) + ')' : '—'}</td>
-      <td style="padding:7px 8px;font-size:.75rem;">
-        ${e.instagram ? '<span style="color:#E1306C;">IG</span> ' : ''}
-        ${e.facebook  ? '<span style="color:#1877F2;">FB</span> ' : ''}
-        ${e.web       ? '🌐' : ''}
-      </td>
-    </tr>
-  `).join('');
-
-  preview.style.display = 'block';
-  btnAct.style.display = 'inline-flex';
-}
-
-async function actualizarFichas() {
-  if (!_fichasData.length) return;
-
-  const btnAct = document.getElementById('btn-actualizar-fichas');
-  const status = document.getElementById('fichas-status');
-  btnAct.disabled = true;
-  btnAct.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Actualizando...';
-
-  // Convertir al formato que espera la API
-  const payload = _fichasData.map(e => ({
-    empresa:         e.nombre    || '',
-    rubro:           e.rubro     || '',
-    telefono:        e.telefono  || '',
-    email:           e.email     || '',
-    nombre_contacto: e.contacto  || '',
-    whatsapp:        e.whatsapp  || '',
-    instagram:       e.instagram || '',
-    facebook:        e.facebook  || '',
-    web:             e.web       || '',
-    horario:         e.horario   || '',
-    rating:          e.rating    || '',
-    resenas:         e.resenas   || '',
-    extra:           e.extra     || ''
-  }));
-
-  try {
-    const res = await apiFetch(`${API}/admin/bolsa/bulk-update`, {
-      method: 'POST',
-      headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify(payload)
-    });
-    const data = await res.json();
-
-    if (res.ok) {
-      const noEnc = data.no_encontrados?.length ? ` | No encontrados: ${data.no_encontrados.join(', ')}` : '';
-      mostrarToast(`✅ ${data.actualizados} leads actualizados${noEnc}`, 'green');
-      status.textContent = `Actualizados: ${data.actualizados}${noEnc}`;
-      document.getElementById('fichas-html').value = '';
-      document.getElementById('fichas-preview').style.display = 'none';
-      btnAct.style.display = 'none';
-      _fichasData = [];
-    } else {
-      mostrarToast('Error al actualizar fichas', 'red');
-    }
-  } catch(e) {
-    mostrarToast('Error de conexión', 'red');
-  }
-
-  btnAct.disabled = false;
-  btnAct.innerHTML = `<i class="fa-solid fa-wand-magic-sparkles"></i> Actualizar <span id="count-fichas">${_fichasData.length}</span> leads`;
 }
 
 function parsearTextoMasivo(texto) {
@@ -1968,24 +1843,70 @@ async function cargarLeadBolsa() {
   const rubro = document.getElementById('bl-rubro').value.trim();
   const telefono = document.getElementById('bl-telefono').value.trim();
   const email = document.getElementById('bl-email').value.trim();
+  const tier = document.getElementById('bl-tier').value;
+  const costo_creditos = parseInt(document.getElementById('bl-costo').value || '0');
+  const score_calidad = parseInt(document.getElementById('bl-score').value || '50');
+  const notas_calificacion = document.getElementById('bl-notas').value.trim();
 
   if(!empresa || !rubro || !telefono) {
     mostrarToast('Empresa, Rubro y Teléfono son obligatorios.', 'amber');
     return;
   }
+  if (tier !== 'basico' && costo_creditos <= 0) {
+    mostrarToast('Los leads calificados y premium deben tener costo > 0.', 'amber');
+    return;
+  }
 
   try {
-    const res = await apiFetch(`${API}/admin/bolsa`, {
+    const res = await apiFetch(`${API}/admin/bolsa-v2`, {
       method: 'POST',
       headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({empresa, rubro, telefono, email})
+      body: JSON.stringify({empresa, rubro, telefono, email, tier, costo_creditos, score_calidad, notas_calificacion})
     });
     if(res.ok) {
-      mostrarToast('¡Lead agregado a la bolsa exitosamente!', 'green');
-      ['bl-empresa', 'bl-rubro', 'bl-telefono', 'bl-email'].forEach(id => document.getElementById(id).value = '');
+      const tierLabel = {basico:'básico', calificado:'calificado ⭐', premium:'premium 💎'}[tier] || tier;
+      mostrarToast(`¡Lead ${tierLabel} agregado a la bolsa!`, 'green');
+      ['bl-empresa', 'bl-rubro', 'bl-telefono', 'bl-email', 'bl-notas'].forEach(id => document.getElementById(id).value = '');
+      document.getElementById('bl-costo').value = '0';
+      document.getElementById('bl-score').value = '50';
+      document.getElementById('bl-tier').value = 'basico';
+      actualizarCostoLead();
       cargarAdminBolsa();
     } else {
       mostrarToast('Error al cargar el lead', 'red');
+    }
+  } catch(e) { mostrarToast('Error de conexión', 'red'); }
+}
+
+function actualizarCostoLead() {
+  const tier = document.getElementById('bl-tier').value;
+  const costoInput = document.getElementById('bl-costo');
+  const hint = document.getElementById('bl-costo-hint');
+  if (tier === 'basico') {
+    costoInput.value = 0;
+    costoInput.disabled = true;
+    if (hint) hint.textContent = '(los básicos son gratis)';
+  } else {
+    costoInput.disabled = false;
+    const sugerido = tier === 'premium' ? 20 : 10;
+    if (parseInt(costoInput.value||'0') === 0) costoInput.value = sugerido;
+    if (hint) hint.textContent = `(sugerido: ${sugerido})`;
+  }
+}
+
+async function asignarCreditosAliado(codigo, nombre) {
+  const input = prompt(`Créditos a asignar a ${nombre} (usá - para quitar, ej: 50 o -10):`, '10');
+  if (input === null) return;
+  const delta = parseInt(input);
+  if (isNaN(delta) || delta === 0) { alert('Valor inválido'); return; }
+  const motivo = delta > 0 ? 'recarga_admin' : 'ajuste_admin';
+  try {
+    const res = await apiFetch(`${API}/admin/aliados/${codigo}/creditos?delta=${delta}&motivo=${motivo}`, {method:'POST'});
+    const data = await res.json();
+    if (res.ok) {
+      mostrarToast(`✅ Saldo actualizado: ${data.nuevo_saldo} créditos`, 'green');
+    } else {
+      mostrarToast(data.detail || 'Error', 'red');
     }
   } catch(e) { mostrarToast('Error de conexión', 'red'); }
 }

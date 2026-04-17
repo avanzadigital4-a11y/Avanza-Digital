@@ -496,6 +496,75 @@
     .onboarding-box { max-height: 90vh; overflow-y: auto; }
     .onboard-header, .onboard-steps, .onboard-footer { padding-left: 20px; padding-right: 20px; }
   }
+
+  /* ─── SIGUIENTE MEJOR ACCIÓN ─── */
+  .nba-card {
+    border-radius: var(--radius); padding: 20px 24px; margin-bottom: 24px;
+    display: flex; align-items: flex-start; gap: 16px;
+    animation: fadeIn 0.4s ease; border: 1px solid;
+    transition: transform 0.2s;
+  }
+  .nba-card:hover { transform: translateY(-2px); }
+  .nba-card.green  { background: rgba(74,222,128,0.06);  border-color: rgba(74,222,128,0.25); }
+  .nba-card.amber  { background: rgba(250,204,21,0.06);  border-color: rgba(250,204,21,0.25); }
+  .nba-card.primary{ background: rgba(59,130,246,0.06);  border-color: rgba(59,130,246,0.25); }
+  .nba-card.red    { background: rgba(239,68,68,0.06);   border-color: rgba(239,68,68,0.25);  }
+  .nba-icon { font-size: 2rem; flex-shrink: 0; line-height: 1; }
+  .nba-body { flex: 1; min-width: 0; }
+  .nba-label { font-size: 0.68rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px; color: var(--text-dim); margin-bottom: 4px; }
+  .nba-title { font-size: 1rem; font-weight: 800; margin-bottom: 4px; }
+  .nba-desc  { font-size: 0.84rem; color: var(--text-muted); line-height: 1.5; margin-bottom: 12px; }
+  .nba-btn   { display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px; border: none;
+    border-radius: 8px; font-size: 0.82rem; font-weight: 700; font-family: 'Inter', sans-serif;
+    cursor: pointer; transition: all 0.2s; }
+  .nba-btn.green   { background: var(--green);   color: #000; }
+  .nba-btn.amber   { background: var(--amber);   color: #000; }
+  .nba-btn.primary { background: var(--primary); color: #fff; }
+
+  /* ─── ONBOARDING CHECKLIST ─── */
+  .ob-checklist { display: flex; flex-direction: column; gap: 8px; }
+  .ob-step { display: flex; align-items: center; gap: 12px; padding: 10px 14px;
+    border-radius: 8px; font-size: 0.85rem; transition: background 0.2s; }
+  .ob-step.done { color: var(--text-muted); }
+  .ob-step.pending { color: var(--text); background: rgba(255,255,255,0.02); }
+  .ob-check { width: 22px; height: 22px; border-radius: 50%; display: flex; align-items: center;
+    justify-content: center; flex-shrink: 0; font-size: 0.75rem; }
+  .ob-check.done    { background: var(--green);   color: #000; }
+  .ob-check.pending { background: rgba(255,255,255,0.08); color: var(--text-dim); border: 1px solid var(--border); }
+  .ob-progress-bar  { height: 6px; background: rgba(255,255,255,0.06); border-radius: 50px; margin: 12px 0 4px; overflow: hidden; }
+  .ob-progress-fill { height: 100%; background: linear-gradient(90deg, var(--green), var(--primary));
+    border-radius: 50px; transition: width 0.8s ease; }
+
+  /* ─── COTIZADOR AI ─── */
+  .ai-analysis-box {
+    margin-top: 20px; padding: 20px 24px;
+    background: linear-gradient(135deg, rgba(168,85,247,0.06), rgba(59,130,246,0.05));
+    border: 1px solid rgba(168,85,247,0.2); border-radius: var(--radius-sm);
+    animation: fadeIn 0.3s ease;
+  }
+  .ai-label { display: flex; align-items: center; gap: 8px; font-size: 0.72rem; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 1.5px; color: #a855f7; margin-bottom: 12px; }
+  .ai-section-title { font-size: 0.8rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase;
+    letter-spacing: 1px; margin-bottom: 6px; margin-top: 14px; }
+  .ai-pitch-box { background: rgba(0,0,0,0.3); border-left: 3px solid #a855f7; border-radius: 6px;
+    padding: 12px 14px; font-size: 0.85rem; color: var(--text-muted); line-height: 1.6; font-style: italic; }
+  .ai-prob-badge { display: inline-flex; align-items: center; gap: 6px; padding: 6px 14px;
+    border-radius: 50px; font-size: 0.85rem; font-weight: 800; border: 1px solid; }
+  .ai-prob-high   { background: rgba(74,222,128,0.1); color: var(--green); border-color: var(--green-border); }
+  .ai-prob-medium { background: rgba(250,204,21,0.1); color: var(--amber); border-color: rgba(250,204,21,0.3); }
+  .ai-prob-low    { background: rgba(239,68,68,0.1);  color: var(--red);   border-color: rgba(239,68,68,0.3); }
+  .ai-skeleton { background: linear-gradient(90deg, rgba(168,85,247,0.05) 25%, rgba(168,85,247,0.12) 50%, rgba(168,85,247,0.05) 75%);
+    background-size: 200% 100%; animation: loading 1.2s infinite; border-radius: 6px; height: 14px; margin-bottom: 8px; }
+
+  /* ─── PILOTO AUTOMÁTICO ─── */
+  .piloto-toggle { display: flex; align-items: center; gap: 8px; cursor: pointer; padding: 5px 10px;
+    border-radius: 6px; font-size: 0.75rem; font-weight: 700; border: 1px solid; transition: all 0.2s; }
+  .piloto-toggle.off { border-color: var(--border); color: var(--text-dim); background: transparent; }
+  .piloto-toggle.on  { border-color: rgba(168,85,247,0.4); color: #c084fc; background: rgba(168,85,247,0.08); }
+  .toggle-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+  .toggle-dot.off { background: var(--text-dim); }
+  .toggle-dot.on  { background: #a855f7; box-shadow: 0 0 6px rgba(168,85,247,0.6); animation: pulse 1.5s infinite; }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.5} }
 </style>
 </head>
 <body>
@@ -516,7 +585,133 @@
       <i class="fa-solid fa-arrow-right-to-bracket"></i> Ingresar al portal
     </button>
     <div class="login-error" id="login-error"><i class="fa-solid fa-circle-exclamation"></i> &nbsp;Código no encontrado o contraseña incorrecta.</div>
-    <div class="login-footer">¿No tenés tu código? Escribí al <a href="https://wa.me/5493424392759" target="_blank">+54 9 342 439 2759</a></div>
+    <div class="login-footer">¿Todavía no sos aliado? <a href="#" onclick="mostrarRegistro()">Registrate gratis →</a></div>
+  </div>
+</div>
+
+<div id="registro-screen" style="display:none; min-height:100vh; padding:40px 24px; background: radial-gradient(ellipse at 50% 0%, rgba(249,115,22,0.07) 0%, transparent 60%); overflow-y:auto;">
+  <div style="max-width:560px; margin:0 auto;">
+
+    <div style="text-align:center; margin-bottom:36px;">
+      <div style="display:inline-flex;align-items:center;gap:10px;font-size:1.4rem;font-weight:800;margin-bottom:10px;">
+        <i class="fa-solid fa-layer-group" style="color:var(--orange);"></i> Avanza Partner Network
+      </div>
+      <div style="display:inline-block;background:rgba(249,115,22,0.12);border:1px solid rgba(249,115,22,0.3);color:var(--orange);font-size:.72rem;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;padding:4px 14px;border-radius:50px;margin-bottom:16px;">
+        Registro gratuito · Sin requisitos
+      </div>
+      <div style="font-size:1.6rem;font-weight:900;line-height:1.2;margin-bottom:8px;">Convertí tus contactos<br>en comisiones</div>
+      <div style="color:var(--text-muted);font-size:.9rem;">Arrancás con 10% y llegás hasta 20% por venta. Comisiones en 24hs.</div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:28px;">
+      <div style="background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:10px;padding:12px 8px;text-align:center;">
+        <div style="font-size:1.1rem;font-weight:900;color:var(--text-muted);">10%</div>
+        <div style="font-size:.68rem;font-weight:700;color:var(--text-dim);text-transform:uppercase;letter-spacing:.5px;">BASIC</div>
+      </div>
+      <div style="background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:10px;padding:12px 8px;text-align:center;">
+        <div style="font-size:1.1rem;font-weight:900;color:#a78bfa;">12%</div>
+        <div style="font-size:.68rem;font-weight:700;color:var(--text-dim);text-transform:uppercase;letter-spacing:.5px;">SILVER</div>
+      </div>
+      <div style="background:rgba(249,115,22,0.08);border:1px solid rgba(249,115,22,0.25);border-radius:10px;padding:12px 8px;text-align:center;">
+        <div style="font-size:1.1rem;font-weight:900;color:var(--orange);">15%</div>
+        <div style="font-size:.68rem;font-weight:700;color:var(--orange);text-transform:uppercase;letter-spacing:.5px;">PREMIUM</div>
+      </div>
+      <div style="background:rgba(250,204,21,0.08);border:1px solid rgba(250,204,21,0.25);border-radius:10px;padding:12px 8px;text-align:center;">
+        <div style="font-size:1.1rem;font-weight:900;color:var(--amber);">20%</div>
+        <div style="font-size:.68rem;font-weight:700;color:var(--amber);text-transform:uppercase;letter-spacing:.5px;">ELITE</div>
+      </div>
+    </div>
+
+    <div style="background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:var(--radius);padding:36px 32px;">
+      <div style="font-size:1rem;font-weight:800;margin-bottom:24px;display:flex;align-items:center;gap:8px;">
+        <i class="fa-solid fa-user-plus" style="color:var(--orange);"></i> Tus datos
+      </div>
+
+      <div class="field">
+        <label><i class="fa-solid fa-user"></i> &nbsp;Nombre completo *</label>
+        <input type="text" id="reg-nombre" placeholder="Juan García" autocomplete="name">
+      </div>
+      <div class="field">
+        <label><i class="fa-solid fa-envelope"></i> &nbsp;Email *</label>
+        <input type="email" id="reg-email" placeholder="juan@empresa.com" autocomplete="email">
+      </div>
+      <div class="field">
+        <label><i class="fa-brands fa-whatsapp"></i> &nbsp;WhatsApp (con código de área) *</label>
+        <input type="text" id="reg-whatsapp" placeholder="+54 9 342 000 0000">
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+        <div class="field">
+          <label><i class="fa-solid fa-location-dot"></i> &nbsp;Ciudad / Provincia</label>
+          <input type="text" id="reg-ciudad" placeholder="Santa Fe">
+        </div>
+        <div class="field">
+          <label><i class="fa-solid fa-id-card"></i> &nbsp;DNI (opcional)</label>
+          <input type="text" id="reg-dni" placeholder="30.000.000">
+        </div>
+      </div>
+      <div class="field">
+        <label><i class="fa-solid fa-briefcase"></i> &nbsp;¿A qué te dedicás? *</label>
+        <select id="reg-perfil" style="width:100%;background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:var(--radius-sm);padding:13px 16px;color:var(--text);font-size:.95rem;font-family:'Inter',sans-serif;cursor:pointer;">
+          <option value="" disabled selected>Elegí tu perfil</option>
+          <option value="Consultor Industrial">Consultor Industrial</option>
+          <option value="Estudio Contable">Estudio / Contador</option>
+          <option value="Agencia B2B">Agencia B2B / Marketing</option>
+          <option value="Vendedor Freelance">Vendedor Freelance</option>
+          <option value="Proveedor de Industrias">Proveedor de Industrias</option>
+          <option value="Otro">Otro</option>
+        </select>
+      </div>
+
+      <div style="border-top:1px solid var(--border);padding-top:24px;margin-top:8px;">
+        <div style="font-size:.9rem;font-weight:700;margin-bottom:16px;display:flex;align-items:center;gap:8px;">
+          <i class="fa-solid fa-lock" style="color:var(--text-muted);"></i> Creá tu contraseña
+        </div>
+        <div class="field">
+          <label><i class="fa-solid fa-key"></i> &nbsp;Contraseña (mínimo 6 caracteres) *</label>
+          <input type="password" id="reg-pass" placeholder="••••••••">
+        </div>
+        <div class="field">
+          <label><i class="fa-solid fa-key"></i> &nbsp;Repetir contraseña *</label>
+          <input type="password" id="reg-pass2" placeholder="••••••••">
+        </div>
+      </div>
+
+      <div style="background:rgba(249,115,22,0.05);border:1px solid rgba(249,115,22,0.2);border-radius:10px;padding:16px;margin-bottom:24px;display:flex;align-items:flex-start;gap:12px;">
+        <input type="checkbox" id="reg-tyc" style="margin-top:3px;width:16px;height:16px;accent-color:var(--orange);flex-shrink:0;cursor:pointer;">
+        <label for="reg-tyc" style="font-size:.83rem;color:var(--text-muted);cursor:pointer;line-height:1.5;">
+          Leí y acepto el <a href="https://avanza-digital-production.up.railway.app/contrato" target="_blank" style="color:var(--orange);font-weight:700;">Acuerdo de Aliado Avanza Partner Network v3 — 2026</a>. Entiendo que actúo como referidor independiente, que debo registrar el referido antes del pago del cliente, y que la comisión se abona dentro de las 24hs del cobro.
+        </label>
+      </div>
+
+      <div id="reg-error" style="display:none;background:var(--red-bg);border:1px solid rgba(239,68,68,0.3);color:#fca5a5;border-radius:8px;padding:12px 16px;font-size:.85rem;margin-bottom:16px;display:flex;align-items:center;gap:8px;">
+        <i class="fa-solid fa-circle-exclamation"></i> <span id="reg-error-msg">Error en el formulario</span>
+      </div>
+
+      <button class="btn-primary" onclick="registrarse()" id="btn-registrar" style="width:100%;padding:16px;font-size:1rem;">
+        <i class="fa-solid fa-rocket"></i> Crear mi cuenta de aliado gratis
+      </button>
+
+      <div style="text-align:center;margin-top:20px;">
+        <a href="#" onclick="mostrarLogin()" style="font-size:.85rem;color:var(--text-muted);text-decoration:none;">
+          ¿Ya tenés cuenta? <span style="color:var(--primary);">Iniciá sesión</span>
+        </a>
+      </div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:20px;margin-bottom:40px;">
+      <div style="background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:10px;padding:16px;font-size:.82rem;color:var(--text-muted);display:flex;align-items:center;gap:10px;">
+        <i class="fa-solid fa-bolt" style="color:var(--amber);"></i> Comisión en menos de 24hs
+      </div>
+      <div style="background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:10px;padding:16px;font-size:.82rem;color:var(--text-muted);display:flex;align-items:center;gap:10px;">
+        <i class="fa-solid fa-code" style="color:var(--primary);"></i> Sin saber nada técnico
+      </div>
+      <div style="background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:10px;padding:16px;font-size:.82rem;color:var(--text-muted);display:flex;align-items:center;gap:10px;">
+        <i class="fa-solid fa-globe" style="color:var(--green);"></i> Sin exclusividad geográfica
+      </div>
+      <div style="background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:10px;padding:16px;font-size:.82rem;color:var(--text-muted);display:flex;align-items:center;gap:10px;">
+        <i class="fa-solid fa-arrow-trend-up" style="color:var(--orange);"></i> Nivel sube automático
+      </div>
+    </div>
   </div>
 </div>
 
@@ -534,12 +729,15 @@
 
     <div class="tabs">
       <button class="tab-btn active" onclick="cambiarTab('dashboard',this)"><i class="fa-solid fa-chart-line"></i> Dashboard</button>
+      <button class="tab-btn" onclick="cambiarTab('cotizador',this)"><i class="fa-solid fa-file-invoice-dollar"></i> Cotizador</button>
       <button class="tab-btn" onclick="cambiarTab('herramientas',this)"><i class="fa-solid fa-magnifying-glass"></i> Auditoría</button>
       <button class="tab-btn" onclick="cambiarTab('prospectos',this)"><i class="fa-solid fa-bullseye"></i> Prospectos</button>
       <button class="tab-btn" onclick="cambiarTab('bolsa',this)"><i class="fa-solid fa-bullhorn"></i> Bolsa de Leads <span style="background:var(--green);color:#000;font-size:.6rem;font-weight:800;padding:2px 6px;border-radius:4px;margin-left:4px;">NUEVO</span></button>
       <button class="tab-btn" onclick="cambiarTab('referidos',this)"><i class="fa-solid fa-user-plus"></i> Referidos</button>
       <button class="tab-btn" onclick="cambiarTab('ventas',this)"><i class="fa-solid fa-handshake"></i> Ventas</button>
       <button class="tab-btn" onclick="cambiarTab('comisiones',this)"><i class="fa-solid fa-dollar-sign"></i> Comisiones</button>
+      <button class="tab-btn" onclick="cambiarTab('red',this)"><i class="fa-solid fa-users-rays" style="color:var(--amber);"></i> Mi Red</button>
+      <button class="tab-btn" onclick="cambiarTab('comunidad',this)"><i class="fa-solid fa-comments" style="color:#c084fc;"></i> Comunidad <span style="background:#c084fc;color:#000;font-size:.6rem;font-weight:800;padding:2px 6px;border-radius:4px;margin-left:4px;">NUEVO</span></button>
     </div>
 
     <div id="tab-dashboard" class="tab-panel active">
@@ -549,6 +747,11 @@
           <div class="welcome-name">Hola, <span id="d-firstname">aliado</span> 👋</div>
           <div class="welcome-sub" id="d-welcome-sub">Nivel actual: — · Comisión: —</div>
         </div>
+      </div>
+
+      <!-- SIGUIENTE MEJOR ACCIÓN -->
+      <div id="nba-container" style="display:none;">
+        <!-- Populated by JS -->
       </div>
 
       <div class="motive-banner" id="motive-banner">
@@ -583,12 +786,42 @@
         </div>
       </div>
 
+      <!-- REPUTACIÓN + CRÉDITOS (v1.3) -->
+      <div class="bento-box" style="margin-bottom:24px; background:linear-gradient(135deg,rgba(192,132,252,0.06),transparent); border-color:rgba(192,132,252,0.2);">
+        <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:20px;">
+          <div style="flex:1; min-width:220px;">
+            <h3 style="font-size:0.95rem;font-weight:700;margin-bottom:6px;"><i class="fa-solid fa-shield-halved" style="color:#c084fc;margin-right:6px;"></i>Mi Reputación</h3>
+            <div style="display:flex; align-items:baseline; gap:8px; margin-bottom:8px;">
+              <span id="d-reput-score" style="font-size:2.2rem; font-weight:900; color:#c084fc;">—</span>
+              <span style="font-size:0.85rem; color:var(--text-dim);">/ 100</span>
+            </div>
+            <div id="d-reput-badges" style="display:flex; flex-wrap:wrap; gap:6px; margin-top:8px;"></div>
+            <p id="d-reput-caption" style="font-size:0.78rem; color:var(--text-dim); margin-top:8px;">Cargando...</p>
+          </div>
+          <div style="min-width:140px; text-align:right;">
+            <h3 style="font-size:0.85rem;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;">Créditos Bolsa</h3>
+            <div style="font-size:2rem; font-weight:900; color:var(--amber);" id="d-creditos">0</div>
+            <p style="font-size:0.72rem; color:var(--text-dim); margin-top:4px;">Para comprar leads Premium</p>
+          </div>
+        </div>
+      </div>
+
       <div class="ref-card">
         <div style="flex:1;">
           <div class="ref-label"><i class="fa-solid fa-link"></i> &nbsp;Tu link de referido directo</div>
           <div class="ref-url" id="d-reflink">Cargando...</div>
         </div>
         <button class="btn-copy" onclick="copiarLink()"><i class="fa-solid fa-copy"></i> Copiar</button>
+      </div>
+
+      <!-- ONBOARDING CHECKLIST -->
+      <div class="bento-box" id="onboarding-checklist-box" style="margin-bottom:24px; display:none;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+          <h3 style="font-size:0.95rem;font-weight:700;"><i class="fa-solid fa-list-check" style="color:var(--primary);margin-right:6px;"></i>Checklist de inicio</h3>
+          <span id="ob-pct-badge" style="font-size:0.75rem;font-weight:800;color:var(--primary);">0%</span>
+        </div>
+        <div class="ob-progress-bar"><div class="ob-progress-fill" id="ob-progress-fill" style="width:0%;"></div></div>
+        <div class="ob-checklist" id="ob-checklist-items"></div>
       </div>
 
       <div class="bento-box" style="margin-bottom:24px;">
@@ -619,7 +852,7 @@
         <div class="lb-header">
           <div>
             <div class="lb-title"><i class="fa-solid fa-trophy"></i> Salón de la Fama</div>
-            <p style="font-size:0.85rem; color:var(--text-dim); margin-top:4px;">Compite con otros aliados. El ranking se basa en ganancias totales.</p>
+            <p style="font-size:0.85rem; color:var(--text-dim); margin-top:4px;">Ranking por ganancias · Tasa de cierre · Velocidad de ventas.</p>
           </div>
           <div id="lb-dynamic-msg" class="lb-dynamic-msg">
             <div class="skeleton" style="width:200px; height:16px;"></div>
@@ -635,6 +868,112 @@
         <div class="lb-list-wrap" id="lb-list">
            <div class="lb-row"><div class="skeleton" style="width:100%;height:40px;"></div></div>
            <div class="lb-row"><div class="skeleton" style="width:100%;height:40px;"></div></div>
+        </div>
+      </div>
+    </div>
+
+    <div id="tab-cotizador" class="tab-panel">
+      <div class="bento-box">
+        <h3 style="font-size:1.1rem;font-weight:800;margin-bottom:8px;"><i class="fa-solid fa-bolt" style="color:var(--primary);"></i> Armar Propuesta en Vivo</h3>
+        <p style="color:var(--text-muted);font-size:0.9rem;margin-bottom:24px;">Cotizá el servicio para tu prospecto. El sistema generará un link de contratación con tu atribución automática.</p>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;">
+          <div class="form-row" style="margin-bottom:0;">
+            <label>Nombre de la Empresa / Cliente</label>
+            <input type="text" id="cot-cliente" placeholder="Ej: Metalúrgica San Martín">
+          </div>
+          <div class="form-row" style="margin-bottom:0;">
+            <label>Rubro del cliente</label>
+            <select id="cot-rubro" onchange="actualizarCotizador()">
+              <option value="">— Seleccioná el rubro —</option>
+              <option value="Metalúrgica / Manufactura">Metalúrgica / Manufactura</option>
+              <option value="Agro / Maquinaria agrícola">Agro / Maquinaria agrícola</option>
+              <option value="Logística / Transporte">Logística / Transporte</option>
+              <option value="Servicios B2B / Consultoría">Servicios B2B / Consultoría</option>
+              <option value="Comercio / Retail B2B">Comercio / Retail B2B</option>
+              <option value="Construcción / Obras">Construcción / Obras</option>
+              <option value="Salud / Clínicas">Salud / Clínicas</option>
+              <option value="Educación / Capacitación">Educación / Capacitación</option>
+              <option value="Tecnología / Software">Tecnología / Software</option>
+              <option value="Otro">Otro</option>
+            </select>
+          </div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;">
+          <div class="form-row" style="margin-bottom:0;">
+            <label>Plan a ofrecer</label>
+            <select id="cot-plan" onchange="actualizarCotizador()" style="background:#111; border:1px solid var(--primary); color:white; font-weight:bold;">
+              <option value="">— Seleccioná el plan —</option>
+              <option value="Plan Base">Plan Base (USD 1.050 · Inicio rápido)</option>
+              <option value="Plan Pro">Plan Pro (USD 2.900 · Crecimiento)</option>
+              <option value="Plan Industrial">Plan Industrial (USD 4.900 · Fábricas)</option>
+              <option value="Estrategico 360">Estratégico 360 (USD 7.500 · Escala Total)</option>
+            </select>
+          </div>
+          <div class="form-row" style="margin-bottom:0;">
+            <label>Urgencia percibida del cliente</label>
+            <select id="cot-urgencia" onchange="actualizarCotizador()">
+              <option value="media">Media — Está evaluando</option>
+              <option value="alta">Alta — Necesita solución ya</option>
+              <option value="baja">Baja — Apenas se está informando</option>
+            </select>
+          </div>
+        </div>
+
+        <div id="cot-resultado" style="display:none; animation: fadeIn 0.3s ease;">
+          <!-- Precio + Comisión -->
+          <div style="background:rgba(59,130,246,0.05); border:1px solid rgba(59,130,246,0.2); border-radius:var(--radius-sm); padding:24px; margin-top:16px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:16px;">
+              <div>
+                <div style="font-size:0.75rem; color:var(--text-dim); text-transform:uppercase; letter-spacing:1px; font-weight:700;">Inversión del Cliente</div>
+                <div style="font-size:2.2rem; font-weight:900; color:var(--text);" id="cot-precio">USD 0</div>
+              </div>
+              <div style="text-align:right;">
+                <div style="font-size:0.75rem; color:var(--text-dim); text-transform:uppercase; letter-spacing:1px; font-weight:700;">Tu Comisión Directa <span id="cot-pct-badge" style="background:var(--green);color:#000;padding:2px 6px;border-radius:4px;margin-left:4px;">10%</span></div>
+                <div style="font-size:2.2rem; font-weight:900; color:var(--green);" id="cot-comision">USD 0</div>
+              </div>
+            </div>
+
+            <!-- Link de pago -->
+            <div style="margin-top:20px; padding-top:16px; border-top:1px solid rgba(255,255,255,0.05);">
+              <label style="font-size:0.8rem; color:var(--text-muted); display:block; margin-bottom:8px; font-weight:600;"><i class="fa-solid fa-link"></i> Link de Pago (Atribución Automática)</label>
+              <div style="display:flex; gap:10px; flex-wrap:wrap;">
+                <input type="text" id="cot-link" readonly style="flex:1; min-width:200px; background:rgba(0,0,0,0.5); border:1px solid var(--border); border-radius:8px; padding:12px; color:var(--primary); font-family:monospace; font-size:0.82rem; outline:none;">
+                <button onclick="copiarCotizacion()" style="background:var(--primary); color:white; border:none; border-radius:8px; padding:0 20px; font-weight:800; cursor:pointer;"><i class="fa-solid fa-copy"></i> Copiar y Enviar</button>
+                <button id="btn-checkout-real" onclick="generarCheckoutReal()" style="background:var(--green); color:#000; border:none; border-radius:8px; padding:0 16px; font-weight:800; cursor:pointer; font-size:0.82rem; display:none;">
+                  <i class="fa-solid fa-credit-card"></i> Pago directo MP
+                </button>
+              </div>
+              <p style="font-size:0.75rem; color:var(--text-dim); margin-top:8px;">Al enviar este link, si el cliente paga, la venta se registra a tu nombre automáticamente.</p>
+            </div>
+
+            <!-- SIMULADOR DE CUOTAS (v1.3) -->
+            <div id="cot-cuotas-box" style="margin-top:20px; padding:16px; background:rgba(74,222,128,0.04); border:1px solid rgba(74,222,128,0.15); border-radius:10px;">
+              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+                <label style="font-size:0.85rem; font-weight:700; color:var(--green);"><i class="fa-solid fa-credit-card"></i> Financiación en cuotas</label>
+                <select id="cot-cuotas" onchange="actualizarCuotas()" style="background:#111; border:1px solid var(--border); color:white; padding:6px 10px; border-radius:6px; font-size:.82rem;">
+                  <option value="1">1 pago (sin recargo)</option>
+                  <option value="3">3 cuotas (+8%)</option>
+                  <option value="6">6 cuotas (+15%)</option>
+                  <option value="12">12 cuotas (+28%)</option>
+                </select>
+              </div>
+              <div id="cot-cuotas-resultado" style="font-size:0.85rem; color:var(--text); display:none;">
+                <div>Cuota: <strong id="cot-cuotas-valor" style="color:var(--green);">—</strong></div>
+                <div style="color:var(--text-muted); font-size:0.78rem; margin-top:4px;">Total financiado: <span id="cot-cuotas-total">—</span></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- ANÁLISIS IA -->
+          <div style="margin-top:16px;">
+            <button id="btn-analisis-ia" onclick="obtenerAnalisisIA()" style="background:linear-gradient(135deg,rgba(168,85,247,0.15),rgba(59,130,246,0.1));border:1px solid rgba(168,85,247,0.3);color:#c084fc;border-radius:10px;padding:12px 20px;font-size:0.85rem;font-weight:700;cursor:pointer;width:100%;display:flex;align-items:center;justify-content:center;gap:8px;transition:all 0.2s;">
+              <i class="fa-solid fa-brain"></i> Generar análisis IA — Pitch + Probabilidad de cierre
+            </button>
+          </div>
+
+          <div id="cot-ai-box" class="ai-analysis-box" style="display:none;"></div>
         </div>
       </div>
     </div>
@@ -773,7 +1112,59 @@
         <div id="lista-prospectos" style="padding:0 4px 8px;"></div>
       </div>
 
-    </div></div>
+    </div>
+
+    <div id="tab-red" class="tab-panel">
+      <div class="bento-box" style="margin-bottom:24px; background:linear-gradient(135deg, rgba(250,204,21,0.05), transparent); border-color:rgba(250,204,21,0.2);">
+        <h3 style="font-size:1.2rem;font-weight:900;margin-bottom:8px;color:var(--amber);"><i class="fa-solid fa-network-wired"></i> Construí tu Agencia Descentralizada</h3>
+        <p style="color:var(--text-muted);font-size:0.9rem;margin-bottom:20px;">Invitá a otros profesionales, agencias o vendedores usando tu Link de Referido. <strong>Ganarás un 5% de comisión pasiva y automática por cada venta que ellos cierren.</strong> Para siempre.</p>
+        
+        <div class="ref-card" style="background:rgba(255,255,255,0.02); border:1px dashed var(--border);">
+          <div style="flex:1;">
+            <div class="ref-label" style="color:var(--amber);"><i class="fa-solid fa-share-nodes"></i> &nbsp;Link de Invitación para Sub-Aliados</div>
+            <div class="ref-url" id="red-invitelink" style="color:var(--text);">Cargando...</div>
+          </div>
+          <button class="btn-copy" style="background:var(--amber);color:#000;" onclick="copiarInviteLink()"><i class="fa-solid fa-copy"></i> Copiar y Sumar Equipo</button>
+        </div>
+
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:16px;margin-top:24px;">
+          <div style="background:rgba(0,0,0,0.4); padding:20px; border-radius:12px; border:1px solid var(--border);">
+            <div style="font-size:0.75rem;font-weight:700;color:var(--text-dim);text-transform:uppercase;">Equipo Activo</div>
+            <div style="font-size:2rem;font-weight:900;color:var(--text);" id="red-equipo-count">0</div>
+          </div>
+          <div style="background:rgba(0,0,0,0.4); padding:20px; border-radius:12px; border:1px solid var(--green-border);">
+            <div style="font-size:0.75rem;font-weight:700;color:var(--green);text-transform:uppercase;">Ingresos Pasivos</div>
+            <div style="font-size:2rem;font-weight:900;color:var(--green);" id="red-ingresos-total">USD 0</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="table-wrap">
+        <div class="table-head"><h3><i class="fa-solid fa-users" style="color:var(--text);"></i> &nbsp;Detalle de tu Red Comercial</h3></div>
+        <div id="tabla-red"></div>
+      </div>
+    </div>
+
+    <!-- TAB COMUNIDAD (v1.3) ────────────────────────────────────────── -->
+    <div id="tab-comunidad" class="tab-panel">
+      <div class="bento-box" style="margin-bottom:24px; background:linear-gradient(135deg,rgba(192,132,252,0.06),transparent); border-color:rgba(192,132,252,0.2);">
+        <h3 style="font-size:1.1rem;font-weight:800;margin-bottom:8px;"><i class="fa-solid fa-comments" style="color:#c084fc;"></i> Comunidad Avanza</h3>
+        <p style="color:var(--text-muted); font-size:0.9rem; margin-bottom:20px;">Compartí tips, preguntas o celebrá tus cierres. La red aprende junta.</p>
+
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:12px;">
+          <select id="post-tipo" style="background:#111; border:1px solid var(--border); color:white; padding:10px 12px; border-radius:8px;">
+            <option value="tip">💡 Tip / Buena práctica</option>
+            <option value="win">🎉 Cierre / Victoria</option>
+            <option value="pregunta">❓ Pregunta / Duda</option>
+          </select>
+          <input type="text" id="post-titulo" placeholder="Título (ej: Cómo cerré un Industrial en 3 días)" style="background:#111; border:1px solid var(--border); color:white; padding:10px 12px; border-radius:8px;">
+        </div>
+        <textarea id="post-cuerpo" rows="4" placeholder="Contá tu idea, tu cierre o tu pregunta..." style="width:100%; background:#111; border:1px solid var(--border); color:white; padding:12px; border-radius:8px; font-family:inherit; resize:vertical; margin-bottom:12px;"></textarea>
+        <button onclick="publicarPost()" class="btn-primary" style="padding:10px 20px;"><i class="fa-solid fa-paper-plane"></i> Publicar</button>
+      </div>
+
+      <div id="comunidad-feed"></div>
+    </div>
 </div>
 
 <a href="https://wa.me/5493424392759" target="_blank" class="float-support" id="float-support" style="display:none;">
@@ -785,45 +1176,174 @@
     <div class="onboard-header">
       <div class="onboard-logo">🎉</div>
       <div class="onboard-title">¡Bienvenido al programa!</div>
-      <div class="onboard-sub">Todo lo que necesitás saber para empezar a ganar.</div>
+      <div class="onboard-sub">Descargá tu kit y empezá a vender hoy mismo.</div>
     </div>
+
+    <div style="background:rgba(249,115,22,0.08);border:1px solid rgba(249,115,22,0.25);border-radius:12px;padding:20px;margin-bottom:24px;">
+      <div style="font-size:.78rem;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:var(--orange);margin-bottom:14px;"><i class="fa-solid fa-box-open"></i> &nbsp;Tu kit completo de aliado</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+        <a href="https://avanza-digital-production.up.railway.app/brochure" target="_blank"
+           style="display:flex;align-items:center;gap:10px;background:rgba(255,255,255,0.05);border:1px solid var(--border);border-radius:8px;padding:12px 14px;text-decoration:none;color:var(--text);font-size:.85rem;font-weight:600;transition:all .2s;"
+           onmouseover="this.style.borderColor='var(--orange)'" onmouseout="this.style.borderColor='var(--border)'">
+          <i class="fa-solid fa-file-pdf" style="color:#ef4444;font-size:1.2rem;"></i>
+          <div><div style="font-weight:700;">Brochure Comercial</div><div style="font-size:.74rem;color:var(--text-muted);">Para mostrarle al cliente</div></div>
+        </a>
+        <a href="https://avanza-digital-production.up.railway.app/guion" target="_blank"
+           style="display:flex;align-items:center;gap:10px;background:rgba(255,255,255,0.05);border:1px solid var(--border);border-radius:8px;padding:12px 14px;text-decoration:none;color:var(--text);font-size:.85rem;font-weight:600;transition:all .2s;"
+           onmouseover="this.style.borderColor='var(--primary)'" onmouseout="this.style.borderColor='var(--border)'">
+          <i class="fa-solid fa-scroll" style="color:var(--primary);font-size:1.2rem;"></i>
+          <div><div style="font-weight:700;">Guión de Ventas</div><div style="font-size:.74rem;color:var(--text-muted);">Qué decir paso a paso</div></div>
+        </a>
+      </div>
+    </div>
+
+    <div style="background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:12px;padding:20px;margin-bottom:24px;">
+      <div style="font-size:.78rem;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:var(--text-muted);margin-bottom:14px;"><i class="fa-solid fa-dollar-sign"></i> &nbsp;Lo que podés ganar por venta</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+        <div style="background:rgba(255,255,255,0.04);border-radius:8px;padding:10px 12px;font-size:.82rem;">
+          <span style="color:var(--text-muted);">Plan Base</span>
+          <span style="float:right;font-weight:800;color:var(--green);">USD 105</span>
+        </div>
+        <div style="background:rgba(255,255,255,0.04);border-radius:8px;padding:10px 12px;font-size:.82rem;">
+          <span style="color:var(--text-muted);">Plan Pro</span>
+          <span style="float:right;font-weight:800;color:var(--green);">USD 290</span>
+        </div>
+        <div style="background:rgba(255,255,255,0.04);border-radius:8px;padding:10px 12px;font-size:.82rem;">
+          <span style="color:var(--text-muted);">Plan Industrial</span>
+          <span style="float:right;font-weight:800;color:var(--green);">USD 490</span>
+        </div>
+        <div style="background:rgba(249,115,22,0.1);border:1px solid rgba(249,115,22,0.2);border-radius:8px;padding:10px 12px;font-size:.82rem;">
+          <span style="color:var(--text-muted);">Estratégico 360</span>
+          <span style="float:right;font-weight:800;color:var(--orange);">USD 750</span>
+        </div>
+      </div>
+      <div style="font-size:.73rem;color:var(--text-dim);margin-top:8px;">* Comisiones nivel BASIC. Suben al 20% con ELITE.</div>
+    </div>
+
     <div class="onboard-steps">
       <div class="onboard-step">
         <div class="onboard-step-num">1</div>
         <div>
-          <div class="onboard-step-title">Prospectá con la Auditoría Gratis</div>
-          <div class="onboard-step-desc">En la pestaña <strong>Auditoría</strong> vas a encontrar tu enlace único. Enviáselo a prospectos para romper el hielo y aportar valor de inmediato.</div>
+          <div class="onboard-step-title">Descargá el brochure y el guión</div>
+          <div class="onboard-step-desc">Son tus únicas herramientas de venta. El brochure va al cliente, el guión te dice exactamente qué preguntar y cómo cerrar.</div>
         </div>
       </div>
       <div class="onboard-step">
         <div class="onboard-step-num">2</div>
         <div>
-          <div class="onboard-step-title">Registrá el referido primero</div>
-          <div class="onboard-step-desc">Antes de que el cliente pague, usá la pestaña "Referidos" para registrarlo. Sin esto, la venta no se puede atribuir.</div>
+          <div class="onboard-step-title">Registrá el referido ANTES del pago</div>
+          <div class="onboard-step-desc">Es el único paso crítico. Usá la pestaña <strong>Referidos</strong> para registrar nombre del cliente y plan elegido antes de que transfiera.</div>
         </div>
       </div>
       <div class="onboard-step">
         <div class="onboard-step-num">3</div>
         <div>
-          <div class="onboard-step-title">Cobrás en 24hs del cierre</div>
-          <div class="onboard-step-desc">Cuando Avanza confirma la venta, tu comisión se procesa en 24 horas. Podés ver el estado en "Ventas" y "Comisiones".</div>
+          <div class="onboard-step-title">Cobrás en menos de 24hs</div>
+          <div class="onboard-step-desc">Cuando el cliente paga, Avanza te transfiere tu comisión directamente. Sin demoras.</div>
         </div>
       </div>
       <div class="onboard-step">
         <div class="onboard-step-num">4</div>
         <div>
-          <div class="onboard-step-title">Subi de nivel acumulando ventas</div>
-          <div class="onboard-step-desc">Con 1 venta llegás a SILVER (12%), con 2 a PREMIUM (15%), con 5 a ELITE (20%). ¡El sistema sube tu nivel solo!</div>
+          <div class="onboard-step-title">Tu nivel sube solo</div>
+          <div class="onboard-step-desc">Con 1 venta → SILVER 12% · Con 2 → PREMIUM 15% · Con 5 → ELITE 20%. Automático.</div>
         </div>
       </div>
     </div>
+
+    <div id="onboard-ref-box" style="background:rgba(59,130,246,0.08);border:1px solid rgba(59,130,246,0.2);border-radius:10px;padding:14px 16px;margin-top:4px;margin-bottom:20px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;">
+      <div>
+        <div style="font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--text-muted);margin-bottom:4px;"><i class="fa-solid fa-link"></i> Tu link de referido único</div>
+        <div id="onboard-ref-link" style="font-size:.85rem;color:var(--primary);font-weight:600;">—</div>
+      </div>
+      <button onclick="copiarRefOnboarding()" style="background:rgba(59,130,246,0.15);border:1px solid rgba(59,130,246,0.3);color:#93c5fd;padding:8px 14px;border-radius:8px;font-size:.8rem;font-weight:700;cursor:pointer;white-space:nowrap;">
+        <i class="fa-solid fa-copy"></i> Copiar
+      </button>
+    </div>
+
     <div class="onboard-footer">
-      <button class="btn-primary" onclick="cerrarOnboarding()">
+      <button class="btn-primary" onclick="cerrarOnboarding()" style="width:100%;padding:16px;font-size:1rem;">
         <i class="fa-solid fa-rocket"></i> ¡Entendido, a vender!
       </button>
+      <div style="text-align:center;margin-top:12px;">
+        <a href="https://wa.me/5493424392759" target="_blank" style="font-size:.82rem;color:var(--text-muted);text-decoration:none;">
+          <i class="fa-brands fa-whatsapp"></i> ¿Tenés dudas antes de arrancar? Escribinos
+        </a>
+      </div>
     </div>
   </div>
 </div>
+
+<!-- MODAL PERFILADO IA (v1.3) -->
+<div class="modal-overlay" id="modal-perfilado">
+  <div class="onboarding-box" style="max-width:520px;">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+      <h3 style="font-size:1.1rem; font-weight:800;"><i class="fa-solid fa-brain" style="color:#c084fc;"></i> Perfilar con IA</h3>
+      <button onclick="document.getElementById('modal-perfilado').classList.remove('open')" style="background:transparent; border:none; color:var(--text-muted); font-size:1.4rem; cursor:pointer;">&times;</button>
+    </div>
+    <p style="color:var(--text-muted); font-size:0.88rem; margin-bottom:16px;">Respondé 3 datos sobre <strong id="perf-nombre" style="color:var(--text);">—</strong> y la IA te devuelve score, plan recomendado y un pitch listo para enviar.</p>
+    <input type="hidden" id="perf-id">
+
+    <div style="margin-bottom:12px;">
+      <label style="display:block; font-size:.8rem; font-weight:700; margin-bottom:6px; color:var(--text-muted);">Rubro</label>
+      <select id="perf-rubro" style="width:100%; background:#111; border:1px solid var(--border); color:white; padding:10px; border-radius:8px;">
+        <option value="">— Seleccioná —</option>
+        <option>Metalúrgica / Manufactura</option>
+        <option>Agro / Maquinaria agrícola</option>
+        <option>Logística / Transporte</option>
+        <option>Servicios B2B / Consultoría</option>
+        <option>Comercio / Retail B2B</option>
+        <option>Construcción / Obras</option>
+        <option>Salud / Clínicas</option>
+        <option>Educación / Capacitación</option>
+        <option>Tecnología / Software</option>
+        <option>Otro</option>
+      </select>
+    </div>
+
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:16px;">
+      <div>
+        <label style="display:block; font-size:.8rem; font-weight:700; margin-bottom:6px; color:var(--text-muted);">Tamaño</label>
+        <select id="perf-tamano" style="width:100%; background:#111; border:1px solid var(--border); color:white; padding:10px; border-radius:8px;">
+          <option value="micro">Micro (1-5)</option>
+          <option value="pyme" selected>PyME (6-50)</option>
+          <option value="mediana">Mediana (51-200)</option>
+          <option value="grande">Grande (200+)</option>
+        </select>
+      </div>
+      <div>
+        <label style="display:block; font-size:.8rem; font-weight:700; margin-bottom:6px; color:var(--text-muted);">Urgencia</label>
+        <select id="perf-urgencia" style="width:100%; background:#111; border:1px solid var(--border); color:white; padding:10px; border-radius:8px;">
+          <option value="baja">Baja — solo se informa</option>
+          <option value="media" selected>Media — evalúa</option>
+          <option value="alta">Alta — necesita ya</option>
+        </select>
+      </div>
+    </div>
+
+    <button onclick="ejecutarPerfilado()" class="btn-primary" style="width:100%; padding:12px; margin-bottom:16px;"><i class="fa-solid fa-wand-magic-sparkles"></i> Generar análisis</button>
+
+    <div id="perf-resultado" style="display:none; background:rgba(192,132,252,0.06); border:1px solid rgba(192,132,252,0.2); border-radius:10px; padding:16px;">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+        <div>
+          <div style="font-size:.72rem; color:var(--text-muted); text-transform:uppercase; letter-spacing:1px; font-weight:700;">Score de cierre</div>
+          <div id="perf-score" style="font-size:2rem; font-weight:900; color:#c084fc;">—</div>
+        </div>
+        <div style="text-align:right;">
+          <div style="font-size:.72rem; color:var(--text-muted); text-transform:uppercase; letter-spacing:1px; font-weight:700;">Plan recomendado</div>
+          <div id="perf-plan" style="font-size:1.1rem; font-weight:800; color:var(--text);">—</div>
+          <div id="perf-ticket" style="font-size:.78rem; color:var(--green);">—</div>
+        </div>
+      </div>
+      <div style="border-top:1px solid var(--border); padding-top:12px;">
+        <div style="font-size:.75rem; color:var(--text-muted); text-transform:uppercase; letter-spacing:1px; font-weight:700; margin-bottom:8px;">Pitch sugerido</div>
+        <pre id="perf-pitch" style="white-space:pre-wrap; background:rgba(0,0,0,0.3); padding:12px; border-radius:8px; font-family:inherit; font-size:.85rem; color:var(--text); line-height:1.5;">—</pre>
+        <button onclick="copiarPitch()" style="margin-top:10px; background:rgba(192,132,252,0.15); color:#c084fc; border:1px solid rgba(192,132,252,0.3); padding:8px 14px; border-radius:8px; font-size:.82rem; font-weight:700; cursor:pointer;"><i class="fa-solid fa-copy"></i> Copiar pitch</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <div id="tab-bolsa" class="tab-panel">
   <div style="background:rgba(59,130,246,0.08); border:1px solid rgba(59,130,246,0.2); border-radius:var(--radius); padding:20px; margin-bottom:24px; display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:16px;">
     <div>
@@ -837,7 +1357,28 @@
   </div>
 
   <div style="display:grid; grid-template-columns:1fr; gap:24px;">
-    
+
+    <!-- MARKETPLACE DE LEADS PREMIUM (v1.3) -->
+    <div class="table-wrap" style="margin-bottom:0; background:linear-gradient(135deg,rgba(250,204,21,0.04),transparent); border-color:rgba(250,204,21,0.2);">
+      <div class="table-head" style="border-bottom-color:rgba(250,204,21,0.15);">
+        <h3><i class="fa-solid fa-gem" style="color:var(--amber);"></i> Leads Premium (Pagos) <span style="font-size:.7rem;font-weight:700;color:var(--amber);background:rgba(250,204,21,0.12);padding:3px 8px;border-radius:4px;margin-left:6px;">EXCLUSIVO</span></h3>
+        <div style="font-size:.8rem; color:var(--text-muted);">Saldo: <strong id="mkt-saldo" style="color:var(--amber);">— créditos</strong></div>
+      </div>
+      <div style="padding:14px 20px; font-size:.82rem; color:var(--text-muted); border-bottom:1px solid var(--border);">
+        Leads pre-calificados con más data (ya pidieron presupuesto, budget confirmado, etc). Se pagan con créditos. <strong>Mayor tasa de cierre.</strong>
+      </div>
+      <div style="overflow-x:auto;">
+        <table>
+          <thead><tr>
+            <th>Empresa</th><th>Rubro</th><th>Calificación</th><th>Notas</th><th>Costo</th><th>Acción</th>
+          </tr></thead>
+          <tbody id="tabla-marketplace">
+            <tr><td colspan="6" style="text-align:center;padding:20px;color:var(--text-dim);">Cargando...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
     <div class="table-wrap" style="margin-bottom:0;">
       <div class="table-head">
         <h3><i class="fa-solid fa-lock" style="color:var(--amber);"></i> Mis Leads Reclamados</h3>
@@ -871,6 +1412,26 @@
       </div>
     </div>
 
+    <!-- HISTORIAL Y ESTADÍSTICAS DE BOLSA -->
+    <div class="bento-box" style="margin-bottom:0;">
+      <h3 style="font-size:.95rem;font-weight:700;margin-bottom:16px;"><i class="fa-solid fa-chart-pie" style="color:var(--primary);"></i> Mi rendimiento en la Bolsa</h3>
+      <div id="historial-kpis" class="metrics-grid" style="margin-bottom:16px;">
+        <div class="metric-card"><div class="metric-label">Total reclamados</div><div class="metric-value blue" id="hk-total">—</div></div>
+        <div class="metric-card highlight"><div class="metric-label">Exitosos</div><div class="metric-value green" id="hk-exitosos">—</div></div>
+        <div class="metric-card"><div class="metric-label">No interesados</div><div class="metric-value" style="color:var(--red);" id="hk-noint">—</div></div>
+        <div class="metric-card"><div class="metric-label">No contestaron</div><div class="metric-value amber" id="hk-nocont">—</div></div>
+        <div class="metric-card"><div class="metric-label">Tasa de éxito</div><div class="metric-value" style="color:#a855f7;" id="hk-tasa">—%</div></div>
+      </div>
+      <div style="overflow-x:auto;">
+        <table>
+          <thead><tr><th>Empresa</th><th>Rubro</th><th>Reclamado</th><th>Estado</th><th>Resultado</th></tr></thead>
+          <tbody id="historial-bolsa-body">
+            <tr><td colspan="5" style="text-align:center;padding:24px;color:var(--text-dim);">Todavía no reclamaste ningún lead.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
   </div>
 </div>
 
@@ -887,7 +1448,126 @@ const BENEFICIOS = {
   ELITE:   ['Todo lo de PREMIUM','Directorio web como consultor','Sesión estratégica trimestral con Iván'],
 };
 
-function pct(n) { return {BASIC:0.10,SILVER:0.12,PREMIUM:0.15,ELITE:0.20}[n]||0.10; }
+// HELPER PORCENTAJE
+function pct(nivel) {
+  if (nivel === 'ELITE') return 0.20;
+  if (nivel === 'PREMIUM') return 0.15;
+  if (nivel === 'SILVER') return 0.12;
+  return 0.10;
+}
+
+// LOGICA DEL COTIZADOR
+function actualizarCotizador() {
+  if(!aliado) return;
+  const plan = document.getElementById('cot-plan').value;
+  const resDiv = document.getElementById('cot-resultado');
+  
+  if(!plan) { 
+    resDiv.style.display = 'none'; 
+    return; 
+  }
+
+  const precio = PLANES[plan];
+  const nivel = aliado.nivel_calculado || aliado.nivel_actual || 'BASIC';
+  const porcentaje = pct(nivel);
+  const comision = Math.round(precio * porcentaje);
+
+  document.getElementById('cot-precio').textContent = 'USD ' + precio.toLocaleString();
+  document.getElementById('cot-comision').textContent = 'USD ' + comision.toLocaleString();
+  document.getElementById('cot-pct-badge').textContent = (porcentaje * 100) + '%';
+
+  // Genera el link apuntando a tu página de checkout genérica con el ref pegado
+  const link = `https://avanzadigital.digital/contratar?plan=${encodeURIComponent(plan)}&ref=${aliado.ref_code}`;
+  document.getElementById('cot-link').value = link;
+
+  resDiv.style.display = 'block';
+}
+
+function copiarCotizacion() {
+  const link = document.getElementById('cot-link').value;
+  const cliente = document.getElementById('cot-cliente').value || 'tu empresa';
+  const plan = document.getElementById('cot-plan').value;
+  
+  const texto = `Hola, te dejo el link directo con la propuesta del ${plan} para ${cliente}. Podés avanzar con la contratación desde ahí de forma segura:\n\n${link}\n\nCualquier consulta, avisame.`;
+  
+  navigator.clipboard.writeText(texto).then(() => {
+    mostrarToast('¡Link y mensaje listos para enviar por WhatsApp!', 'green');
+  });
+}
+
+function mostrarRegistro() {
+  document.getElementById('login-screen').style.display = 'none';
+  document.getElementById('registro-screen').style.display = 'block';
+  window.scrollTo(0,0);
+}
+
+function mostrarLogin() {
+  document.getElementById('registro-screen').style.display = 'none';
+  document.getElementById('login-screen').style.display = 'flex';
+}
+
+async function registrarse() {
+  const nombre   = document.getElementById('reg-nombre').value.trim();
+  const email    = document.getElementById('reg-email').value.trim();
+  const whatsapp = document.getElementById('reg-whatsapp').value.trim();
+  const ciudad   = document.getElementById('reg-ciudad').value.trim();
+  const dni      = document.getElementById('reg-dni').value.trim();
+  const perfil   = document.getElementById('reg-perfil').value;
+  const pass     = document.getElementById('reg-pass').value;
+  const pass2    = document.getElementById('reg-pass2').value;
+  const tyc      = document.getElementById('reg-tyc').checked;
+
+  const errDiv = document.getElementById('reg-error');
+  const errMsg = document.getElementById('reg-error-msg');
+  errDiv.style.display = 'none';
+
+  const mostrarError = (msg) => {
+    errMsg.textContent = msg;
+    errDiv.style.display = 'flex';
+    errDiv.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  };
+
+  if (!nombre || !email || !whatsapp || !perfil) return mostrarError('Completá todos los campos obligatorios.');
+  if (pass.length < 6) return mostrarError('La contraseña debe tener al menos 6 caracteres.');
+  if (pass !== pass2) return mostrarError('Las contraseñas no coinciden.');
+  if (!tyc) return mostrarError('Tenés que aceptar el Acuerdo de Aliado para continuar.');
+
+  const btn = document.getElementById('btn-registrar');
+  btn.innerHTML = '<span class="spinner"></span> Creando tu cuenta...';
+  btn.disabled = true;
+
+  try {
+    const urlParams = new URLSearchParams(window.location.search);
+    const refSponsor = urlParams.get('ref') || '';
+    const params = new URLSearchParams({ nombre, email, whatsapp, ciudad, dni, perfil, password: pass, ref_sponsor: refSponsor });
+    
+    const res = await fetch(`${API}/registrarse?${params}`, { method: 'POST' });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.detail || 'Error al registrarse.');
+
+    aliado = data;
+    // Ocultar pantalla de registro, mostrar portal
+    document.getElementById('registro-screen').style.display = 'none';
+    document.getElementById('portal-screen').style.display = 'block';
+    // Forzar onboarding siempre para nuevos registros
+    localStorage.removeItem(`portal_onboarded_${aliado.codigo}`);
+    cargarTodo();
+    mostrarToast(`¡Bienvenido, ${aliado.nombre.split(' ')[0]}! Tu código es ${aliado.codigo}`, 'green');
+  } catch(e) {
+    mostrarError(e.message || 'Error de conexión. Intentá de nuevo.');
+  }
+
+  btn.innerHTML = '<i class="fa-solid fa-rocket"></i> Crear mi cuenta de aliado gratis';
+  btn.disabled = false;
+}
+
+function copiarRefOnboarding() {
+  if (!aliado) return;
+  const link = `https://avanzadigital.digital/alianzas?ref=${aliado.ref_code}`;
+  navigator.clipboard.writeText(link).then(() => mostrarToast('Link copiado al portapapeles', 'green'));
+}
+
+
 
 function mostrarToast(msg, tipo='green') {
   const t = document.createElement('div');
@@ -927,7 +1607,9 @@ function cambiarTab(tab, btn) {
   document.getElementById(`tab-${tab}`).classList.add('active');
   btn.classList.add('active');
   if(tab==='prospectos') cargarProspectos();
-  if(tab==='bolsa') { cargarBolsa(); cargarHistorialBolsa(); }
+  if(tab==='bolsa') { cargarBolsa(); cargarHistorialBolsa(); cargarMarketplace(); }
+  if(tab==='red') cargarRed();
+  if(tab==='comunidad') cargarComunidad();
 }
 
 function cerrarSesion() { 
@@ -947,9 +1629,17 @@ async function cargarTodo() {
   renderVentas(); 
   renderComisiones();
   renderLeaderboard();
+  cargarReputacion();
+  cargarCreditos();
+  cargarSiguienteAccion();
+  cargarOnboardingChecklist();
 
   // Mostrar botón flotante de soporte
   document.getElementById('float-support').style.display = 'flex';
+
+  // Onboarding primer login: poblar ref link
+  const refBox = document.getElementById('onboard-ref-link');
+  if (refBox && aliado) refBox.textContent = `avanzadigital.digital/alianzas?ref=${aliado.ref_code}`;
 
   // Onboarding primer login
   const key = `portal_onboarded_${aliado.codigo}`;
@@ -1217,14 +1907,28 @@ function renderProspectos() {
           ${p.contacto?`<div style="font-size:.8rem;color:var(--text-muted);margin-top:3px;"><i class="fa-solid fa-phone" style="font-size:.7rem;"></i> ${p.contacto}</div>`:''}
           ${p.plan_interes?`<div style="font-size:.8rem;color:var(--text-muted);"><i class="fa-solid fa-tag" style="font-size:.7rem;"></i> ${p.plan_interes}</div>`:''}
           ${p.fecha_contacto?`<div style="font-size:.75rem;color:var(--text-dim);">Contactado: ${p.fecha_contacto}${p.fecha_respuesta?' · Respondió: '+p.fecha_respuesta:''}</div>`:''}
-        </div>
+          <div style="margin-top:10px; font-size:0.8rem; font-weight:600; color:var(--${p.action_type}); background:rgba(255,255,255,0.03); padding:8px 12px; border-radius:6px; display:inline-block; border:1px solid var(--border); border-left: 3px solid var(--${p.action_type});">
+                ${p.next_action}
+              </div>
+          </div>
         <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;">
           ${p.estado==='sin_contactar'?`<button onclick="accionProspecto(${p.id},'contactar')" style="background:var(--primary);color:white;border:none;border-radius:8px;padding:7px 13px;font-size:.78rem;font-weight:700;cursor:pointer;white-space:nowrap;"><i class="fa-solid fa-paper-plane"></i> Contacté</button>`:''}
           ${p.estado==='contactado'?`<button onclick="accionProspecto(${p.id},'respondio')" style="background:rgba(74,222,128,0.15);color:var(--green);border:1px solid var(--green-border);border-radius:8px;padding:7px 13px;font-size:.78rem;font-weight:700;cursor:pointer;white-space:nowrap;"><i class="fa-solid fa-reply"></i> Respondió</button>`:''}
           ${p.estado==='sin_contactar'?'':`<button onclick="accionProspecto(${p.id},'seguimiento')" style="background:rgba(245,158,11,0.12);color:var(--amber);border:1px solid rgba(245,158,11,0.3);border-radius:8px;padding:7px 13px;font-size:.78rem;font-weight:700;cursor:pointer;white-space:nowrap;"><i class="fa-solid fa-rotate-right"></i> Seguimiento</button>`}
           <button onclick="toggleInteresante(${p.id},${p.interesante})" title="${p.interesante?'Quitar flag':'Marcar como interesante'}" style="background:${p.interesante?'rgba(245,158,11,0.15)':'rgba(255,255,255,0.04)'};color:${p.interesante?'var(--amber)':'var(--text-dim)'};border:1px solid ${p.interesante?'rgba(245,158,11,0.3)':'var(--border)'};border-radius:8px;padding:7px 10px;font-size:.82rem;cursor:pointer;">🔥</button>
+          <button onclick="abrirPerfilado(${p.id},'${(p.nombre||'').replace(/'/g,"\\'")}')" title="Perfilar con IA" style="background:rgba(192,132,252,0.12);color:#c084fc;border:1px solid rgba(192,132,252,0.3);border-radius:8px;padding:7px 12px;font-size:.78rem;font-weight:700;cursor:pointer;white-space:nowrap;"><i class="fa-solid fa-brain"></i> Perfilar IA</button>
+          <button onclick="togglePiloto(${p.id},${p.piloto_automatico?true:false})" title="${p.piloto_automatico?'Detener piloto automático':'Activar piloto automático (emails de seguimiento)'}" style="background:${p.piloto_automatico?'rgba(74,222,128,0.15)':'rgba(255,255,255,0.04)'};color:${p.piloto_automatico?'var(--green)':'var(--text-dim)'};border:1px solid ${p.piloto_automatico?'var(--green-border)':'var(--border)'};border-radius:8px;padding:7px 10px;font-size:.82rem;cursor:pointer;">🤖</button>
         </div>
       </div>
+      ${p.score_ia && p.score_ia > 0 ? `
+      <div style="background:rgba(192,132,252,0.06); border:1px solid rgba(192,132,252,0.2); border-radius:8px; padding:10px 12px; font-size:.82rem;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+          <strong style="color:#c084fc;"><i class="fa-solid fa-brain"></i> Score IA: ${p.score_ia}/100</strong>
+          ${p.plan_recomendado ? `<span style="color:var(--text-muted); font-size:.75rem;">Plan sugerido: <strong style="color:var(--text);">${p.plan_recomendado}</strong></span>` : ''}
+        </div>
+        ${p.pitch_sugerido ? `<details style="margin-top:6px;"><summary style="cursor:pointer; color:var(--text-muted); font-size:.78rem;">Ver pitch sugerido</summary><pre style="white-space:pre-wrap; margin-top:8px; padding:10px; background:rgba(0,0,0,0.3); border-radius:6px; font-family:inherit; font-size:.8rem; color:var(--text);">${p.pitch_sugerido}</pre></details>` : ''}
+      </div>
+      ` : ''}
       <div style="display:flex;align-items:center;gap:8px;">
         <input type="text" id="nota-input-${p.id}" value="${p.nota||''}" placeholder="Agregar nota... (ej: pidió demo, evalúa con su socio)"
           style="flex:1;background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:8px;padding:7px 12px;color:var(--text);font-size:.82rem;font-family:'Inter',sans-serif;outline:none;">
@@ -1429,18 +2133,7 @@ async function cargarBolsa() {
         return `<tr style="background: ${l.estado==='reclamado' ? 'rgba(245,158,11,0.03)' : 'transparent'};">
           <td style="font-weight:700; color:var(--text);">${l.empresa}</td>
           <td>${l.rubro}</td>
-          <td>
-            <div style="font-family:monospace;color:var(--primary);font-weight:700;">${l.telefono||'—'}</div>
-            ${l.whatsapp ? `<div style="font-size:.75rem;color:#25D366;"><i class="fa-brands fa-whatsapp"></i> ${l.whatsapp}</div>` : ''}
-            ${l.email ? `<div style="font-size:.75rem;color:var(--text-dim);">${l.email}</div>` : ''}
-            ${l.instagram ? `<div style="font-size:.75rem;color:#E1306C;"><i class="fa-brands fa-instagram"></i> ${l.instagram}</div>` : ''}
-            ${l.facebook ? `<div style="font-size:.75rem;color:#1877F2;"><i class="fa-brands fa-facebook"></i> ${l.facebook}</div>` : ''}
-            ${l.web ? `<div style="font-size:.75rem;color:var(--text-muted);">🌐 ${l.web}</div>` : ''}
-            ${l.nombre_contacto ? `<div style="font-size:.75rem;color:var(--amber);margin-top:3px;">👤 ${l.nombre_contacto}</div>` : ''}
-            ${l.horario ? `<div style="font-size:.72rem;color:var(--text-dim);">🕐 ${l.horario}</div>` : ''}
-            ${l.rating ? `<div style="font-size:.72rem;color:var(--text-dim);">⭐ ${l.rating} (${l.resenas||0} reseñas)</div>` : ''}
-            ${l.extra ? `<div style="font-size:.72rem;color:var(--text-dim);font-style:italic;margin-top:2px;">${l.extra}</div>` : ''}
-          </td>
+          <td style="font-family:monospace; color:var(--primary);">${l.telefono} <br> <span style="color:var(--text-dim);font-size:.75rem;">${l.email||''}</span></td>
           <td>${tiempoHtml}</td>
           <td>${accionHtml}</td>
         </tr>`;
@@ -1577,6 +2270,663 @@ async function cargarHistorialBolsa() {
     `).join('');
   } catch(e) { console.error(e); }
 }
+
+// Funciones de MI RED
+async function cargarRed() {
+  if(!aliado) return;
+  document.getElementById('red-invitelink').textContent = `https://avanza-digital-production.up.railway.app/portal.html?ref=${aliado.ref_code}`;
+  
+  try {
+    const res = await fetch(`${API}/aliados/${aliado.codigo}/red`);
+    if(!res.ok) return;
+    const data = await res.json();
+    
+    document.getElementById('red-equipo-count').textContent = data.total_sub_aliados;
+    document.getElementById('red-ingresos-total').textContent = `USD ${data.total_ganancia_pasiva.toLocaleString()}`;
+    
+    const tbody = document.getElementById('tabla-red');
+    if(data.total_sub_aliados === 0) {
+      tbody.innerHTML = `<div class="empty-state"><i class="fa-solid fa-user-group"></i><p>Tu red está vacía.<br>Compartí tu enlace de invitación para sumar equipo y ganar comisiones pasivas.</p></div>`;
+      return;
+    }
+    
+    tbody.innerHTML = `<table><thead><tr><th>Nombre</th><th>Nivel</th><th>Ubicación</th><th>Ingreso</th><th>Ganancia Generada (5%)</th></tr></thead><tbody>` + 
+      data.detalle.map(sub => `
+        <tr>
+          <td style="font-weight:700;">${sub.nombre}</td>
+          <td><span class="badge badge-blue">${sub.nivel}</span></td>
+          <td style="color:var(--text-muted);">${sub.ciudad}</td>
+          <td style="font-size:.8rem;color:var(--text-dim);">${sub.fecha_ingreso}</td>
+          <td style="color:var(--green);font-weight:800;">USD ${sub.ganancia_pasiva.toLocaleString()}</td>
+        </tr>
+      `).join('') + `</tbody></table>`;
+  } catch(e) { console.error('Error cargando red', e); }
+}
+
+function copiarInviteLink() {
+  navigator.clipboard.writeText(document.getElementById('red-invitelink').textContent).then(()=>{
+    mostrarToast('¡Link de invitación copiado! Mandalo a otros vendedores.', 'amber');
+  });
+}
+
+// ─── SIGUIENTE MEJOR ACCIÓN ───────────────────────────────────────────────────
+
+async function cargarSiguienteAccion() {
+  if(!aliado) return;
+  try {
+    const res = await fetch(`${API}/aliados/${aliado.codigo}/siguiente-accion`);
+    if(!res.ok) return;
+    const data = await res.json();
+    const cont = document.getElementById('nba-container');
+    if(!data.siguiente_accion) { cont.style.display='none'; return; }
+    const a = data.siguiente_accion;
+    cont.style.display = 'block';
+    cont.innerHTML = `
+      <div class="nba-card ${a.color}">
+        <div class="nba-icon">${a.icono}</div>
+        <div class="nba-body">
+          <div class="nba-label"><i class="fa-solid fa-bolt"></i> Siguiente mejor acción</div>
+          <div class="nba-title">${a.titulo}</div>
+          <div class="nba-desc">${a.descripcion}</div>
+          <button class="nba-btn ${a.color}" onclick="cambiarTabDesdeNBA('${a.tab}')">
+            <i class="fa-solid fa-arrow-right"></i> ${a.boton}
+          </button>
+        </div>
+      </div>
+    `;
+  } catch(e) { console.warn('Error cargando siguiente acción', e); }
+}
+
+function cambiarTabDesdeNBA(tab) {
+  const btn = document.querySelector(`.tab-btn[onclick*="'${tab}'"]`);
+  if(btn) cambiarTab(tab, btn);
+}
+
+// ─── CHECKLIST ONBOARDING ─────────────────────────────────────────────────────
+
+async function cargarOnboardingChecklist() {
+  if(!aliado) return;
+  try {
+    const res = await fetch(`${API}/aliados/${aliado.codigo}/onboarding`);
+    if(!res.ok) return;
+    const data = await res.json();
+    const box = document.getElementById('onboarding-checklist-box');
+    if(data.pct === 100) { box.style.display='none'; return; }
+    box.style.display = 'block';
+    document.getElementById('ob-pct-badge').textContent = data.pct + '%';
+    document.getElementById('ob-progress-fill').style.width = data.pct + '%';
+    document.getElementById('ob-checklist-items').innerHTML = data.pasos.map(p=>`
+      <div class="ob-step ${p.completado?'done':'pending'}">
+        <div class="ob-check ${p.completado?'done':'pending'}">
+          ${p.completado?'<i class="fa-solid fa-check" style="font-size:.7rem;"></i>':''}
+        </div>
+        <span>${p.titulo}</span>
+        ${!p.completado?'<span style="margin-left:auto;font-size:.72rem;font-weight:700;color:var(--primary);background:rgba(59,130,246,0.1);padding:2px 8px;border-radius:50px;">Pendiente</span>':''}
+      </div>
+    `).join('');
+  } catch(e) { console.warn('Error onboarding checklist', e); }
+}
+
+// ─── COTIZADOR CON ANÁLISIS IA ────────────────────────────────────────────────
+
+function actualizarCotizador() {
+  if(!aliado) return;
+  const plan     = document.getElementById('cot-plan').value;
+  const resDiv   = document.getElementById('cot-resultado');
+  const aiBox    = document.getElementById('cot-ai-box');
+  if(!plan) { resDiv.style.display='none'; return; }
+
+  const precio     = PLANES[plan];
+  const nivel      = aliado.nivel_calculado || aliado.nivel_actual || 'BASIC';
+  const porcentaje = pct(nivel);
+  const comision   = Math.round(precio * porcentaje);
+
+  document.getElementById('cot-precio').textContent   = 'USD ' + precio.toLocaleString();
+  document.getElementById('cot-comision').textContent = 'USD ' + comision.toLocaleString();
+  document.getElementById('cot-pct-badge').textContent = (porcentaje * 100) + '%';
+
+  const cliente = document.getElementById('cot-cliente').value || 'tu-cliente';
+  const link    = `https://avanzadigital.digital/contratar?plan=${encodeURIComponent(plan)}&ref=${aliado.ref_code}&cliente=${encodeURIComponent(cliente)}`;
+  document.getElementById('cot-link').value = link;
+
+  // Mostrar botón MP si aplica
+  const btnMP = document.getElementById('btn-checkout-real');
+  if(btnMP) btnMP.style.display = 'inline-flex';
+
+  // Resetear análisis IA
+  if(aiBox) { aiBox.style.display='none'; aiBox.innerHTML=''; }
+  resDiv.style.display = 'block';
+}
+
+async function generarCheckoutReal() {
+  const plan    = document.getElementById('cot-plan').value;
+  const cliente = document.getElementById('cot-cliente').value || 'Cliente';
+  const btn     = document.getElementById('btn-checkout-real');
+  if(!plan) return;
+  btn.innerHTML = '<span class="spinner"></span> Generando...';
+  btn.disabled  = true;
+  try {
+    const res  = await fetch(`${API}/checkout/crear?plan=${encodeURIComponent(plan)}&ref_code=${aliado.ref_code}&nombre_cliente=${encodeURIComponent(cliente)}`, {method:'POST'});
+    const data = await res.json();
+    if(res.ok && data.checkout_url) {
+      if(data.fallback) {
+        mostrarToast('Checkout MP no activado. Usá el link de atribución manual.', 'amber');
+        document.getElementById('cot-link').value = data.checkout_url;
+      } else {
+        mostrarToast('¡Checkout generado! Abriendo MercadoPago...', 'green');
+        setTimeout(()=> window.open(data.checkout_url, '_blank'), 400);
+      }
+    } else {
+      mostrarToast('Error al generar checkout. Usá el link manual.', 'amber');
+    }
+  } catch(e) {
+    mostrarToast('Error de conexión.', 'red');
+  }
+  btn.innerHTML = '<i class="fa-solid fa-credit-card"></i> Pago directo MP';
+  btn.disabled  = false;
+}
+
+async function obtenerAnalisisIA() {
+  const plan     = document.getElementById('cot-plan').value;
+  const rubro    = document.getElementById('cot-rubro').value;
+  const urgencia = document.getElementById('cot-urgencia').value;
+  const cliente  = document.getElementById('cot-cliente').value || 'el cliente';
+  const aiBox    = document.getElementById('cot-ai-box');
+  const btn      = document.getElementById('btn-analisis-ia');
+  if(!plan || !rubro) {
+    mostrarToast('Seleccioná plan y rubro para obtener análisis IA.', 'amber'); return;
+  }
+
+  btn.innerHTML = '<span class="spinner"></span> Generando análisis...';
+  btn.disabled  = true;
+
+  // Análisis local: sin llamada API externa, basado en reglas de negocio
+  await new Promise(r => setTimeout(r, 900));
+
+  const analisis = generarAnalisisLocal(plan, rubro, urgencia, cliente);
+
+  aiBox.style.display = 'block';
+  aiBox.innerHTML = `
+    <div class="ai-label"><i class="fa-solid fa-brain"></i> Análisis IA — Propuesta inteligente</div>
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:8px;">
+      <span class="ai-prob-badge ${analisis.probClass}">
+        <i class="fa-solid fa-chart-line"></i> ${analisis.probTexto}
+      </span>
+      <span style="font-size:.78rem;color:var(--text-dim);">${analisis.motivo}</span>
+    </div>
+    <div class="ai-section-title"><i class="fa-solid fa-bullseye" style="color:#a855f7;margin-right:4px;"></i> Plan recomendado para este perfil</div>
+    <p style="font-size:.85rem;color:var(--text-muted);margin-bottom:4px;">${analisis.planRec}</p>
+    <div class="ai-section-title" style="margin-top:14px;"><i class="fa-brands fa-whatsapp" style="color:var(--green);margin-right:4px;"></i> Mensaje de apertura sugerido</div>
+    <div class="ai-pitch-box">${analisis.pitch}</div>
+    <div class="ai-section-title" style="margin-top:14px;"><i class="fa-solid fa-triangle-exclamation" style="color:var(--amber);margin-right:4px;"></i> Objeciones frecuentes en este rubro</div>
+    <ul style="padding-left:16px;font-size:.82rem;color:var(--text-muted);line-height:1.8;">${analisis.objeciones.map(o=>`<li>${o}</li>`).join('')}</ul>
+  `;
+
+  btn.innerHTML = '<i class="fa-solid fa-brain"></i> Regenerar análisis';
+  btn.disabled  = false;
+}
+
+function generarAnalisisLocal(plan, rubro, urgencia, cliente) {
+  const PROB = {
+    alta:  { pct: '72–85%', cls: 'ai-prob-high',   texto: '72–85% prob. cierre' },
+    media: { pct: '45–65%', cls: 'ai-prob-medium',  texto: '45–65% prob. cierre' },
+    baja:  { pct: '20–40%', cls: 'ai-prob-low',     texto: '20–40% prob. cierre' },
+  };
+
+  const PITCHES = {
+    'Metalúrgica / Manufactura': `Hola, vi que ${cliente} tiene presencia web pero no aparece en búsquedas clave para compradores industriales. Corrí un reporte técnico gratuito para su sitio — los resultados son bastante claros. ¿Le comparto el informe para que vean el estado real de su visibilidad online?`,
+    'Agro / Maquinaria agrícola': `Hola, muchos distribuidores de maquinaria agrícola están perdiendo consultas porque Google no los encuentra en la zona. Preparé un análisis gratuito para ${cliente}. ¿Lo ven y vemos si aplica?`,
+    'Logística / Transporte': `Hola, en logística el 70% de las búsquedas de nuevos clientes empiezan en Google. Hice un reporte del sitio de ${cliente} y hay algunos puntos críticos. ¿Se lo mando para que evalúen?`,
+    'Servicios B2B / Consultoría': `Hola, los servicios B2B que aparecen primero en Google capturan 3x más leads que los que no. Hice un diagnóstico del sitio de ${cliente} — puedo mandárselo en 2 minutos. ¿Les sirve?`,
+    default: `Hola, analicé la presencia web de ${cliente} y detecté algunas mejoras concretas que podrían generar más consultas de clientes. ¿Les interesa ver el reporte gratuito?`,
+  };
+
+  const PLAN_RECS = {
+    'Plan Base':        'Ideal para validar la propuesta. Empresa pequeña/mediana que necesita visibilidad inicial rápida. Buen ticket de entrada y alta conversión.',
+    'Plan Pro':         'Recomendado para empresas con web activa que ya venden pero quieren escalar. Mayor ticket = mayor comisión. Presenta el ROI en leads.',
+    'Plan Industrial':  'Para fábricas o distribuidores que necesitan posicionarse en búsquedas muy específicas. Pitch: "sus compradores buscan exactamente lo que hacen".',
+    'Estrategico 360':  'Para empresas con ambición de dominar su mercado. Pitch de valor total: presencia, leads, reputación. Presenta múltiples canales de impacto.',
+  };
+
+  const OBJECIONES = {
+    'Metalúrgica / Manufactura': ['«Nuestros clientes nos llegan por referidos» → Respondé: ¿y si pudieran llegar también por Google?', '«Ya tenemos web» → Respondé: tenerla y aparecer en búsquedas son cosas distintas.'],
+    'Agro / Maquinaria agrícola': ['«No usamos internet para cerrar ventas» → Respondé: sus competidores sí.', '«Lo decide el dueño, no yo» → Pedí el contacto del dueño directamente.'],
+    default: ['«No tenemos presupuesto ahora» → Preguntá cuándo sería buen momento y agendá seguimiento.', '«Lo vemos más adelante» → Ofrecé el diagnóstico gratuito para que tengan info concreta.'],
+  };
+
+  const probData  = PROB[urgencia] || PROB.media;
+  const pitch     = PITCHES[rubro] || PITCHES.default;
+  const planRec   = PLAN_RECS[plan] || 'Plan adecuado para este perfil.';
+  const objs      = OBJECIONES[rubro] || OBJECIONES.default;
+  const motivo    = urgencia === 'alta' ? 'Alta urgencia detectada — cerrá en la próxima llamada' :
+                    urgencia === 'baja' ? 'Lead frío — aportá valor primero con la auditoría' :
+                    'Probabilidad media — seguimiento estructurado recomendado';
+
+  return { probClass: probData.cls, probTexto: probData.texto, motivo, pitch, planRec, objeciones: objs };
+}
+
+function copiarCotizacion() {
+  const link    = document.getElementById('cot-link').value;
+  const cliente = document.getElementById('cot-cliente').value || 'tu empresa';
+  const plan    = document.getElementById('cot-plan').value;
+  const texto = `Hola, te dejo el link directo con la propuesta del ${plan} para ${cliente}. Podés avanzar con la contratación desde ahí de forma segura:\n\n${link}\n\nCualquier consulta, avisame.`;
+  navigator.clipboard.writeText(texto).then(() => {
+    mostrarToast('¡Link y mensaje listos para enviar por WhatsApp!', 'green');
+  });
+}
+
+function irACotizador(id, nombre, plan) {
+  const btn = document.querySelector('.tab-btn[onclick*="cotizador"]');
+  if(btn) cambiarTab('cotizador', btn);
+  setTimeout(()=>{
+    const inp = document.getElementById('cot-cliente');
+    if(inp) inp.value = nombre;
+    if(plan) {
+      const sel = document.getElementById('cot-plan');
+      if(sel) { sel.value = plan; actualizarCotizador(); }
+    }
+  }, 100);
+}
+
+// ─── PILOTO AUTOMÁTICO ────────────────────────────────────────────────────────
+
+async function togglePiloto(id, actual) {
+  try {
+    const nuevoEstado = !actual;
+    const res = await fetch(`${API}/prospectos/${id}/piloto?activo=${nuevoEstado}`, {method:'PATCH'});
+    if(res.ok) {
+      mostrarToast(nuevoEstado ? '🤖 Piloto automático activado para este lead' : 'Piloto desactivado', nuevoEstado ? 'primary' : 'amber');
+      await cargarProspectos();
+    }
+  } catch(e) { console.warn('Error toggle piloto', e); }
+}
+
+// ─── LEADERBOARD (actualizado con métricas avanzadas) ─────────────────────────
+
+async function renderLeaderboard() {
+  try {
+    const res = await fetch(`${API}/leaderboard`);
+    if (!res.ok) return;
+    const lb = await res.json();
+
+    const myPosIndex = lb.findIndex(x => x.codigo === aliado.codigo);
+    const me = lb[myPosIndex];
+
+    let msg = '¡Sumá ventas para escalar posiciones!';
+    if (me) {
+      if (me.posicion === 1)       msg = '¡Sos el #1! Defendé tu corona. 👑';
+      else if (me.posicion <= 3)   msg = '¡Estás en el podio! A un paso de la gloria. 🔥';
+      else if (me.posicion <= 10)  {
+        const diff = lb[2].ventas_6m - me.ventas_6m;
+        msg = diff > 0 ? `Estás en el Top 10. ¡A solo ${diff} venta${diff>1?'s':''} del podio! 🚀`
+                       : '¡Empatado con el podio! Cerrá una más para subir. 🚀';
+      } else {
+        const top10 = lb[9];
+        if(top10) { const diff = Math.max(1, top10.ventas_6m - me.ventas_6m);
+          msg = `A ${diff} venta${diff>1?'s':''} de entrar al Top 10. ¡Vos podés!`; }
+      }
+    }
+    document.getElementById('lb-dynamic-msg').innerHTML = `<i class="fa-solid fa-fire"></i> ${msg}`;
+
+    const podiumOrder = [
+      { rank:2, obj:lb[1], cls:'podium-2', medal:'🥈' },
+      { rank:1, obj:lb[0], cls:'podium-1', medal:'🥇' },
+      { rank:3, obj:lb[2], cls:'podium-3', medal:'🥉' },
+    ];
+    let podiumHtml = '';
+    podiumOrder.forEach(p => {
+      if (!p.obj) return;
+      const isMe = p.obj.codigo === aliado.codigo;
+      podiumHtml += `
+      <div class="podium-card ${p.cls} ${isMe?'is-me':''}">
+        <div class="podium-medal">${p.medal}</div>
+        <div class="avatar avatar-${p.rank}">${getInitials(p.obj.nombre)}</div>
+        <div style="flex:1;">
+          <div class="podium-name">${p.obj.nombre} ${isMe?'<br><span class="lb-badge-me">Vos</span>':''}</div>
+          <div class="podium-sales">${p.obj.ventas_6m} ventas · ${p.obj.tasa_cierre||0}% cierre</div>
+        </div>
+        <div class="podium-comision"><i class="fa-solid fa-sack-dollar" style="font-size:0.8rem;"></i> ${p.obj.total_ganado.toLocaleString()}</div>
+      </div>`;
+    });
+    document.getElementById('lb-podium').innerHTML = podiumHtml;
+
+    const rest = lb.slice(3);
+    document.getElementById('lb-list').innerHTML = rest.map(item => {
+      const isMe = item.codigo === aliado.codigo;
+      return `
+      <div class="lb-row ${isMe?'is-me':''}">
+        <div class="lb-pos">#${item.posicion}</div>
+        <div class="lb-avatar-mini">${getInitials(item.nombre)}</div>
+        <div class="lb-info">
+          <div class="lb-name">
+            ${item.nombre} ${isMe?'<span class="lb-badge-me">Vos</span>':''}
+            <span class="lb-nivel nivel-${item.nivel}">${item.nivel}</span>
+          </div>
+          <div class="lb-stats">
+            <span><i class="fa-solid fa-chart-line"></i> ${item.ventas_6m} ventas</span>
+            <span><i class="fa-solid fa-percent"></i> ${item.tasa_cierre||0}% cierre</span>
+            <span><i class="fa-solid fa-bolt"></i> ${item.velocidad||0}/mes</span>
+          </div>
+        </div>
+        <div class="lb-money"><i class="fa-solid fa-sack-dollar" style="font-size:0.9rem;color:var(--text-dim);"></i> USD ${item.total_ganado.toLocaleString()}</div>
+      </div>`;
+    }).join('');
+
+    if (me && me.posicion > 3) {
+      setTimeout(() => {
+        const myRow = document.querySelector('.lb-row.is-me');
+        if (myRow) myRow.scrollIntoView({ behavior:'smooth', block:'center' });
+      }, 500);
+    }
+  } catch(e) { console.warn('Error cargando leaderboard', e); }
+}
+
+// ─── HISTORIAL BOLSA (fixes para los nuevos KPI IDs) ─────────────────────────
+
+async function cargarHistorialBolsa() {
+  if(!aliado) return;
+  try {
+    const res = await fetch(`${API}/aliados/${aliado.codigo}/historial-bolsa`);
+    if(!res.ok) return;
+    const data = await res.json();
+    const s = data.stats;
+
+    const setKPI = (id, val) => { const el = document.getElementById(id); if(el) el.textContent = val; };
+    setKPI('hk-total',    s.total_reclamados);
+    setKPI('hk-exitosos', s.exitosos);
+    setKPI('hk-noint',    s.no_interesados);
+    setKPI('hk-nocont',   s.no_contestaron);
+    setKPI('hk-tasa',     s.tasa_exito + '%');
+
+    const tbody = document.getElementById('historial-bolsa-body');
+    if(!tbody) return;
+    if(!data.leads.length) {
+      tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:24px;color:var(--text-dim);">Todavía no reclamaste ningún lead.</td></tr>';
+      return;
+    }
+    const iconRes  = { exitoso:'✅', no_interesado:'❌', no_contesto:'📵' };
+    const labelRes = { exitoso:'Exitoso', no_interesado:'No interesado', no_contesto:'No contestó' };
+    tbody.innerHTML = data.leads.map(l => `
+      <tr>
+        <td style="font-weight:700;">${l.empresa}</td>
+        <td style="color:var(--text-muted);">${l.rubro}</td>
+        <td style="font-size:.8rem;color:var(--text-dim);">${l.fecha_reclamo||'—'}</td>
+        <td>${l.estado==='reclamado'?'<span class="badge badge-amber">Activo</span>':'<span class="badge badge-blue">Cerrado</span>'}</td>
+        <td>${l.resultado?`${iconRes[l.resultado]||''} ${labelRes[l.resultado]||l.resultado}`:'<span style="color:var(--text-dim);">—</span>'}</td>
+      </tr>
+    `).join('');
+  } catch(e) { console.error(e); }
+}
+
+// ─── PATCH: cargarTodo con las nuevas funciones ───────────────────────────────
+
+const _cargarTodoOriginal = cargarTodo;
+cargarTodo = async function() {
+  await _cargarTodoOriginal();
+  await cargarSiguienteAccion();
+  await cargarOnboardingChecklist();
+
+  // Si llega de un pago exitoso, mostrar celebración
+  const urlParams = new URLSearchParams(window.location.search);
+  if(urlParams.get('pago') === 'ok') {
+    const plan = urlParams.get('plan') || '';
+    mostrarToast(`🎉 ¡Pago confirmado! Venta de ${plan} registrada.`, 'green');
+    history.replaceState(null, '', window.location.pathname);
+  }
+};
+// ══════════════════════════════════════════════════════════════════════
+// ══ v1.3 — REPUTACIÓN, CRÉDITOS, PERFILADO IA, CUOTAS, MARKETPLACE, COMUNIDAD
+// ══════════════════════════════════════════════════════════════════════
+
+// ─── REPUTACIÓN ──────────────────────────────────────────────────────
+async function cargarReputacion() {
+  if (!aliado) return;
+  try {
+    const res = await fetch(`${API}/aliados/${aliado.codigo}/reputacion`);
+    if (!res.ok) return;
+    const data = await res.json();
+    const scoreEl = document.getElementById('d-reput-score');
+    if (scoreEl) scoreEl.textContent = data.score;
+
+    const cap = document.getElementById('d-reput-caption');
+    if (cap) {
+      const f = data.factores || {};
+      cap.textContent = `Tasa de cierre: ${f.tasa_cierre||0}% · Éxito bolsa: ${f.tasa_bolsa||0}% · Red activa: ${f.red_activa||0}`;
+    }
+    const box = document.getElementById('d-reput-badges');
+    if (box) {
+      if (data.badges && data.badges.length) {
+        box.innerHTML = data.badges.map(b=>
+          `<span title="${b.desc}" style="background:rgba(192,132,252,0.12); color:#c084fc; border:1px solid rgba(192,132,252,0.25); padding:4px 10px; border-radius:20px; font-size:.72rem; font-weight:700;">${b.icono} ${b.label}</span>`
+        ).join('');
+      } else {
+        box.innerHTML = `<span style="font-size:.76rem; color:var(--text-dim);">Sin badges aún — empezá a vender y aparecerán solas.</span>`;
+      }
+    }
+  } catch(e){ console.error('reputacion:', e); }
+}
+
+// ─── CRÉDITOS ────────────────────────────────────────────────────────
+async function cargarCreditos() {
+  if (!aliado) return;
+  try {
+    const res = await fetch(`${API}/aliados/${aliado.codigo}/creditos`);
+    if (!res.ok) return;
+    const data = await res.json();
+    const el = document.getElementById('d-creditos');
+    if (el) el.textContent = data.saldo;
+    const mkt = document.getElementById('mkt-saldo');
+    if (mkt) mkt.textContent = `${data.saldo} créditos`;
+  } catch(e){ console.error('creditos:', e); }
+}
+
+// ─── SIMULADOR DE CUOTAS ─────────────────────────────────────────────
+async function actualizarCuotas() {
+  const plan = document.getElementById('cot-plan').value;
+  const cuotas = parseInt(document.getElementById('cot-cuotas').value);
+  const box = document.getElementById('cot-cuotas-resultado');
+  if (!plan) { if(box) box.style.display='none'; return; }
+  try {
+    const res = await fetch(`${API}/cotizador/cuotas?plan=${encodeURIComponent(plan)}&cuotas=${cuotas}`);
+    if (!res.ok) return;
+    const data = await res.json();
+    document.getElementById('cot-cuotas-valor').textContent = `USD ${data.valor_cuota.toLocaleString('es-AR',{maximumFractionDigits:0})}`;
+    document.getElementById('cot-cuotas-total').textContent = `USD ${data.total_financiado.toLocaleString('es-AR',{maximumFractionDigits:0})} (${data.recargo_pct}% recargo)`;
+    box.style.display='block';
+  } catch(e){ console.error('cuotas:', e); }
+}
+
+// ─── PERFILADO IA ────────────────────────────────────────────────────
+function abrirPerfilado(id, nombre) {
+  document.getElementById('perf-id').value = id;
+  document.getElementById('perf-nombre').textContent = nombre;
+  // Pre-llenar si ya tiene datos
+  const p = todosProspectos.find(x => x.id === id);
+  if (p) {
+    if (p.rubro) document.getElementById('perf-rubro').value = p.rubro;
+    if (p.tamano) document.getElementById('perf-tamano').value = p.tamano;
+    if (p.urgencia) document.getElementById('perf-urgencia').value = p.urgencia;
+  }
+  document.getElementById('perf-resultado').style.display = 'none';
+  document.getElementById('modal-perfilado').classList.add('open');
+}
+
+async function ejecutarPerfilado() {
+  const id = document.getElementById('perf-id').value;
+  const rubro = document.getElementById('perf-rubro').value;
+  const tamano = document.getElementById('perf-tamano').value;
+  const urgencia = document.getElementById('perf-urgencia').value;
+  if (!rubro) { alert('Seleccioná un rubro.'); return; }
+  try {
+    const url = `${API}/prospectos/${id}/perfilar?rubro=${encodeURIComponent(rubro)}&tamano=${tamano}&urgencia=${urgencia}`;
+    const res = await fetch(url, {method:'POST'});
+    if (!res.ok) { const d = await res.json(); alert(d.detail || 'Error'); return; }
+    const data = await res.json();
+    document.getElementById('perf-score').textContent = data.score;
+    document.getElementById('perf-plan').textContent = data.plan_recomendado;
+    document.getElementById('perf-ticket').textContent = `Ticket estimado: USD ${data.ticket_esperado.toLocaleString('es-AR')}`;
+    document.getElementById('perf-pitch').textContent = data.pitch_sugerido;
+    document.getElementById('perf-resultado').style.display = 'block';
+    // Recargar prospectos para que se vea en la card
+    setTimeout(() => cargarProspectos(), 800);
+  } catch(e) { alert('Error de conexión.'); }
+}
+
+function copiarPitch() {
+  const pitch = document.getElementById('perf-pitch').textContent;
+  navigator.clipboard.writeText(pitch).then(()=> {
+    mostrarToast('Pitch copiado al portapapeles', 'green');
+  });
+}
+
+// ─── MARKETPLACE DE LEADS PREMIUM ────────────────────────────────────
+async function cargarMarketplace() {
+  if (!aliado) return;
+  const tbody = document.getElementById('tabla-marketplace');
+  if (!tbody) return;
+  try {
+    const res = await fetch(`${API}/bolsa/marketplace?codigo_aliado=${aliado.codigo}`);
+    if (!res.ok) return;
+    const data = await res.json();
+    document.getElementById('mkt-saldo').textContent = `${data.saldo_creditos} créditos`;
+    if (!data.leads.length) {
+      tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; padding:24px; color:var(--text-dim);">No hay leads premium disponibles en este momento.</td></tr>`;
+      return;
+    }
+    tbody.innerHTML = data.leads.map(l => {
+      const tierBadge = l.tier === 'premium'
+        ? `<span style="background:rgba(250,204,21,0.15); color:var(--amber); padding:3px 8px; border-radius:4px; font-size:.7rem; font-weight:800;">💎 PREMIUM</span>`
+        : `<span style="background:rgba(59,130,246,0.15); color:#60a5fa; padding:3px 8px; border-radius:4px; font-size:.7rem; font-weight:800;">⭐ CALIFICADO</span>`;
+      const puedePagar = data.saldo_creditos >= (l.costo_creditos || 0);
+      return `<tr>
+        <td><strong>${l.empresa}</strong> ${tierBadge}</td>
+        <td>${l.rubro}</td>
+        <td><div style="display:flex; align-items:center; gap:6px;"><div style="width:40px; height:6px; background:rgba(255,255,255,0.1); border-radius:3px; overflow:hidden;"><div style="width:${l.score_calidad}%; height:100%; background:var(--green);"></div></div><span style="font-size:.75rem; color:var(--text-muted);">${l.score_calidad}</span></div></td>
+        <td style="font-size:.8rem; color:var(--text-muted); max-width:240px;">${l.notas || '—'}</td>
+        <td><strong style="color:var(--amber);">${l.costo_creditos} cr.</strong></td>
+        <td>
+          <button onclick="comprarLead(${l.id},${l.costo_creditos})" ${puedePagar?'':'disabled'} style="background:${puedePagar?'var(--amber)':'rgba(255,255,255,0.06)'}; color:${puedePagar?'#000':'var(--text-dim)'}; border:none; border-radius:6px; padding:7px 14px; font-size:.78rem; font-weight:800; cursor:${puedePagar?'pointer':'not-allowed'};">
+            ${puedePagar ? 'Comprar' : 'Sin saldo'}
+          </button>
+        </td>
+      </tr>`;
+    }).join('');
+  } catch(e) { console.error('marketplace:', e); }
+}
+
+async function comprarLead(id, costo) {
+  if (!confirm(`Confirmás la compra de este lead por ${costo} créditos?`)) return;
+  try {
+    const res = await fetch(`${API}/bolsa/${id}/comprar?codigo_aliado=${aliado.codigo}`, {method:'POST'});
+    const data = await res.json();
+    if (!res.ok) { alert(data.detail || 'Error'); return; }
+    mostrarToast(`✅ Lead comprado — saldo: ${data.saldo_restante} créditos`, 'green');
+    await cargarMarketplace();
+    await cargarBolsa();
+    await cargarCreditos();
+  } catch(e) { alert('Error de conexión.'); }
+}
+
+// ─── COMUNIDAD ──────────────────────────────────────────────────────
+async function cargarComunidad() {
+  const feed = document.getElementById('comunidad-feed');
+  if (!feed) return;
+  feed.innerHTML = `<div style="text-align:center; padding:40px; color:var(--text-dim);">Cargando feed...</div>`;
+  try {
+    const res = await fetch(`${API}/comunidad/feed`);
+    if (!res.ok) return;
+    const data = await res.json();
+    if (!data.posts.length) {
+      feed.innerHTML = `<div class="bento-box" style="text-align:center; padding:40px; color:var(--text-muted);">
+        Nadie publicó todavía. <br>¡Sé el primero en compartir un tip o una victoria!
+      </div>`;
+      return;
+    }
+    const tipoIcon = { tip: '💡', win: '🎉', pregunta: '❓' };
+    const tipoColor = { tip: '#c084fc', win: '#4ade80', pregunta: '#facc15' };
+    feed.innerHTML = data.posts.map(p => `
+      <div class="bento-box" style="margin-bottom:16px; ${p.fijado?'border-color:rgba(250,204,21,0.4); background:rgba(250,204,21,0.02);':''}">
+        <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:10px;">
+          <div>
+            <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+              <span style="font-size:1.2rem;">${tipoIcon[p.tipo]||'💬'}</span>
+              <strong style="font-size:1rem;">${p.titulo}</strong>
+              ${p.fijado?'<span style="font-size:.65rem; background:rgba(250,204,21,0.15); color:var(--amber); padding:2px 8px; border-radius:4px; font-weight:800;">📌 DESTACADO</span>':''}
+            </div>
+            <div style="font-size:.75rem; color:var(--text-dim); margin-top:4px;">
+              ${p.autor} · ${p.autor_nivel||'BASIC'} · ${p.fecha}
+            </div>
+          </div>
+          <button onclick="darLike(${p.id})" style="background:rgba(239,68,68,0.08); color:#ef4444; border:1px solid rgba(239,68,68,0.2); border-radius:20px; padding:5px 12px; font-size:.78rem; font-weight:700; cursor:pointer; white-space:nowrap;">
+            ❤ ${p.likes||0}
+          </button>
+        </div>
+        <div style="white-space:pre-wrap; font-size:.88rem; line-height:1.6; color:var(--text); margin-bottom:12px;">${escapeHtml(p.cuerpo)}</div>
+        <div style="border-top:1px solid var(--border); padding-top:10px;">
+          ${(p.comentarios||[]).map(c=>`
+            <div style="padding:6px 0; font-size:.82rem;">
+              <strong style="color:var(--text-muted);">${c.autor}:</strong> <span style="color:var(--text);">${escapeHtml(c.cuerpo)}</span>
+              <span style="font-size:.7rem; color:var(--text-dim); margin-left:6px;">${c.fecha}</span>
+            </div>
+          `).join('')}
+          <div style="display:flex; gap:6px; margin-top:8px;">
+            <input type="text" id="com-input-${p.id}" placeholder="Escribir un comentario..." style="flex:1; background:rgba(255,255,255,0.03); border:1px solid var(--border); color:var(--text); padding:7px 12px; border-radius:6px; font-size:.82rem;">
+            <button onclick="comentarPost(${p.id})" style="background:var(--primary); color:#fff; border:none; border-radius:6px; padding:7px 14px; font-size:.78rem; font-weight:700; cursor:pointer;"><i class="fa-solid fa-paper-plane"></i></button>
+          </div>
+        </div>
+      </div>
+    `).join('');
+  } catch(e) { console.error('comunidad:', e); }
+}
+
+function escapeHtml(s) {
+  return (s||'').replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":"&#39;"}[c]));
+}
+
+async function publicarPost() {
+  const tipo = document.getElementById('post-tipo').value;
+  const titulo = document.getElementById('post-titulo').value.trim();
+  const cuerpo = document.getElementById('post-cuerpo').value.trim();
+  if (titulo.length < 3 || cuerpo.length < 5) { alert('Escribí un título y un cuerpo.'); return; }
+  try {
+    const res = await fetch(`${API}/comunidad/post`, {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({codigo_aliado: aliado.codigo, tipo, titulo, cuerpo})
+    });
+    if (!res.ok) { const d = await res.json(); alert(d.detail || 'Error'); return; }
+    document.getElementById('post-titulo').value = '';
+    document.getElementById('post-cuerpo').value = '';
+    mostrarToast('✅ Post publicado', 'green');
+    cargarComunidad();
+  } catch(e) { alert('Error de conexión.'); }
+}
+
+async function darLike(id) {
+  try {
+    await fetch(`${API}/comunidad/${id}/like`, {method:'POST'});
+    cargarComunidad();
+  } catch(e){}
+}
+
+async function comentarPost(id) {
+  const input = document.getElementById(`com-input-${id}`);
+  const cuerpo = input.value.trim();
+  if (cuerpo.length < 2) return;
+  try {
+    const res = await fetch(`${API}/comunidad/${id}/comentario`, {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({codigo_aliado: aliado.codigo, cuerpo})
+    });
+    if (res.ok) { input.value=''; cargarComunidad(); }
+  } catch(e){}
+}
+
+// Hook: cuando cambia el plan en el cotizador, refrescar cuotas
+document.addEventListener('DOMContentLoaded', () => {
+  const planSelect = document.getElementById('cot-plan');
+  if (planSelect) planSelect.addEventListener('change', actualizarCuotas);
+});
+
 </script>
 </body>
 </html>
