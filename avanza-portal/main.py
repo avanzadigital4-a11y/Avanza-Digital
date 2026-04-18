@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Depends, HTTPException, Request, status
+from fastapi import FastAPI, Depends, HTTPException, Request, status, BackgroundTasks
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
@@ -121,7 +121,7 @@ def enviar_email(destinatario: str, asunto: str, cuerpo_html: str):
         msg["From"]    = EMAIL_FROM
         msg["To"]      = destinatario
         msg.attach(MIMEText(cuerpo_html, "html"))
-        with smtplib.SMTP(SMTP_HOST, SMTP_PORT) as server:
+        with smtplib.SMTP(SMTP_HOST, SMTP_PORT, timeout=10) as server:
             server.starttls()
             server.login(SMTP_USER, SMTP_PASS)
             server.sendmail(EMAIL_FROM, destinatario, msg.as_string())
@@ -296,6 +296,7 @@ def ver_contrato():
 @app.post("/registrarse")
 def auto_registro(
     nombre: str, email: str, whatsapp: str,
+    background_tasks: BackgroundTasks,
     ciudad: str = "", perfil: str = "", password: str = "", dni: str = "",
     ref_sponsor: str = "", 
     db: Session = Depends(get_db)
@@ -330,8 +331,9 @@ def auto_registro(
     )
     db.add(a); db.commit(); db.refresh(a)
 
-    # Email de bienvenida
-    enviar_email(
+    # Email de bienvenida — EN SEGUNDO PLANO (no bloquea la respuesta)
+    background_tasks.add_task(
+        enviar_email,
         a.email,
         f"¡Bienvenido al Avanza Partner Network, {a.nombre.split()[0]}!",
         f"""
@@ -350,8 +352,9 @@ def auto_registro(
         """
     )
 
-    # Notificar al admin
-    enviar_email(
+    # Notificar al admin — EN SEGUNDO PLANO
+    background_tasks.add_task(
+        enviar_email,
         EMAIL_FROM or "avanzadigital4@gmail.com",
         f"[NUEVO ALIADO] {a.nombre} — {a.codigo}",
         f"<p>Nuevo aliado auto-registrado:<br><strong>{a.nombre}</strong> — {a.email} — {a.whatsapp}<br>Perfil: {a.perfil or '—'} | Ciudad: {a.ciudad or '—'}<br>Código: {a.codigo} | Ref: {a.ref_code}</p>"

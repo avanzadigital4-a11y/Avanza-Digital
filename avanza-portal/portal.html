@@ -729,6 +729,7 @@
 
     <div class="tabs">
       <button class="tab-btn active" onclick="cambiarTab('dashboard',this)"><i class="fa-solid fa-chart-line"></i> Dashboard</button>
+      <button class="tab-btn" onclick="cambiarTab('academia',this)" style="background:rgba(249,115,22,0.12);border-color:rgba(249,115,22,0.3);color:#f97316;"><i class="fa-solid fa-graduation-cap"></i> Academia <span style="background:#f97316;color:#000;font-size:.6rem;font-weight:800;padding:2px 6px;border-radius:4px;margin-left:4px;">NUEVO</span></button>
       <button class="tab-btn" onclick="cambiarTab('cotizador',this)"><i class="fa-solid fa-file-invoice-dollar"></i> Cotizador</button>
       <button class="tab-btn" onclick="cambiarTab('herramientas',this)"><i class="fa-solid fa-magnifying-glass"></i> Auditoría</button>
       <button class="tab-btn" onclick="cambiarTab('prospectos',this)"><i class="fa-solid fa-bullseye"></i> Prospectos</button>
@@ -1431,9 +1432,127 @@
         </table>
       </div>
     </div>
-
   </div>
 </div>
+
+<!-- ═══════════════════════════════════════════════════════════════════
+     ACADEMIA DEL ALIADO · 8 módulos de formación para cerrar ventas
+     ═══════════════════════════════════════════════════════════════════ -->
+<div id="tab-academia" class="tab-panel">
+      <style>
+        .aca-hero { background: linear-gradient(135deg, rgba(249,115,22,0.12), rgba(249,115,22,0.02)); border: 1px solid rgba(249,115,22,0.3); border-radius: 16px; padding: 28px; margin-bottom: 24px; }
+        .aca-hero h2 { color: #fff; font-size: 1.8rem; font-weight: 800; margin-bottom: 8px; letter-spacing: -0.5px; }
+        .aca-hero .sub { color: var(--text-muted); font-size: 1rem; margin-bottom: 16px; line-height: 1.5; }
+        .aca-hero .badge-line { display: flex; flex-wrap: wrap; gap: 10px; }
+        .aca-hero .badge-item { background: rgba(255,255,255,0.04); border: 1px solid var(--border); padding: 6px 12px; border-radius: 20px; font-size: 0.8rem; color: var(--text-muted); }
+        .aca-hero .badge-item i { color: #f97316; margin-right: 5px; }
+        
+        .aca-modules { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 14px; margin-bottom: 24px; }
+        .aca-module { background: var(--bg2); border: 1px solid var(--border); border-radius: 12px; padding: 20px; cursor: pointer; transition: all 0.2s; position: relative; }
+        .aca-module:hover { border-color: rgba(249,115,22,0.4); transform: translateY(-2px); }
+        .aca-module.completed::after { content: '✓'; position: absolute; top: 14px; right: 14px; width: 24px; height: 24px; background: var(--green); color: #000; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 0.85rem; }
+        .aca-module .num { background: rgba(249,115,22,0.15); color: #f97316; font-size: 0.75rem; font-weight: 800; letter-spacing: 1px; padding: 3px 9px; border-radius: 4px; display: inline-block; margin-bottom: 10px; }
+        .aca-module h3 { color: #fff; font-size: 1.05rem; font-weight: 700; margin-bottom: 6px; line-height: 1.3; }
+        .aca-module p { color: var(--text-muted); font-size: 0.85rem; line-height: 1.5; margin-bottom: 12px; }
+        .aca-module .meta { display: flex; gap: 12px; font-size: 0.75rem; color: var(--text-dim); }
+        .aca-module .meta span { display: flex; align-items: center; gap: 4px; }
+        
+        /* Vista detalle del módulo */
+        .aca-lesson { display: none; background: var(--bg2); border: 1px solid var(--border); border-radius: 16px; padding: 32px; margin-bottom: 24px; }
+        .aca-lesson.active { display: block; }
+        .aca-lesson .back-btn { background: transparent; border: 1px solid var(--border); color: var(--text-muted); padding: 8px 14px; border-radius: 8px; font-size: 0.85rem; cursor: pointer; margin-bottom: 20px; display: inline-flex; align-items: center; gap: 6px; }
+        .aca-lesson .back-btn:hover { color: #fff; border-color: var(--border-h); }
+        .aca-lesson .lesson-head { border-bottom: 1px solid var(--border); padding-bottom: 18px; margin-bottom: 24px; }
+        .aca-lesson .lesson-num { color: #f97316; font-size: 0.8rem; font-weight: 800; letter-spacing: 1.2px; margin-bottom: 6px; }
+        .aca-lesson h2 { color: #fff; font-size: 1.8rem; font-weight: 800; line-height: 1.15; margin-bottom: 8px; }
+        .aca-lesson .lesson-sub { color: var(--text-muted); font-size: 0.95rem; line-height: 1.5; }
+        
+        .aca-lesson h3 { color: #fff; font-size: 1.2rem; font-weight: 700; margin: 28px 0 10px; }
+        .aca-lesson h4 { color: #f97316; font-size: 0.8rem; font-weight: 800; letter-spacing: 1px; text-transform: uppercase; margin: 24px 0 10px; }
+        .aca-lesson p { color: var(--text-muted); font-size: 0.95rem; line-height: 1.7; margin-bottom: 14px; }
+        .aca-lesson p strong { color: #fff; font-weight: 700; }
+        .aca-lesson ul, .aca-lesson ol { color: var(--text-muted); padding-left: 22px; margin-bottom: 14px; font-size: 0.95rem; line-height: 1.8; }
+        .aca-lesson ul li, .aca-lesson ol li { margin-bottom: 6px; }
+        .aca-lesson ul li strong, .aca-lesson ol li strong { color: #fff; }
+        
+        .aca-highlight { background: rgba(249,115,22,0.08); border-left: 3px solid #f97316; padding: 14px 18px; border-radius: 6px; margin: 16px 0; }
+        .aca-highlight .label { color: #f97316; font-size: 0.75rem; font-weight: 800; letter-spacing: 1px; margin-bottom: 6px; }
+        .aca-highlight .text { color: var(--text); font-size: 0.95rem; line-height: 1.6; }
+        
+        .aca-tip { background: rgba(74,222,128,0.08); border-left: 3px solid var(--green); padding: 14px 18px; border-radius: 6px; margin: 16px 0; }
+        .aca-tip .label { color: var(--green); font-size: 0.75rem; font-weight: 800; letter-spacing: 1px; margin-bottom: 6px; }
+        .aca-tip .text { color: var(--text); font-size: 0.9rem; line-height: 1.6; }
+        
+        .aca-warn { background: rgba(239,68,68,0.06); border-left: 3px solid var(--red); padding: 14px 18px; border-radius: 6px; margin: 16px 0; }
+        .aca-warn .label { color: var(--red); font-size: 0.75rem; font-weight: 800; letter-spacing: 1px; margin-bottom: 6px; }
+        .aca-warn .text { color: var(--text); font-size: 0.9rem; line-height: 1.6; }
+        
+        .aca-pitch-box { background: #050505; border: 1px solid var(--border); border-radius: 8px; padding: 16px 18px; margin: 14px 0; }
+        .aca-pitch-box .label { color: var(--text-dim); font-size: 0.7rem; font-weight: 800; letter-spacing: 1px; margin-bottom: 8px; }
+        .aca-pitch-box .text { color: #fff; font-size: 0.95rem; line-height: 1.65; font-style: italic; }
+        .aca-pitch-box .text strong { color: var(--green); font-style: normal; }
+        
+        .aca-objection { background: var(--bg3); border: 1px solid var(--border); border-radius: 8px; padding: 14px 16px; margin-bottom: 10px; }
+        .aca-objection .q { color: #f97316; font-weight: 700; font-size: 0.9rem; margin-bottom: 6px; }
+        .aca-objection .a { color: var(--text-muted); font-size: 0.88rem; line-height: 1.6; }
+        .aca-objection .a strong { color: #fff; }
+        
+        .aca-table { width: 100%; border-collapse: collapse; margin: 14px 0; background: var(--bg3); border-radius: 8px; overflow: hidden; font-size: 0.88rem; }
+        .aca-table th, .aca-table td { padding: 10px 14px; text-align: left; border-bottom: 1px solid var(--border); }
+        .aca-table th { background: #050505; color: var(--text-dim); font-size: 0.7rem; font-weight: 800; letter-spacing: 1px; text-transform: uppercase; }
+        .aca-table td { color: var(--text-muted); }
+        .aca-table td strong { color: #fff; }
+        .aca-table tr:last-child td { border-bottom: none; }
+        
+        .aca-nav { display: flex; justify-content: space-between; gap: 10px; margin-top: 32px; padding-top: 20px; border-top: 1px solid var(--border); }
+        .aca-nav button { flex: 1; padding: 12px 16px; border-radius: 8px; font-weight: 700; font-size: 0.9rem; cursor: pointer; border: 1px solid var(--border); background: transparent; color: var(--text-muted); font-family: inherit; transition: all 0.2s; }
+        .aca-nav button:hover:not(:disabled) { color: #fff; border-color: var(--border-h); }
+        .aca-nav button:disabled { opacity: 0.3; cursor: not-allowed; }
+        .aca-nav .complete-btn { background: #f97316; color: #000; border-color: #f97316; }
+        .aca-nav .complete-btn:hover:not(:disabled) { background: #ea580c; border-color: #ea580c; color: #000; }
+        .aca-nav .complete-btn.done { background: var(--green); border-color: var(--green); color: #000; }
+
+        .aca-downloads { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px; margin: 16px 0; }
+        .aca-download { background: var(--bg3); border: 1px solid var(--border); border-radius: 8px; padding: 14px 16px; display: flex; align-items: center; gap: 12px; text-decoration: none; color: var(--text); transition: all 0.2s; }
+        .aca-download:hover { border-color: rgba(249,115,22,0.4); background: rgba(249,115,22,0.04); }
+        .aca-download i { font-size: 1.6rem; color: #f97316; flex-shrink: 0; }
+        .aca-download .dl-title { font-weight: 700; font-size: 0.9rem; margin-bottom: 2px; }
+        .aca-download .dl-sub { color: var(--text-dim); font-size: 0.75rem; }
+
+        .progress-bar-aca { background: var(--bg3); height: 8px; border-radius: 4px; overflow: hidden; margin: 14px 0 20px; }
+        .progress-fill-aca { background: linear-gradient(90deg, #f97316, #fbbf24); height: 100%; transition: width 0.4s; }
+
+        @media(max-width:640px){
+          .aca-hero { padding: 20px; }
+          .aca-hero h2 { font-size: 1.4rem; }
+          .aca-lesson { padding: 20px; }
+          .aca-lesson h2 { font-size: 1.4rem; }
+        }
+      </style>
+
+      <!-- VISTA ÍNDICE -->
+      <div id="aca-index">
+        <div class="aca-hero">
+          <h2>🎓 Academia del Aliado</h2>
+          <p class="sub">Todo lo que necesitás saber para cerrar tu primera venta. 8 módulos de texto, sin rodeos. Podés leerlos en 45 minutos y salir a vender el mismo día.</p>
+          <div class="badge-line">
+            <span class="badge-item"><i class="fa-solid fa-book"></i> 8 módulos</span>
+            <span class="badge-item"><i class="fa-solid fa-clock"></i> ~45 min lectura</span>
+            <span class="badge-item"><i class="fa-solid fa-file-pdf"></i> Descargables incluidos</span>
+            <span class="badge-item"><i class="fa-solid fa-rotate-right"></i> Podés releer cuando quieras</span>
+          </div>
+          <div class="progress-bar-aca" style="margin-top:18px;"><div class="progress-fill-aca" id="aca-progress-fill" style="width:0%;"></div></div>
+          <div style="color:var(--text-dim);font-size:.8rem;"><span id="aca-progress-text">0 de 8 módulos completados</span></div>
+        </div>
+
+        <div class="aca-modules" id="aca-modules-grid">
+          <!-- Generado por JS -->
+        </div>
+      </div>
+
+      <!-- VISTAS DE MÓDULO (generadas dinámicamente al hacer click) -->
+      <div id="aca-lessons-container"></div>
+    </div>
 
 <script>
 const API = 'https://avanza-digital-production.up.railway.app';
@@ -1541,7 +1660,12 @@ async function registrarse() {
     const refSponsor = urlParams.get('ref') || '';
     const params = new URLSearchParams({ nombre, email, whatsapp, ciudad, dni, perfil, password: pass, ref_sponsor: refSponsor });
     
-    const res = await fetch(`${API}/registrarse?${params}`, { method: 'POST' });
+    // Timeout de 15 segundos para evitar cuelgues infinitos
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 15000);
+    
+    const res = await fetch(`${API}/registrarse?${params}`, { method: 'POST', signal: controller.signal });
+    clearTimeout(timeoutId);
     const data = await res.json();
     if (!res.ok) throw new Error(data.detail || 'Error al registrarse.');
 
@@ -1554,7 +1678,11 @@ async function registrarse() {
     cargarTodo();
     mostrarToast(`¡Bienvenido, ${aliado.nombre.split(' ')[0]}! Tu código es ${aliado.codigo}`, 'green');
   } catch(e) {
-    mostrarError(e.message || 'Error de conexión. Intentá de nuevo.');
+    if (e.name === 'AbortError') {
+      mostrarError('El registro tardó demasiado. Verificá tu conexión y probá de nuevo. Si ya creaste la cuenta, intentá iniciar sesión.');
+    } else {
+      mostrarError(e.message || 'Error de conexión. Intentá de nuevo.');
+    }
   }
 
   btn.innerHTML = '<i class="fa-solid fa-rocket"></i> Crear mi cuenta de aliado gratis';
@@ -1610,6 +1738,7 @@ function cambiarTab(tab, btn) {
   if(tab==='bolsa') { cargarBolsa(); cargarHistorialBolsa(); cargarMarketplace(); }
   if(tab==='red') cargarRed();
   if(tab==='comunidad') cargarComunidad();
+  if(tab==='academia') inicializarAcademia();
 }
 
 function cerrarSesion() { 
@@ -2926,6 +3055,800 @@ document.addEventListener('DOMContentLoaded', () => {
   const planSelect = document.getElementById('cot-plan');
   if (planSelect) planSelect.addEventListener('change', actualizarCuotas);
 });
+
+// ═══════════════════════════════════════════════════════════════════════
+// ACADEMIA DEL ALIADO · 8 módulos de formación
+// ═══════════════════════════════════════════════════════════════════════
+
+const ACADEMIA_MODULOS = [
+  {
+    id: 1,
+    num: 'MÓDULO 01',
+    title: 'Cómo funciona el programa',
+    desc: 'Comisiones, niveles, flujo de atribución de ventas y cómo te pagamos en 24hs.',
+    tiempo: '5 min',
+    icon: 'fa-circle-info',
+    content: `
+      <h3>Lo que vas a aprender</h3>
+      <ul>
+        <li>Cuánto cobrás por cada venta y cómo sube tu comisión con el tiempo</li>
+        <li>Qué hay que hacer para que una venta cuente como tuya</li>
+        <li>Cuándo y cómo te pagamos</li>
+      </ul>
+
+      <h3>El programa en 1 línea</h3>
+      <p><strong>Vos cerrás. Avanza implementa. Ambos cobramos.</strong> Vos presentás la solución al cliente, cerrás la venta, y cobrás comisión. Nosotros nos ocupamos de implementar el sistema técnico (web, automatización, CRM, integraciones).</p>
+
+      <h3>Estructura de comisiones</h3>
+      <p>Tu comisión se calcula sobre el valor neto de cada plan que vendas. Los niveles suben automáticamente según la cantidad de ventas en ventanas de 6 meses:</p>
+      <table class="aca-table">
+        <thead><tr><th>Nivel</th><th>Comisión</th><th>Requisito</th></tr></thead>
+        <tbody>
+          <tr><td><strong>BASIC</strong></td><td><strong>10%</strong></td><td>Sin requisitos (arrancás acá)</td></tr>
+          <tr><td><strong>SILVER</strong></td><td><strong>12%</strong></td><td>1 venta cerrada</td></tr>
+          <tr><td><strong>PREMIUM</strong></td><td><strong>15%</strong></td><td>2 ventas en 6 meses</td></tr>
+          <tr><td><strong>ELITE</strong></td><td><strong>20%</strong></td><td>5 ventas en 6 meses</td></tr>
+        </tbody>
+      </table>
+
+      <h3>Cuánto ganás por venta</h3>
+      <table class="aca-table">
+        <thead><tr><th>Plan</th><th>Precio</th><th>BASIC 10%</th><th>SILVER 12%</th><th>PREMIUM 15%</th><th>ELITE 20%</th></tr></thead>
+        <tbody>
+          <tr><td>Base</td><td>USD 1.050</td><td>USD 105</td><td>USD 126</td><td>USD 157</td><td>USD 210</td></tr>
+          <tr><td>Pro</td><td>USD 2.900</td><td>USD 290</td><td>USD 348</td><td>USD 435</td><td>USD 580</td></tr>
+          <tr><td>Industrial</td><td>USD 4.900</td><td>USD 490</td><td>USD 588</td><td>USD 735</td><td>USD 980</td></tr>
+          <tr><td>Estratégico 360</td><td>USD 7.500</td><td>USD 750</td><td>USD 900</td><td>USD 1.125</td><td>USD 1.500</td></tr>
+        </tbody>
+      </table>
+
+      <div class="aca-highlight">
+        <div class="label">COMISIONES RECURRENTES</div>
+        <div class="text">Si el cliente contrata un plan con mantenimiento mensual, cobrás <strong>10% de ese pago mensual</strong> mientras el cliente siga activo. Es ingreso pasivo que crece con cada cliente que sumás.</div>
+      </div>
+
+      <h3>Atribución de ventas — el paso crítico</h3>
+      <p>Para que una venta te pertenezca, tenés que cumplir <strong>3 condiciones</strong>:</p>
+      <ol>
+        <li>Registrar al referido <strong>en el portal ANTES del pago del cliente</strong>, indicando nombre y plan elegido.</li>
+        <li>Avanza Digital confirma la recepción del registro.</li>
+        <li>Usar el link con tu parámetro <code>?ref=</code> cuenta como registro automático válido.</li>
+      </ol>
+
+      <div class="aca-warn">
+        <div class="label">ATENCIÓN</div>
+        <div class="text">Si el cliente llega a Avanza directamente sin estar registrado por vos antes del pago, <strong>la venta no se te atribuye</strong>. Este es el único paso técnico donde podés perder tu comisión. Siempre: primero registrás, después el cliente paga.</div>
+      </div>
+
+      <h3>Cuándo cobrás</h3>
+      <p>La comisión se abona sobre el valor neto de cada venta <strong>dentro de las 24 horas posteriores al ingreso del pago</strong> del cliente a la cuenta de Avanza. Te vamos a pedir factura A o B (o recibo válido según tu situación fiscal).</p>
+
+      <h3>Tus obligaciones como aliado</h3>
+      <ul>
+        <li>Registrar el referido <strong>antes</strong> de que pague</li>
+        <li>Usar solo los materiales comerciales oficiales que te damos</li>
+        <li>No hacer promesas técnicas ni compromisos fuera de los planes oficiales</li>
+        <li>Mantener confidencialidad sobre los términos del acuerdo y la estructura de comisiones</li>
+        <li>No intermediar servicios de competidores directos durante 12 meses posteriores a cada venta</li>
+      </ul>
+    `
+  },
+  {
+    id: 2,
+    num: 'MÓDULO 02',
+    title: 'Cómo detectar al cliente ideal',
+    desc: 'Las 4 preguntas que hacés en los primeros 30 segundos para saber si vale la pena avanzar.',
+    tiempo: '6 min',
+    icon: 'fa-bullseye',
+    content: `
+      <h3>Lo que vas a aprender</h3>
+      <ul>
+        <li>Cómo saber en 30 segundos si un prospecto vale tu tiempo</li>
+        <li>Las 4 preguntas de calificación que nunca fallan</li>
+        <li>Qué rubros convierten mejor y cuáles dejar pasar</li>
+      </ul>
+
+      <h3>El perfil del cliente ideal de Avanza</h3>
+      <p>No todos los negocios son clientes. Los que mejor convierten tienen <strong>estas 4 características</strong>:</p>
+      <ul>
+        <li><strong>PYME B2B industrial o de servicios</strong> — 5 a 200 empleados</li>
+        <li><strong>Venden a otras empresas</strong>, no al consumidor final</li>
+        <li><strong>Reciben consultas técnicas</strong> (presupuestos, cotizaciones, servicios a medida)</li>
+        <li><strong>El dueño o gerente comercial ya siente el dolor</strong> de perder consultas, tardar en responder o no tener control del pipeline</li>
+      </ul>
+
+      <h3>Los rubros que mejor convierten</h3>
+      <table class="aca-table">
+        <thead><tr><th>Rubro</th><th>Plan típico</th><th>Ciclo de cierre</th></tr></thead>
+        <tbody>
+          <tr><td>Metalúrgica · Fábrica · Agroindustria</td><td>Industrial (USD 4.900)</td><td>4–8 semanas</td></tr>
+          <tr><td>Transporte · Logística · Distribución</td><td>Pro (USD 2.900)</td><td>2–4 semanas</td></tr>
+          <tr><td>Servicios técnicos · Mantenimiento · Construcción</td><td>Base (USD 1.050)</td><td>1–2 semanas</td></tr>
+          <tr><td>Parque industrial · Desarrollo · Corporativo +100</td><td>Estratégico 360 (USD 7.500)</td><td>8–12 semanas</td></tr>
+        </tbody>
+      </table>
+
+      <h3>Las 4 preguntas de calificación</h3>
+      <p>Hacelas en este orden exacto. Cada una abre la siguiente:</p>
+
+      <div class="aca-pitch-box">
+        <div class="label">PREGUNTA 1</div>
+        <div class="text">"¿Cuántas consultas de clientes nuevos reciben por mes, aproximadamente?"</div>
+      </div>
+      <p><strong>Qué buscás:</strong> que reciban al menos 10 consultas/mes. Si reciben menos, probablemente no tengan el dolor suficiente para invertir. Si reciben más de 50, son clientes PREMIUM.</p>
+
+      <div class="aca-pitch-box">
+        <div class="label">PREGUNTA 2</div>
+        <div class="text">"¿Por qué canales entran esas consultas — WhatsApp, email, teléfono, web?"</div>
+      </div>
+      <p><strong>Qué buscás:</strong> que mencionen 2 o más canales distintos. Ahí está el dolor — consultas dispersas, perdidas entre canales. Si solo dicen "teléfono" o "me llaman", el cliente todavía no necesita digitalizar.</p>
+
+      <div class="aca-pitch-box">
+        <div class="label">PREGUNTA 3</div>
+        <div class="text">"¿Cuánto tardan en responder una consulta nueva, más o menos?"</div>
+      </div>
+      <p><strong>Qué buscás:</strong> cualquier respuesta mayor a 2 horas. Si dice "12 horas", "un día", "a veces al día siguiente" — ahí hay oro. Si dice "respondo en minutos", el cliente probablemente no escale al sistema completo, pero puede cerrar un Plan Base.</p>
+
+      <div class="aca-pitch-box">
+        <div class="label">PREGUNTA 4</div>
+        <div class="text">"Si pudieras tener un sistema que responde automáticamente en 60 segundos y te manda solo los leads calificados al vendedor, ¿eso resolvería el problema?"</div>
+      </div>
+      <p><strong>Qué buscás:</strong> que diga "sí" o "claro". Si duda, no está listo. Pero si vos hacés la pregunta bien, el 80% va a decir que sí — porque le estás describiendo exactamente el dolor que te acaban de contar.</p>
+
+      <div class="aca-tip">
+        <div class="label">TIP CLAVE</div>
+        <div class="text">No vendés en esta fase. Solo calificás. Si las 4 respuestas te dan verde, pasás al pitch (Módulo 5). Si alguna te da rojo claro, no insistas — agradecele y guardá el contacto para otro momento.</div>
+      </div>
+
+      <h3>Señales de un cliente "caliente" para cerrar rápido</h3>
+      <ul>
+        <li><strong>"Estamos creciendo y no damos abasto"</strong> — dolor activo, presupuesto disponible</li>
+        <li><strong>"Perdimos clientes porque no respondimos a tiempo"</strong> — dolor con número, cierre rápido</li>
+        <li><strong>"Mi competencia está apareciendo primero en Google"</strong> — urgencia competitiva</li>
+        <li><strong>"Queremos digitalizar el proceso pero no sabemos por dónde"</strong> — cliente listo, solo necesita guía</li>
+      </ul>
+
+      <h3>Señales de que no vale la pena avanzar</h3>
+      <ul>
+        <li><strong>"Ya tengo una agencia"</strong> — difícil desplazar; no imposible, pero cuesta</li>
+        <li><strong>"Yo mismo hago la web"</strong> — DIY mindset, no va a pagar por servicio</li>
+        <li><strong>"No tengo presupuesto ahora"</strong> — si lo dice en la primera llamada, archivalo por 3 meses</li>
+        <li><strong>"Somos muy chicos todavía"</strong> — honesto, no está listo</li>
+      </ul>
+    `
+  },
+  {
+    id: 3,
+    num: 'MÓDULO 03',
+    title: 'Cómo hacer el diagnóstico',
+    desc: 'Cuando el cliente te pide "mostrame cómo funciona": guión paso a paso del diagnóstico de 15 minutos.',
+    tiempo: '7 min',
+    icon: 'fa-magnifying-glass-chart',
+    content: `
+      <h3>Lo que vas a aprender</h3>
+      <ul>
+        <li>El guión exacto del diagnóstico de 15 minutos</li>
+        <li>Cómo llevar la conversación hacia el plan correcto sin parecer vendedor</li>
+        <li>Qué apoyos visuales mostrar en cada etapa</li>
+      </ul>
+
+      <h3>Qué es el diagnóstico</h3>
+      <p>El diagnóstico es una <strong>llamada de 15 minutos</strong> donde el cliente te cuenta su proceso comercial actual y vos le mostrás qué plan le conviene. Es el momento más importante del cierre. No es una demo ni una venta dura — es una conversación de asesor, donde el cliente se convence solo al oírse describir sus propios problemas.</p>
+
+      <div class="aca-highlight">
+        <div class="label">REGLA DE ORO</div>
+        <div class="text">En el diagnóstico <strong>hablá 30%, escuchá 70%</strong>. El cliente te va a vender a vos mismo si lo dejás hablar lo suficiente.</div>
+      </div>
+
+      <h3>Estructura del diagnóstico (15 minutos)</h3>
+
+      <h4>Minuto 0-2 · Apertura y contexto</h4>
+      <div class="aca-pitch-box">
+        <div class="label">LO QUE DECÍS</div>
+        <div class="text">"Gracias por el tiempo, [Nombre]. Esta charla es simple: te hago 4 o 5 preguntas sobre cómo recibís y manejás consultas comerciales hoy. Con eso te armo una recomendación concreta de qué hacer. No te vendo nada acá — si el plan tiene sentido, te paso el presupuesto por WhatsApp y decidís después."</div>
+      </div>
+      <p><strong>Objetivo:</strong> bajarle la guardia. Si el cliente siente que no lo estás vendiendo, se abre más.</p>
+
+      <h4>Minuto 2-6 · Las 4 preguntas de diagnóstico</h4>
+      <p>Las mismas del Módulo 2, pero acá con más profundidad:</p>
+      <ol>
+        <li><strong>Volumen:</strong> "¿Cuántas consultas reciben por mes?"</li>
+        <li><strong>Canales:</strong> "¿Por dónde entran? ¿Qué porcentaje por cada uno?"</li>
+        <li><strong>Tiempo de respuesta:</strong> "¿Cuánto tardan en contestar la primera vez?"</li>
+        <li><strong>Seguimiento:</strong> "¿Cómo hacen el seguimiento cuando el cliente no cierra en la primera consulta? ¿Tienen un sistema o se va por WhatsApp del vendedor?"</li>
+      </ol>
+
+      <div class="aca-tip">
+        <div class="label">TÉCNICA</div>
+        <div class="text">Después de cada respuesta, repetí el número de vuelta con un poquito de sorpresa: "¿12 horas de respuesta? Uf, pesado eso". El cliente se escucha y la urgencia sube sola.</div>
+      </div>
+
+      <h4>Minuto 6-10 · Identificar el dolor principal</h4>
+      <p>Con las respuestas en la mano, identificá cuál de estos 4 dolores es el más fuerte:</p>
+      <ul>
+        <li><strong>Dolor de Volumen:</strong> reciben muchas consultas pero se pierden</li>
+        <li><strong>Dolor de Tiempo:</strong> tardan mucho en responder y pierden ventas</li>
+        <li><strong>Dolor de Seguimiento:</strong> el vendedor se olvida, los leads se enfrían</li>
+        <li><strong>Dolor de Visibilidad:</strong> el dueño no sabe qué pasa con cada consulta</li>
+      </ul>
+      <div class="aca-pitch-box">
+        <div class="label">CÓMO DEVOLVÉS EL DOLOR</div>
+        <div class="text">"O sea, si entiendo bien, el problema central es <strong>[dolor principal]</strong>. Perdés clientes porque <strong>[consecuencia concreta]</strong>. ¿Es así o me estoy perdiendo algo?"</div>
+      </div>
+      <p>El cliente asiente. Ahí ya ganaste — el cliente escuchó el diagnóstico de su propia boca. Ahora solo falta presentar la solución.</p>
+
+      <h4>Minuto 10-13 · Presentás la solución con el caso de su rubro</h4>
+      <p>Este es el momento donde usás el Módulo 7 (Casos de éxito). Elegís el caso del rubro del cliente y lo contás brevemente. Por ejemplo, si es una metalúrgica:</p>
+      <div class="aca-pitch-box">
+        <div class="label">CONEXIÓN CON EL CASO</div>
+        <div class="text">"Te cuento rápido. <strong>Metalúrgica Balconi en Rafaela</strong> tenía exactamente lo que me acabás de describir — 38 empleados, consultas por 3 canales distintos, 40% de presupuestos sin seguimiento. En 21 días les armamos un sistema. Hoy tienen +47% de conversión y cero consultas sin respuesta en 24hs. El Plan Industrial — USD 4.900, pago único."</div>
+      </div>
+
+      <h4>Minuto 13-15 · Cierre</h4>
+      <p>Hacés la pregunta de cierre directa:</p>
+      <div class="aca-pitch-box">
+        <div class="label">PREGUNTA DE CIERRE</div>
+        <div class="text">"¿Te sirve algo así para tu empresa? ¿Querés que te pase el detalle del plan por WhatsApp?"</div>
+      </div>
+      <p>Si dice sí, pasaste al siguiente paso: mandás el brochure + detalle del plan, y coordinás la llamada técnica con el equipo de Avanza.</p>
+
+      <div class="aca-warn">
+        <div class="label">ERROR FRECUENTE</div>
+        <div class="text">No te vayas por la técnica en el diagnóstico. No expliques "cómo funciona el sistema por dentro". El cliente no compra tecnología — compra el resultado (más leads, menos tiempo perdido, visibilidad). Deja los detalles técnicos para la llamada con el equipo de Avanza.</div>
+      </div>
+
+      <h3>Qué hacer si el cliente no cierra en el diagnóstico</h3>
+      <p>No pasa nada. La mayoría necesita pensarlo. Terminá así:</p>
+      <div class="aca-pitch-box">
+        <div class="label">CIERRE ALTERNATIVO</div>
+        <div class="text">"Entiendo. Te mando el brochure con el caso de [Balconi/Oñate/Cufré] por WhatsApp ahora, y te vuelvo a escribir el viernes para ver qué pensaste. Sin presión."</div>
+      </div>
+      <p>El follow-up del viernes es crítico. <strong>Siempre mandalo.</strong> Con la mitad de tus clientes, el cierre pasa en el segundo contacto, no en el primero.</p>
+    `
+  },
+  {
+    id: 4,
+    num: 'MÓDULO 04',
+    title: 'Los 4 sistemas explicados',
+    desc: 'Base, Pro, Industrial y Estratégico 360: qué incluye cada uno, a qué empresa le conviene, cómo lo explicás.',
+    tiempo: '8 min',
+    icon: 'fa-layer-group',
+    content: `
+      <h3>Lo que vas a aprender</h3>
+      <ul>
+        <li>Qué incluye cada plan en palabras simples</li>
+        <li>A qué cliente le recomendás cada uno</li>
+        <li>Cómo explicar diferencias sin entrar en tecnicismos</li>
+      </ul>
+
+      <h3>Plan Base · USD 1.050</h3>
+      <p><strong>Para:</strong> PYMEs chicas sin presencia digital activa (menos de 15 empleados)</p>
+      <p><strong>Implementación:</strong> 7 días</p>
+      <p><strong>Qué incluye:</strong></p>
+      <ul>
+        <li>Landing page profesional orientada a conversión</li>
+        <li>Mensaje comercial estratégico (no "webs bonitas")</li>
+        <li>Formulario de contacto integrado con WhatsApp</li>
+      </ul>
+      <p><strong>ROI típico:</strong> en industria, una sola venta B2B promedio supera los USD 3.000. El plan se paga con la primera venta cerrada por el canal digital.</p>
+      <div class="aca-pitch-box">
+        <div class="label">CÓMO LO EXPLICÁS</div>
+        <div class="text">"Es el plan de arranque. Te armamos una página simple pero efectiva con un formulario que va directo a tu WhatsApp. En 7 días estás recibiendo consultas. Ideal para empezar sin arriesgar mucho."</div>
+      </div>
+
+      <h3>Plan Pro · USD 2.900</h3>
+      <p><strong>Para:</strong> empresas que quieren un canal comercial automatizado de verdad (15 a 50 empleados)</p>
+      <p><strong>Implementación:</strong> 14 días</p>
+      <p><strong>Qué incluye:</strong> todo lo del Base, más:</p>
+      <ul>
+        <li>Web multi-sección (hasta 6 páginas)</li>
+        <li>Lead magnet y formulario avanzado para calificar consultas</li>
+        <li>Integración con CRM y email marketing</li>
+        <li>Automatización de respuestas (el sistema contesta solo en menos de 60 segundos)</li>
+        <li>Copywriting orientado a ventas</li>
+      </ul>
+      <p><strong>ROI típico:</strong> con 3 leads calificados por mes y un cierre promedio de USD 5.000, el ROI se logra en el primer mes de operación.</p>
+      <div class="aca-pitch-box">
+        <div class="label">CÓMO LO EXPLICÁS</div>
+        <div class="text">"El Pro es para cuando ya tenés flujo constante de consultas. Incluye automatización de respuestas — el sistema contesta al cliente solo, califica si es buen lead o no, y recién ahí le pasa el contacto a tu vendedor. Tu equipo deja de perder tiempo con consultas basura."</div>
+      </div>
+
+      <h3>Plan Industrial · USD 4.900</h3>
+      <p><strong>Para:</strong> fábricas y empresas con ciclos de venta complejos (30 a 200 empleados)</p>
+      <p><strong>Implementación:</strong> 21 días</p>
+      <p><strong>Qué incluye:</strong> todo lo del Pro, más:</p>
+      <ul>
+        <li>Embudo de ventas técnico completo con etapas</li>
+        <li>Formularios hiper-segmentados (se adaptan al tipo de producto consultado)</li>
+        <li>Panel de métricas en tiempo real (el dueño ve todo)</li>
+        <li>Capacitación al equipo comercial</li>
+      </ul>
+      <p><strong>ROI típico:</strong> eliminar 10 horas semanales de trabajo manual de tu equipo de ventas vale más de USD 10.000 al año en productividad recuperada.</p>
+      <div class="aca-pitch-box">
+        <div class="label">CÓMO LO EXPLICÁS</div>
+        <div class="text">"El Industrial es para cuando vendés cosas complejas — equipos, servicios técnicos, proyectos a medida. El formulario se adapta: si alguien pregunta por un silo, te pide capacidad; si pregunta por un intercambiador, te pide otros datos. Cada consulta llega calificada con info útil. El dueño ve todo en un panel."</div>
+      </div>
+
+      <h3>Estratégico 360 · USD 7.500</h3>
+      <p><strong>Para:</strong> empresas con visión de liderazgo en su sector, parques industriales, desarrollos corporativos</p>
+      <p><strong>Implementación:</strong> 30-60 días</p>
+      <p><strong>Qué incluye:</strong> todo lo del Industrial, más:</p>
+      <ul>
+        <li>Desarrollo a medida / intranet corporativa</li>
+        <li>Integración con ERP (Tango, SAP)</li>
+        <li>Lead scoring automático (el sistema prioriza leads por probabilidad de cierre)</li>
+        <li>Garantía extendida 12 meses con SLA</li>
+      </ul>
+      <p><strong>ROI típico:</strong> la integración con Tango o SAP elimina la doble carga de datos. Un operador administrativo ahorrado vale USD 600/mes = ROI en 13 meses.</p>
+      <div class="aca-pitch-box">
+        <div class="label">CÓMO LO EXPLICÁS</div>
+        <div class="text">"El Estratégico 360 es para proyectos grandes donde el sistema tiene que ser único. Lo integramos con el ERP que ya usan (Tango, SAP), le sumamos inteligencia para que el sistema priorice los leads más calientes, y queda todo documentado con garantía de 12 meses. Es el plan que estamos implementando, por ejemplo, en un Parque Logístico Industrial de 120 hectáreas."</div>
+      </div>
+
+      <h3>Cómo elegir qué plan ofrecer</h3>
+      <table class="aca-table">
+        <thead><tr><th>Si el cliente dice...</th><th>Ofrecés</th></tr></thead>
+        <tbody>
+          <tr><td>"No tengo presencia digital"</td><td><strong>Base (USD 1.050)</strong></td></tr>
+          <tr><td>"Tengo web pero no me sirve"</td><td><strong>Pro (USD 2.900)</strong></td></tr>
+          <tr><td>"Vendo productos técnicos complejos"</td><td><strong>Industrial (USD 4.900)</strong></td></tr>
+          <tr><td>"Uso Tango/SAP y quiero integrar todo"</td><td><strong>Estratégico 360 (USD 7.500)</strong></td></tr>
+          <tr><td>"Soy un desarrollador inmobiliario"</td><td><strong>Estratégico 360 (USD 7.500)</strong></td></tr>
+          <tr><td>"Soy corporativo, tengo +100 empleados"</td><td><strong>Estratégico 360 (USD 7.500)</strong></td></tr>
+        </tbody>
+      </table>
+
+      <div class="aca-tip">
+        <div class="label">TIP DE UPSELL</div>
+        <div class="text">Si el cliente dudaba entre 2 planes, siempre empujá al <strong>más caro</strong>. Tu comisión sube y el cliente termina más contento (siempre es mejor empezar con más herramientas que quedarse corto). Un cliente que contrata Pro y a los 3 meses necesita Industrial termina pagando más que si hubiese arrancado con Industrial directo.</div>
+      </div>
+
+      <h3>Todos los planes incluyen</h3>
+      <ul>
+        <li><strong>Pago único</strong> (sin costo mensual obligatorio)</li>
+        <li><strong>Código 100% del cliente</strong> (no es licencia ni alquiler)</li>
+        <li><strong>Implementación en el plazo pactado</strong> (si nos atrasamos, te compensamos)</li>
+        <li><strong>Factura A o B</strong></li>
+      </ul>
+    `
+  },
+  {
+    id: 5,
+    num: 'MÓDULO 05',
+    title: 'Cómo cerrar con el guión por rubro',
+    desc: 'El pitch exacto, la pregunta de cierre y el mensaje de WhatsApp para cada rubro — copiá y pegá.',
+    tiempo: '6 min',
+    icon: 'fa-handshake',
+    content: `
+      <h3>Lo que vas a aprender</h3>
+      <ul>
+        <li>Qué caso usar según el rubro del prospecto</li>
+        <li>El pitch verbal listo para recitar</li>
+        <li>El mensaje de WhatsApp para mandarlo tras conseguir el SÍ</li>
+      </ul>
+
+      <h3>Matriz de decisión rápida</h3>
+      <table class="aca-table">
+        <thead><tr><th>Rubro del cliente</th><th>Caso a usar</th><th>Plan que cerrás</th></tr></thead>
+        <tbody>
+          <tr><td>Metalúrgica · Fábrica · Agroindustria · Alimentos</td><td>Metalúrgica Balconi</td><td><strong>Industrial USD 4.900</strong></td></tr>
+          <tr><td>Transporte · Logística · Distribución · Mayorista</td><td>Transportes Oñate</td><td><strong>Pro USD 2.900</strong></td></tr>
+          <tr><td>Servicios técnicos · Mantenimiento · Construcción</td><td>Soluciones Técnicas del Litoral</td><td><strong>Base USD 1.050</strong></td></tr>
+          <tr><td>Parque industrial · Desarrollo · Corporativo +100</td><td>PLI Norte Argentino</td><td><strong>Estratégico 360 USD 7.500</strong></td></tr>
+        </tbody>
+      </table>
+
+      <h3>Caso 1 · Metalúrgica, Fábrica, Agroindustria</h3>
+      <div class="aca-pitch-box">
+        <div class="label">PITCH VERBAL</div>
+        <div class="text">"Te cuento rápido: uno de los clientes que te va a sonar parecido es <strong>Metalúrgica Balconi, en Rafaela</strong>. Hacen equipos para agroindustria, 38 empleados. Tenían exactamente tu problema — consultas por WhatsApp del vendedor, email y teléfono, sin control. <strong>Les armamos un panel único en 21 días</strong>. Hoy tienen cero consultas sin respuesta en 24hs y mejoraron un 47% la conversión. Recuperaron dos clientes grandes que ya habían dado por perdidos."</div>
+      </div>
+      <div class="aca-highlight">
+        <div class="label">▸ PREGUNTA DE CIERRE</div>
+        <div class="text">"¿Te suena el problema? ¿Querés que te pase el detalle del plan para tu empresa?"</div>
+      </div>
+      <div class="aca-pitch-box">
+        <div class="label">MENSAJE DE WHATSAPP (TRAS EL SÍ)</div>
+        <div class="text">Hola [Nombre], como charlamos, te dejo el caso de Metalúrgica Balconi en Rafaela — mismo rubro que [empresa]. Tenían el mismo problema de presupuestos que se perdían. En 21 días montaron el sistema y mejoraron un 47% la conversión.<br><br>Te paso el brochure y el detalle del Plan Industrial (USD 4.900). Si querés avanzar, coordinamos una llamada de 15 minutos con el equipo técnico para arrancar. ¿Esta semana te queda bien?</div>
+      </div>
+
+      <h3>Caso 2 · Transporte, Logística, Distribución</h3>
+      <div class="aca-pitch-box">
+        <div class="label">PITCH VERBAL</div>
+        <div class="text">"Hay un caso que te puede interesar. <strong>Transportes Oñate Hermanos, en Rosario</strong>. 22 empleados. Recibían cotizaciones por 4 canales distintos. Tardaban 31 horas en contestar un presupuesto. En transporte eso es muerte — el cliente cotiza con la competencia. <strong>En 14 días les montamos el sistema</strong>. Hoy responden en 4 horas automáticamente y cerraron 3 contratos nuevos el primer mes."</div>
+      </div>
+      <div class="aca-highlight">
+        <div class="label">▸ PREGUNTA DE CIERRE</div>
+        <div class="text">"¿Cuánto tardan ustedes hoy en responder una cotización? ¿Te sirve arreglar eso en 14 días?"</div>
+      </div>
+      <div class="aca-pitch-box">
+        <div class="label">MENSAJE DE WHATSAPP (TRAS EL SÍ)</div>
+        <div class="text">Hola [Nombre], como charlamos, te paso el caso de Transportes Oñate en Rosario. Pasaron de tardar 31hs a 4hs en responder cotizaciones y cerraron 3 contratos nuevos el primer mes.<br><br>Te dejo el brochure y el detalle del Plan Pro (USD 2.900). Si te cierra, coordinamos llamada técnica de 15 minutos para arrancar. ¿Esta semana o la próxima?</div>
+      </div>
+
+      <h3>Caso 3 · Servicios técnicos, Mantenimiento, Construcción</h3>
+      <div class="aca-pitch-box">
+        <div class="label">PITCH VERBAL</div>
+        <div class="text">"Te cuento un caso ideal para empresas de tu perfil. <strong>Soluciones Técnicas del Litoral, en Paraná</strong>. 9 empleados, 12 años en el mercado. Conseguían clientes solo por referidos. <strong>En 7 días montamos el Plan Base</strong>. A los 20 días les entró la primera consulta de una empresa con la que nunca habían tenido contacto. USD 8.400 en contratos nuevos el primer trimestre. El plan se pagó solo con la primera venta."</div>
+      </div>
+      <div class="aca-highlight">
+        <div class="label">▸ PREGUNTA DE CIERRE</div>
+        <div class="text">"Por USD 1.050 arrancás en 7 días. Con una sola consulta nueva al mes ya te conviene, ¿no?"</div>
+      </div>
+
+      <h3>Caso 4 · Proyectos de gran escala</h3>
+      <div class="aca-pitch-box">
+        <div class="label">PITCH DE AUTORIDAD</div>
+        <div class="text">"Para que veas la escala que manejamos: hay un proyecto en implementación con un <strong>Parque Logístico Industrial de 120 hectáreas en el norte argentino</strong>, 89 lotes y empresas ancla como Andreani, Grido e YPF Gas. Se está construyendo con 4 embudos segmentados y un cotizador inteligente de lotes. Lo tuyo puede ser más chico, pero el enfoque es el mismo."</div>
+      </div>
+      <div class="aca-highlight">
+        <div class="label">▸ PREGUNTA DE CIERRE</div>
+        <div class="text">"El Estratégico 360 son USD 7.500, pago único. Una sola empresa o inversor captado por el sistema lo paga. ¿Avanzamos?"</div>
+      </div>
+
+      <div class="aca-tip">
+        <div class="label">REGLA DE ORO</div>
+        <div class="text">Un aliado que usa el caso correcto del rubro cierra <strong>3 veces más</strong> que uno que improvisa. Si vas con Balconi a un transportista, el cliente no se reconoce. Si vas con Oñate a una metalúrgica, tampoco. Memoriza los 4 casos por rubro — eso solo te cambia el resultado del mes.</div>
+      </div>
+    `
+  },
+  {
+    id: 6,
+    num: 'MÓDULO 06',
+    title: 'Manejo de las 6 objeciones más comunes',
+    desc: 'Qué te van a decir los clientes para no comprar, y qué responder sin pelear.',
+    tiempo: '7 min',
+    icon: 'fa-shield',
+    content: `
+      <h3>Lo que vas a aprender</h3>
+      <ul>
+        <li>Las 6 objeciones que escuchás en el 90% de los cierres</li>
+        <li>Cómo responder cada una con naturalidad</li>
+        <li>Cuándo insistir y cuándo dejar ir</li>
+      </ul>
+
+      <h3>Objeción 1 · "Es caro"</h3>
+      <div class="aca-objection">
+        <div class="q">Lo que dice el cliente</div>
+        <div class="a">"USD 2.900 es mucho para mí ahora." / "Está fuera de mi presupuesto."</div>
+      </div>
+      <p><strong>Respuesta:</strong></p>
+      <div class="aca-pitch-box">
+        <div class="label">LO QUE DECÍS</div>
+        <div class="text">"Entiendo. Te hago una pregunta simple: <strong>¿cuánto vale para vos cerrar una venta más por mes?</strong> Si tu venta promedio está en USD 3.000 o más — y en industria lo está — el plan se paga solo con una venta cerrada de más. Y no estamos hablando de una venta al año: hablamos de <strong>todos los meses</strong>, durante años."</div>
+      </div>
+      <p>Si el cliente sigue dudando, agregá:</p>
+      <div class="aca-pitch-box">
+        <div class="label">COMPLEMENTO</div>
+        <div class="text">"Además es pago único — no es alquiler ni licencia mensual. Pagás una vez y el código queda tuyo. La mayoría de webs del mercado son alquiler de USD 200/mes, lo cual en 2 años es más caro que esto."</div>
+      </div>
+
+      <h3>Objeción 2 · "Ya tengo una web"</h3>
+      <div class="aca-objection">
+        <div class="q">Lo que dice el cliente</div>
+        <div class="a">"Ya gasté plata en una web hace 2 años, no voy a hacer otra."</div>
+      </div>
+      <div class="aca-pitch-box">
+        <div class="label">LO QUE DECÍS</div>
+        <div class="text">"Ok, dejame preguntarte: <strong>¿cuántos clientes nuevos te trae esa web por mes?</strong> Si la respuesta es cero o casi cero — que es lo más común — entonces no tenés una web, tenés una tarjeta de presentación digital. La diferencia no es tener web, es tener un sistema que <strong>genera y califica leads automáticamente</strong>. ¿Tu web hace eso hoy?"</div>
+      </div>
+
+      <h3>Objeción 3 · "Lo voy a pensar"</h3>
+      <div class="aca-objection">
+        <div class="q">Lo que dice el cliente</div>
+        <div class="a">"Sí, me interesa, déjame pensarlo y te aviso."</div>
+      </div>
+      <p>"Lo voy a pensar" es la objeción más peligrosa. Casi siempre es un "no" disfrazado.</p>
+      <div class="aca-pitch-box">
+        <div class="label">LO QUE DECÍS</div>
+        <div class="text">"Por supuesto, es una decisión importante. Para ayudarte a pensarlo mejor: <strong>¿qué es lo que te genera más dudas específicamente?</strong> ¿El precio, el tiempo que toma, o algo del sistema en sí?"</div>
+      </div>
+      <p>La pregunta fuerza a concretar la duda. Una vez que la dice, tenés algo para responder. Si dice "no sé, lo necesito pensar más", entonces acordá una fecha de seguimiento:</p>
+      <div class="aca-pitch-box">
+        <div class="label">SEGUIMIENTO</div>
+        <div class="text">"Perfecto. ¿Te parece si te vuelvo a escribir el viernes? Así, si tenés alguna pregunta, me la podés hacer directamente."</div>
+      </div>
+
+      <h3>Objeción 4 · "No tengo tiempo para implementar esto"</h3>
+      <div class="aca-objection">
+        <div class="q">Lo que dice el cliente</div>
+        <div class="a">"Estoy con mil cosas, no puedo dedicarle tiempo a esto ahora."</div>
+      </div>
+      <div class="aca-pitch-box">
+        <div class="label">LO QUE DECÍS</div>
+        <div class="text">"Por eso existe este servicio. <strong>Vos no implementás nada</strong> — Avanza hace todo. Tu única tarea es una llamada de 30 minutos al inicio para contarles cómo funciona tu negocio, y otra al final para ver la entrega. Total: 1 hora tuya en todo el proceso. El resto lo hacen ellos. Eso es exactamente el valor del servicio — te ahorra el tiempo que no tenés."</div>
+      </div>
+
+      <h3>Objeción 5 · "Ya tenemos WhatsApp Business"</h3>
+      <div class="aca-objection">
+        <div class="q">Lo que dice el cliente</div>
+        <div class="a">"Ya usamos WhatsApp Business y funciona bien."</div>
+      </div>
+      <div class="aca-pitch-box">
+        <div class="label">LO QUE DECÍS</div>
+        <div class="text">"Balconi también lo usaba. <strong>El problema no es tener WhatsApp, es que nadie ve lo que pasa ahí adentro.</strong> Si hoy el vendedor atiende y no cierra, ¿vos como dueño cómo te enterás? Lo que agregamos es el panel que unifica WhatsApp, email y teléfono, con etapas visibles y seguimiento automático. Por eso Balconi recuperó dos clientes grandes que ya habían dado por perdidos."</div>
+      </div>
+
+      <h3>Objeción 6 · "Déjame hablarlo con mi socio/equipo"</h3>
+      <div class="aca-objection">
+        <div class="q">Lo que dice el cliente</div>
+        <div class="a">"Tengo que consultarlo con mi socio antes de avanzar."</div>
+      </div>
+      <p>Esto puede ser real o excusa. Descubrís cuál es con una pregunta:</p>
+      <div class="aca-pitch-box">
+        <div class="label">LO QUE DECÍS</div>
+        <div class="text">"Perfecto. <strong>Si él/ella dice que sí, vos avanzás? ¿O hay algo más que te frene a vos también?</strong>"</div>
+      </div>
+      <p>Si dice "sí, yo avanzo" → real. Acordá fecha de respuesta. Si dice "bueno, también tengo que ver unos temas" → el socio es excusa, el freno es otro. Volvé a preguntar cuál.</p>
+
+      <div class="aca-warn">
+        <div class="label">CUÁNDO DEJAR IR</div>
+        <div class="text">Si usás estas respuestas y el cliente sigue dudando después de 2 seguimientos, <strong>dejalo ir con gracia</strong>. No insistas más. Escribile un último mensaje amable: <em>"Entiendo que no es el momento. Te dejo mis datos por si en algún momento lo retomás. Éxitos con el negocio."</em> El 20% de esos clientes vuelven solos a los 3-6 meses cuando el dolor se hace insoportable.</div>
+      </div>
+    `
+  },
+  {
+    id: 7,
+    num: 'MÓDULO 07',
+    title: 'Casos de éxito en detalle',
+    desc: 'Los 4 casos reales con cifras, antes/después y lecciones aprendidas — para contar con confianza.',
+    tiempo: '5 min',
+    icon: 'fa-trophy',
+    content: `
+      <h3>Lo que vas a aprender</h3>
+      <ul>
+        <li>Los 4 casos reales en profundidad</li>
+        <li>Qué números usar cuando el cliente pregunta por resultados</li>
+        <li>Cómo adaptar cada caso al cliente que tenés enfrente</li>
+      </ul>
+
+      <h3>🏭 Metalúrgica Balconi S.R.L.</h3>
+      <p><strong>Perfil:</strong> Fabricación de equipos para agroindustria · Rafaela, Santa Fe · 38 empleados</p>
+      <p><strong>Plan contratado:</strong> Industrial · USD 4.900 · Implementación 21 días</p>
+      <h4>Problema antes</h4>
+      <p>Consultas de acopiadoras y feedlots entraban por WhatsApp del gerente comercial, email y teléfono, <strong>sin sistema de seguimiento</strong>. El 40% de los presupuestos enviados quedaban sin seguimiento posterior. No había visibilidad sobre en qué etapa estaba cada cliente ni quién era responsable de cada cotización.</p>
+      <h4>Qué se implementó</h4>
+      <p>Canal unificado de consultas técnicas con formulario segmentado por tipo de equipo (silos, intercambiadores, estructuras), integración con WhatsApp Business, panel de seguimiento por etapa comercial y respuesta automática con ficha técnica del producto consultado.</p>
+      <h4>Resultados a 90 días</h4>
+      <ul>
+        <li><strong>+47%</strong> en conversión de presupuestos enviados</li>
+        <li><strong>11 leads calificados</strong> por mes de promedio</li>
+        <li><strong>0 consultas</strong> sin respuesta en 24 horas</li>
+        <li><strong>2 clientes grandes recuperados</strong> que ya habían sido dados por perdidos</li>
+      </ul>
+      <h4>Frase de cierre del dueño</h4>
+      <div class="aca-pitch-box">
+        <div class="text">"Antes yo mismo revisaba el WhatsApp del vendedor. Hoy entro al panel y en dos minutos sé qué presupuesto está caliente." — Santiago Balconi, Socio Gerente</div>
+      </div>
+
+      <h3>🚚 Transportes Oñate Hermanos S.A.</h3>
+      <p><strong>Perfil:</strong> Transporte de cargas regional · Rosario, Santa Fe · 22 empleados</p>
+      <p><strong>Plan contratado:</strong> Pro · USD 2.900 · Implementación 14 días</p>
+      <h4>Problema antes</h4>
+      <p>Solicitudes de cotización entraban por teléfono, email, Instagram y WhatsApp personal de tres empleados distintos. <strong>Pedidos duplicados o perdidos</strong>, con tiempos de respuesta superiores a 48 horas. Los clientes nuevos conseguían precio antes con la competencia.</p>
+      <h4>Qué se implementó</h4>
+      <p>Formulario inteligente de cotización segmentado por tipo de carga y destino, integrado al WhatsApp oficial. Respuesta automática con tiempo estimado y operador asignado. Panel con historial por CUIT.</p>
+      <h4>Resultados a 60 días</h4>
+      <ul>
+        <li><strong>–14 horas semanales</strong> de gestión manual de consultas</li>
+        <li><strong>+38%</strong> en tasa de cierre con clientes nuevos</li>
+        <li><strong>4.2 horas</strong> de primera respuesta (antes: 31 horas)</li>
+        <li><strong>3 contratos nuevos</strong> el primer mes</li>
+      </ul>
+
+      <h3>🔧 Soluciones Técnicas del Litoral S.R.L.</h3>
+      <p><strong>Perfil:</strong> Mantenimiento y calibración industrial · Paraná, Entre Ríos · 9 empleados</p>
+      <p><strong>Plan contratado:</strong> Base · USD 1.050 · Implementación 7 días</p>
+      <h4>Problema antes</h4>
+      <p>Empresa con 12 años en el mercado conseguía clientes <strong>exclusivamente por referidos</strong>. Sin presencia digital activa ni forma de recibir consultas online. Perdía trabajo frente a competidores más jóvenes posicionados en Google.</p>
+      <h4>Qué se implementó</h4>
+      <p>Canal digital operativo con página web técnica optimizada para búsquedas locales, formulario de solicitud de servicio con clasificación por tipo de mantenimiento y urgencia, e integración a WhatsApp Business.</p>
+      <h4>Resultados a 45 días</h4>
+      <ul>
+        <li><strong>3–4 clientes nuevos</strong> por mes desde canal digital</li>
+        <li><strong>1° puesto en Google local</strong> para su rubro en Paraná</li>
+        <li><strong>USD 8.400</strong> en contratos nuevos el primer trimestre</li>
+      </ul>
+
+      <h3>🏗️ Parque Logístico Industrial · Norte Argentino (en curso)</h3>
+      <p><strong>Perfil:</strong> 120 hectáreas · 89 lotes industriales · 4 empresas ancla instaladas</p>
+      <p><strong>Plan contratado:</strong> Estratégico 360 · USD 7.500 · Implementación 45-60 días</p>
+      <h4>El desafío</h4>
+      <p>Parque industrial de gran escala con infraestructura operativa y certificación ambiental provincial. Toda la captación dependía del contacto directo. Empresas logísticas nacionales e inversores que evaluaban el NOA <strong>no encontraban el parque en búsquedas activas</strong>.</p>
+      <h4>Arquitectura del sistema</h4>
+      <p>Plataforma corporativa con 4 embudos segmentados (operador logístico · inversor en renta · distribuidor regional · PYME en expansión). Panel ejecutivo con métricas en tiempo real. Cotizador inteligente de lotes.</p>
+      <h4>Escala del proyecto</h4>
+      <ul>
+        <li><strong>120 hectáreas</strong> de superficie total</li>
+        <li><strong>89 lotes</strong> disponibles</li>
+        <li><strong>4 embudos</strong> segmentados por tipo de cliente</li>
+        <li><strong>Implementación 45-60 días</strong></li>
+      </ul>
+
+      <div class="aca-highlight">
+        <div class="label">CÓMO USAR LOS CASOS</div>
+        <div class="text">No contés el caso completo en la charla. Contá solo el <strong>problema antes + qué se hizo + un resultado concreto con número</strong>. Total: 30 segundos. El resto de la info está para cuando el cliente pregunte detalles después.</div>
+      </div>
+    `
+  },
+  {
+    id: 8,
+    num: 'MÓDULO 08',
+    title: 'Materiales descargables',
+    desc: 'Brochure comercial, guión por rubro, contrato y kit corto — todo lo que necesitás para vender.',
+    tiempo: '2 min',
+    icon: 'fa-download',
+    content: `
+      <h3>Lo que vas a aprender</h3>
+      <ul>
+        <li>Qué material mandar en cada momento del cierre</li>
+        <li>Cómo usar cada PDF correctamente</li>
+      </ul>
+
+      <h3>Los 4 materiales oficiales</h3>
+
+      <div class="aca-downloads">
+        <a class="aca-download" href="https://avanza-digital-production.up.railway.app/brochure" target="_blank">
+          <i class="fa-solid fa-file-pdf"></i>
+          <div><div class="dl-title">Brochure Comercial v4</div><div class="dl-sub">Para mandar al cliente tras el primer contacto</div></div>
+        </a>
+        <a class="aca-download" href="https://avanza-digital-production.up.railway.app/guion" target="_blank">
+          <i class="fa-solid fa-book"></i>
+          <div><div class="dl-title">Guión de Ventas por Rubro</div><div class="dl-sub">Para tu referencia personal al vender</div></div>
+        </a>
+        <a class="aca-download" href="https://avanza-digital-production.up.railway.app/contrato" target="_blank">
+          <i class="fa-solid fa-file-signature"></i>
+          <div><div class="dl-title">Contrato de Aliado v3</div><div class="dl-sub">Tu acuerdo con Avanza Partner Network</div></div>
+        </a>
+      </div>
+
+      <h3>Cuándo usar cada material</h3>
+
+      <h4>Brochure Comercial</h4>
+      <p><strong>Cuándo:</strong> después del primer contacto con el cliente, cuando ya calificaste que vale la pena avanzar. Se lo mandás por WhatsApp tras el diagnóstico o tras la primera conversación donde el cliente mostró interés.</p>
+      <p><strong>Mensaje para acompañarlo:</strong></p>
+      <div class="aca-pitch-box">
+        <div class="text">"Hola [Nombre], como charlamos, te paso el brochure con los 4 planes y los casos de éxito. En la página 5 está el caso de [Balconi/Oñate/Cufré] que te va a interesar. Si te cierra alguno, coordinamos llamada técnica. ¿Esta semana?"</div>
+      </div>
+
+      <h4>Guión de Ventas por Rubro</h4>
+      <p><strong>Cuándo:</strong> nunca se lo mandes al cliente. Es tu herramienta personal. Tenelo abierto en el celular durante tus llamadas con clientes — especialmente las primeras 5 o 10 — para recordar el pitch exacto del rubro.</p>
+
+      <h4>Contrato de Aliado</h4>
+      <p><strong>Cuándo:</strong> antes de registrarte formalmente. Ya lo firmaste cuando te diste de alta en el portal — este es para que tengas la referencia completa de términos y condiciones, niveles de comisión y obligaciones.</p>
+
+      <h3>Tu link de referido</h3>
+      <p>El arma más poderosa que tenés. Cada vez que le pasás tu link personalizado a un prospecto y este se registra o contrata, la venta te queda atribuida automáticamente sin necesidad de registrarlo a mano.</p>
+
+      <div class="aca-highlight">
+        <div class="label">TU LINK DE REFERIDO</div>
+        <div class="text">Está en el <strong>Dashboard del portal</strong> → botón "Copiar mi link". Usalo en:<br>
+        • Tu firma de email<br>
+        • Tu bio de LinkedIn<br>
+        • Cuando mandás el brochure por WhatsApp<br>
+        • En conversaciones de networking donde alguien se muestre interesado</div>
+      </div>
+
+      <h3>Flujo recomendado para cerrar una venta</h3>
+      <ol>
+        <li><strong>Primera conversación</strong> (5 min) — Calificás con las 4 preguntas del Módulo 2</li>
+        <li><strong>Diagnóstico</strong> (15 min) — Aplicás el guión del Módulo 3</li>
+        <li><strong>Pitch del caso</strong> del rubro (Módulo 5)</li>
+        <li><strong>Pregunta de cierre</strong> (Módulo 5)</li>
+        <li><strong>Si dice sí</strong> → mandás Brochure + link de referido por WhatsApp</li>
+        <li><strong>Registrás al cliente en el portal</strong> con su nombre y plan elegido</li>
+        <li><strong>Coordinás llamada técnica</strong> con equipo de Avanza para arrancar implementación</li>
+        <li><strong>El cliente paga</strong> → tu comisión en 24hs</li>
+      </ol>
+
+      <div class="aca-tip">
+        <div class="label">¡LISTO!</div>
+        <div class="text">Completaste la Academia. Ya sabés todo lo necesario para cerrar tu primera venta. <strong>El próximo paso es salir a vender</strong>. Andá al Dashboard, copiá tu link de referido, y empezá a escribirle a 5 prospectos hoy. La primera venta cambia todo.</div>
+      </div>
+    `
+  }
+];
+
+function inicializarAcademia() {
+  renderAcademiaIndex();
+}
+
+function renderAcademiaIndex() {
+  document.getElementById('aca-index').style.display = 'block';
+  document.getElementById('aca-lessons-container').innerHTML = '';
+  
+  const progreso = getAcademiaProgreso();
+  const completados = progreso.length;
+  const pct = Math.round((completados / 8) * 100);
+  
+  document.getElementById('aca-progress-fill').style.width = pct + '%';
+  document.getElementById('aca-progress-text').textContent = `${completados} de 8 módulos completados (${pct}%)`;
+  
+  const grid = document.getElementById('aca-modules-grid');
+  grid.innerHTML = ACADEMIA_MODULOS.map(m => `
+    <div class="aca-module ${progreso.includes(m.id) ? 'completed' : ''}" onclick="abrirModulo(${m.id})">
+      <div class="num">${m.num}</div>
+      <h3>${m.title}</h3>
+      <p>${m.desc}</p>
+      <div class="meta">
+        <span><i class="fa-solid ${m.icon}"></i></span>
+        <span><i class="fa-solid fa-clock"></i> ${m.tiempo}</span>
+        ${progreso.includes(m.id) ? '<span style="color:var(--green);"><i class="fa-solid fa-check"></i> Completado</span>' : ''}
+      </div>
+    </div>
+  `).join('');
+}
+
+function getAcademiaProgreso() {
+  if (!aliado) return [];
+  const key = `academia_progress_${aliado.codigo}`;
+  try {
+    return JSON.parse(localStorage.getItem(key) || '[]');
+  } catch { return []; }
+}
+
+function marcarModuloCompleto(id) {
+  if (!aliado) return;
+  const key = `academia_progress_${aliado.codigo}`;
+  const progreso = getAcademiaProgreso();
+  if (!progreso.includes(id)) {
+    progreso.push(id);
+    localStorage.setItem(key, JSON.stringify(progreso));
+    mostrarToast(`✓ Módulo ${id} completado`, 'green');
+  }
+}
+
+function abrirModulo(id) {
+  const m = ACADEMIA_MODULOS.find(x => x.id === id);
+  if (!m) return;
+  
+  document.getElementById('aca-index').style.display = 'none';
+  const progreso = getAcademiaProgreso();
+  const completo = progreso.includes(id);
+  const prevModulo = ACADEMIA_MODULOS.find(x => x.id === id - 1);
+  const nextModulo = ACADEMIA_MODULOS.find(x => x.id === id + 1);
+  
+  const html = `
+    <div class="aca-lesson active">
+      <button class="back-btn" onclick="volverAIndice()"><i class="fa-solid fa-arrow-left"></i> Volver al índice</button>
+      <div class="lesson-head">
+        <div class="lesson-num">${m.num} · ${m.tiempo} de lectura</div>
+        <h2>${m.title}</h2>
+        <div class="lesson-sub">${m.desc}</div>
+      </div>
+      ${m.content}
+      <div class="aca-nav">
+        <button onclick="${prevModulo ? `abrirModulo(${prevModulo.id})` : ''}" ${!prevModulo ? 'disabled' : ''}>
+          <i class="fa-solid fa-arrow-left"></i> Módulo anterior
+        </button>
+        <button class="complete-btn ${completo ? 'done' : ''}" onclick="completarYAvanzar(${id})">
+          ${completo ? '<i class="fa-solid fa-check"></i> Completado' : '<i class="fa-solid fa-check"></i> Marcar como completado'}
+        </button>
+        <button onclick="${nextModulo ? `abrirModulo(${nextModulo.id})` : 'volverAIndice()'}">
+          ${nextModulo ? 'Siguiente módulo' : 'Volver al índice'} <i class="fa-solid fa-arrow-right"></i>
+        </button>
+      </div>
+    </div>
+  `;
+  
+  document.getElementById('aca-lessons-container').innerHTML = html;
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function volverAIndice() {
+  renderAcademiaIndex();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function completarYAvanzar(id) {
+  marcarModuloCompleto(id);
+  const nextModulo = ACADEMIA_MODULOS.find(x => x.id === id + 1);
+  if (nextModulo) {
+    setTimeout(() => abrirModulo(nextModulo.id), 600);
+  } else {
+    setTimeout(() => volverAIndice(), 600);
+  }
+}
 
 </script>
 </body>
