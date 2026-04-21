@@ -90,6 +90,8 @@ for col_sql in [
     "ALTER TABLE bolsa_leads ADD COLUMN costo_creditos INTEGER DEFAULT 0",
     "ALTER TABLE bolsa_leads ADD COLUMN score_calidad INTEGER DEFAULT 50",
     "ALTER TABLE bolsa_leads ADD COLUMN notas_calificacion TEXT",
+    # Canal de aliado (canal1=busco clientes, canal2=tengo mis clientes)
+    "ALTER TABLE aliados ADD COLUMN tipo_aliado VARCHAR DEFAULT 'canal1'",
 ]:
     try:
         with engine.connect() as conn:
@@ -298,7 +300,8 @@ def auto_registro(
     nombre: str, email: str, whatsapp: str,
     background_tasks: BackgroundTasks,
     ciudad: str = "", perfil: str = "", password: str = "", dni: str = "",
-    ref_sponsor: str = "", 
+    ref_sponsor: str = "",
+    tipo_aliado: str = "canal1",  # NUEVO: "canal1" o "canal2"
     db: Session = Depends(get_db)
 ):
     """Registro self-serve público con sistema de Sub-Aliados."""
@@ -328,6 +331,7 @@ def auto_registro(
         ref_code     = generar_ref_code(nombre),
         password_hash= hash_password(password),
         sponsor_id   = sponsor_id_db,
+        tipo_aliado  = tipo_aliado if tipo_aliado in ("canal1", "canal2") else "canal1",
     )
     db.add(a); db.commit(); db.refresh(a)
 
@@ -501,6 +505,8 @@ def cambiar_nivel(codigo: str, nivel: str, db: Session = Depends(get_db)):
 @app.get("/aliados/{codigo}/red")
 def mi_red_comercial(codigo: str, db: Session = Depends(get_db)):
     a = _get_aliado(codigo, db)
+    if (getattr(a, "tipo_aliado", "canal1") or "canal1") == "canal2":
+        raise HTTPException(403, "Mi Red no está disponible para aliados Canal 2.")
     red = []
     total_pasivo = 0
 
@@ -542,6 +548,8 @@ def registrar_referido(ref_code: str, nombre_cliente: str, plan_elegido: str,
                         notas: str = "", db: Session = Depends(get_db)):
     a = db.query(Aliado).filter(Aliado.ref_code == ref_code).first()
     if not a: raise HTTPException(404, "Código de referido inválido.")
+    if (getattr(a, "tipo_aliado", "canal1") or "canal1") == "canal2":
+        raise HTTPException(403, "Referidos no disponibles para aliados Canal 2.")
     if plan_elegido not in PLANES: raise HTTPException(400, f"Plan inválido.")
     r = Referido(aliado_id=a.id, nombre_cliente=nombre_cliente, plan_elegido=plan_elegido, notas=notas)
     db.add(r); db.commit(); db.refresh(r)
@@ -887,6 +895,7 @@ def _aliado_detalle(a):
         "total_pendiente": round(a.total_pendiente, 2),
         "ref_code": a.ref_code,
         "link_ref": f"https://avanzadigital.digital/alianzas?ref={a.ref_code}",
+        "tipo_aliado": getattr(a, "tipo_aliado", "canal1") or "canal1",
         "referidos": [{"cliente": r.nombre_cliente, "plan": r.plan_elegido,
                        "fecha": r.registrado_en.strftime("%d/%m/%Y"),
                        "confirmado": r.acuse_recibo, "convertido": r.convertido}
@@ -1110,6 +1119,7 @@ def siguiente_accion(codigo: str, db: Session = Depends(get_db)):
     a = _get_aliado(codigo, db)
     _aplicar_caducidad_bolsa(db)
     acciones = []
+    es_canal2 = (getattr(a, "tipo_aliado", "canal1") or "canal1") == "canal2"
 
     # 1. Lead caliente: respondió pero no se cotizó
     respondieron = [p for p in a.prospectos if p.estado == "respondio"]
@@ -1150,29 +1160,39 @@ def siguiente_accion(codigo: str, db: Session = Depends(get_db)):
             "color": "primary"
         })
 
-    # 4. Leads disponibles en bolsa (si tiene cupo)
-    reclamos_activos = db.query(LeadBolsa).filter(
-        LeadBolsa.aliado_id == a.id, LeadBolsa.estado == "reclamado"
-    ).count()
-    leads_disp = db.query(LeadBolsa).filter(LeadBolsa.estado == "disponible").count()
-    if leads_disp > 0 and reclamos_activos < 3:
-        acciones.append({
-            "tipo": "reclamar_lead", "urgencia": 2, "icono": "🎯",
-            "titulo": f"{leads_disp} lead{'s' if leads_disp > 1 else ''} disponible{'s' if leads_disp > 1 else ''} en la bolsa",
-            "descripcion": "Hay clientes pre-filtrados esperando. Reclamá uno antes que otro aliado lo tome.",
-            "boton": "Ver Bolsa de Leads", "tab": "bolsa",
-            "color": "primary"
-        })
+    # 4. Leads disponibles en bolsa — SOLO Canal 1
+    if not es_canal2:
+        reclamos_activos = db.query(LeadBolsa).filter(
+            LeadBolsa.aliado_id == a.id, LeadBolsa.estado == "reclamado"
+        ).count()
+        leads_disp = db.query(LeadBolsa).filter(LeadBolsa.estado == "disponible").count()
+        if leads_disp > 0 and reclamos_activos < 3:
+            acciones.append({
+                "tipo": "reclamar_lead", "urgencia": 2, "icono": "🎯",
+                "titulo": f"{leads_disp} lead{'s' if leads_disp > 1 else ''} disponible{'s' if leads_disp > 1 else ''} en la bolsa",
+                "descripcion": "Hay clientes pre-filtrados esperando. Reclamá uno antes que otro aliado lo tome.",
+                "boton": "Ver Bolsa de Leads", "tab": "bolsa",
+                "color": "primary"
+            })
 
-    # 5. Primer prospecto (si no tiene ninguno)
+    # 5. Sin prospectos — acción diferenciada por canal
     if not a.prospectos and a.ventas_6_meses == 0:
-        acciones.append({
-            "tipo": "prospectar", "urgencia": 1, "icono": "🚀",
-            "titulo": "Cargá tu primer prospecto hoy",
-            "descripcion": "Pensá en 3 empresas de tu entorno que podrían necesitar presencia digital. Agregalas y contactalas con el enlace de Auditoría.",
-            "boton": "Agregar Prospecto", "tab": "prospectos",
-            "color": "primary"
-        })
+        if es_canal2:
+            acciones.append({
+                "tipo": "primer_prospecto_c2", "urgencia": 1, "icono": "🚀",
+                "titulo": "Cargá tu primer cliente hoy",
+                "descripcion": "Pensá en 3 clientes de tu cartera que no tienen presencia digital. Entrá al Selector de Rubro, elegí su industria y tenés el pitch listo en 30 segundos.",
+                "boton": "Ir al Selector de Rubro", "tab": "selector-rubro",
+                "color": "green"
+            })
+        else:
+            acciones.append({
+                "tipo": "prospectar", "urgencia": 1, "icono": "🚀",
+                "titulo": "Cargá tu primer prospecto hoy",
+                "descripcion": "Pensá en 3 empresas de tu entorno que podrían necesitar presencia digital. Agregalas y contactalas con el enlace de Auditoría.",
+                "boton": "Agregar Prospecto", "tab": "prospectos",
+                "color": "primary"
+            })
 
     acciones.sort(key=lambda x: x["urgencia"], reverse=True)
 
@@ -1319,6 +1339,8 @@ def revocar_lead_bolsa(id: int, db: Session = Depends(get_db)):
 def ver_bolsa_aliado(codigo: str, db: Session = Depends(get_db)):
     """Muestra los leads disponibles y los que este aliado ya reclamó."""
     a = _get_aliado(codigo, db)
+    if (getattr(a, "tipo_aliado", "canal1") or "canal1") == "canal2":
+        raise HTTPException(403, "La bolsa de leads no está disponible para aliados Canal 2.")
     _aplicar_caducidad_bolsa(db) # Limpiamos antes de mostrar
     
     disponibles = db.query(LeadBolsa).filter(LeadBolsa.estado == "disponible").all()
@@ -1349,6 +1371,8 @@ LIMITE_RECLAMOS_ACTIVOS = 3  # Máximo de reclamos simultáneos por aliado
 @app.post("/bolsa/{id}/reclamar")
 def reclamar_lead(id: int, codigo_aliado: str, db: Session = Depends(get_db)):
     a = _get_aliado(codigo_aliado, db)
+    if (getattr(a, "tipo_aliado", "canal1") or "canal1") == "canal2":
+        raise HTTPException(403, "Operación no disponible para aliados Canal 2.")
 
     # Verificar límite de reclamos activos simultáneos
     reclamos_activos = db.query(LeadBolsa).filter(
@@ -1374,6 +1398,9 @@ def contactar_lead_bolsa(id: int, codigo_aliado: str, resultado: str = "exitoso"
     Marca un lead como contactado. 
     resultado puede ser: exitoso | no_interesado | no_contesto
     """
+    a = _get_aliado(codigo_aliado, db)
+    if (getattr(a, "tipo_aliado", "canal1") or "canal1") == "canal2":
+        raise HTTPException(403, "La bolsa de leads no está disponible para aliados Canal 2.")
     RESULTADOS_VALIDOS = {"exitoso", "no_interesado", "no_contesto"}
     if resultado not in RESULTADOS_VALIDOS:
         raise HTTPException(400, f"Resultado inválido. Opciones: {', '.join(RESULTADOS_VALIDOS)}")
@@ -1399,6 +1426,8 @@ def contactar_lead_bolsa(id: int, codigo_aliado: str, resultado: str = "exitoso"
 def historial_bolsa_aliado(codigo: str, db: Session = Depends(get_db)):
     """Historial completo de leads de un aliado con estadísticas."""
     a = _get_aliado(codigo, db)
+    if (getattr(a, "tipo_aliado", "canal1") or "canal1") == "canal2":
+        raise HTTPException(403, "La bolsa de leads no está disponible para aliados Canal 2.")
     leads = db.query(LeadBolsa).filter(LeadBolsa.aliado_id == a.id).order_by(LeadBolsa.fecha_reclamo.desc()).all()
 
     total          = len(leads)
@@ -1917,6 +1946,10 @@ def admin_ajustar_creditos(codigo: str, delta: int, motivo: str = "recarga_admin
 @app.get("/bolsa/marketplace")
 def ver_marketplace(codigo_aliado: str = "", db: Session = Depends(get_db)):
     """Lista los leads calificados/premium disponibles con su costo en créditos."""
+    if codigo_aliado:
+        a = db.query(Aliado).filter(Aliado.codigo == codigo_aliado, Aliado.activo == True).first()
+        if a and (getattr(a, "tipo_aliado", "canal1") or "canal1") == "canal2":
+            raise HTTPException(403, "El marketplace de leads no está disponible para aliados Canal 2.")
     _aplicar_caducidad_bolsa(db)
     leads = db.query(LeadBolsa).filter(
         LeadBolsa.estado == "disponible",
@@ -1950,6 +1983,8 @@ def ver_marketplace(codigo_aliado: str = "", db: Session = Depends(get_db)):
 def comprar_lead(id: int, codigo_aliado: str, db: Session = Depends(get_db)):
     """Compra un lead premium/calificado usando créditos."""
     a = _get_aliado(codigo_aliado, db)
+    if (getattr(a, "tipo_aliado", "canal1") or "canal1") == "canal2":
+        raise HTTPException(403, "El marketplace de leads no está disponible para aliados Canal 2.")
     lead = db.query(LeadBolsa).filter(
         LeadBolsa.id == id, LeadBolsa.estado == "disponible"
     ).first()

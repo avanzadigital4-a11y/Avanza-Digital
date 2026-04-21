@@ -48,6 +48,11 @@ class Aliado(Base):
     portal_publico_titular = Column(String, nullable=True)
     portal_publico_bio = Column(Text, nullable=True)
 
+    # --- CANAL DE ALIADO ---
+    # "canal1" = Busco clientes (recibe leads del admin, usa Academia, Bolsa, etc.)
+    # "canal2" = Tengo mis clientes (contador, consultor B2B — trae su propia cartera)
+    tipo_aliado = Column(String, default="canal1")
+
     ventas = relationship("Venta", back_populates="aliado")
     referidos = relationship("Referido", back_populates="aliado")
     prospectos = relationship("Prospecto", back_populates="aliado")
