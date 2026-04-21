@@ -990,7 +990,7 @@
       <div style="background:rgba(249,115,22,0.05);border:1px solid rgba(249,115,22,0.2);border-radius:10px;padding:16px;margin-bottom:24px;display:flex;align-items:flex-start;gap:12px;">
         <input type="checkbox" id="reg-tyc" style="margin-top:3px;width:16px;height:16px;accent-color:var(--orange);flex-shrink:0;cursor:pointer;">
         <label for="reg-tyc" style="font-size:.83rem;color:var(--text-muted);cursor:pointer;line-height:1.5;">
-          Leí y acepto el <a href="https://avanza-digital-production.up.railway.app/contrato" target="_blank" style="color:var(--orange);font-weight:700;">Acuerdo de Aliado Avanza Partner Network v3 — 2026</a>. Entiendo que actúo como referidor independiente, que debo registrar el referido antes del pago del cliente, y que la comisión se abona dentro de las 24hs del cobro.
+          Leí y acepto el <a href="https://avanza-digital.onrender.com/contrato" target="_blank" style="color:var(--orange);font-weight:700;">Acuerdo de Aliado Avanza Partner Network v3 — 2026</a>. Entiendo que actúo como referidor independiente, que debo registrar el referido antes del pago del cliente, y que la comisión se abona dentro de las 24hs del cobro.
         </label>
       </div>
 
@@ -2210,7 +2210,7 @@
     </div>
 
 <script>
-const API = 'https://avanza-digital-production.up.railway.app';
+const API = 'https://avanza-digital.onrender.com';
 let aliado = null;
 
 const PLANES = { 'Plan Base':1050, 'Plan Pro':2900, 'Plan Industrial':4900, 'Estrategico 360':7500 };
@@ -3158,7 +3158,7 @@ async function cargarHistorialBolsa() {
 // Funciones de MI RED
 async function cargarRed() {
   if(!aliado) return;
-  document.getElementById('red-invitelink').textContent = `https://avanza-digital-production.up.railway.app/portal.html?ref=${aliado.ref_code}`;
+  document.getElementById('red-invitelink').textContent = `https://avanza-digital.onrender.com/portal.html?ref=${aliado.ref_code}`;
   
   try {
     const res = await fetch(`${API}/aliados/${aliado.codigo}/red`);
