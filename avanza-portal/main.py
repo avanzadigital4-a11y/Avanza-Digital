@@ -9,9 +9,10 @@ from pydantic import BaseModel
 from models import (
     Aliado, Admin, Venta, Referido, Prospecto, AuditoriaLog, LeadBolsa,
     TransaccionCredito, PostComunidad, ComentarioComunidad, AutomationLog,
+    LinkPago, AcademiaModulo,
     PLANES, NIVELES, CUOTAS_RECARGO, REPUTACION_BADGES
 )
-import random, string, os, smtplib, httpx, json
+import random, string, os, smtplib, httpx, json, hmac as hmac_mod, hashlib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from apscheduler.schedulers.background import BackgroundScheduler
@@ -100,6 +101,26 @@ for col_sql in [
     except Exception:
         pass
 
+# ─── MIGRACIONES v2 (CBU, términos, links_pago, academia) ────────────────────
+for col_sql in [
+    "ALTER TABLE aliados ADD COLUMN cbu_alias VARCHAR",
+    "ALTER TABLE aliados ADD COLUMN terminos_aceptados BOOLEAN DEFAULT FALSE",
+    "ALTER TABLE aliados ADD COLUMN terminos_aceptados_en TIMESTAMP",
+    "ALTER TABLE prospectos ADD COLUMN propuesta_enviada BOOLEAN DEFAULT FALSE",
+    "ALTER TABLE prospectos ADD COLUMN pago_pendiente BOOLEAN DEFAULT FALSE",
+    "ALTER TABLE prospectos ADD COLUMN pagado BOOLEAN DEFAULT FALSE",
+    "ALTER TABLE prospectos ADD COLUMN comision_abonada BOOLEAN DEFAULT FALSE",
+]:
+    try:
+        with engine.connect() as conn:
+            conn.execute(text(col_sql))
+            conn.commit()
+    except Exception:
+        pass
+
+# Crear nuevas tablas si no existen
+Base.metadata.create_all(bind=engine)
+
 
 # ─── EMAIL HELPER ─────────────────────────────────────────────────────────────
 SMTP_HOST     = os.environ.get("SMTP_HOST", "")
@@ -108,9 +129,14 @@ SMTP_USER     = os.environ.get("SMTP_USER", "")
 SMTP_PASS     = os.environ.get("SMTP_PASS", "")
 EMAIL_FROM    = os.environ.get("EMAIL_FROM", SMTP_USER)
 
-# ─── MERCADOPAGO ──────────────────────────────────────────────────────────────
-MP_ACCESS_TOKEN = os.environ.get("MP_ACCESS_TOKEN", "")
-PORTAL_URL      = os.environ.get("PORTAL_URL", "https://avanza-digital-production.up.railway.app")
+# ─── MERCADOPAGO + PAYPAL ─────────────────────────────────────────────────────
+MP_ACCESS_TOKEN    = os.environ.get("MP_ACCESS_TOKEN", "")
+MP_WEBHOOK_SECRET  = os.environ.get("MP_WEBHOOK_SECRET", "")
+PAYPAL_CLIENT_ID   = os.environ.get("PAYPAL_CLIENT_ID", "")
+PAYPAL_CLIENT_SECRET = os.environ.get("PAYPAL_CLIENT_SECRET", "")
+PAYPAL_WEBHOOK_ID  = os.environ.get("PAYPAL_WEBHOOK_ID", "")
+RESEND_API_KEY     = os.environ.get("RESEND_API_KEY", "")
+PORTAL_URL         = os.environ.get("PORTAL_URL", "https://avanza-digital-production.up.railway.app")
 
 def enviar_email(destinatario: str, asunto: str, cuerpo_html: str):
     """Envía un email. Si no hay SMTP configurado, solo loguea y no falla."""
@@ -132,24 +158,86 @@ def enviar_email(destinatario: str, asunto: str, cuerpo_html: str):
         print(f"[EMAIL ERROR] {e}")
 
 
-# ─── SCHEDULER: NOTIFICACIÓN 24HS ────────────────────────────────────────────
-def job_notificaciones_24h():
-    """Corre cada hora. Detecta leads reclamados hace 24hs sin contactar y avisa al aliado."""
+async def enviar_email_async(destinatario: str, asunto: str, html: str):
+    """Envía email vía Resend si hay API key, si no usa SMTP."""
+    if RESEND_API_KEY:
+        try:
+            async with httpx.AsyncClient() as client:
+                r = await client.post(
+                    "https://api.resend.com/emails",
+                    headers={"Authorization": f"Bearer {RESEND_API_KEY}", "Content-Type": "application/json"},
+                    json={"from": "Avanza Digital <no-reply@avanzadigital.digital>",
+                          "to": [destinatario], "subject": asunto, "html": html},
+                    timeout=10.0
+                )
+                if r.status_code not in (200, 201):
+                    print(f"[RESEND ERROR] {r.text}")
+        except Exception as e:
+            print(f"[RESEND ERROR] {e}")
+            enviar_email(destinatario, asunto, html)
+    else:
+        enviar_email(destinatario, asunto, html)
+
+
+async def get_tipo_cambio_blue() -> float:
+    """Consulta dolarapi.com y retorna el tipo de cambio blue (venta)."""
+    try:
+        async with httpx.AsyncClient() as client:
+            r = await client.get("https://dolarapi.com/v1/dolares/blue", timeout=8.0)
+            if r.status_code == 200:
+                return float(r.json().get("venta", 1250))
+    except Exception as e:
+        print(f"[DOLAR API ERROR] {e}")
+    return 1250.0  # fallback
+
+
+_paypal_token_cache: dict = {"token": "", "expires_at": 0}
+
+async def get_paypal_access_token() -> str:
+    """Obtiene (y cachea) el Bearer token de PayPal."""
+    import time
+    if _paypal_token_cache["token"] and time.time() < _paypal_token_cache["expires_at"] - 60:
+        return _paypal_token_cache["token"]
+    if not PAYPAL_CLIENT_ID or not PAYPAL_CLIENT_SECRET:
+        raise HTTPException(503, "PayPal no configurado.")
+    import base64
+    creds = base64.b64encode(f"{PAYPAL_CLIENT_ID}:{PAYPAL_CLIENT_SECRET}".encode()).decode()
+    async with httpx.AsyncClient() as client:
+        r = await client.post(
+            "https://api-m.paypal.com/v1/oauth2/token",
+            headers={"Content-Type": "application/x-www-form-urlencoded",
+                     "Authorization": f"Basic {creds}"},
+            content="grant_type=client_credentials",
+            timeout=10.0
+        )
+        if r.status_code != 200:
+            raise HTTPException(502, f"Error PayPal auth: {r.text[:200]}")
+        data = r.json()
+        import time as _time
+        _paypal_token_cache["token"] = data["access_token"]
+        _paypal_token_cache["expires_at"] = _time.time() + data.get("expires_in", 3600)
+        return data["access_token"]
+
+
+# ─── SCHEDULER: NOTIFICACIÓN 24HS + LIBERACIÓN 48HS ─────────────────────────
+def job_notificaciones_y_liberacion():
+    """Cada 30 min: notifica a las 24hs e libera leads inactivos a las 48hs."""
     from database import SessionLocal
     db = SessionLocal()
     try:
         ahora = datetime.now()
-        limite_inf = ahora - timedelta(hours=25)  # entre 24 y 25 hs
-        limite_sup = ahora - timedelta(hours=24)
 
-        pendientes = db.query(LeadBolsa).filter(
+        # — Notificación 24hs —
+        limite_inf = ahora - timedelta(hours=25)
+        limite_sup = ahora - timedelta(hours=24)
+        pendientes_notif = db.query(LeadBolsa).filter(
             LeadBolsa.estado == "reclamado",
             LeadBolsa.notif_24h_enviada == False,
             LeadBolsa.fecha_reclamo <= limite_sup,
             LeadBolsa.fecha_reclamo >= limite_inf,
         ).all()
 
-        for lead in pendientes:
+        for lead in pendientes_notif:
             if lead.aliado and lead.aliado.email:
                 horas_rest = max(0, int(48 - (ahora - lead.fecha_reclamo).total_seconds() / 3600))
                 html = f"""
@@ -158,12 +246,43 @@ def job_notificaciones_24h():
                   <p>Hola <strong>{lead.aliado.nombre}</strong>,</p>
                   <p>Reclamaste el lead <strong>{lead.empresa}</strong> hace 24 horas y todavía no lo marcaste como contactado.</p>
                   <p style="color:#f87171;">Si no actualizás su estado en las próximas <strong>{horas_rest} horas</strong>, el sistema lo devolverá a la bolsa pública automáticamente.</p>
-                  <a href="https://avanza-digital-production.up.railway.app/portal.html" style="display:inline-block;margin-top:16px;padding:12px 24px;background:#3b82f6;color:#fff;border-radius:8px;text-decoration:none;font-weight:700;">Ir al Portal →</a>
+                  <a href="{PORTAL_URL}/portal.html" style="display:inline-block;margin-top:16px;padding:12px 24px;background:#3b82f6;color:#fff;border-radius:8px;text-decoration:none;font-weight:700;">Ir al Portal →</a>
                   <p style="margin-top:24px;font-size:.8rem;color:#64748b;">Avanza Digital · Partner Network</p>
                 </div>
                 """
                 enviar_email(lead.aliado.email, f"⏰ Avanza: Tenés {horas_rest}hs para contactar a {lead.empresa}", html)
                 lead.notif_24h_enviada = True
+
+        # — Liberación automática 48hs —
+        limite_48h = ahora - timedelta(hours=48)
+        vencidos = db.query(LeadBolsa).filter(
+            LeadBolsa.estado == "reclamado",
+            LeadBolsa.fecha_reclamo <= limite_48h,
+        ).all()
+        for lead in vencidos:
+            aliado_nombre = lead.aliado.nombre if lead.aliado else "aliado"
+            aliado_email  = lead.aliado.email  if lead.aliado else ""
+            print(f"[JOB] Liberando lead {lead.id} ({lead.empresa}) de aliado_id={lead.aliado_id}")
+            lead.estado    = "disponible"
+            lead.aliado_id = None
+            lead.fecha_reclamo = None
+            lead.notif_24h_enviada = False
+            if aliado_email:
+                enviar_email(aliado_email, f"⚠️ Lead liberado: {lead.empresa}",
+                    f"""<div style="font-family:sans-serif;padding:24px;background:#0f172a;color:#e2e8f0;border-radius:12px;max-width:500px;margin:auto;">
+                    <h2 style="color:#ef4444;">Lead devuelto al pool</h2>
+                    <p>Hola <strong>{aliado_nombre}</strong>, el lead <strong>{lead.empresa}</strong> venció el plazo de 48 horas sin ser contactado y fue devuelto automáticamente a la bolsa.</p>
+                    <a href="{PORTAL_URL}/portal.html" style="display:inline-block;margin-top:16px;padding:12px 24px;background:#3b82f6;color:#fff;border-radius:8px;text-decoration:none;font-weight:700;">Ver bolsa de leads →</a>
+                    </div>""")
+
+        # — Expirar links de pago vencidos —
+        links_vencidos = db.query(LinkPago).filter(
+            LinkPago.estado == "activo",
+            LinkPago.expires_at <= ahora,
+        ).all()
+        for lp in links_vencidos:
+            lp.estado = "vencido"
+
         db.commit()
     except Exception as e:
         print(f"[SCHEDULER ERROR] {e}")
@@ -171,7 +290,7 @@ def job_notificaciones_24h():
         db.close()
 
 scheduler = BackgroundScheduler()
-scheduler.add_job(job_notificaciones_24h, "interval", hours=1)
+scheduler.add_job(job_notificaciones_y_liberacion, "interval", minutes=30)
 scheduler.start()
 
 
@@ -212,6 +331,11 @@ RUTAS_ADMIN = {
     ("POST",   "/admin/comunidad/{id}/ocultar"),
     ("POST",   "/ventas/{id}/pagar"),
     ("POST",   "/referidos/{id}/confirmar"),
+    ("GET",    "/admin/pagos"),
+    ("GET",    "/admin/comisiones-pendientes"),
+    ("POST",   "/admin/comisiones/{venta_id}/abonar"),
+    ("POST",   "/admin/academia/modulos"),
+    ("DELETE", "/admin/academia/modulos/{mod_id}"),
 }
 
 def _es_ruta_admin(method: str, path: str) -> bool:
@@ -301,7 +425,8 @@ def auto_registro(
     background_tasks: BackgroundTasks,
     ciudad: str = "", perfil: str = "", password: str = "", dni: str = "",
     ref_sponsor: str = "",
-    tipo_aliado: str = "canal1",  # NUEVO: "canal1" o "canal2"
+    tipo_aliado: str = "canal1",
+    acepto_terminos: bool = False,
     db: Session = Depends(get_db)
 ):
     """Registro self-serve público con sistema de Sub-Aliados."""
@@ -309,6 +434,8 @@ def auto_registro(
         raise HTTPException(400, "Nombre, email, WhatsApp y contraseña son obligatorios.")
     if len(password) < 6:
         raise HTTPException(400, "La contraseña debe tener al menos 6 caracteres.")
+    if not acepto_terminos:
+        raise HTTPException(400, "Debés aceptar los términos y condiciones para registrarte.")
     if db.query(Aliado).filter(Aliado.email == email).first():
         raise HTTPException(400, "Ya existe un aliado registrado con ese email.")
 
@@ -332,6 +459,8 @@ def auto_registro(
         password_hash= hash_password(password),
         sponsor_id   = sponsor_id_db,
         tipo_aliado  = tipo_aliado if tipo_aliado in ("canal1", "canal2") else "canal1",
+        terminos_aceptados    = True,
+        terminos_aceptados_en = datetime.now(),
     )
     db.add(a); db.commit(); db.refresh(a)
 
@@ -896,6 +1025,9 @@ def _aliado_detalle(a):
         "ref_code": a.ref_code,
         "link_ref": f"https://avanzadigital.digital/alianzas?ref={a.ref_code}",
         "tipo_aliado": getattr(a, "tipo_aliado", "canal1") or "canal1",
+        "cbu_alias": getattr(a, "cbu_alias", None) or "",
+        "terminos_aceptados": getattr(a, "terminos_aceptados", False),
+        "terminos_aceptados_en": a.terminos_aceptados_en.strftime("%d/%m/%Y") if getattr(a, "terminos_aceptados_en", None) else None,
         "referidos": [{"cliente": r.nombre_cliente, "plan": r.plan_elegido,
                        "fecha": r.registrado_en.strftime("%d/%m/%Y"),
                        "confirmado": r.acuse_recibo, "convertido": r.convertido}
@@ -955,43 +1087,91 @@ def obtener_leaderboard(db: Session = Depends(get_db)):
     return completo
 
 
-# ─── CHECKOUT MERCADOPAGO ─────────────────────────────────────────────────────
+# ─── CHECKOUT (MP ARS + PayPal USD) ──────────────────────────────────────────
 
 @app.post("/checkout/crear")
-async def crear_checkout(plan: str, ref_code: str, nombre_cliente: str = "Cliente", db: Session = Depends(get_db)):
-    """Crea una preferencia de pago en MercadoPago con atribución automática al aliado."""
+async def crear_checkout(
+    plan: str, ref_code: str,
+    nombre_cliente: str = "Cliente",
+    moneda: str = "ars",
+    db: Session = Depends(get_db)
+):
+    """Crea un link de pago: moneda=ars → MercadoPago (ARS); moneda=usd → PayPal (USD)."""
     a = db.query(Aliado).filter(Aliado.ref_code == ref_code).first()
     if not a:
         raise HTTPException(404, "Código de referido inválido.")
     if plan not in PLANES:
         raise HTTPException(400, "Plan inválido.")
 
+    valor_usd = PLANES[plan]
+    expires_at = datetime.now() + timedelta(hours=48)
+
+    if moneda == "usd":
+        # — PayPal —
+        if not PAYPAL_CLIENT_ID:
+            return {"checkout_url": f"https://avanzadigital.digital/contratar?plan={plan}&ref={ref_code}",
+                    "fallback": True, "mensaje": "PayPal no configurado."}
+        try:
+            pp_token = await get_paypal_access_token()
+            external_ref = f"{ref_code}|{plan}|{nombre_cliente}"
+            async with httpx.AsyncClient() as client:
+                r = await client.post(
+                    "https://api-m.paypal.com/v2/checkout/orders",
+                    headers={"Content-Type": "application/json",
+                             "Authorization": f"Bearer {pp_token}"},
+                    json={
+                        "intent": "CAPTURE",
+                        "purchase_units": [{
+                            "amount": {"currency_code": "USD", "value": f"{valor_usd:.2f}"},
+                            "description": f"Avanza Digital — {plan}",
+                            "custom_id": external_ref,
+                        }],
+                        "application_context": {
+                            "return_url": "https://avanzadigital.digital/gracias",
+                            "cancel_url": "https://avanzadigital.digital/error",
+                            "brand_name": "Avanza Digital",
+                            "user_action": "PAY_NOW",
+                        },
+                    },
+                    timeout=15.0
+                )
+                if r.status_code not in (200, 201):
+                    raise HTTPException(502, f"Error PayPal: {r.text[:200]}")
+                order = r.json()
+            checkout_url = next((l["href"] for l in order.get("links", []) if l["rel"] == "approve"), None)
+            if not checkout_url:
+                raise HTTPException(502, "PayPal no devolvió URL de aprobación.")
+            lp = LinkPago(aliado_id=a.id, plan=plan, moneda="usd", precio_usd=valor_usd,
+                          checkout_url=checkout_url, expires_at=expires_at)
+            db.add(lp); db.commit(); db.refresh(lp)
+            return {"checkout_url": checkout_url, "moneda": "usd", "precio_usd": valor_usd,
+                    "expires_at": expires_at.isoformat(), "link_id": lp.id, "fallback": False}
+        except httpx.TimeoutException:
+            raise HTTPException(504, "Timeout al conectar con PayPal.")
+
+    # — MercadoPago ARS —
     if not MP_ACCESS_TOKEN:
-        # Fallback gracioso si no está configurado
-        return {
-            "checkout_url": f"https://avanzadigital.digital/contratar?plan={plan}&ref={ref_code}",
-            "fallback": True,
-            "mensaje": "Pagos automáticos no activados aún. Contactá a admin para configurar MP_ACCESS_TOKEN."
-        }
-
-    valor = PLANES[plan]
-    external_ref = f"{ref_code}|{plan}|{nombre_cliente}"
-
-    preference_data = {
-        "items": [{"title": f"Avanza Digital — {plan}", "quantity": 1,
-                   "unit_price": float(valor), "currency_id": "USD"}],
-        "payer": {"name": nombre_cliente},
-        "external_reference": external_ref,
-        "back_urls": {
-            "success": f"{PORTAL_URL}/checkout/exitoso?ref={ref_code}&plan={plan}",
-            "failure": f"{PORTAL_URL}/portal.html",
-            "pending": f"{PORTAL_URL}/portal.html"
-        },
-        "auto_return": "approved",
-        "notification_url": f"{PORTAL_URL}/checkout/webhook"
-    }
-
+        return {"checkout_url": f"https://avanzadigital.digital/contratar?plan={plan}&ref={ref_code}",
+                "fallback": True, "mensaje": "MP no configurado."}
     try:
+        tipo_cambio = await get_tipo_cambio_blue()
+        precio_ars  = round(valor_usd * tipo_cambio, 2)
+        external_ref = f"{ref_code}|{plan}|{nombre_cliente}"
+
+        preference_data = {
+            "items": [{"title": f"Avanza Digital — {plan}", "quantity": 1,
+                       "unit_price": precio_ars, "currency_id": "ARS"}],
+            "payer": {"name": nombre_cliente},
+            "external_reference": external_ref,
+            "date_of_expiration": expires_at.strftime("%Y-%m-%dT%H:%M:%S.000-03:00"),
+            "back_urls": {
+                "success": f"{PORTAL_URL}/checkout/exitoso?ref={ref_code}&plan={plan}",
+                "failure": f"{PORTAL_URL}/portal.html",
+                "pending": f"{PORTAL_URL}/portal.html"
+            },
+            "auto_return": "approved",
+            "notification_url": f"{PORTAL_URL}/webhooks/mercadopago",
+        }
         async with httpx.AsyncClient() as client:
             resp = await client.post(
                 "https://api.mercadopago.com/checkout/preferences",
@@ -1002,9 +1182,14 @@ async def crear_checkout(plan: str, ref_code: str, nombre_cliente: str = "Client
             if resp.status_code not in (200, 201):
                 raise HTTPException(502, f"Error MercadoPago: {resp.text[:200]}")
             pref = resp.json()
-
-        return {"checkout_url": pref["init_point"], "preference_id": pref["id"],
-                "plan": plan, "valor": valor, "aliado": a.nombre, "fallback": False}
+        checkout_url = pref["init_point"]
+        lp = LinkPago(aliado_id=a.id, plan=plan, moneda="ars", precio_usd=valor_usd,
+                      precio_ars=precio_ars, tipo_cambio=tipo_cambio,
+                      checkout_url=checkout_url, expires_at=expires_at)
+        db.add(lp); db.commit(); db.refresh(lp)
+        return {"checkout_url": checkout_url, "moneda": "ars", "precio_ars": precio_ars,
+                "precio_usd": valor_usd, "tipo_cambio": tipo_cambio,
+                "expires_at": expires_at.isoformat(), "link_id": lp.id, "fallback": False}
     except httpx.TimeoutException:
         raise HTTPException(504, "Timeout al conectar con MercadoPago.")
 
@@ -1025,11 +1210,127 @@ def checkout_exitoso(ref: str = "", plan: str = "", payment_id: str = "", db: Se
     return RedirectResponse(f"{PORTAL_URL}/portal.html?pago=ok&plan={plan}&ref={ref}")
 
 
+def _verificar_firma_mp(request_headers: dict, query_params: dict, raw_body: bytes):
+    """Verifica la firma HMAC-SHA256 de un webhook de MercadoPago."""
+    if not MP_WEBHOOK_SECRET:
+        return  # sin secret configurado, no verificar (dev mode)
+    x_signature  = request_headers.get("x-signature", "")
+    x_request_id = request_headers.get("x-request-id", "")
+    if not x_signature:
+        raise HTTPException(401, "Falta header x-signature")
+    parts = {p.split("=")[0]: p.split("=")[1] for p in x_signature.split(",") if "=" in p}
+    ts = parts.get("ts", "")
+    v1 = parts.get("v1", "")
+    if not ts or not v1:
+        raise HTTPException(401, "Formato de firma inválido")
+    data_id = query_params.get("data.id", "")
+    manifest = f"id:{data_id};request-id:{x_request_id};ts:{ts};"
+    computed = hmac_mod.new(MP_WEBHOOK_SECRET.encode(), manifest.encode(), hashlib.sha256).hexdigest()
+    if computed != v1:
+        raise HTTPException(401, "Firma inválida — posible request falso")
+
+
+async def _procesar_pago_mp(payment_id: str, db: Session):
+    """Lógica común: busca pago en MP, registra venta y notifica al aliado."""
+    async with httpx.AsyncClient() as client:
+        resp = await client.get(
+            f"https://api.mercadopago.com/v1/payments/{payment_id}",
+            headers={"Authorization": f"Bearer {MP_ACCESS_TOKEN}"}, timeout=10.0
+        )
+        if resp.status_code != 200:
+            return {"status": "error_mp"}
+        payment = resp.json()
+
+    if payment.get("status") != "approved":
+        return {"status": "not_approved"}
+
+    ext_ref = payment.get("external_reference", "")
+    parts   = ext_ref.split("|", 2)
+    if len(parts) < 2:
+        return {"status": "invalid_ref"}
+    ref_code, plan = parts[0], parts[1]
+    nombre_cliente = parts[2] if len(parts) > 2 else "Cliente Web"
+
+    if plan not in PLANES:
+        return {"status": "invalid_plan"}
+
+    a = db.query(Aliado).filter(Aliado.ref_code == ref_code).first()
+    if not a:
+        return {"status": "aliado_not_found"}
+
+    existing = db.query(Venta).filter(
+        Venta.aliado_id == a.id, Venta.notas.contains(str(payment_id))
+    ).first()
+    if existing:
+        return {"status": "already_processed"}
+
+    valor = PLANES[plan]
+    comision_usd = round(valor * a.comision_pct, 2)
+    v = Venta(aliado_id=a.id, nombre_cliente=nombre_cliente, plan=plan,
+              valor_usd=valor, comision_pct=a.comision_pct, comision_usd=comision_usd,
+              confirmada=True, pagada=False, fecha_venta=datetime.now(),
+              modalidad_pago="MercadoPago", notas=f"Pago automático MP ID:{payment_id}")
+    db.add(v)
+
+    # Marcar link como pagado
+    link = db.query(LinkPago).filter(
+        LinkPago.aliado_id == a.id, LinkPago.plan == plan,
+        LinkPago.moneda == "ars", LinkPago.estado == "activo"
+    ).order_by(LinkPago.created_at.desc()).first()
+    if link:
+        link.estado = "pagado"
+
+    if getattr(a, "sponsor", None):
+        comision_sponsor = round(valor * 0.05, 2)
+        v_red = Venta(
+            aliado_id=a.sponsor.id, nombre_cliente=f"♻️ RED: {a.nombre} (MP:{nombre_cliente})",
+            plan=plan, valor_usd=valor, comision_pct=0.05, comision_usd=comision_sponsor,
+            confirmada=True, pagada=False, fecha_venta=datetime.now(),
+            modalidad_pago="MercadoPago", notas=f"Ingreso pasivo MP:{payment_id}"
+        )
+        db.add(v_red)
+        a.sponsor.nivel = a.sponsor.nivel_calculado
+
+    a.nivel = a.nivel_calculado
+    db.commit()
+
+    await enviar_email_async(a.email, f"💰 ¡Nuevo cliente cerrado! — {plan}",
+        f"""<div style="font-family:sans-serif;background:#050505;color:#fff;padding:32px;max-width:520px;margin:auto;border-radius:12px;">
+          <h2 style="color:#4ade80;">¡Tu cliente {nombre_cliente} acaba de pagar! 🎉</h2>
+          <p>Hola <strong>{a.nombre.split()[0]}</strong>, se confirmó un pago automático.</p>
+          <div style="background:#111;border:1px solid #222;border-radius:8px;padding:16px;margin:16px 0;">
+            <p style="margin:4px 0;"><strong>Plan:</strong> {plan}</p>
+            <p style="margin:4px 0;"><strong>Tu comisión:</strong> <span style="color:#4ade80;font-size:1.3rem;font-weight:900;">USD {comision_usd:,.0f}</span></p>
+          </div>
+          <p style="color:#71717a;font-size:.85rem;">Se te abona dentro de las 24hs al CBU/alias registrado.</p>
+          <a href="{PORTAL_URL}/portal.html" style="display:inline-block;margin-top:16px;padding:12px 24px;background:#3b82f6;color:#fff;border-radius:8px;text-decoration:none;font-weight:700;">Ver mi portal →</a>
+        </div>""")
+    return {"status": "ok", "venta_registrada": True}
+
+
 @app.post("/checkout/webhook")
-async def checkout_webhook(request: Request, db: Session = Depends(get_db)):
+async def checkout_webhook_legacy(request: Request, db: Session = Depends(get_db)):
+    """Webhook legacy de MP (mantiene URL anterior activa)."""
+    return await _mp_webhook_handler(request, db)
+
+
+@app.post("/webhooks/mercadopago")
+async def webhook_mercadopago(request: Request, db: Session = Depends(get_db)):
+    """Webhook de MercadoPago con verificación HMAC."""
+    return await _mp_webhook_handler(request, db)
+
+
+async def _mp_webhook_handler(request: Request, db: Session):
     """IPN de MercadoPago: registra la venta automáticamente al aliado."""
     try:
-        body = await request.json()
+        raw_body = await request.body()
+        try:
+            _verificar_firma_mp(dict(request.headers), dict(request.query_params), raw_body)
+        except HTTPException as e:
+            print(f"[WEBHOOK MP] Firma inválida: {e.detail}")
+            return JSONResponse(status_code=401, content={"error": e.detail})
+
+        body = json.loads(raw_body)
         if body.get("type") != "payment":
             return {"status": "ignored"}
 
@@ -1037,22 +1338,56 @@ async def checkout_webhook(request: Request, db: Session = Depends(get_db)):
         if not payment_id or not MP_ACCESS_TOKEN:
             return {"status": "no_payment_id"}
 
-        async with httpx.AsyncClient() as client:
-            resp = await client.get(
-                f"https://api.mercadopago.com/v1/payments/{payment_id}",
-                headers={"Authorization": f"Bearer {MP_ACCESS_TOKEN}"}, timeout=10.0
-            )
-            if resp.status_code != 200:
-                return {"status": "error_mp"}
-            payment = resp.json()
+        return await _procesar_pago_mp(str(payment_id), db)
+    except Exception as e:
+        print(f"[WEBHOOK MP ERROR] {e}")
+        return {"status": "error", "detail": str(e)}
 
-        if payment.get("status") != "approved":
-            return {"status": "not_approved"}
 
-        ext_ref = payment.get("external_reference", "")
-        parts   = ext_ref.split("|", 2)
+@app.post("/webhooks/paypal")
+async def webhook_paypal(request: Request, db: Session = Depends(get_db)):
+    """Webhook de PayPal: verifica firma y registra venta al aliado."""
+    try:
+        raw_body = await request.body()
+        body = json.loads(raw_body)
+
+        # Verificar firma con la API de PayPal
+        if PAYPAL_WEBHOOK_ID:
+            try:
+                pp_token = await get_paypal_access_token()
+                verify_payload = {
+                    "auth_algo": request.headers.get("paypal-auth-algo", ""),
+                    "cert_url": request.headers.get("paypal-cert-url", ""),
+                    "transmission_id": request.headers.get("paypal-transmission-id", ""),
+                    "transmission_sig": request.headers.get("paypal-transmission-sig", ""),
+                    "transmission_time": request.headers.get("paypal-transmission-time", ""),
+                    "webhook_id": PAYPAL_WEBHOOK_ID,
+                    "webhook_event": body,
+                }
+                async with httpx.AsyncClient() as client:
+                    vr = await client.post(
+                        "https://api-m.paypal.com/v1/notifications/verify-webhook-signature",
+                        headers={"Authorization": f"Bearer {pp_token}", "Content-Type": "application/json"},
+                        json=verify_payload, timeout=10.0
+                    )
+                    if vr.status_code == 200 and vr.json().get("verification_status") != "SUCCESS":
+                        print("[WEBHOOK PAYPAL] Firma inválida")
+                        return JSONResponse(status_code=401, content={"error": "Firma inválida"})
+            except Exception as ve:
+                print(f"[WEBHOOK PAYPAL] Error verificando firma: {ve}")
+
+        if body.get("event_type") != "PAYMENT.CAPTURE.COMPLETED":
+            return {"status": "ignored"}
+
+        resource = body.get("resource", {})
+        custom_id = resource.get("custom_id", "")
+        if not custom_id:
+            purchase_units = body.get("purchase_units", [{}])
+            custom_id = purchase_units[0].get("custom_id", "") if purchase_units else ""
+
+        parts = custom_id.split("|", 2)
         if len(parts) < 2:
-            return {"status": "invalid_ref"}
+            return {"status": "invalid_custom_id"}
         ref_code, plan = parts[0], parts[1]
         nombre_cliente = parts[2] if len(parts) > 2 else "Cliente Web"
 
@@ -1063,9 +1398,9 @@ async def checkout_webhook(request: Request, db: Session = Depends(get_db)):
         if not a:
             return {"status": "aliado_not_found"}
 
-        # Idempotencia
+        capture_id = resource.get("id", "")
         existing = db.query(Venta).filter(
-            Venta.aliado_id == a.id, Venta.notas.contains(str(payment_id))
+            Venta.aliado_id == a.id, Venta.notas.contains(capture_id)
         ).first()
         if existing:
             return {"status": "already_processed"}
@@ -1075,39 +1410,43 @@ async def checkout_webhook(request: Request, db: Session = Depends(get_db)):
         v = Venta(aliado_id=a.id, nombre_cliente=nombre_cliente, plan=plan,
                   valor_usd=valor, comision_pct=a.comision_pct, comision_usd=comision_usd,
                   confirmada=True, pagada=False, fecha_venta=datetime.now(),
-                  modalidad_pago="MercadoPago", notas=f"Pago automático MP ID:{payment_id}")
+                  modalidad_pago="PayPal", notas=f"Pago automático PayPal ID:{capture_id}")
         db.add(v)
+
+        link = db.query(LinkPago).filter(
+            LinkPago.aliado_id == a.id, LinkPago.plan == plan,
+            LinkPago.moneda == "usd", LinkPago.estado == "activo"
+        ).order_by(LinkPago.created_at.desc()).first()
+        if link:
+            link.estado = "pagado"
 
         if getattr(a, "sponsor", None):
             comision_sponsor = round(valor * 0.05, 2)
-            v_red = Venta(
-                aliado_id=a.sponsor.id, nombre_cliente=f"♻️ RED: {a.nombre} (MP:{nombre_cliente})",
+            db.add(Venta(
+                aliado_id=a.sponsor.id, nombre_cliente=f"♻️ RED: {a.nombre} (PP:{nombre_cliente})",
                 plan=plan, valor_usd=valor, comision_pct=0.05, comision_usd=comision_sponsor,
                 confirmada=True, pagada=False, fecha_venta=datetime.now(),
-                modalidad_pago="MercadoPago", notas=f"Ingreso pasivo MP:{payment_id}"
-            )
-            db.add(v_red)
+                modalidad_pago="PayPal", notas=f"Ingreso pasivo PP:{capture_id}"
+            ))
             a.sponsor.nivel = a.sponsor.nivel_calculado
 
         a.nivel = a.nivel_calculado
         db.commit()
 
-        enviar_email(a.email, f"🎉 ¡Nueva venta confirmada! — {plan}",
+        await enviar_email_async(a.email, f"💰 ¡Nuevo cliente cerrado! — {plan}",
             f"""<div style="font-family:sans-serif;background:#050505;color:#fff;padding:32px;max-width:520px;margin:auto;border-radius:12px;">
-              <h2 style="color:#4ade80;">¡Venta confirmada vía portal! 🎉</h2>
-              <p>Hola <strong>{a.nombre.split()[0]}</strong>, se confirmó un pago automático.</p>
+              <h2 style="color:#4ade80;">¡Tu cliente {nombre_cliente} acaba de pagar con PayPal! 🎉</h2>
               <div style="background:#111;border:1px solid #222;border-radius:8px;padding:16px;margin:16px 0;">
                 <p style="margin:4px 0;"><strong>Plan:</strong> {plan}</p>
-                <p style="margin:4px 0;"><strong>Cliente:</strong> {nombre_cliente}</p>
                 <p style="margin:4px 0;"><strong>Tu comisión:</strong> <span style="color:#4ade80;font-size:1.3rem;font-weight:900;">USD {comision_usd:,.0f}</span></p>
               </div>
-              <p style="color:#71717a;font-size:.85rem;">Tu comisión se acreditará en las próximas 24hs.</p>
+              <p style="color:#71717a;font-size:.85rem;">Se te abona dentro de las 24hs al CBU/alias registrado.</p>
               <a href="{PORTAL_URL}/portal.html" style="display:inline-block;margin-top:16px;padding:12px 24px;background:#3b82f6;color:#fff;border-radius:8px;text-decoration:none;font-weight:700;">Ver mi portal →</a>
             </div>""")
 
         return {"status": "ok", "venta_registrada": True}
     except Exception as e:
-        print(f"[WEBHOOK ERROR] {e}")
+        print(f"[WEBHOOK PAYPAL ERROR] {e}")
         return {"status": "error", "detail": str(e)}
 
 
@@ -2076,6 +2415,198 @@ def simular_cuotas(plan: str, cuotas: int = 1):
     }
 
 
+# ─── TIPO DE CAMBIO (público) ─────────────────────────────────────────────────
+
+@app.get("/tipo-cambio")
+async def tipo_cambio_blue():
+    """Devuelve el tipo de cambio blue actual para el cotizador."""
+    tc = await get_tipo_cambio_blue()
+    return {"venta": tc, "fuente": "dolarapi.com/v1/dolares/blue"}
+
+
+# ─── PERFIL DEL ALIADO (CBU/alias) ───────────────────────────────────────────
+
+class PerfilPatch(BaseModel):
+    cbu_alias: str = None
+    portal_publico_titular: str = None
+    portal_publico_bio: str = None
+
+@app.patch("/aliado/perfil")
+def actualizar_perfil(codigo: str, data: PerfilPatch, db: Session = Depends(get_db)):
+    """Actualiza CBU/alias y otros datos del perfil del aliado."""
+    a = _get_aliado(codigo, db)
+    if data.cbu_alias is not None:
+        a.cbu_alias = data.cbu_alias.strip()
+    if data.portal_publico_titular is not None:
+        a.portal_publico_titular = data.portal_publico_titular.strip()
+    if data.portal_publico_bio is not None:
+        a.portal_publico_bio = data.portal_publico_bio.strip()
+    db.commit()
+    return {"mensaje": "Perfil actualizado.", "cbu_alias": a.cbu_alias}
+
+
+# ─── COMISIONES DEL ALIADO ────────────────────────────────────────────────────
+
+@app.get("/aliado/comisiones")
+def comisiones_aliado(codigo: str, db: Session = Depends(get_db)):
+    """Lista el historial de comisiones del aliado con estado de pago."""
+    a = _get_aliado(codigo, db)
+    ventas = db.query(Venta).filter(
+        Venta.aliado_id == a.id, Venta.confirmada == True
+    ).order_by(Venta.fecha_venta.desc()).all()
+    total_pendiente = sum(v.comision_usd for v in ventas if not v.pagada)
+    total_cobrado   = sum(v.comision_usd for v in ventas if v.pagada)
+    return {
+        "total_pendiente": round(total_pendiente, 2),
+        "total_cobrado": round(total_cobrado, 2),
+        "comisiones": [
+            {
+                "id": v.id,
+                "cliente": v.nombre_cliente,
+                "plan": v.plan,
+                "monto_plan_usd": v.valor_usd,
+                "comision_usd": v.comision_usd,
+                "estado": "abonada" if v.pagada else "pendiente",
+                "modalidad": v.modalidad_pago or "—",
+                "fecha_pago": v.fecha_venta.strftime("%d/%m/%Y") if v.fecha_venta else "—",
+                "fecha_abono": v.fecha_pago.strftime("%d/%m/%Y") if v.fecha_pago else "—",
+            }
+            for v in ventas
+        ],
+    }
+
+
+# ─── LINKS DE PAGO DEL ALIADO ─────────────────────────────────────────────────
+
+@app.get("/aliado/links-pago")
+def links_pago_aliado(codigo: str, db: Session = Depends(get_db)):
+    """Lista los links de pago generados por el aliado con estado y expiración."""
+    a = _get_aliado(codigo, db)
+    ahora = datetime.now()
+    links = db.query(LinkPago).filter(
+        LinkPago.aliado_id == a.id
+    ).order_by(LinkPago.created_at.desc()).limit(50).all()
+    resultado = []
+    for lp in links:
+        estado = lp.estado
+        if estado == "activo" and lp.expires_at and lp.expires_at <= ahora:
+            estado = "vencido"
+        resultado.append({
+            "id": lp.id,
+            "plan": lp.plan,
+            "moneda": lp.moneda,
+            "precio_usd": lp.precio_usd,
+            "precio_ars": lp.precio_ars,
+            "tipo_cambio": lp.tipo_cambio,
+            "checkout_url": lp.checkout_url,
+            "estado": estado,
+            "created_at": lp.created_at.strftime("%d/%m/%Y %H:%M") if lp.created_at else "—",
+            "expires_at": lp.expires_at.strftime("%d/%m/%Y %H:%M") if lp.expires_at else "—",
+        })
+    return {"links": resultado}
+
+
+# ─── PANEL ADMIN: PAGOS Y COMISIONES ─────────────────────────────────────────
+
+@app.get("/admin/pagos")
+def admin_pagos(db: Session = Depends(get_db)):
+    """Admin: todos los pagos recibidos (ventas confirmadas)."""
+    ventas = db.query(Venta).filter(Venta.confirmada == True).order_by(Venta.fecha_venta.desc()).limit(200).all()
+    return {"pagos": [
+        {"id": v.id, "aliado": v.aliado.nombre if v.aliado else "—",
+         "aliado_codigo": v.aliado.codigo if v.aliado else "—",
+         "cliente": v.nombre_cliente, "plan": v.plan,
+         "monto_usd": v.valor_usd, "comision_usd": v.comision_usd,
+         "modalidad": v.modalidad_pago or "—",
+         "fecha": v.fecha_venta.strftime("%d/%m/%Y") if v.fecha_venta else "—",
+         "pagada": v.pagada}
+        for v in ventas
+    ]}
+
+
+@app.get("/admin/comisiones-pendientes")
+def admin_comisiones_pendientes(db: Session = Depends(get_db)):
+    """Admin: comisiones pendientes de abonar con CBU del aliado."""
+    ventas = db.query(Venta).filter(
+        Venta.confirmada == True, Venta.pagada == False
+    ).order_by(Venta.fecha_venta.asc()).all()
+    return {"comisiones": [
+        {"id": v.id, "aliado": v.aliado.nombre if v.aliado else "—",
+         "aliado_codigo": v.aliado.codigo if v.aliado else "—",
+         "aliado_email": v.aliado.email if v.aliado else "—",
+         "cbu_alias": getattr(v.aliado, "cbu_alias", None) or "",
+         "cliente": v.nombre_cliente, "plan": v.plan,
+         "monto_usd": v.valor_usd, "comision_usd": v.comision_usd,
+         "fecha_venta": v.fecha_venta.strftime("%d/%m/%Y") if v.fecha_venta else "—"}
+        for v in ventas
+    ]}
+
+
+@app.post("/admin/comisiones/{venta_id}/abonar")
+async def admin_abonar_comision(venta_id: int, db: Session = Depends(get_db)):
+    """Admin: marca una comisión como abonada y notifica al aliado."""
+    v = db.query(Venta).filter(Venta.id == venta_id).first()
+    if not v:
+        raise HTTPException(404, "Venta no encontrada.")
+    if v.pagada:
+        raise HTTPException(400, "Esta comisión ya fue marcada como abonada.")
+    v.pagada = True
+    v.fecha_pago = datetime.now()
+    db.commit()
+    if v.aliado and v.aliado.email:
+        await enviar_email_async(v.aliado.email, "✅ Comisión abonada — Avanza Digital",
+            f"""<div style="font-family:sans-serif;background:#050505;color:#fff;padding:32px;max-width:520px;margin:auto;border-radius:12px;">
+              <h2 style="color:#4ade80;">¡Tu comisión fue acreditada! ✅</h2>
+              <p>Hola <strong>{v.aliado.nombre.split()[0]}</strong>,</p>
+              <div style="background:#111;border:1px solid #222;border-radius:8px;padding:16px;margin:16px 0;">
+                <p style="margin:4px 0;"><strong>Plan:</strong> {v.plan}</p>
+                <p style="margin:4px 0;"><strong>Cliente:</strong> {v.nombre_cliente}</p>
+                <p style="margin:4px 0;"><strong>Comisión:</strong> <span style="color:#4ade80;font-size:1.3rem;font-weight:900;">USD {v.comision_usd:,.0f}</span></p>
+              </div>
+              <p>Ya debería verse reflejado en tu cuenta.</p>
+              <a href="{PORTAL_URL}/portal.html" style="display:inline-block;margin-top:16px;padding:12px 24px;background:#3b82f6;color:#fff;border-radius:8px;text-decoration:none;font-weight:700;">Ver mis comisiones →</a>
+            </div>""")
+    return {"mensaje": "Comisión marcada como abonada.", "fecha_pago": v.fecha_pago.isoformat()}
+
+
+# ─── ACADEMIA ─────────────────────────────────────────────────────────────────
+
+@app.get("/academia/modulos")
+def listar_modulos(db: Session = Depends(get_db)):
+    """Lista los módulos activos de la Academia."""
+    modulos = db.query(AcademiaModulo).filter(AcademiaModulo.activo == True).order_by(AcademiaModulo.orden).all()
+    return {"modulos": [
+        {"id": m.id, "orden": m.orden, "titulo": m.titulo, "descripcion": m.descripcion,
+         "tipo": m.tipo, "url": m.url_contenido, "duracion_minutos": m.duracion_minutos}
+        for m in modulos
+    ]}
+
+
+class AcademiaModuloCreate(BaseModel):
+    orden: int
+    titulo: str
+    descripcion: str = ""
+    tipo: str = "texto"
+    url_contenido: str = ""
+    duracion_minutos: int = 0
+
+@app.post("/admin/academia/modulos")
+def crear_modulo(m: AcademiaModuloCreate, db: Session = Depends(get_db)):
+    """Admin: crea un módulo de academia."""
+    mod = AcademiaModulo(**m.dict())
+    db.add(mod); db.commit(); db.refresh(mod)
+    return {"id": mod.id, "titulo": mod.titulo}
+
+@app.delete("/admin/academia/modulos/{mod_id}")
+def eliminar_modulo(mod_id: int, db: Session = Depends(get_db)):
+    mod = db.query(AcademiaModulo).filter(AcademiaModulo.id == mod_id).first()
+    if not mod:
+        raise HTTPException(404, "Módulo no encontrado.")
+    mod.activo = False
+    db.commit()
+    return {"mensaje": "Módulo desactivado."}
+
+
 # ─── COMUNIDAD INTERNA (F) ───────────────────────────────────────────────────
 
 @app.get("/comunidad/feed")
@@ -2213,6 +2744,7 @@ def portal_publico_aliado(ref_code: str, db: Session = Depends(get_db)):
         </div>
         """
 
+    # ──────────────────────────────────────────────────────────────────────────────
     html = f"""<!DOCTYPE html>
 <html lang="es"><head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">

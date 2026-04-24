@@ -347,6 +347,8 @@ tr:hover td { background:rgba(255,255,255,0.02); }
       <button class="tab-btn" onclick="cambiarTab('prospectos',this)"><i class="fa-solid fa-bullseye"></i> Prospectos <span id="badge-prosp" style="display:none;background:var(--red);color:white;font-size:.65rem;font-weight:800;padding:2px 7px;border-radius:50px;margin-left:2px;">0</span></button>
       <button class="tab-btn" onclick="cambiarTab('auditorias',this)"><i class="fa-solid fa-magnifying-glass"></i> Auditorías</button>
       <button class="tab-btn" onclick="cambiarTab('bolsa',this)"><i class="fa-solid fa-bullhorn"></i> Bolsa de Leads</button>
+      <button class="tab-btn" onclick="cambiarTab('pagos',this)"><i class="fa-solid fa-credit-card"></i> Pagos</button>
+      <button class="tab-btn" onclick="cambiarTab('comisiones-admin',this)"><i class="fa-solid fa-dollar-sign"></i> Comisiones <span id="badge-com" style="display:none;background:var(--amber);color:#000;font-size:.65rem;font-weight:800;padding:2px 7px;border-radius:50px;margin-left:2px;">0</span></button>
       <button class="tab-btn" onclick="cambiarTab('nuevo-aliado',this)"><i class="fa-solid fa-user-plus"></i> Nuevo aliado</button>
     </div>
 
@@ -694,6 +696,50 @@ tr:hover td { background:rgba(255,255,255,0.02); }
       </div>
     </div>
 
+    <!-- ── TAB PAGOS ── -->
+    <div id="tab-pagos" class="tab-panel">
+      <div class="table-wrap">
+        <div class="table-head">
+          <h3><i class="fa-solid fa-credit-card" style="color:var(--primary);"></i> &nbsp;Pagos recibidos</h3>
+          <button class="btn-outline" onclick="cargarPagosAdmin()"><i class="fa-solid fa-arrows-rotate"></i> Actualizar</button>
+        </div>
+        <div id="tabla-pagos-admin" style="overflow-x:auto;"></div>
+      </div>
+    </div>
+
+    <!-- ── TAB COMISIONES PENDIENTES ── -->
+    <div id="tab-comisiones-admin" class="tab-panel">
+      <div class="table-wrap">
+        <div class="table-head">
+          <h3><i class="fa-solid fa-dollar-sign" style="color:var(--amber);"></i> &nbsp;Comisiones pendientes de abonar</h3>
+          <button class="btn-outline" onclick="cargarComisionesAdmin()"><i class="fa-solid fa-arrows-rotate"></i> Actualizar</button>
+        </div>
+        <div id="tabla-comisiones-admin" style="overflow-x:auto;"></div>
+      </div>
+    </div>
+
+    <!-- ── MODAL CONFIRMAR ABONO ── -->
+    <div class="modal-overlay" id="modal-confirmar-abono">
+      <div class="modal-confirm-box">
+        <span class="confirm-icon">💸</span>
+        <div class="confirm-title">Confirmar pago de comisión</div>
+        <div class="confirm-sub">
+          Aliado: <strong id="conf-aliado-nombre"></strong><br>
+          Monto: <strong id="conf-monto" style="color:#4ade80;"></strong><br><br>
+          CBU / Alias registrado:<br>
+          <strong id="conf-cbu" style="font-size:1rem;letter-spacing:.5px;"></strong>
+          <div id="conf-sin-cbu" style="display:none;margin-top:8px;padding:8px 12px;background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);border-radius:8px;color:#f87171;font-size:.8rem;">
+            ⚠️ Este aliado no tiene CBU/alias cargado. No podés marcar como abonada hasta que lo cargue.
+          </div>
+          <div style="margin-top:10px;font-size:.8rem;color:var(--text-dim);">⚠️ Verificá que el CBU sea correcto antes de confirmar. Esta acción no se puede revertir automáticamente.</div>
+        </div>
+        <div class="confirm-actions">
+          <button id="btn-confirmar-abono" onclick="confirmarAbono()" style="background:var(--green);color:#000;border:none;border-radius:var(--radius-sm);padding:12px 24px;font-weight:800;cursor:pointer;">Sí, ya transferí</button>
+          <button onclick="document.getElementById('modal-confirmar-abono').classList.remove('open')" style="background:transparent;color:var(--text-muted);border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px 24px;font-weight:600;cursor:pointer;">Cancelar</button>
+        </div>
+      </div>
+    </div>
+
     <div id="tab-nuevo-aliado" class="tab-panel">
       <div style="max-width:640px;">
         <div class="table-wrap" style="padding:32px;">
@@ -875,10 +921,21 @@ function apiFetch(url, opts = {}) {
 
 async function cargarTodo() {
   // 1. PRIMERO cargamos los aliados y esperamos a que termine
-  await cargarAliados(); 
-  
+  await cargarAliados();
+
   // 2. LUEGO cargamos el resto (que ahora sí pueden usar la lista de 'todosAliados')
   await Promise.all([cargarReferidos(), cargarVentas(), cargarSuspendidos()]);
+
+  // Cargar badge de comisiones pendientes
+  try {
+    const r = await apiFetch(`${API}/admin/comisiones-pendientes`);
+    const d = await r.json();
+    const badge = document.getElementById('badge-com');
+    if (badge && d.comisiones.length) {
+      badge.textContent = d.comisiones.length;
+      badge.style.display = 'inline';
+    }
+  } catch {}
   
   // 3. Finalmente renderizamos la interfaz
   renderDashboard();
@@ -1201,6 +1258,8 @@ async function verAliado(codigo) {
           <button onclick="navigator.clipboard.writeText('${a.link_ref||''}').then(()=>mostrarToast('Link copiado','green'))" class="btn-outline" style="padding:3px 8px;font-size:.72rem;margin-left:8px;"><i class="fa-solid fa-copy"></i></button>
         </div>
         <div><i class="fa-solid fa-calendar" style="width:16px;color:var(--text-dim);"></i> Firma: ${a.fecha_firma||'—'}</div>
+        <div><i class="fa-solid fa-file-signature" style="width:16px;color:${a.terminos_aceptados?'#4ade80':'#f87171'};"></i> Términos: ${a.terminos_aceptados ? `<span style="color:#4ade80;">✅ Aceptados el ${a.terminos_aceptados_en||'—'}</span>` : '<span style="color:#f87171;">⚠️ No registrado</span>'}</div>
+        <div><i class="fa-solid fa-building-columns" style="width:16px;color:var(--amber);"></i> CBU/Alias: ${a.cbu_alias ? `<span style="font-family:monospace;color:#f59e0b;">${a.cbu_alias}</span>` : '<span style="color:#f87171;font-size:.82rem;">Sin CBU cargado</span>'}</div>
       </div>
     </div>
     <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:20px;">
@@ -1471,7 +1530,9 @@ function cambiarTab(tab, btn) {
   btn.classList.add('active');
   if(tab==='prospectos') cargarAdminProspectos();
   if(tab==='auditorias') cargarAuditoriasAdmin();
-  if(tab==='bolsa') cargarAdminBolsa(); // <-- Agrega esta línea
+  if(tab==='bolsa') cargarAdminBolsa();
+  if(tab==='pagos') cargarPagosAdmin();
+  if(tab==='comisiones-admin') cargarComisionesAdmin();
 }
 
 // ── PROSPECTOS ADMIN ────────────────────────────────────────────────────────
@@ -1909,6 +1970,137 @@ async function asignarCreditosAliado(codigo, nombre) {
       mostrarToast(data.detail || 'Error', 'red');
     }
   } catch(e) { mostrarToast('Error de conexión', 'red'); }
+}
+
+// ── PAGOS ──────────────────────────────────────────────────────────────────
+
+async function cargarPagosAdmin() {
+  const cont = document.getElementById('tabla-pagos-admin');
+  if (!cont) return;
+  cont.innerHTML = '<div style="padding:24px;color:var(--text-dim);">Cargando...</div>';
+  try {
+    const r = await apiFetch(`${API}/admin/pagos`);
+    const d = await r.json();
+    if (!d.pagos.length) {
+      cont.innerHTML = '<div class="empty-state"><i class="fa-solid fa-credit-card"></i><p>No hay pagos registrados aún.</p></div>'; return;
+    }
+    cont.innerHTML = `<table style="width:100%;border-collapse:collapse;font-size:.84rem;">
+      <thead><tr style="border-bottom:1px solid var(--border);color:var(--text-dim);font-size:.72rem;text-transform:uppercase;">
+        <th style="padding:10px 12px;text-align:left;">Aliado</th>
+        <th style="padding:10px 12px;text-align:left;">Cliente</th>
+        <th style="padding:10px 12px;text-align:left;">Plan</th>
+        <th style="padding:10px 12px;text-align:right;">Monto</th>
+        <th style="padding:10px 12px;text-align:right;">Comisión</th>
+        <th style="padding:10px 12px;text-align:center;">Método</th>
+        <th style="padding:10px 12px;text-align:center;">Fecha</th>
+        <th style="padding:10px 12px;text-align:center;">Estado</th>
+      </tr></thead>
+      <tbody>${d.pagos.map(p => `
+        <tr style="border-bottom:1px solid rgba(255,255,255,0.04);">
+          <td style="padding:10px 12px;"><span style="font-weight:700;">${p.aliado}</span> <span style="color:var(--text-dim);font-size:.75rem;">${p.aliado_codigo}</span></td>
+          <td style="padding:10px 12px;color:var(--text-muted);">${p.cliente}</td>
+          <td style="padding:10px 12px;color:var(--text-muted);">${p.plan}</td>
+          <td style="padding:10px 12px;text-align:right;">USD ${p.monto_usd.toLocaleString()}</td>
+          <td style="padding:10px 12px;text-align:right;color:var(--green);font-weight:700;">USD ${p.comision_usd.toLocaleString()}</td>
+          <td style="padding:10px 12px;text-align:center;"><span style="font-size:.75rem;background:rgba(59,130,246,0.1);color:#93c5fd;padding:2px 8px;border-radius:50px;">${p.modalidad}</span></td>
+          <td style="padding:10px 12px;text-align:center;color:var(--text-dim);">${p.fecha}</td>
+          <td style="padding:10px 12px;text-align:center;">${p.pagada ? '<span style="color:#4ade80;font-size:.75rem;">✅ Abonada</span>' : '<span style="color:#f59e0b;font-size:.75rem;">🕐 Pendiente</span>'}</td>
+        </tr>`).join('')}
+      </tbody></table>`;
+  } catch(e) { cont.innerHTML = '<div class="empty-state"><p>Error cargando pagos.</p></div>'; }
+}
+
+// ── COMISIONES PENDIENTES ───────────────────────────────────────────────────
+
+let _comisionSeleccionada = null;
+
+async function cargarComisionesAdmin() {
+  const cont = document.getElementById('tabla-comisiones-admin');
+  if (!cont) return;
+  cont.innerHTML = '<div style="padding:24px;color:var(--text-dim);">Cargando...</div>';
+  try {
+    const r = await apiFetch(`${API}/admin/comisiones-pendientes`);
+    const d = await r.json();
+    const badge = document.getElementById('badge-com');
+    if (badge) {
+      badge.textContent = d.comisiones.length;
+      badge.style.display = d.comisiones.length ? 'inline' : 'none';
+    }
+    if (!d.comisiones.length) {
+      cont.innerHTML = '<div class="empty-state"><i class="fa-solid fa-circle-check" style="color:var(--green);"></i><p>No hay comisiones pendientes. ¡Todo al día!</p></div>'; return;
+    }
+    cont.innerHTML = `<table style="width:100%;border-collapse:collapse;font-size:.84rem;">
+      <thead><tr style="border-bottom:1px solid var(--border);color:var(--text-dim);font-size:.72rem;text-transform:uppercase;">
+        <th style="padding:10px 12px;text-align:left;">Aliado</th>
+        <th style="padding:10px 12px;text-align:left;">Cliente</th>
+        <th style="padding:10px 12px;text-align:left;">Plan</th>
+        <th style="padding:10px 12px;text-align:right;">Comisión</th>
+        <th style="padding:10px 12px;text-align:left;">CBU / Alias</th>
+        <th style="padding:10px 12px;text-align:center;">Fecha venta</th>
+        <th style="padding:10px 12px;text-align:center;">Acción</th>
+      </tr></thead>
+      <tbody>${d.comisiones.map(c => `
+        <tr style="border-bottom:1px solid rgba(255,255,255,0.04);">
+          <td style="padding:10px 12px;"><span style="font-weight:700;">${c.aliado}</span><br><span style="color:var(--text-dim);font-size:.72rem;">${c.aliado_email}</span></td>
+          <td style="padding:10px 12px;color:var(--text-muted);">${c.cliente}</td>
+          <td style="padding:10px 12px;color:var(--text-muted);">${c.plan}</td>
+          <td style="padding:10px 12px;text-align:right;color:var(--green);font-weight:800;">USD ${c.comision_usd.toLocaleString()}</td>
+          <td style="padding:10px 12px;">
+            ${c.cbu_alias
+              ? `<span style="font-family:monospace;font-size:.85rem;color:var(--text);">${c.cbu_alias}</span>`
+              : '<span style="color:#f87171;font-size:.78rem;">⚠️ Sin CBU cargado</span>'}
+          </td>
+          <td style="padding:10px 12px;text-align:center;color:var(--text-dim);">${c.fecha_venta}</td>
+          <td style="padding:10px 12px;text-align:center;">
+            <button onclick="abrirModalAbono(${c.id},'${c.aliado.replace(/'/g,"\\'")}','USD ${c.comision_usd.toLocaleString()}','${(c.cbu_alias||'').replace(/'/g,"\\'")}','${c.aliado_codigo}')"
+              style="background:${c.cbu_alias ? 'var(--green)' : 'rgba(255,255,255,0.05)'};color:${c.cbu_alias ? '#000' : 'var(--text-dim)'};border:none;border-radius:6px;padding:7px 14px;font-size:.78rem;font-weight:700;cursor:${c.cbu_alias ? 'pointer' : 'not-allowed'};">
+              Marcar abonada
+            </button>
+          </td>
+        </tr>`).join('')}
+      </tbody></table>`;
+  } catch(e) { cont.innerHTML = '<div class="empty-state"><p>Error cargando comisiones.</p></div>'; }
+}
+
+function abrirModalAbono(id, aliado, monto, cbuAlias, codigoAliado) {
+  _comisionSeleccionada = {id, codigoAliado};
+  document.getElementById('conf-aliado-nombre').textContent = aliado;
+  document.getElementById('conf-monto').textContent = monto;
+  const cbuEl = document.getElementById('conf-cbu');
+  const sinCbuEl = document.getElementById('conf-sin-cbu');
+  const btnConfirmar = document.getElementById('btn-confirmar-abono');
+  if (cbuAlias) {
+    cbuEl.textContent = cbuAlias;
+    sinCbuEl.style.display = 'none';
+    btnConfirmar.disabled = false;
+    btnConfirmar.style.opacity = '1';
+  } else {
+    cbuEl.textContent = '—';
+    sinCbuEl.style.display = 'block';
+    btnConfirmar.disabled = true;
+    btnConfirmar.style.opacity = '.4';
+  }
+  document.getElementById('modal-confirmar-abono').classList.add('open');
+}
+
+async function confirmarAbono() {
+  if (!_comisionSeleccionada) return;
+  const btn = document.getElementById('btn-confirmar-abono');
+  btn.innerHTML = '<span class="spinner"></span>';
+  btn.disabled = true;
+  try {
+    const r = await apiFetch(`${API}/admin/comisiones/${_comisionSeleccionada.id}/abonar`, {method:'POST'});
+    const d = await r.json();
+    if (r.ok) {
+      document.getElementById('modal-confirmar-abono').classList.remove('open');
+      mostrarToast('✅ Comisión marcada como abonada. El aliado será notificado.', 'green');
+      cargarComisionesAdmin();
+    } else {
+      mostrarToast(d.detail || 'Error al abonar comisión.', 'red');
+    }
+  } catch { mostrarToast('Error de conexión.', 'red'); }
+  btn.innerHTML = 'Sí, ya transferí';
+  btn.disabled = false;
 }
 
 async function revocarLead(id) {

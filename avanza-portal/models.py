@@ -53,6 +53,13 @@ class Aliado(Base):
     # "canal2" = Tengo mis clientes (contador, consultor B2B — trae su propia cartera)
     tipo_aliado = Column(String, default="canal1")
 
+    # --- COBRO DE COMISIONES ---
+    cbu_alias = Column(String, nullable=True)
+
+    # --- CONTRATO DIGITAL ---
+    terminos_aceptados = Column(Boolean, default=False)
+    terminos_aceptados_en = Column(DateTime, nullable=True)
+
     ventas = relationship("Venta", back_populates="aliado")
     referidos = relationship("Referido", back_populates="aliado")
     prospectos = relationship("Prospecto", back_populates="aliado")
@@ -298,6 +305,41 @@ CUOTAS_RECARGO = {
     6:  0.15,
     12: 0.28,
 }
+
+# ─── LINK DE PAGO (checkout con expiración) ──────────────────────────────────
+class LinkPago(Base):
+    __tablename__ = "links_pago"
+
+    id = Column(Integer, primary_key=True, index=True)
+    aliado_id = Column(Integer, ForeignKey("aliados.id"))
+    prospecto_id = Column(Integer, ForeignKey("prospectos.id"), nullable=True)
+    plan = Column(String)
+    moneda = Column(String)                   # 'ars' | 'usd'
+    precio_usd = Column(Float)
+    precio_ars = Column(Float, nullable=True)
+    tipo_cambio = Column(Float, nullable=True)
+    checkout_url = Column(String)
+    created_at = Column(DateTime, default=func.now())
+    expires_at = Column(DateTime)
+    estado = Column(String, default="activo")  # 'activo' | 'vencido' | 'pagado'
+
+    aliado = relationship("Aliado")
+
+
+# ─── MÓDULOS DE LA ACADEMIA ───────────────────────────────────────────────────
+class AcademiaModulo(Base):
+    __tablename__ = "academia_modulos"
+
+    id = Column(Integer, primary_key=True, index=True)
+    orden = Column(Integer)
+    titulo = Column(String)
+    descripcion = Column(Text, nullable=True)
+    tipo = Column(String)                      # 'video' | 'pdf' | 'texto'
+    url_contenido = Column(String, nullable=True)
+    duracion_minutos = Column(Integer, nullable=True)
+    activo = Column(Boolean, default=True)
+    creado_en = Column(DateTime, default=func.now())
+
 
 # Badges del sistema de reputación (C)
 REPUTACION_BADGES = {

@@ -1501,8 +1501,13 @@
 
     <div id="tab-cotizador" class="tab-panel">
       <div class="bento-box">
-        <h3 style="font-size:1.1rem;font-weight:800;margin-bottom:8px;"><i class="fa-solid fa-bolt" style="color:var(--primary);"></i> Armar Propuesta en Vivo</h3>
-        <p style="color:var(--text-muted);font-size:0.9rem;margin-bottom:24px;">Cotizá el servicio para tu prospecto. El sistema generará un link de contratación con tu atribución automática.</p>
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:12px;margin-bottom:8px;">
+          <h3 style="font-size:1.1rem;font-weight:800;"><i class="fa-solid fa-bolt" style="color:var(--primary);"></i> Armar Propuesta en Vivo</h3>
+          <div id="cot-tc-badge" style="background:rgba(59,130,246,0.1);border:1px solid rgba(59,130,246,0.25);border-radius:8px;padding:6px 12px;font-size:.78rem;color:#93c5fd;font-weight:700;">
+            <i class="fa-solid fa-arrows-rotate" id="cot-tc-spin" style="animation:spin .7s linear infinite;"></i> Cargando tipo de cambio...
+          </div>
+        </div>
+        <p style="color:var(--text-muted);font-size:0.9rem;margin-bottom:24px;">Cotizá el servicio para tu prospecto. Generá un link en pesos (MP) o en dólares (PayPal) con tu atribución automática.</p>
 
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;">
           <div class="form-row" style="margin-bottom:0;">
@@ -1562,17 +1567,47 @@
               </div>
             </div>
 
-            <!-- Link de pago -->
+            <!-- Precio ARS referencia -->
+            <div id="cot-ars-ref" style="margin-top:12px;padding:10px 14px;background:rgba(59,130,246,0.06);border:1px solid rgba(59,130,246,0.15);border-radius:8px;font-size:.82rem;color:#93c5fd;display:none;">
+              <i class="fa-solid fa-coins"></i> Precio en ARS: <strong id="cot-precio-ars">—</strong> · <span id="cot-tc-label" style="opacity:.7;">USD 1 = ARS — (blue · actualizando...)</span>
+            </div>
+
+            <!-- Links de pago generados -->
+            <div id="cot-links-generados" style="display:none;margin-top:16px;padding-top:16px;border-top:1px solid rgba(255,255,255,0.05);">
+              <div style="margin-bottom:10px;">
+                <div style="font-size:.75rem;color:var(--text-dim);font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;"><i class="fa-solid fa-peso-sign" style="color:#4ade80;"></i> Link en Pesos — MercadoPago</div>
+                <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+                  <input type="text" id="cot-link-mp" readonly style="flex:1;min-width:180px;background:rgba(0,0,0,0.5);border:1px solid var(--border);border-radius:8px;padding:10px 12px;color:#4ade80;font-family:monospace;font-size:.78rem;outline:none;">
+                  <button onclick="copiarLink('cot-link-mp')" style="background:rgba(74,222,128,0.15);color:#4ade80;border:1px solid rgba(74,222,128,0.3);border-radius:8px;padding:10px 14px;font-weight:700;cursor:pointer;font-size:.8rem;"><i class="fa-solid fa-copy"></i> Copiar</button>
+                </div>
+                <div id="cot-mp-expiry" style="font-size:.73rem;color:var(--text-dim);margin-top:4px;"></div>
+              </div>
+              <div>
+                <div style="font-size:.75rem;color:var(--text-dim);font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;"><i class="fa-brands fa-paypal" style="color:#60a5fa;"></i> Link en Dólares — PayPal</div>
+                <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+                  <input type="text" id="cot-link-pp" readonly style="flex:1;min-width:180px;background:rgba(0,0,0,0.5);border:1px solid var(--border);border-radius:8px;padding:10px 12px;color:#60a5fa;font-family:monospace;font-size:.78rem;outline:none;">
+                  <button onclick="copiarLink('cot-link-pp')" style="background:rgba(96,165,250,0.15);color:#60a5fa;border:1px solid rgba(96,165,250,0.3);border-radius:8px;padding:10px 14px;font-weight:700;cursor:pointer;font-size:.8rem;"><i class="fa-solid fa-copy"></i> Copiar</button>
+                </div>
+                <div id="cot-pp-expiry" style="font-size:.73rem;color:var(--text-dim);margin-top:4px;"></div>
+              </div>
+            </div>
+
+            <!-- Link manual (atribución) + botones de generar -->
             <div style="margin-top:20px; padding-top:16px; border-top:1px solid rgba(255,255,255,0.05);">
-              <label style="font-size:0.8rem; color:var(--text-muted); display:block; margin-bottom:8px; font-weight:600;"><i class="fa-solid fa-link"></i> Link de Pago (Atribución Automática)</label>
-              <div style="display:flex; gap:10px; flex-wrap:wrap;">
+              <label style="font-size:0.8rem; color:var(--text-muted); display:block; margin-bottom:8px; font-weight:600;"><i class="fa-solid fa-link"></i> Link de Propuesta (manual)</label>
+              <div style="display:flex; gap:10px; flex-wrap:wrap;margin-bottom:14px;">
                 <input type="text" id="cot-link" readonly style="flex:1; min-width:200px; background:rgba(0,0,0,0.5); border:1px solid var(--border); border-radius:8px; padding:12px; color:var(--primary); font-family:monospace; font-size:0.82rem; outline:none;">
-                <button onclick="copiarCotizacion()" style="background:var(--primary); color:white; border:none; border-radius:8px; padding:0 20px; font-weight:800; cursor:pointer;"><i class="fa-solid fa-copy"></i> Copiar y Enviar</button>
-                <button id="btn-checkout-real" onclick="generarCheckoutReal()" style="background:var(--green); color:#000; border:none; border-radius:8px; padding:0 16px; font-weight:800; cursor:pointer; font-size:0.82rem; display:none;">
-                  <i class="fa-solid fa-credit-card"></i> Pago directo MP
+                <button onclick="copiarCotizacion()" style="background:var(--primary); color:white; border:none; border-radius:8px; padding:0 20px; font-weight:800; cursor:pointer;"><i class="fa-solid fa-copy"></i> Copiar</button>
+              </div>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+                <button id="btn-checkout-mp" onclick="generarCheckout('ars')" style="background:linear-gradient(135deg,#4ade80,#22c55e);color:#000;border:none;border-radius:8px;padding:12px 16px;font-weight:800;cursor:pointer;font-size:.85rem;display:flex;align-items:center;justify-content:center;gap:8px;">
+                  <i class="fa-solid fa-peso-sign"></i> Generar link en pesos (MP)
+                </button>
+                <button id="btn-checkout-pp" onclick="generarCheckout('usd')" style="background:linear-gradient(135deg,#3b82f6,#2563eb);color:#fff;border:none;border-radius:8px;padding:12px 16px;font-weight:800;cursor:pointer;font-size:.85rem;display:flex;align-items:center;justify-content:center;gap:8px;">
+                  <i class="fa-brands fa-paypal"></i> Generar link en dólares (PayPal)
                 </button>
               </div>
-              <p style="font-size:0.75rem; color:var(--text-dim); margin-top:8px;">Al enviar este link, si el cliente paga, la venta se registra a tu nombre automáticamente.</p>
+              <p style="font-size:0.75rem; color:var(--text-dim); margin-top:10px;">Al generar el link y el cliente paga, la venta se registra a tu nombre automáticamente. Los links vencen en 48hs.</p>
             </div>
 
             <!-- SIMULADOR DE CUOTAS (v1.3) -->
@@ -1677,14 +1712,47 @@
     </div>
 
     <div id="tab-comisiones" class="tab-panel">
+
+      <!-- Resumen pendiente -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:24px;">
+        <div class="metric-card highlight" style="padding:20px;">
+          <div class="metric-label" style="font-size:.72rem;">Pendiente de cobro</div>
+          <div class="metric-value amber" id="com-total-pendiente" style="font-size:1.8rem;">—</div>
+          <div class="metric-sub">Se abona en 24hs del cierre</div>
+        </div>
+        <div class="metric-card" style="padding:20px;">
+          <div class="metric-label" style="font-size:.72rem;">Total cobrado</div>
+          <div class="metric-value green" id="com-total-cobrado" style="font-size:1.8rem;">—</div>
+          <div class="metric-sub">Comisiones ya abonadas</div>
+        </div>
+      </div>
+
+      <!-- CBU/Alias para cobro -->
+      <div class="bento-box" style="margin-bottom:24px;background:linear-gradient(135deg,rgba(74,222,128,0.05),transparent);border-color:rgba(74,222,128,0.2);">
+        <h3 style="font-size:.9rem;font-weight:700;margin-bottom:12px;"><i class="fa-solid fa-building-columns" style="color:var(--green);"></i> &nbsp;Tu CBU / Alias para cobros</h3>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;">
+          <div style="flex:1;min-width:200px;">
+            <label style="font-size:.72rem;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;display:block;margin-bottom:6px;">CBU o Alias de MercadoPago</label>
+            <input type="text" id="cbu-alias-input" placeholder="Tu CBU o alias (ej: ivan.galarza.mp)" style="width:100%;background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:var(--radius-sm);padding:11px 14px;color:var(--text);font-size:.9rem;font-family:'Inter',sans-serif;outline:none;">
+          </div>
+          <button onclick="guardarCBU()" id="btn-guardar-cbu" style="background:var(--green);color:#000;border:none;border-radius:var(--radius-sm);padding:11px 20px;font-size:.88rem;font-weight:800;cursor:pointer;white-space:nowrap;">
+            <i class="fa-solid fa-floppy-disk"></i> Guardar
+          </button>
+        </div>
+        <p style="font-size:.75rem;color:var(--text-dim);margin-top:8px;">Sin CBU cargado, el admin no puede transferirte la comisión.</p>
+      </div>
+
+      <!-- Calculadora de comisiones por nivel -->
       <div class="bento-box" style="margin-bottom:24px;">
         <h3 style="font-size:0.95rem;font-weight:700;margin-bottom:4px;"><i class="fa-solid fa-calculator" style="color:var(--primary);"></i> &nbsp;Tus comisiones según nivel actual</h3>
-        <p style="font-size:0.82rem;color:var(--text-muted);margin-bottom:0;">Valores para pago único. Comisiones recurrentes: 10% mensual mientras el cliente esté activo.</p>
+        <p style="font-size:0.82rem;color:var(--text-muted);margin-bottom:0;">Valores para pago único.</p>
         <div class="planes-grid" id="planes-grid"></div>
       </div>
+
+      <!-- Historial de comisiones -->
       <div class="table-wrap">
-        <div class="table-head"><h3><i class="fa-solid fa-receipt" style="color:var(--amber);"></i> &nbsp;Detalle de comisiones</h3></div>
-        <div id="tabla-comisiones"></div>
+        <div class="table-head"><h3><i class="fa-solid fa-receipt" style="color:var(--amber);"></i> &nbsp;Historial de comisiones</h3></div>
+        <div id="tabla-comisiones-historial" style="padding:0 4px 8px;"></div>
       </div>
     </div>
 
@@ -2316,7 +2384,7 @@ async function registrarse() {
   try {
     const urlParams = new URLSearchParams(window.location.search);
     const refSponsor = urlParams.get('ref') || '';
-    const params = new URLSearchParams({ nombre, email, whatsapp, ciudad, dni, perfil, password: pass, ref_sponsor: refSponsor, tipo_aliado: tipoAliado });
+    const params = new URLSearchParams({ nombre, email, whatsapp, ciudad, dni, perfil, password: pass, ref_sponsor: refSponsor, tipo_aliado: tipoAliado, acepto_terminos: 'true' });
     
     // Timeout de 15 segundos para evitar cuelgues infinitos
     const controller = new AbortController();
@@ -2504,19 +2572,22 @@ function cerrarSesion() {
 
 async function cargarTodo() {
   try { const res = await fetch(`${API}/aliados/${aliado.codigo}`); if(res.ok) aliado = await res.json(); } catch {}
-  
+
   // Configurar visibilidad de tabs y bloques según canal del aliado
   configurarCanal();
 
-  renderDashboard(); 
-  renderReferidos(); 
-  renderVentas(); 
+  renderDashboard();
+  renderReferidos();
+  renderVentas();
   renderComisiones();
   renderLeaderboard();
   cargarReputacion();
   cargarCreditos();
   cargarSiguienteAccion();
   cargarOnboardingChecklist();
+  cargarTipoCambio();
+  cargarComisionesHistorial();
+  renderCBUAlias();
 
   // Mostrar botón flotante de soporte
   document.getElementById('float-support').style.display = 'flex';
@@ -3269,45 +3340,157 @@ function actualizarCotizador() {
   document.getElementById('cot-comision').textContent = 'USD ' + comision.toLocaleString();
   document.getElementById('cot-pct-badge').textContent = (porcentaje * 100) + '%';
 
+  // Mostrar precio ARS referencia
+  const arsRef = document.getElementById('cot-ars-ref');
+  if (arsRef && window._tipoCambio) {
+    const precioARS = Math.round(precio * window._tipoCambio);
+    document.getElementById('cot-precio-ars').textContent = 'ARS ' + precioARS.toLocaleString('es-AR');
+    arsRef.style.display = 'block';
+  }
+
   const cliente = document.getElementById('cot-cliente').value || 'tu-cliente';
   const link    = `https://avanzadigital.digital/contratar?plan=${encodeURIComponent(plan)}&ref=${aliado.ref_code}&cliente=${encodeURIComponent(cliente)}`;
   document.getElementById('cot-link').value = link;
 
-  // Mostrar botón MP si aplica
-  const btnMP = document.getElementById('btn-checkout-real');
-  if(btnMP) btnMP.style.display = 'inline-flex';
+  // Ocultar links generados previos
+  document.getElementById('cot-links-generados').style.display = 'none';
+  document.getElementById('cot-link-mp').value = '';
+  document.getElementById('cot-link-pp').value = '';
 
   // Resetear análisis IA
   if(aiBox) { aiBox.style.display='none'; aiBox.innerHTML=''; }
   resDiv.style.display = 'block';
 }
 
-async function generarCheckoutReal() {
+async function generarCheckout(moneda) {
   const plan    = document.getElementById('cot-plan').value;
   const cliente = document.getElementById('cot-cliente').value || 'Cliente';
-  const btn     = document.getElementById('btn-checkout-real');
-  if(!plan) return;
+  if(!plan) { mostrarToast('Elegí un plan primero.', 'amber'); return; }
+  const btnId = moneda === 'ars' ? 'btn-checkout-mp' : 'btn-checkout-pp';
+  const btn   = document.getElementById(btnId);
+  const label = moneda === 'ars' ? '<i class="fa-solid fa-peso-sign"></i> Generar link en pesos (MP)' : '<i class="fa-brands fa-paypal"></i> Generar link en dólares (PayPal)';
   btn.innerHTML = '<span class="spinner"></span> Generando...';
   btn.disabled  = true;
   try {
-    const res  = await fetch(`${API}/checkout/crear?plan=${encodeURIComponent(plan)}&ref_code=${aliado.ref_code}&nombre_cliente=${encodeURIComponent(cliente)}`, {method:'POST'});
+    const res  = await fetch(`${API}/checkout/crear?plan=${encodeURIComponent(plan)}&ref_code=${aliado.ref_code}&nombre_cliente=${encodeURIComponent(cliente)}&moneda=${moneda}`, {method:'POST'});
     const data = await res.json();
     if(res.ok && data.checkout_url) {
       if(data.fallback) {
-        mostrarToast('Checkout MP no activado. Usá el link de atribución manual.', 'amber');
-        document.getElementById('cot-link').value = data.checkout_url;
+        mostrarToast('Procesador no configurado aún. Usá el link manual.', 'amber');
       } else {
-        mostrarToast('¡Checkout generado! Abriendo MercadoPago...', 'green');
-        setTimeout(()=> window.open(data.checkout_url, '_blank'), 400);
+        const inputId  = moneda === 'ars' ? 'cot-link-mp' : 'cot-link-pp';
+        const expiryId = moneda === 'ars' ? 'cot-mp-expiry' : 'cot-pp-expiry';
+        document.getElementById(inputId).value = data.checkout_url;
+        if (data.expires_at) {
+          const exp = new Date(data.expires_at);
+          document.getElementById(expiryId).textContent = `Vence: ${exp.toLocaleString('es-AR')}`;
+        }
+        document.getElementById('cot-links-generados').style.display = 'block';
+        const monedaLabel = moneda === 'ars' ? 'en pesos (MercadoPago)' : 'en dólares (PayPal)';
+        mostrarToast(`¡Link ${monedaLabel} generado! Copialo y enviáselo al cliente.`, 'green');
       }
     } else {
-      mostrarToast('Error al generar checkout. Usá el link manual.', 'amber');
+      mostrarToast(data.mensaje || data.detail || 'Error al generar el link.', 'red');
     }
   } catch(e) {
     mostrarToast('Error de conexión.', 'red');
   }
-  btn.innerHTML = '<i class="fa-solid fa-credit-card"></i> Pago directo MP';
+  btn.innerHTML = label;
   btn.disabled  = false;
+}
+
+function copiarLink(inputId) {
+  const val = document.getElementById(inputId)?.value;
+  if (!val) return;
+  navigator.clipboard.writeText(val).then(() => mostrarToast('Link copiado', 'green'));
+}
+
+async function cargarTipoCambio() {
+  try {
+    const r = await fetch(`${API}/tipo-cambio`);
+    if (r.ok) {
+      const d = await r.json();
+      window._tipoCambio = d.venta;
+      const badge = document.getElementById('cot-tc-badge');
+      if (badge) badge.innerHTML = `<i class="fa-solid fa-circle" style="color:#4ade80;font-size:.5rem;vertical-align:middle;"></i> USD 1 = ARS ${d.venta.toLocaleString('es-AR')} <span style="opacity:.6;">(blue · actualizado)</span>`;
+      const label = document.getElementById('cot-tc-label');
+      if (label) label.textContent = `USD 1 = ARS ${d.venta.toLocaleString('es-AR')} (blue · actualizado)`;
+    }
+  } catch(e) { console.log('Error cargando tipo de cambio:', e); }
+}
+
+async function cargarComisionesHistorial() {
+  if (!aliado) return;
+  try {
+    const r = await fetch(`${API}/aliado/comisiones?codigo=${aliado.codigo}`);
+    if (!r.ok) return;
+    const d = await r.json();
+    const pendEl = document.getElementById('com-total-pendiente');
+    const cobEl  = document.getElementById('com-total-cobrado');
+    if (pendEl) pendEl.textContent = `USD ${d.total_pendiente.toLocaleString()}`;
+    if (cobEl)  cobEl.textContent  = `USD ${d.total_cobrado.toLocaleString()}`;
+    const cont = document.getElementById('tabla-comisiones-historial');
+    if (!cont) return;
+    if (!d.comisiones.length) {
+      cont.innerHTML = `<div class="empty-state"><i class="fa-solid fa-receipt"></i><p>Todavía no tenés comisiones registradas.</p></div>`;
+      return;
+    }
+    cont.innerHTML = `
+      <table style="width:100%;border-collapse:collapse;font-size:.85rem;">
+        <thead><tr style="border-bottom:1px solid var(--border);color:var(--text-dim);font-size:.72rem;text-transform:uppercase;letter-spacing:.5px;">
+          <th style="padding:10px 12px;text-align:left;">Cliente</th>
+          <th style="padding:10px 12px;text-align:left;">Plan</th>
+          <th style="padding:10px 12px;text-align:right;">Monto plan</th>
+          <th style="padding:10px 12px;text-align:right;">Mi comisión</th>
+          <th style="padding:10px 12px;text-align:center;">Estado</th>
+          <th style="padding:10px 12px;text-align:center;">Fecha pago</th>
+          <th style="padding:10px 12px;text-align:center;">Fecha abono</th>
+        </tr></thead>
+        <tbody>${d.comisiones.map(c => `
+          <tr style="border-bottom:1px solid rgba(255,255,255,0.04);">
+            <td style="padding:10px 12px;color:var(--text);">${c.cliente}</td>
+            <td style="padding:10px 12px;color:var(--text-muted);">${c.plan}</td>
+            <td style="padding:10px 12px;text-align:right;color:var(--text-muted);">USD ${c.monto_plan_usd.toLocaleString()}</td>
+            <td style="padding:10px 12px;text-align:right;font-weight:800;color:var(--green);">USD ${c.comision_usd.toLocaleString()}</td>
+            <td style="padding:10px 12px;text-align:center;">
+              ${c.estado === 'abonada'
+                ? '<span style="background:rgba(74,222,128,0.1);color:#4ade80;border:1px solid rgba(74,222,128,0.3);padding:3px 10px;border-radius:50px;font-size:.72rem;font-weight:700;">✅ Abonada</span>'
+                : '<span style="background:rgba(245,158,11,0.1);color:#f59e0b;border:1px solid rgba(245,158,11,0.3);padding:3px 10px;border-radius:50px;font-size:.72rem;font-weight:700;">🕐 Pendiente</span>'}
+            </td>
+            <td style="padding:10px 12px;text-align:center;color:var(--text-muted);">${c.fecha_pago}</td>
+            <td style="padding:10px 12px;text-align:center;color:var(--text-muted);">${c.fecha_abono}</td>
+          </tr>`).join('')}
+        </tbody>
+      </table>`;
+  } catch(e) { console.log('Error cargando comisiones:', e); }
+}
+
+function renderCBUAlias() {
+  const input = document.getElementById('cbu-alias-input');
+  if (input && aliado && aliado.cbu_alias) input.value = aliado.cbu_alias;
+}
+
+async function guardarCBU() {
+  const val = document.getElementById('cbu-alias-input')?.value?.trim();
+  const btn = document.getElementById('btn-guardar-cbu');
+  if (val === undefined || val === null) return;
+  btn.innerHTML = '<span class="spinner"></span>';
+  btn.disabled = true;
+  try {
+    const r = await fetch(`${API}/aliado/perfil?codigo=${aliado.codigo}`, {
+      method: 'PATCH',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({cbu_alias: val})
+    });
+    if (r.ok) {
+      aliado.cbu_alias = val;
+      mostrarToast('CBU/Alias guardado correctamente.', 'green');
+    } else {
+      mostrarToast('Error al guardar CBU/Alias.', 'red');
+    }
+  } catch { mostrarToast('Error de conexión.', 'red'); }
+  btn.innerHTML = '<i class="fa-solid fa-floppy-disk"></i> Guardar';
+  btn.disabled = false;
 }
 
 async function obtenerAnalisisIA() {
