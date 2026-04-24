@@ -347,6 +347,9 @@ tr:hover td { background:rgba(255,255,255,0.02); }
       <button class="tab-btn" onclick="cambiarTab('prospectos',this)"><i class="fa-solid fa-bullseye"></i> Prospectos <span id="badge-prosp" style="display:none;background:var(--red);color:white;font-size:.65rem;font-weight:800;padding:2px 7px;border-radius:50px;margin-left:2px;">0</span></button>
       <button class="tab-btn" onclick="cambiarTab('auditorias',this)"><i class="fa-solid fa-magnifying-glass"></i> Auditorías</button>
       <button class="tab-btn" onclick="cambiarTab('bolsa',this)"><i class="fa-solid fa-bullhorn"></i> Bolsa de Leads</button>
+      <button class="tab-btn" onclick="cambiarTab('comisiones',this)"><i class="fa-solid fa-percent"></i> Comisiones <span id="badge-comis" style="display:none;background:var(--red);color:white;font-size:.65rem;font-weight:800;padding:2px 7px;border-radius:50px;margin-left:2px;">0</span></button>
+      <button class="tab-btn" onclick="cambiarTab('pagos',this)"><i class="fa-solid fa-credit-card"></i> Pagos</button>
+      <button class="tab-btn" onclick="cambiarTab('academia',this)"><i class="fa-solid fa-graduation-cap"></i> Academia</button>
       <button class="tab-btn" onclick="cambiarTab('nuevo-aliado',this)"><i class="fa-solid fa-user-plus"></i> Nuevo aliado</button>
     </div>
 
@@ -393,13 +396,13 @@ tr:hover td { background:rgba(255,255,255,0.02); }
 
       <div class="quick-actions">
         <span class="quick-actions-label"><i class="fa-solid fa-zap"></i> Acciones rápidas:</span>
-        <button class="btn-primary" onclick="cambiarTab('nuevo-aliado',document.querySelectorAll('.tab-btn')[7])">
+        <button class="btn-primary" onclick="cambiarTab('nuevo-aliado')">
           <i class="fa-solid fa-user-plus"></i> Nuevo aliado
         </button>
         <button class="btn-primary" onclick="abrirModalVenta()">
           <i class="fa-solid fa-plus"></i> Registrar venta
         </button>
-        <button class="btn-outline" onclick="cambiarTab('referidos',document.querySelectorAll('.tab-btn')[3])">
+        <button class="btn-outline" onclick="cambiarTab('referidos')">
           <i class="fa-solid fa-bell"></i> Ver referidos pendientes
         </button>
       </div>
@@ -414,7 +417,7 @@ tr:hover td { background:rgba(255,255,255,0.02); }
         <div class="table-wrap" style="margin-bottom:0;">
           <div class="table-head">
             <h3><i class="fa-solid fa-triangle-exclamation" style="color:var(--amber);"></i> Pendientes de confirmación</h3>
-            <button class="btn-outline" onclick="cambiarTab('referidos',document.querySelectorAll('.tab-btn')[3])"><i class="fa-solid fa-arrow-right"></i> Ver todos</button>
+            <button class="btn-outline" onclick="cambiarTab('referidos')"><i class="fa-solid fa-arrow-right"></i> Ver todos</button>
           </div>
           <div id="dash-referidos-pending"></div>
         </div>
@@ -444,7 +447,7 @@ tr:hover td { background:rgba(255,255,255,0.02); }
               <option value="PREMIUM">PREMIUM</option>
               <option value="ELITE">ELITE</option>
             </select>
-            <button class="btn-primary" onclick="cambiarTab('nuevo-aliado',document.querySelectorAll('.tab-btn')[7])"><i class="fa-solid fa-user-plus"></i> Nuevo aliado</button>
+            <button class="btn-primary" onclick="cambiarTab('nuevo-aliado')"><i class="fa-solid fa-user-plus"></i> Nuevo aliado</button>
           </div>
         </div>
         <div style="overflow-x:auto;">
@@ -694,6 +697,107 @@ tr:hover td { background:rgba(255,255,255,0.02); }
       </div>
     </div>
 
+    <!-- ═══════════════════════════════════════════════════════════════════
+         TAB: COMISIONES (§12 + §15)
+    ═══════════════════════════════════════════════════════════════════ -->
+    <div id="tab-comisiones" class="tab-panel">
+
+      <!-- KPIs rápidos -->
+      <div id="comis-kpis" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin-bottom:20px;"></div>
+
+      <div class="table-wrap">
+        <div class="table-head">
+          <div>
+            <h3><i class="fa-solid fa-percent" style="color:var(--primary);"></i> Comisiones</h3>
+            <div style="font-size:.82rem;color:var(--text-muted);margin-top:4px;">Verificá el CBU antes de transferir. Una vez marcada como abonada, no se puede revertir.</div>
+          </div>
+          <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+            <div class="tabs" style="margin-bottom:0;">
+              <button class="tab-btn active" onclick="filtrarComisiones('pendiente',this)" id="fcom-pend"><i class="fa-solid fa-clock"></i> Pendientes</button>
+              <button class="tab-btn" onclick="filtrarComisiones('abonada',this)" id="fcom-abon"><i class="fa-solid fa-check"></i> Abonadas</button>
+              <button class="tab-btn" onclick="filtrarComisiones('',this)" id="fcom-todas">Todas</button>
+            </div>
+            <button onclick="cargarAdminComisiones()" style="background:transparent;border:1px solid var(--border);color:var(--text-muted);border-radius:8px;padding:7px 14px;font-size:.8rem;cursor:pointer;"><i class="fa-solid fa-rotate-right"></i></button>
+          </div>
+        </div>
+        <div style="overflow-x:auto;">
+          <table>
+            <thead><tr>
+              <th>Aliado</th><th>Cliente</th><th>Plan</th>
+              <th>Comisión USD</th><th>CBU / Alias</th>
+              <th>Estado</th><th>Fecha pago</th><th>Acción</th>
+            </tr></thead>
+            <tbody id="tabla-comis-body">
+              <tr><td colspan="8" style="padding:32px;text-align:center;color:var(--text-muted);">Cargando...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════════════════════════
+         TAB: PAGOS (§12)
+    ═══════════════════════════════════════════════════════════════════ -->
+    <div id="tab-pagos" class="tab-panel">
+
+      <div id="pagos-kpis" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin-bottom:20px;"></div>
+
+      <div class="table-wrap">
+        <div class="table-head">
+          <div>
+            <h3><i class="fa-solid fa-credit-card" style="color:var(--green);"></i> Pagos recibidos</h3>
+            <div style="font-size:.82rem;color:var(--text-muted);margin-top:4px;">Historial de todos los cobros procesados por MercadoPago y PayPal.</div>
+          </div>
+          <button onclick="cargarAdminPagos()" style="background:transparent;border:1px solid var(--border);color:var(--text-muted);border-radius:8px;padding:7px 14px;font-size:.8rem;cursor:pointer;"><i class="fa-solid fa-rotate-right"></i> Actualizar</button>
+        </div>
+        <div style="overflow-x:auto;">
+          <table>
+            <thead><tr>
+              <th>Aliado</th><th>Plan</th><th>Monto USD</th>
+              <th>Monto ARS</th><th>TC</th><th>Procesador</th><th>Fecha</th>
+            </tr></thead>
+            <tbody id="tabla-pagos-body">
+              <tr><td colspan="7" style="padding:32px;text-align:center;color:var(--text-muted);">Cargando...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════════════════════════
+         TAB: ACADEMIA (§18)
+    ═══════════════════════════════════════════════════════════════════ -->
+    <div id="tab-academia" class="tab-panel">
+      <div class="table-wrap">
+        <div class="table-head">
+          <div>
+            <h3><i class="fa-solid fa-graduation-cap" style="color:var(--amber);"></i> Academia — Módulos de onboarding</h3>
+            <div style="font-size:.82rem;color:var(--text-muted);margin-top:4px;">Los módulos activos se muestran a todos los aliados en su portal. Ordená con el campo "Orden" (menor = primero).</div>
+          </div>
+          <div style="display:flex;gap:8px;">
+            <button onclick="cargarAdminAcademia()" style="background:transparent;border:1px solid var(--border);color:var(--text-muted);border-radius:8px;padding:7px 14px;font-size:.8rem;cursor:pointer;"><i class="fa-solid fa-rotate-right"></i></button>
+            <button class="btn-primary" onclick="abrirModalAcademia()"><i class="fa-solid fa-plus"></i> Nuevo módulo</button>
+          </div>
+        </div>
+        <div style="overflow-x:auto;">
+          <table>
+            <thead><tr>
+              <th style="width:60px;">Orden</th>
+              <th>Título</th>
+              <th>Tipo</th>
+              <th>Duración</th>
+              <th>URL / Contenido</th>
+              <th>Activo</th>
+              <th style="width:140px;">Acciones</th>
+            </tr></thead>
+            <tbody id="tabla-academia-body">
+              <tr><td colspan="7" style="padding:32px;text-align:center;color:var(--text-muted);">Cargando...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
     <div id="tab-nuevo-aliado" class="tab-panel">
       <div style="max-width:640px;">
         <div class="table-wrap" style="padding:32px;">
@@ -799,6 +903,100 @@ tr:hover td { background:rgba(255,255,255,0.02); }
       <button class="btn-outline" onclick="cerrarModal('modal-confirm')"><i class="fa-solid fa-xmark"></i> Cancelar</button>
       <button class="btn-red" id="confirm-ok-btn" onclick="ejecutarConfirm()"><i class="fa-solid fa-check"></i> Confirmar</button>
     </div>
+  </div>
+</div>
+
+<!-- MODAL: Confirmar abono de comisión (§15) -->
+<div class="modal-overlay" id="modal-abonar">
+  <div class="modal-box" style="max-width:460px;">
+    <button class="modal-close" onclick="cerrarModal('modal-abonar')">&times;</button>
+    <div class="modal-title"><i class="fa-solid fa-money-bill-transfer" style="color:var(--green);"></i> &nbsp;Confirmar pago de comisión</div>
+    <div class="modal-sub">Revisá cuidadosamente los datos antes de transferir.</div>
+
+    <div style="background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:var(--radius-sm);padding:16px 18px;margin-bottom:14px;line-height:1.9;font-size:.9rem;">
+      <div><span style="color:var(--text-muted);">Aliado:</span> <strong id="ab-nombre" style="color:var(--text);">—</strong></div>
+      <div><span style="color:var(--text-muted);">Cliente:</span> <strong id="ab-cliente" style="color:var(--text);">—</strong></div>
+      <div><span style="color:var(--text-muted);">Plan:</span> <strong id="ab-plan" style="color:var(--text);">—</strong></div>
+      <div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border);">
+        <span style="color:var(--text-muted);">Monto a transferir:</span>
+        <div style="font-size:1.8rem;font-weight:900;color:var(--green);margin-top:2px;" id="ab-monto">USD —</div>
+      </div>
+    </div>
+
+    <div id="ab-cbu-wrap" style="background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:var(--radius-sm);padding:14px 18px;margin-bottom:14px;">
+      <div style="font-size:.72rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;">CBU / Alias registrado</div>
+      <div id="ab-cbu" style="font-family:monospace;font-size:.95rem;color:var(--text);word-break:break-all;">—</div>
+    </div>
+
+    <div id="ab-nocbu-warning" style="display:none;background:var(--red-bg);border:1px solid rgba(239,68,68,0.3);border-radius:var(--radius-sm);padding:14px 18px;margin-bottom:14px;color:var(--red);font-size:.88rem;line-height:1.5;">
+      <i class="fa-solid fa-triangle-exclamation"></i>
+      <strong>Este aliado NO tiene CBU/alias cargado.</strong><br>
+      Pedile que lo cargue desde su portal antes de abonar.
+    </div>
+
+    <div style="background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.25);border-radius:var(--radius-sm);padding:12px 16px;margin-bottom:18px;color:var(--amber);font-size:.82rem;line-height:1.5;">
+      <i class="fa-solid fa-circle-exclamation"></i> Verificá antes de continuar. <strong>No se puede revertir.</strong>
+    </div>
+
+    <div style="display:flex;gap:10px;">
+      <button class="btn-outline" style="flex:1;justify-content:center;padding:12px;" onclick="cerrarModal('modal-abonar')">
+        <i class="fa-solid fa-xmark"></i> Cancelar
+      </button>
+      <button class="btn-green" id="ab-confirm-btn" style="flex:2;justify-content:center;padding:12px;" onclick="ejecutarAbono()">
+        <i class="fa-solid fa-check"></i> Sí, ya transferí
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: Crear / editar módulo de academia (§18) -->
+<div class="modal-overlay" id="modal-academia">
+  <div class="modal-box">
+    <button class="modal-close" onclick="cerrarModal('modal-academia')">&times;</button>
+    <div class="modal-title" id="ac-modal-title"><i class="fa-solid fa-graduation-cap" style="color:var(--amber);"></i> &nbsp;Nuevo módulo</div>
+    <div class="modal-sub">Los módulos activos aparecen en el portal de todos los aliados, ordenados por el campo "Orden".</div>
+    <input type="hidden" id="ac-id">
+    <div class="form-2col">
+      <div class="form-row">
+        <label>Orden *</label>
+        <input type="number" id="ac-orden" value="1" min="1">
+      </div>
+      <div class="form-row">
+        <label>Tipo *</label>
+        <select id="ac-tipo">
+          <option value="video">Video</option>
+          <option value="pdf">PDF</option>
+          <option value="texto">Texto</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-row">
+      <label>Título *</label>
+      <input type="text" id="ac-titulo" placeholder="Ej: Bienvenida al programa">
+    </div>
+    <div class="form-row">
+      <label>Descripción</label>
+      <textarea id="ac-descripcion" rows="3" placeholder="Breve descripción que aparece bajo el título..."></textarea>
+    </div>
+    <div class="form-2col">
+      <div class="form-row">
+        <label>URL / Contenido</label>
+        <input type="text" id="ac-url" placeholder="https://youtu.be/... o /academia/slug">
+      </div>
+      <div class="form-row">
+        <label>Duración (min)</label>
+        <input type="number" id="ac-duracion" placeholder="15" min="0">
+      </div>
+    </div>
+    <div class="form-row">
+      <label style="display:flex;align-items:center;gap:8px;text-transform:none;letter-spacing:normal;font-size:.88rem;color:var(--text);">
+        <input type="checkbox" id="ac-activo" checked style="width:auto;">
+        Módulo activo (visible para los aliados)
+      </label>
+    </div>
+    <button class="btn-primary" style="width:100%;justify-content:center;padding:13px;" onclick="guardarModuloAcademia()" id="ac-save-btn">
+      <i class="fa-solid fa-floppy-disk"></i> Guardar módulo
+    </button>
   </div>
 </div>
 
@@ -1201,6 +1399,13 @@ async function verAliado(codigo) {
           <button onclick="navigator.clipboard.writeText('${a.link_ref||''}').then(()=>mostrarToast('Link copiado','green'))" class="btn-outline" style="padding:3px 8px;font-size:.72rem;margin-left:8px;"><i class="fa-solid fa-copy"></i></button>
         </div>
         <div><i class="fa-solid fa-calendar" style="width:16px;color:var(--text-dim);"></i> Firma: ${a.fecha_firma||'—'}</div>
+        <div><i class="fa-solid fa-file-contract" style="width:16px;color:var(--green);"></i>
+          Términos aceptados:
+          ${a.terminos_aceptados
+            ? `<span style="color:var(--green);">✅ ${new Date(a.terminos_aceptados_en).toLocaleString('es-AR')}</span>`
+            : `<span style="color:var(--red);">⚠️ No registrado</span>`
+          }
+        </div>
       </div>
     </div>
     <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:20px;">
@@ -1468,10 +1673,19 @@ function cambiarTab(tab, btn) {
   document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));
   document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
   document.getElementById(`tab-${tab}`).classList.add('active');
-  btn.classList.add('active');
-  if(tab==='prospectos') cargarAdminProspectos();
-  if(tab==='auditorias') cargarAuditoriasAdmin();
-  if(tab==='bolsa') cargarAdminBolsa(); // <-- Agrega esta línea
+  // Si no viene el botón, lo buscamos por el onclick (más robusto que usar índices)
+  if (!btn) {
+    btn = [...document.querySelectorAll('.tab-btn')].find(b =>
+      (b.getAttribute('onclick')||'').includes(`cambiarTab('${tab}'`)
+    );
+  }
+  if (btn) btn.classList.add('active');
+  if(tab==='prospectos')  cargarAdminProspectos();
+  if(tab==='auditorias')  cargarAuditoriasAdmin();
+  if(tab==='bolsa')       cargarAdminBolsa();
+  if(tab==='comisiones')  cargarAdminComisiones();
+  if(tab==='pagos')       cargarAdminPagos();
+  if(tab==='academia')    cargarAdminAcademia();
 }
 
 // ── PROSPECTOS ADMIN ────────────────────────────────────────────────────────
@@ -1920,6 +2134,440 @@ async function revocarLead(id) {
     }
   } catch(e) { mostrarToast('Error al revocar lead', 'red'); }
 }
+
+// ═══════════════════════════════════════════════════════════════════════════
+// TAB COMISIONES (§12 + §15)
+// ═══════════════════════════════════════════════════════════════════════════
+
+let filtroComis = 'pendiente';
+let comisionesCache = [];
+let comisionActiva = null; // la comisión que el admin está por abonar
+
+async function cargarAdminComisiones() {
+  const body = document.getElementById('tabla-comis-body');
+  try {
+    const url = filtroComis ? `${API}/admin/comisiones?estado=${filtroComis}` : `${API}/admin/comisiones`;
+    const r = await apiFetch(url);
+    if (!r.ok) {
+      body.innerHTML = `<tr><td colspan="8" style="padding:32px;text-align:center;color:var(--red);">Error al cargar comisiones (${r.status})</td></tr>`;
+      return;
+    }
+    comisionesCache = await r.json();
+    renderComisiones();
+    renderKpisComisiones();
+    actualizarBadgeComisiones();
+  } catch (e) {
+    console.error(e);
+    body.innerHTML = `<tr><td colspan="8" style="padding:32px;text-align:center;color:var(--red);">Error de conexión</td></tr>`;
+  }
+}
+
+function filtrarComisiones(estado, btn) {
+  filtroComis = estado;
+  document.querySelectorAll('#tab-comisiones .tabs .tab-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  cargarAdminComisiones();
+}
+
+function renderKpisComisiones() {
+  // Para los KPIs siempre calculamos sobre pendientes+abonadas, pedimos ambos grupos si filtrando.
+  // Acá hacemos un cálculo rápido con lo que tenemos en cache del filtro actual + fetch separado si no.
+  // Para no hacer otra request, calculamos según el filtro actual y mostramos "(según filtro)".
+  const total = comisionesCache.length;
+  const sumPendiente = comisionesCache.filter(c=>c.estado==='pendiente').reduce((s,c)=>s+(c.comision_usd||0),0);
+  const sumAbonada   = comisionesCache.filter(c=>c.estado==='abonada').reduce((s,c)=>s+(c.comision_usd||0),0);
+  const sinCbu       = comisionesCache.filter(c=>c.estado==='pendiente' && !c.aliado_cbu).length;
+
+  const kpis = [
+    { label: 'Registros visibles', value: total, color: 'var(--text)' },
+    { label: 'A pagar (pendiente)', value: `USD ${Math.round(sumPendiente).toLocaleString()}`, color: 'var(--amber)' },
+    { label: 'Ya abonado', value: `USD ${Math.round(sumAbonada).toLocaleString()}`, color: 'var(--green)' },
+    { label: 'Sin CBU cargado', value: sinCbu, color: sinCbu>0 ? 'var(--red)' : 'var(--text-dim)' },
+  ];
+  document.getElementById('comis-kpis').innerHTML = kpis.map(k=>`
+    <div style="background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:12px;padding:14px 18px;">
+      <div style="font-size:.72rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;">${k.label}</div>
+      <div style="font-size:1.3rem;font-weight:800;color:${k.color};">${k.value}</div>
+    </div>`).join('');
+}
+
+function renderComisiones() {
+  const body = document.getElementById('tabla-comis-body');
+  if (!comisionesCache.length) {
+    const msg = filtroComis==='pendiente' ? '¡No hay comisiones pendientes!'
+              : filtroComis==='abonada'   ? 'No hay comisiones abonadas todavía.'
+              :                              'No hay comisiones registradas.';
+    body.innerHTML = `<tr><td colspan="8"><div class="empty-state"><i class="fa-solid fa-percent"></i><p>${msg}</p></div></td></tr>`;
+    return;
+  }
+  body.innerHTML = comisionesCache.map(c => {
+    const cbuDisplay = c.aliado_cbu
+      ? `<span style="font-family:monospace;font-size:.78rem;color:var(--text-muted);">${escapeHtml(c.aliado_cbu)}</span>`
+      : `<span class="badge badge-red"><i class="fa-solid fa-triangle-exclamation"></i> Sin CBU</span>`;
+    const estadoBadge = c.estado === 'abonada'
+      ? '<span class="badge badge-green"><i class="fa-solid fa-check"></i> Abonada</span>'
+      : '<span class="badge badge-amber"><i class="fa-solid fa-clock"></i> Pendiente</span>';
+    const fecha = c.estado === 'abonada' && c.fecha_abono
+      ? new Date(c.fecha_abono).toLocaleDateString('es-AR')
+      : c.fecha_pago ? new Date(c.fecha_pago).toLocaleDateString('es-AR') : '—';
+    const accion = c.estado === 'abonada'
+      ? '<span style="font-size:.8rem;color:var(--text-dim);">—</span>'
+      : `<button class="btn-green" onclick="abrirModalAbonar(${c.id})"><i class="fa-solid fa-money-bill-wave"></i> Marcar abonada</button>`;
+    return `<tr>
+      <td style="color:var(--text);font-weight:600;">${escapeHtml(c.aliado_nombre||'—')}<br><span style="font-size:.72rem;color:var(--text-dim);">${c.aliado_codigo||''}</span></td>
+      <td>${escapeHtml(c.cliente||'—')}</td>
+      <td><span class="badge badge-blue">${escapeHtml(c.plan||'—')}</span></td>
+      <td style="color:var(--green);font-weight:800;">USD ${Math.round(c.comision_usd||0).toLocaleString()}</td>
+      <td>${cbuDisplay}</td>
+      <td>${estadoBadge}</td>
+      <td style="font-size:.8rem;color:var(--text-dim);">${fecha}</td>
+      <td>${accion}</td>
+    </tr>`;
+  }).join('');
+}
+
+function abrirModalAbonar(id) {
+  const c = comisionesCache.find(x => x.id === id);
+  if (!c) { mostrarToast('Comisión no encontrada', 'red'); return; }
+  comisionActiva = c;
+
+  document.getElementById('ab-nombre').textContent  = c.aliado_nombre || '—';
+  document.getElementById('ab-cliente').textContent = c.cliente || '—';
+  document.getElementById('ab-plan').textContent    = c.plan || '—';
+  document.getElementById('ab-monto').textContent   = `USD ${Math.round(c.comision_usd||0).toLocaleString()}`;
+
+  const cbuWrap = document.getElementById('ab-cbu-wrap');
+  const cbu     = document.getElementById('ab-cbu');
+  const warning = document.getElementById('ab-nocbu-warning');
+  const btn     = document.getElementById('ab-confirm-btn');
+
+  if (c.aliado_cbu) {
+    cbu.textContent       = c.aliado_cbu;
+    cbuWrap.style.display = 'block';
+    warning.style.display = 'none';
+    btn.disabled = false;
+    btn.style.opacity = '1';
+    btn.style.cursor = 'pointer';
+    btn.innerHTML = '<i class="fa-solid fa-check"></i> Sí, ya transferí';
+  } else {
+    cbuWrap.style.display = 'none';
+    warning.style.display = 'block';
+    btn.disabled = true;
+    btn.style.opacity = '.4';
+    btn.style.cursor = 'not-allowed';
+    btn.innerHTML = '<i class="fa-solid fa-ban"></i> Falta CBU del aliado';
+  }
+
+  document.getElementById('modal-abonar').classList.add('open');
+}
+
+async function ejecutarAbono() {
+  if (!comisionActiva) return;
+  const c = comisionActiva;
+  const btn = document.getElementById('ab-confirm-btn');
+  if (btn.disabled) return;
+
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span> Procesando...';
+
+  try {
+    const res = await apiFetch(`${API}/admin/comisiones/${c.id}/abonar`, { method: 'POST' });
+    const data = await res.json().catch(()=>({}));
+    if (res.ok) {
+      mostrarToast(`✅ Comisión de ${c.aliado_nombre} marcada como abonada`, 'green');
+      cerrarModal('modal-abonar');
+      comisionActiva = null;
+      await cargarAdminComisiones();
+      // Refrescamos ventas y dashboard porque el endpoint también marca la venta como pagada
+      await cargarVentas();
+      renderVentas();
+      renderDashboard();
+    } else {
+      mostrarToast(data.detail || 'Error al marcar como abonada', 'red');
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fa-solid fa-check"></i> Sí, ya transferí';
+    }
+  } catch {
+    mostrarToast('Error de conexión', 'red');
+    btn.disabled = false;
+    btn.innerHTML = '<i class="fa-solid fa-check"></i> Sí, ya transferí';
+  }
+}
+
+function actualizarBadgeComisiones() {
+  // Solo tiene sentido si el filtro actual es 'pendiente' (ahí contamos todo lo que hay).
+  // Si está en 'abonada' o 'todas' no actualizamos el badge desde acá.
+  if (filtroComis !== 'pendiente') return;
+  const badge = document.getElementById('badge-comis');
+  if (!badge) return;
+  const n = comisionesCache.length;
+  if (n > 0) { badge.textContent = n; badge.style.display = 'inline'; }
+  else       { badge.style.display = 'none'; }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// TAB PAGOS (§12)
+// ═══════════════════════════════════════════════════════════════════════════
+
+let pagosCache = [];
+
+async function cargarAdminPagos() {
+  const body = document.getElementById('tabla-pagos-body');
+  try {
+    const r = await apiFetch(`${API}/admin/pagos`);
+    if (!r.ok) {
+      body.innerHTML = `<tr><td colspan="7" style="padding:32px;text-align:center;color:var(--red);">Error al cargar pagos (${r.status})</td></tr>`;
+      return;
+    }
+    pagosCache = await r.json();
+    renderPagos();
+    renderKpisPagos();
+  } catch(e) {
+    console.error(e);
+    body.innerHTML = `<tr><td colspan="7" style="padding:32px;text-align:center;color:var(--red);">Error de conexión</td></tr>`;
+  }
+}
+
+function renderKpisPagos() {
+  const total    = pagosCache.length;
+  const sumUsd   = pagosCache.reduce((s,p)=>s+(p.precio_usd||0),0);
+  const mp       = pagosCache.filter(p=>(p.processor||'').toLowerCase().includes('mercado') || (p.processor||'').toLowerCase()==='mp').length;
+  const paypal   = pagosCache.filter(p=>(p.processor||'').toLowerCase().includes('paypal')).length;
+
+  const kpis = [
+    { label: 'Total pagos', value: total, color: 'var(--text)' },
+    { label: 'Recaudado (USD)', value: `USD ${Math.round(sumUsd).toLocaleString()}`, color: 'var(--green)' },
+    { label: 'Vía MercadoPago', value: mp, color: 'var(--primary)' },
+    { label: 'Vía PayPal', value: paypal, color: '#a855f7' },
+  ];
+  document.getElementById('pagos-kpis').innerHTML = kpis.map(k=>`
+    <div style="background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:12px;padding:14px 18px;">
+      <div style="font-size:.72rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;">${k.label}</div>
+      <div style="font-size:1.3rem;font-weight:800;color:${k.color};">${k.value}</div>
+    </div>`).join('');
+}
+
+function renderPagos() {
+  const body = document.getElementById('tabla-pagos-body');
+  if (!pagosCache.length) {
+    body.innerHTML = `<tr><td colspan="7"><div class="empty-state"><i class="fa-solid fa-credit-card"></i><p>Todavía no se recibió ningún pago.</p></div></td></tr>`;
+    return;
+  }
+  body.innerHTML = pagosCache.map(p => {
+    const proc = (p.processor||'').toLowerCase();
+    const procBadge = proc.includes('paypal')  ? '<span class="badge badge-purple"><i class="fa-brands fa-paypal"></i> PayPal</span>'
+                    : proc.includes('mercado') || proc==='mp' ? '<span class="badge badge-blue"><i class="fa-solid fa-money-check-dollar"></i> MercadoPago</span>'
+                    : `<span class="badge badge-gray">${escapeHtml(p.processor||'—')}</span>`;
+    const fecha = p.created_at ? new Date(p.created_at).toLocaleString('es-AR', {dateStyle:'short', timeStyle:'short'}) : '—';
+    const ars = p.precio_ars ? `$${Math.round(p.precio_ars).toLocaleString()}` : '—';
+    const tc  = p.tipo_cambio ? Number(p.tipo_cambio).toFixed(2) : '—';
+    return `<tr>
+      <td style="color:var(--text);font-weight:600;">${escapeHtml(p.aliado_nombre||'—')}<br><span style="font-size:.72rem;color:var(--text-dim);">${p.aliado_codigo||''}</span></td>
+      <td><span class="badge badge-blue">${escapeHtml(p.plan||'—')}</span></td>
+      <td style="font-weight:700;">USD ${Math.round(p.precio_usd||0).toLocaleString()}</td>
+      <td>${ars}</td>
+      <td style="font-size:.85rem;color:var(--text-muted);">${tc}</td>
+      <td>${procBadge}</td>
+      <td style="font-size:.8rem;color:var(--text-dim);">${fecha}</td>
+    </tr>`;
+  }).join('');
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// TAB ACADEMIA (§18)
+// ═══════════════════════════════════════════════════════════════════════════
+
+let academiaCache = [];
+
+async function cargarAdminAcademia() {
+  const body = document.getElementById('tabla-academia-body');
+  try {
+    const r = await apiFetch(`${API}/admin/academia`);
+    if (!r.ok) {
+      body.innerHTML = `<tr><td colspan="7" style="padding:32px;text-align:center;color:var(--red);">Error al cargar módulos (${r.status})</td></tr>`;
+      return;
+    }
+    academiaCache = await r.json();
+    renderAcademia();
+  } catch(e) {
+    console.error(e);
+    body.innerHTML = `<tr><td colspan="7" style="padding:32px;text-align:center;color:var(--red);">Error de conexión</td></tr>`;
+  }
+}
+
+function renderAcademia() {
+  const body = document.getElementById('tabla-academia-body');
+  if (!academiaCache.length) {
+    body.innerHTML = `<tr><td colspan="7"><div class="empty-state"><i class="fa-solid fa-graduation-cap"></i><p>No hay módulos cargados.<br>Creá el primero para poblar la academia.</p></div></td></tr>`;
+    return;
+  }
+  const ordenados = [...academiaCache].sort((a,b)=>(a.orden||0)-(b.orden||0));
+  body.innerHTML = ordenados.map(m => {
+    const tipoBadge = m.tipo === 'video' ? '<span class="badge badge-blue"><i class="fa-solid fa-play"></i> Video</span>'
+                    : m.tipo === 'pdf'   ? '<span class="badge badge-red"><i class="fa-solid fa-file-pdf"></i> PDF</span>'
+                    : '<span class="badge badge-gray"><i class="fa-solid fa-file-lines"></i> Texto</span>';
+    const activoBadge = m.activo
+      ? '<span class="badge badge-green"><i class="fa-solid fa-eye"></i> Activo</span>'
+      : '<span class="badge badge-gray"><i class="fa-solid fa-eye-slash"></i> Oculto</span>';
+    const url = m.url_contenido || m.url || '';
+    const urlDisplay = url
+      ? `<a href="${escapeAttr(url)}" target="_blank" style="color:var(--primary);font-family:monospace;font-size:.78rem;word-break:break-all;">${escapeHtml(url.length>50?url.slice(0,50)+'…':url)}</a>`
+      : '<span style="color:var(--text-dim);font-size:.8rem;">—</span>';
+    const duracion = m.duracion_minutos ? `${m.duracion_minutos} min` : '—';
+    const toggleLabel = m.activo ? 'Ocultar' : 'Mostrar';
+    const toggleIcon  = m.activo ? 'fa-eye-slash' : 'fa-eye';
+    return `<tr>
+      <td style="text-align:center;font-weight:800;color:var(--text);">${m.orden}</td>
+      <td>
+        <div style="font-weight:700;color:var(--text);">${escapeHtml(m.titulo||'—')}</div>
+        ${m.descripcion?`<div style="font-size:.78rem;color:var(--text-muted);margin-top:3px;">${escapeHtml(m.descripcion)}</div>`:''}
+      </td>
+      <td>${tipoBadge}</td>
+      <td style="font-size:.85rem;color:var(--text-muted);">${duracion}</td>
+      <td>${urlDisplay}</td>
+      <td>${activoBadge}</td>
+      <td>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;">
+          <button class="btn-outline" style="padding:6px 10px;font-size:.72rem;" onclick="editarModuloAcademia(${m.id})" title="Editar"><i class="fa-solid fa-pen"></i></button>
+          <button class="btn-outline" style="padding:6px 10px;font-size:.72rem;" onclick="toggleActivoModulo(${m.id})" title="${toggleLabel}"><i class="fa-solid ${toggleIcon}"></i></button>
+          <button class="btn-outline" style="padding:6px 10px;font-size:.72rem;color:var(--red);border-color:rgba(239,68,68,0.3);" onclick="eliminarModuloAcademia(${m.id})" title="Eliminar"><i class="fa-solid fa-trash"></i></button>
+        </div>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+function abrirModalAcademia() {
+  document.getElementById('ac-modal-title').innerHTML = '<i class="fa-solid fa-graduation-cap" style="color:var(--amber);"></i> &nbsp;Nuevo módulo';
+  document.getElementById('ac-id').value = '';
+  // Orden sugerido: siguiente al máximo actual
+  const maxOrden = academiaCache.reduce((m,x)=>Math.max(m, x.orden||0), 0);
+  document.getElementById('ac-orden').value = maxOrden + 1;
+  document.getElementById('ac-tipo').value = 'video';
+  document.getElementById('ac-titulo').value = '';
+  document.getElementById('ac-descripcion').value = '';
+  document.getElementById('ac-url').value = '';
+  document.getElementById('ac-duracion').value = '';
+  document.getElementById('ac-activo').checked = true;
+  document.getElementById('ac-save-btn').innerHTML = '<i class="fa-solid fa-floppy-disk"></i> Guardar módulo';
+  document.getElementById('modal-academia').classList.add('open');
+}
+
+function editarModuloAcademia(id) {
+  const m = academiaCache.find(x => x.id === id);
+  if (!m) return;
+  document.getElementById('ac-modal-title').innerHTML = '<i class="fa-solid fa-pen" style="color:var(--primary);"></i> &nbsp;Editar módulo';
+  document.getElementById('ac-id').value = m.id;
+  document.getElementById('ac-orden').value = m.orden || 1;
+  document.getElementById('ac-tipo').value  = m.tipo || 'video';
+  document.getElementById('ac-titulo').value = m.titulo || '';
+  document.getElementById('ac-descripcion').value = m.descripcion || '';
+  document.getElementById('ac-url').value = m.url_contenido || m.url || '';
+  document.getElementById('ac-duracion').value = m.duracion_minutos || '';
+  document.getElementById('ac-activo').checked = !!m.activo;
+  document.getElementById('ac-save-btn').innerHTML = '<i class="fa-solid fa-floppy-disk"></i> Guardar cambios';
+  document.getElementById('modal-academia').classList.add('open');
+}
+
+async function guardarModuloAcademia() {
+  const id     = document.getElementById('ac-id').value.trim();
+  const titulo = document.getElementById('ac-titulo').value.trim();
+  const orden  = parseInt(document.getElementById('ac-orden').value) || 1;
+  const tipo   = document.getElementById('ac-tipo').value;
+  const descripcion = document.getElementById('ac-descripcion').value.trim();
+  const url    = document.getElementById('ac-url').value.trim();
+  const dur    = document.getElementById('ac-duracion').value;
+  const activo = document.getElementById('ac-activo').checked;
+
+  if (!titulo) { mostrarToast('El título es obligatorio', 'red'); return; }
+  if (!['video','pdf','texto'].includes(tipo)) { mostrarToast('Tipo inválido', 'red'); return; }
+
+  const payload = {
+    orden,
+    titulo,
+    tipo,
+    descripcion: descripcion || null,
+    url_contenido: url || null,
+    duracion_minutos: dur ? parseInt(dur) : null,
+    activo,
+  };
+
+  const btn = document.getElementById('ac-save-btn');
+  const originalHTML = btn.innerHTML;
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span> Guardando...';
+
+  try {
+    const isEdit = !!id;
+    const url_ = isEdit ? `${API}/admin/academia/${id}` : `${API}/admin/academia`;
+    const r = await apiFetch(url_, {
+      method: isEdit ? 'PATCH' : 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify(payload),
+    });
+    const data = await r.json().catch(()=>({}));
+    if (r.ok) {
+      mostrarToast(isEdit ? 'Módulo actualizado' : 'Módulo creado', 'green');
+      cerrarModal('modal-academia');
+      await cargarAdminAcademia();
+    } else {
+      mostrarToast(data.detail || 'Error al guardar', 'red');
+    }
+  } catch {
+    mostrarToast('Error de conexión', 'red');
+  }
+
+  btn.disabled = false;
+  btn.innerHTML = originalHTML;
+}
+
+async function toggleActivoModulo(id) {
+  const m = academiaCache.find(x => x.id === id);
+  if (!m) return;
+  try {
+    const r = await apiFetch(`${API}/admin/academia/${id}`, {
+      method: 'PATCH',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ activo: !m.activo }),
+    });
+    if (r.ok) {
+      mostrarToast(!m.activo ? 'Módulo activado' : 'Módulo oculto', 'green');
+      await cargarAdminAcademia();
+    } else {
+      const err = await r.json().catch(()=>({}));
+      mostrarToast(err.detail || 'Error', 'red');
+    }
+  } catch { mostrarToast('Error de conexión', 'red'); }
+}
+
+function eliminarModuloAcademia(id) {
+  const m = academiaCache.find(x => x.id === id);
+  if (!m) return;
+  confirmarAccion(
+    `¿Eliminar "${m.titulo}"?`,
+    'Esta acción es permanente. El módulo desaparecerá del portal de todos los aliados.',
+    'fa-trash', 'red',
+    async () => {
+      try {
+        const r = await apiFetch(`${API}/admin/academia/${id}`, { method: 'DELETE' });
+        if (r.ok) {
+          mostrarToast('Módulo eliminado', 'green');
+          await cargarAdminAcademia();
+        } else {
+          const err = await r.json().catch(()=>({}));
+          mostrarToast(err.detail || 'Error al eliminar', 'red');
+        }
+      } catch { mostrarToast('Error de conexión', 'red'); }
+    }
+  );
+}
+
+// ─── helpers de escapado (usados por las 3 tabs) ───────────────────────────
+function escapeHtml(s) {
+  if (s == null) return '';
+  return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+function escapeAttr(s) { return escapeHtml(s).replace(/"/g, '&quot;'); }
 
 </script>
 </body>

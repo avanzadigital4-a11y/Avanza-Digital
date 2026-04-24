@@ -1568,11 +1568,50 @@
               <div style="display:flex; gap:10px; flex-wrap:wrap;">
                 <input type="text" id="cot-link" readonly style="flex:1; min-width:200px; background:rgba(0,0,0,0.5); border:1px solid var(--border); border-radius:8px; padding:12px; color:var(--primary); font-family:monospace; font-size:0.82rem; outline:none;">
                 <button onclick="copiarCotizacion()" style="background:var(--primary); color:white; border:none; border-radius:8px; padding:0 20px; font-weight:800; cursor:pointer;"><i class="fa-solid fa-copy"></i> Copiar y Enviar</button>
-                <button id="btn-checkout-real" onclick="generarCheckoutReal()" style="background:var(--green); color:#000; border:none; border-radius:8px; padding:0 16px; font-weight:800; cursor:pointer; font-size:0.82rem; display:none;">
-                  <i class="fa-solid fa-credit-card"></i> Pago directo MP
-                </button>
               </div>
               <p style="font-size:0.75rem; color:var(--text-dim); margin-top:8px;">Al enviar este link, si el cliente paga, la venta se registra a tu nombre automáticamente.</p>
+
+              <!-- NUEVO v1.4: Generador dual MP (ARS) + PayPal (USD) con tipo de cambio -->
+              <div id="cot-checkout-box" style="display:none; margin-top:16px; background:rgba(0,0,0,0.3); border:1px solid rgba(255,255,255,0.06); border-radius:10px; padding:16px;">
+                <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; margin-bottom:14px;">
+                  <div>
+                    <div style="font-size:0.72rem; font-weight:700; color:var(--text-dim); text-transform:uppercase; letter-spacing:1px;">Equivalente en pesos (MP)</div>
+                    <div style="font-size:1.4rem; font-weight:900; color:var(--text);" id="cot-precio-ars">ARS —</div>
+                  </div>
+                  <div id="cot-tc-badge" style="font-size:0.7rem; color:var(--amber); background:rgba(245,158,11,0.08); border:1px solid rgba(245,158,11,0.2); padding:6px 10px; border-radius:6px;">
+                    Cargando tipo de cambio...
+                  </div>
+                </div>
+
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+                  <button id="btn-checkout-ars" onclick="generarLinkPago('ars')" style="background:linear-gradient(135deg,#00a8e8,#007ea7); color:#fff; border:none; border-radius:8px; padding:14px; font-weight:800; cursor:pointer; font-size:0.88rem; display:flex; align-items:center; justify-content:center; gap:8px;">
+                    <i class="fa-solid fa-peso-sign"></i> Generar link en pesos (MP)
+                  </button>
+                  <button id="btn-checkout-usd" onclick="generarLinkPago('usd')" style="background:linear-gradient(135deg,#0070ba,#003087); color:#fff; border:none; border-radius:8px; padding:14px; font-weight:800; cursor:pointer; font-size:0.88rem; display:flex; align-items:center; justify-content:center; gap:8px;">
+                    <i class="fa-brands fa-paypal"></i> Generar link en dólares (PayPal)
+                  </button>
+                </div>
+
+                <!-- Resultado de link generado con expiración -->
+                <div id="cot-link-generado" style="display:none; margin-top:14px; padding:14px; background:rgba(74,222,128,0.05); border:1px solid rgba(74,222,128,0.2); border-radius:8px;">
+                  <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; margin-bottom:10px;">
+                    <div style="font-size:0.82rem; font-weight:700; color:var(--green);">
+                      <i class="fa-solid fa-circle-check"></i> <span id="cot-lg-titulo">Link generado</span>
+                    </div>
+                    <div id="cot-lg-vence" style="font-size:0.72rem; color:var(--amber);">Vence en 48hs</div>
+                  </div>
+                  <div style="display:flex; gap:8px; flex-wrap:wrap;">
+                    <input type="text" id="cot-lg-url" readonly style="flex:1; min-width:200px; background:rgba(0,0,0,0.5); border:1px solid var(--border); border-radius:6px; padding:10px; color:var(--text); font-family:monospace; font-size:0.78rem; outline:none;">
+                    <button onclick="copiarLinkPago()" style="background:var(--primary); color:white; border:none; border-radius:6px; padding:0 14px; font-weight:700; cursor:pointer; font-size:0.78rem;">
+                      <i class="fa-solid fa-copy"></i> Copiar
+                    </button>
+                    <button id="btn-regenerar-link" onclick="regenerarLinkPago()" style="display:none; background:rgba(245,158,11,0.15); color:var(--amber); border:1px solid rgba(245,158,11,0.3); border-radius:6px; padding:0 14px; font-weight:700; cursor:pointer; font-size:0.78rem;">
+                      <i class="fa-solid fa-rotate"></i> Regenerar
+                    </button>
+                  </div>
+                  <p id="cot-lg-aviso" style="font-size:0.72rem; color:var(--text-dim); margin-top:8px; margin-bottom:0;">Compartí este link con tu cliente. Expira a las 48 horas por seguridad (el tipo de cambio puede variar).</p>
+                </div>
+              </div>
             </div>
 
             <!-- SIMULADOR DE CUOTAS (v1.3) -->
@@ -1677,14 +1716,55 @@
     </div>
 
     <div id="tab-comisiones" class="tab-panel">
+
+      <!-- NUEVO v1.4: Total pendiente en grande (spec §16) -->
+      <div class="bento-box" style="margin-bottom:20px; background:linear-gradient(135deg,rgba(74,222,128,0.08),rgba(59,130,246,0.04)); border:1px solid rgba(74,222,128,0.25);">
+        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:16px;">
+          <div>
+            <div style="font-size:0.72rem; font-weight:700; color:var(--text-dim); text-transform:uppercase; letter-spacing:1.5px; margin-bottom:6px;">
+              <i class="fa-solid fa-sack-dollar" style="color:var(--green);"></i> Total pendiente de cobro
+            </div>
+            <div style="font-size:2.8rem; font-weight:900; color:var(--green); line-height:1;" id="com-total-pendiente">USD 0</div>
+            <div style="font-size:0.78rem; color:var(--text-muted); margin-top:6px;">Se te abona al CBU/alias registrado — dentro de 24hs del pago del cliente.</div>
+          </div>
+          <div style="text-align:right;">
+            <div style="font-size:0.72rem; font-weight:700; color:var(--text-dim); text-transform:uppercase; letter-spacing:1.5px; margin-bottom:6px;">Ya abonado</div>
+            <div style="font-size:1.4rem; font-weight:800; color:var(--text);" id="com-total-abonado">USD 0</div>
+          </div>
+        </div>
+      </div>
+
       <div class="bento-box" style="margin-bottom:24px;">
         <h3 style="font-size:0.95rem;font-weight:700;margin-bottom:4px;"><i class="fa-solid fa-calculator" style="color:var(--primary);"></i> &nbsp;Tus comisiones según nivel actual</h3>
         <p style="font-size:0.82rem;color:var(--text-muted);margin-bottom:0;">Valores para pago único. Comisiones recurrentes: 10% mensual mientras el cliente esté activo.</p>
         <div class="planes-grid" id="planes-grid"></div>
       </div>
+
       <div class="table-wrap">
         <div class="table-head"><h3><i class="fa-solid fa-receipt" style="color:var(--amber);"></i> &nbsp;Detalle de comisiones</h3></div>
         <div id="tabla-comisiones"></div>
+      </div>
+
+      <!-- NUEVO v1.4: Perfil de cobro (CBU/alias) (spec §11) -->
+      <div class="bento-box" style="margin-top:24px;">
+        <h3 style="font-size:0.95rem; font-weight:700; margin-bottom:4px;">
+          <i class="fa-solid fa-building-columns" style="color:var(--primary);"></i>
+          &nbsp;Datos de cobro
+        </h3>
+        <p style="font-size:0.82rem; color:var(--text-muted); margin-bottom:16px;">
+          El CBU o alias donde te transferimos las comisiones. <strong>Sin esto cargado, el admin no puede abonarte.</strong>
+        </p>
+        <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:flex-end;">
+          <div style="flex:1; min-width:220px;">
+            <label style="font-size:.75rem; font-weight:600; color:var(--text-muted); text-transform:uppercase; letter-spacing:1px; display:block; margin-bottom:6px;">CBU o alias de Mercado Pago</label>
+            <input type="text" id="perfil-cbu" placeholder="Ej: mi.alias.mp  o  0000003100000000000000"
+                   style="width:100%; background:rgba(255,255,255,0.04); border:1px solid var(--border); border-radius:var(--radius-sm); padding:12px 14px; color:var(--text); font-size:.9rem; font-family:'Inter',sans-serif; outline:none;">
+          </div>
+          <button onclick="guardarCBU()" id="btn-guardar-cbu" style="background:var(--primary); color:white; border:none; border-radius:8px; padding:12px 22px; font-weight:800; cursor:pointer; font-size:.88rem;">
+            <i class="fa-solid fa-floppy-disk"></i> Guardar
+          </button>
+        </div>
+        <div id="perfil-cbu-estado" style="font-size:0.78rem; margin-top:10px;"></div>
       </div>
     </div>
 
@@ -1733,6 +1813,7 @@
             <button onclick="filtrarProspectos('todos',this)" id="pfiltro-todos" style="background:var(--primary);color:white;border:none;border-radius:6px;padding:5px 12px;font-size:.78rem;font-weight:600;cursor:pointer;">Todos</button>
             <button onclick="filtrarProspectos('sin_contactar',this)" id="pfiltro-sin" style="background:transparent;color:var(--text-muted);border:1px solid var(--border);border-radius:6px;padding:5px 12px;font-size:.78rem;font-weight:600;cursor:pointer;">Sin contactar</button>
             <button onclick="filtrarProspectos('contactado',this)" id="pfiltro-cont" style="background:transparent;color:var(--text-muted);border:1px solid var(--border);border-radius:6px;padding:5px 12px;font-size:.78rem;font-weight:600;cursor:pointer;">Contactados</button>
+            <button onclick="filtrarProspectos('propuesta_enviada',this)" id="pfiltro-prop" style="background:transparent;color:var(--text-muted);border:1px solid var(--border);border-radius:6px;padding:5px 12px;font-size:.78rem;font-weight:600;cursor:pointer;">Propuesta enviada</button>
             <button onclick="filtrarProspectos('respondio',this)" id="pfiltro-resp" style="background:transparent;color:var(--text-muted);border:1px solid var(--border);border-radius:6px;padding:5px 12px;font-size:.78rem;font-weight:600;cursor:pointer;">Respondieron</button>
           </div>
         </div>
@@ -2316,7 +2397,7 @@ async function registrarse() {
   try {
     const urlParams = new URLSearchParams(window.location.search);
     const refSponsor = urlParams.get('ref') || '';
-    const params = new URLSearchParams({ nombre, email, whatsapp, ciudad, dni, perfil, password: pass, ref_sponsor: refSponsor, tipo_aliado: tipoAliado });
+    const params = new URLSearchParams({ nombre, email, whatsapp, ciudad, dni, perfil, password: pass, ref_sponsor: refSponsor, tipo_aliado: tipoAliado, acepto_terminos: 'true' });
     
     // Timeout de 15 segundos para evitar cuelgues infinitos
     const controller = new AbortController();
@@ -2398,6 +2479,9 @@ function cambiarTab(tab, btn) {
   if(tab==='red') cargarRed();
   if(tab==='comunidad') cargarComunidad();
   if(tab==='academia') inicializarAcademia();
+  // v1.4: refrescar TC al entrar al cotizador y comisiones al entrar a su tab
+  if(tab==='cotizador') { cargarTipoDeCambio(); recuperarUltimoLinkActivo(); }
+  if(tab==='comisiones') renderComisiones();
 }
 
 // ── CANAL 2: Selector de rubro ──────────────────────────────────────────────
@@ -2673,7 +2757,10 @@ function renderVentas() {
   </tr>`).join('')}</tbody></table>`;
 }
 
-function renderComisiones() {
+async function renderComisiones() {
+  if(!aliado) return;
+
+  // Tarjetas de comisión por plan (sin cambios)
   const nivel = aliado.nivel_calculado||aliado.nivel_actual||'BASIC';
   const p = pct(nivel);
   document.getElementById('planes-grid').innerHTML = Object.entries(PLANES).map(([plan,precio])=>`
@@ -2684,20 +2771,134 @@ function renderComisiones() {
       <div class="plan-pct">Nivel ${nivel} · ${Math.round(p*100)}%</div>
     </div>`).join('');
 
-  const ventas = aliado.ventas||[];
+  // Pintar CBU desde el objeto aliado que ya tenemos en memoria (spec §11)
+  const cbuInput = document.getElementById('perfil-cbu');
+  const cbuEstado = document.getElementById('perfil-cbu-estado');
+  if(cbuInput) cbuInput.value = aliado.cbu_alias || '';
+  if(cbuEstado) {
+    if(aliado.cbu_alias) {
+      cbuEstado.innerHTML = `<span style="color:var(--green);"><i class="fa-solid fa-circle-check"></i> CBU/alias cargado.</span>`;
+    } else {
+      cbuEstado.innerHTML = `<span style="color:var(--amber);"><i class="fa-solid fa-triangle-exclamation"></i> Cargá tu CBU/alias para poder cobrar.</span>`;
+    }
+  }
+
+  // Consumir endpoint de comisiones (spec §16)
   const el = document.getElementById('tabla-comisiones');
-  if (!ventas.length) { el.innerHTML=`<div class="empty-state"><i class="fa-solid fa-receipt"></i><p>Las comisiones de tus ventas confirmadas aparecerán acá.</p></div>`; return; }
-  const totalGanado = ventas.reduce((s,v)=>s+v.comision,0);
-  const pendiente = ventas.filter(v=>!v.pagada).reduce((s,v)=>s+v.comision,0);
-  el.innerHTML=`<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:16px;padding:20px 24px;border-bottom:1px solid var(--border);">
-    <div><div style="font-size:0.72rem;font-weight:600;color:var(--text-dim);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;">Total ganado</div><div style="font-size:1.6rem;font-weight:800;color:var(--green);">USD ${Math.round(totalGanado).toLocaleString()}</div></div>
-    <div><div style="font-size:0.72rem;font-weight:600;color:var(--text-dim);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;">Pendiente</div><div style="font-size:1.6rem;font-weight:800;color:var(--amber);">USD ${Math.round(pendiente).toLocaleString()}</div></div>
-  </div>
-  <table><thead><tr><th>Cliente</th><th>Plan</th><th>Comisión</th><th>Estado</th></tr></thead><tbody>${ventas.map(v=>`<tr>
-    <td style="color:var(--text);font-weight:600;">${v.cliente}</td><td>${v.plan}</td>
-    <td style="color:var(--green);font-weight:800;">USD ${Math.round(v.comision).toLocaleString()}</td>
-    <td>${v.pagada?'<span class="badge badge-green"><i class="fa-solid fa-check"></i> Pagada</span>':'<span class="badge badge-amber"><i class="fa-solid fa-clock"></i> Pendiente 24hs</span>'}</td>
-  </tr>`).join('')}</tbody></table>`;
+  const totalPendEl = document.getElementById('com-total-pendiente');
+  const totalAbonEl = document.getElementById('com-total-abonado');
+  el.innerHTML = `<div class="empty-state"><div class="spinner"></div><p style="margin-top:12px;">Cargando comisiones...</p></div>`;
+
+  try {
+    const res = await fetch(`${API}/aliados/${aliado.codigo}/comisiones`);
+    if(!res.ok) throw new Error('HTTP ' + res.status);
+    const data = await res.json();
+
+    // Totales en grande
+    if(totalPendEl) totalPendEl.textContent = 'USD ' + Math.round(data.total_pendiente_usd||0).toLocaleString();
+    if(totalAbonEl) totalAbonEl.textContent = 'USD ' + Math.round(data.total_abonado_usd||0).toLocaleString();
+
+    const comisiones = data.comisiones || [];
+    if(!comisiones.length) {
+      el.innerHTML = `<div class="empty-state"><i class="fa-solid fa-receipt"></i><p>Todavía no tenés comisiones registradas.<br>Cuando un cliente tuyo pague, aparecerán acá.</p></div>`;
+      return;
+    }
+
+    const badgeEstado = (estado) => estado === 'abonada'
+      ? '<span class="badge badge-green"><i class="fa-solid fa-check"></i> Abonada</span>'
+      : '<span class="badge badge-amber"><i class="fa-solid fa-clock"></i> Pendiente</span>';
+
+    const formatoFecha = (iso) => {
+      if(!iso) return '—';
+      const d = new Date(iso);
+      return d.toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', year: '2-digit' });
+    };
+
+    el.innerHTML = `
+      <table>
+        <thead>
+          <tr>
+            <th>Cliente</th>
+            <th>Plan</th>
+            <th>Monto plan</th>
+            <th>Mi comisión</th>
+            <th>Estado</th>
+            <th>Fecha pago</th>
+            <th>Fecha abono</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${comisiones.map(c => `
+            <tr>
+              <td style="color:var(--text); font-weight:600;">${c.cliente || '—'}</td>
+              <td>${c.plan}</td>
+              <td style="color:var(--text-muted);">USD ${Math.round(c.monto_plan_usd).toLocaleString()}</td>
+              <td style="color:var(--green); font-weight:800;">USD ${Math.round(c.comision_usd).toLocaleString()}</td>
+              <td>${badgeEstado(c.estado)}</td>
+              <td style="font-size:.82rem; color:var(--text-dim);">${formatoFecha(c.fecha_pago)}</td>
+              <td style="font-size:.82rem; color:var(--text-dim);">${formatoFecha(c.fecha_abono)}</td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+    `;
+  } catch(e) {
+    console.error('Error cargando comisiones:', e);
+    // Fallback: usar el formato viejo con aliado.ventas si el endpoint nuevo falla
+    const ventas = aliado.ventas||[];
+    if (!ventas.length) {
+      el.innerHTML=`<div class="empty-state"><i class="fa-solid fa-receipt"></i><p>Las comisiones de tus ventas confirmadas aparecerán acá.</p></div>`;
+      if(totalPendEl) totalPendEl.textContent = 'USD 0';
+      if(totalAbonEl) totalAbonEl.textContent = 'USD 0';
+      return;
+    }
+    const totalGanado = ventas.reduce((s,v)=>s+v.comision,0);
+    const pendiente = ventas.filter(v=>!v.pagada).reduce((s,v)=>s+v.comision,0);
+    if(totalPendEl) totalPendEl.textContent = 'USD ' + Math.round(pendiente).toLocaleString();
+    if(totalAbonEl) totalAbonEl.textContent = 'USD ' + Math.round(totalGanado - pendiente).toLocaleString();
+    el.innerHTML=`<table><thead><tr><th>Cliente</th><th>Plan</th><th>Comisión</th><th>Estado</th></tr></thead><tbody>${ventas.map(v=>`<tr>
+      <td style="color:var(--text);font-weight:600;">${v.cliente}</td><td>${v.plan}</td>
+      <td style="color:var(--green);font-weight:800;">USD ${Math.round(v.comision).toLocaleString()}</td>
+      <td>${v.pagada?'<span class="badge badge-green"><i class="fa-solid fa-check"></i> Pagada</span>':'<span class="badge badge-amber"><i class="fa-solid fa-clock"></i> Pendiente</span>'}</td>
+    </tr>`).join('')}</tbody></table>`;
+  }
+}
+
+// NUEVO v1.4: guardar CBU/alias del aliado (spec §11)
+async function guardarCBU() {
+  if(!aliado) return;
+  const input = document.getElementById('perfil-cbu');
+  const btn   = document.getElementById('btn-guardar-cbu');
+  const estado = document.getElementById('perfil-cbu-estado');
+  const valor = (input.value || '').trim();
+
+  btn.innerHTML = '<span class="spinner"></span> Guardando...';
+  btn.disabled  = true;
+
+  try {
+    const res = await fetch(`${API}/aliado/perfil?codigo=${encodeURIComponent(aliado.codigo)}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ cbu_alias: valor }),
+    });
+    const data = await res.json();
+    if(!res.ok) throw new Error(data.detail || 'Error');
+
+    aliado.cbu_alias = data.cbu_alias; // mantener sincronizado
+    if(valor) {
+      estado.innerHTML = `<span style="color:var(--green);"><i class="fa-solid fa-circle-check"></i> Guardado correctamente.</span>`;
+      mostrarToast('CBU/alias guardado. Ya podés cobrar comisiones.', 'green');
+    } else {
+      estado.innerHTML = `<span style="color:var(--amber);"><i class="fa-solid fa-triangle-exclamation"></i> Cargá tu CBU/alias para poder cobrar.</span>`;
+      mostrarToast('CBU/alias vaciado.', 'amber');
+    }
+  } catch(e) {
+    estado.innerHTML = `<span style="color:var(--red);"><i class="fa-solid fa-circle-xmark"></i> ${e.message}</span>`;
+    mostrarToast('No se pudo guardar. Intentá de nuevo.', 'red');
+  } finally {
+    btn.innerHTML = '<i class="fa-solid fa-floppy-disk"></i> Guardar';
+    btn.disabled  = false;
+  }
 }
 
 async function registrarReferido() {
@@ -2742,14 +2943,19 @@ async function cargarProspectos() {
 function renderAlertas() {
   const sinContactar = todosProspectos.filter(p=>p.estado==='sin_contactar').length;
   const sinSeguimiento = todosProspectos.filter(p=>p.estado==='contactado').length;
+  const conPropuesta = todosProspectos.filter(p=>p.estado==='propuesta_enviada').length;
   let html = '';
   if(sinContactar>0)
     html += `<div style="background:rgba(239,68,68,0.12);border:1px solid rgba(239,68,68,0.3);border-radius:10px;padding:12px 16px;margin-bottom:12px;font-size:.88rem;font-weight:600;color:#ef4444;">
       <i class="fa-solid fa-circle-exclamation"></i> &nbsp;Tenés <strong>${sinContactar}</strong> prospecto${sinContactar>1?'s':''} sin contactar
     </div>`;
   if(sinSeguimiento>0)
-    html += `<div style="background:rgba(245,158,11,0.1);border:1px solid rgba(245,158,11,0.25);border-radius:10px;padding:12px 16px;margin-bottom:16px;font-size:.88rem;font-weight:600;color:#f59e0b;">
+    html += `<div style="background:rgba(245,158,11,0.1);border:1px solid rgba(245,158,11,0.25);border-radius:10px;padding:12px 16px;margin-bottom:12px;font-size:.88rem;font-weight:600;color:#f59e0b;">
       <i class="fa-solid fa-clock"></i> &nbsp;Tenés <strong>${sinSeguimiento}</strong> sin seguimiento — contactaste pero no respondieron
+    </div>`;
+  if(conPropuesta>0)
+    html += `<div style="background:rgba(59,130,246,0.08);border:1px solid rgba(59,130,246,0.25);border-radius:10px;padding:12px 16px;margin-bottom:16px;font-size:.88rem;font-weight:600;color:var(--primary);">
+      <i class="fa-solid fa-file-invoice"></i> &nbsp;Tenés <strong>${conPropuesta}</strong> propuesta${conPropuesta>1?'s':''} enviada${conPropuesta>1?'s':''} esperando respuesta
     </div>`;
   document.getElementById('prosp-alertas').innerHTML = html;
 }
@@ -2776,8 +2982,8 @@ function renderProspectos() {
     return;
   }
 
-  const estadoLabel = { sin_contactar:'Sin contactar', contactado:'Contactado', respondio:'Respondió' };
-  const estadoColor = { sin_contactar:'var(--red)', contactado:'var(--amber)', respondio:'var(--green)' };
+  const estadoLabel = { sin_contactar:'Sin contactar', contactado:'Contactado', propuesta_enviada:'Propuesta enviada', respondio:'Respondió' };
+  const estadoColor = { sin_contactar:'var(--red)', contactado:'var(--amber)', propuesta_enviada:'var(--primary)', respondio:'var(--green)' };
 
   contenedor.innerHTML = lista.map(p=>`
     <div id="prosp-card-${p.id}" style="border-bottom:1px solid var(--border);padding:16px 8px;display:grid;gap:10px;">
@@ -2797,7 +3003,8 @@ function renderProspectos() {
           </div>
         <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;">
           ${p.estado==='sin_contactar'?`<button onclick="accionProspecto(${p.id},'contactar')" style="background:var(--primary);color:white;border:none;border-radius:8px;padding:7px 13px;font-size:.78rem;font-weight:700;cursor:pointer;white-space:nowrap;"><i class="fa-solid fa-paper-plane"></i> Contacté</button>`:''}
-          ${p.estado==='contactado'?`<button onclick="accionProspecto(${p.id},'respondio')" style="background:rgba(74,222,128,0.15);color:var(--green);border:1px solid var(--green-border);border-radius:8px;padding:7px 13px;font-size:.78rem;font-weight:700;cursor:pointer;white-space:nowrap;"><i class="fa-solid fa-reply"></i> Respondió</button>`:''}
+          ${p.estado==='contactado'?`<button onclick="accionProspecto(${p.id},'propuesta_enviada')" style="background:rgba(59,130,246,0.15);color:var(--primary);border:1px solid rgba(59,130,246,0.35);border-radius:8px;padding:7px 13px;font-size:.78rem;font-weight:700;cursor:pointer;white-space:nowrap;"><i class="fa-solid fa-file-invoice"></i> Envié la propuesta</button>`:''}
+          ${p.estado==='contactado'||p.estado==='propuesta_enviada'?`<button onclick="accionProspecto(${p.id},'respondio')" style="background:rgba(74,222,128,0.15);color:var(--green);border:1px solid var(--green-border);border-radius:8px;padding:7px 13px;font-size:.78rem;font-weight:700;cursor:pointer;white-space:nowrap;"><i class="fa-solid fa-reply"></i> Respondió</button>`:''}
           ${p.estado==='sin_contactar'?'':`<button onclick="accionProspecto(${p.id},'seguimiento')" style="background:rgba(245,158,11,0.12);color:var(--amber);border:1px solid rgba(245,158,11,0.3);border-radius:8px;padding:7px 13px;font-size:.78rem;font-weight:700;cursor:pointer;white-space:nowrap;"><i class="fa-solid fa-rotate-right"></i> Seguimiento</button>`}
           <button onclick="toggleInteresante(${p.id},${p.interesante})" title="${p.interesante?'Quitar flag':'Marcar como interesante'}" style="background:${p.interesante?'rgba(245,158,11,0.15)':'rgba(255,255,255,0.04)'};color:${p.interesante?'var(--amber)':'var(--text-dim)'};border:1px solid ${p.interesante?'rgba(245,158,11,0.3)':'var(--border)'};border-radius:8px;padding:7px 10px;font-size:.82rem;cursor:pointer;">🔥</button>
           <button onclick="abrirPerfilado(${p.id},'${(p.nombre||'').replace(/'/g,"\\'")}')" title="Perfilar con IA" style="background:rgba(192,132,252,0.12);color:#c084fc;border:1px solid rgba(192,132,252,0.3);border-radius:8px;padding:7px 12px;font-size:.78rem;font-weight:700;cursor:pointer;white-space:nowrap;"><i class="fa-solid fa-brain"></i> Perfilar IA</button>
@@ -2845,7 +3052,8 @@ async function crearProspecto() {
 }
 
 async function accionProspecto(id, accion) {
-  const endpoint = accion==='seguimiento' ? 'contactar' : accion;
+  const endpointMap = { seguimiento: 'contactar', propuesta_enviada: 'propuesta_enviada' };
+  const endpoint = endpointMap[accion] ?? accion;
   try {
     const res = await fetch(`${API}/prospectos/${id}/${endpoint}`,{method:'PATCH'});
     if(res.ok) await cargarProspectos();
@@ -3253,6 +3461,36 @@ async function cargarOnboardingChecklist() {
 
 // ─── COTIZADOR CON ANÁLISIS IA ────────────────────────────────────────────────
 
+// Cache del tipo de cambio (se recarga al entrar al cotizador)
+let _tipoDeCambio = null;
+let _ultimoLinkGenerado = null; // { id, url, moneda, expires_at }
+
+async function cargarTipoDeCambio() {
+  try {
+    const res = await fetch(`${API}/tipo-de-cambio`);
+    if(!res.ok) throw new Error();
+    const data = await res.json();
+    _tipoDeCambio = data.venta;
+    const badge = document.getElementById('cot-tc-badge');
+    if(badge) badge.innerHTML = `USD 1 = ARS ${Number(data.venta).toLocaleString('es-AR')} <span style="opacity:.7;">(blue · actualizado)</span>`;
+    actualizarPrecioARS();
+    return data.venta;
+  } catch(e) {
+    const badge = document.getElementById('cot-tc-badge');
+    if(badge) badge.innerHTML = `<span style="color:var(--red);">Sin TC en vivo — se usa al generar el link</span>`;
+    return null;
+  }
+}
+
+function actualizarPrecioARS() {
+  const plan = document.getElementById('cot-plan').value;
+  const el   = document.getElementById('cot-precio-ars');
+  if(!el) return;
+  if(!plan || !_tipoDeCambio) { el.textContent = 'ARS —'; return; }
+  const arsEstimado = Math.round(PLANES[plan] * _tipoDeCambio);
+  el.textContent = 'ARS ' + arsEstimado.toLocaleString('es-AR');
+}
+
 function actualizarCotizador() {
   if(!aliado) return;
   const plan     = document.getElementById('cot-plan').value;
@@ -3273,42 +3511,220 @@ function actualizarCotizador() {
   const link    = `https://avanzadigital.digital/contratar?plan=${encodeURIComponent(plan)}&ref=${aliado.ref_code}&cliente=${encodeURIComponent(cliente)}`;
   document.getElementById('cot-link').value = link;
 
-  // Mostrar botón MP si aplica
-  const btnMP = document.getElementById('btn-checkout-real');
-  if(btnMP) btnMP.style.display = 'inline-flex';
+  // Mostrar box de checkout dual y cargar tipo de cambio si hace falta
+  const checkoutBox = document.getElementById('cot-checkout-box');
+  if(checkoutBox) {
+    checkoutBox.style.display = 'block';
+    if(!_tipoDeCambio) cargarTipoDeCambio(); else actualizarPrecioARS();
+  }
+
+  // Ocultar link previo (si el aliado cambia de plan, queda stale)
+  const lgBox = document.getElementById('cot-link-generado');
+  if(lgBox) lgBox.style.display = 'none';
+  _ultimoLinkGenerado = null;
 
   // Resetear análisis IA
   if(aiBox) { aiBox.style.display='none'; aiBox.innerHTML=''; }
   resDiv.style.display = 'block';
 }
 
-async function generarCheckoutReal() {
+// Generador de link de pago con selección de moneda (spec §2, §3, §13)
+async function generarLinkPago(moneda) {
+  if(!aliado) return;
   const plan    = document.getElementById('cot-plan').value;
   const cliente = document.getElementById('cot-cliente').value || 'Cliente';
-  const btn     = document.getElementById('btn-checkout-real');
-  if(!plan) return;
-  btn.innerHTML = '<span class="spinner"></span> Generando...';
-  btn.disabled  = true;
+  if(!plan) { mostrarToast('Elegí un plan primero.', 'amber'); return; }
+
+  const btnARS = document.getElementById('btn-checkout-ars');
+  const btnUSD = document.getElementById('btn-checkout-usd');
+  const btnActivo = (moneda === 'ars') ? btnARS : btnUSD;
+  const labelOriginal = btnActivo.innerHTML;
+  btnActivo.innerHTML = '<span class="spinner"></span> Generando...';
+  btnActivo.disabled = true;
+  if(moneda === 'ars' && btnUSD) btnUSD.disabled = true;
+  if(moneda === 'usd' && btnARS) btnARS.disabled = true;
+
   try {
-    const res  = await fetch(`${API}/checkout/crear?plan=${encodeURIComponent(plan)}&ref_code=${aliado.ref_code}&nombre_cliente=${encodeURIComponent(cliente)}`, {method:'POST'});
+    const url = `${API}/checkout/crear?plan=${encodeURIComponent(plan)}&ref_code=${aliado.ref_code}&nombre_cliente=${encodeURIComponent(cliente)}&moneda=${moneda}`;
+    const res  = await fetch(url, { method: 'POST' });
+    const data = await res.json();
+
+    if(!res.ok || !data.checkout_url) {
+      mostrarToast(data.detail || 'Error al generar el link. Intentá de nuevo.', 'red');
+      return;
+    }
+
+    if(data.fallback) {
+      mostrarToast('Procesador no configurado todavía. Avisale al admin.', 'amber');
+      return;
+    }
+
+    // Mostrar el link en el box de resultado
+    _ultimoLinkGenerado = {
+      id: data.link_id,
+      url: data.checkout_url,
+      moneda: data.moneda,
+      expires_at: data.expires_at,
+      plan: data.plan,
+      precio_usd: data.precio_usd,
+      precio_ars: data.precio_ars,
+      tipo_cambio: data.tipo_cambio,
+    };
+
+    const lgBox   = document.getElementById('cot-link-generado');
+    const lgTitulo = document.getElementById('cot-lg-titulo');
+    const lgVence = document.getElementById('cot-lg-vence');
+    const lgUrl   = document.getElementById('cot-lg-url');
+    const lgAviso = document.getElementById('cot-lg-aviso');
+
+    if(data.moneda === 'ars') {
+      lgTitulo.innerHTML = `Link en pesos — <strong>ARS ${Math.round(data.precio_ars).toLocaleString('es-AR')}</strong> (TC ${Number(data.tipo_cambio).toLocaleString('es-AR')})`;
+    } else {
+      lgTitulo.innerHTML = `Link en dólares — <strong>USD ${Number(data.precio_usd).toFixed(2)}</strong> (PayPal)`;
+    }
+    lgUrl.value = data.checkout_url;
+    if(lgAviso) lgAviso.textContent = `Compartí este link con tu cliente. Expira a las 48 horas por seguridad (el tipo de cambio puede variar).`;
+    actualizarTextoVencimiento();
+    lgBox.style.display = 'block';
+    document.getElementById('btn-regenerar-link').style.display = 'none';
+    mostrarToast('Link generado. Copialo y mandáselo al cliente.', 'green');
+
+    // Reemplazar el link manual con el de pago real
+    document.getElementById('cot-link').value = data.checkout_url;
+  } catch(e) {
+    mostrarToast('Error de conexión al generar link.', 'red');
+    console.error(e);
+  } finally {
+    btnActivo.innerHTML = labelOriginal;
+    btnActivo.disabled = false;
+    if(btnARS) btnARS.disabled = false;
+    if(btnUSD) btnUSD.disabled = false;
+  }
+}
+
+function actualizarTextoVencimiento() {
+  if(!_ultimoLinkGenerado || !_ultimoLinkGenerado.expires_at) return;
+  const lgVence = document.getElementById('cot-lg-vence');
+  const btnRegen = document.getElementById('btn-regenerar-link');
+  const exp = new Date(_ultimoLinkGenerado.expires_at);
+  const ahora = new Date();
+  const diffMs = exp.getTime() - ahora.getTime();
+  if(diffMs <= 0) {
+    lgVence.innerHTML = '<span style="color:var(--red);"><i class="fa-solid fa-triangle-exclamation"></i> Este link venció. Generá uno nuevo.</span>';
+    if(btnRegen) btnRegen.style.display = 'inline-flex';
+  } else {
+    const horas = Math.floor(diffMs / (1000*60*60));
+    const mins  = Math.floor((diffMs % (1000*60*60)) / (1000*60));
+    const txt = horas >= 1 ? `Vence en ${horas}h ${mins}m` : `Vence en ${mins} min`;
+    lgVence.innerHTML = `<i class="fa-solid fa-clock"></i> ${txt}`;
+    if(btnRegen) btnRegen.style.display = 'none';
+  }
+}
+// refrescar cada 60s mientras el cotizador está abierto
+setInterval(actualizarTextoVencimiento, 60000);
+
+// Recupera el último link activo del aliado desde el backend al entrar al cotizador (spec §13)
+async function recuperarUltimoLinkActivo() {
+  if(!aliado) return;
+  try {
+    const res = await fetch(`${API}/checkout/ultimo-link?codigo=${encodeURIComponent(aliado.codigo)}`);
+    if(!res.ok) return; // 404 = sin link previo, silencioso
+    const data = await res.json();
+    if(!data || !data.checkout_url) return;
+
+    _ultimoLinkGenerado = {
+      id:          data.link_id,
+      url:         data.checkout_url,
+      moneda:      data.moneda,
+      expires_at:  data.expires_at,
+      plan:        data.plan,
+      precio_usd:  data.precio_usd,
+      precio_ars:  data.precio_ars,
+      tipo_cambio: data.tipo_cambio,
+    };
+
+    // Mostrar el box con el link recuperado
+    const lgBox    = document.getElementById('cot-link-generado');
+    const lgTitulo = document.getElementById('cot-lg-titulo');
+    const lgUrl    = document.getElementById('cot-lg-url');
+    const lgAviso  = document.getElementById('cot-lg-aviso');
+    if(!lgBox) return;
+
+    if(data.moneda === 'ars') {
+      lgTitulo.innerHTML = `Link anterior en pesos — <strong>ARS ${Math.round(data.precio_ars).toLocaleString('es-AR')}</strong> (TC ${Number(data.tipo_cambio).toLocaleString('es-AR')})`;
+    } else {
+      lgTitulo.innerHTML = `Link anterior en dólares — <strong>USD ${Number(data.precio_usd).toFixed(2)}</strong> (PayPal)`;
+    }
+    lgUrl.value = data.checkout_url;
+    if(lgAviso) lgAviso.textContent = 'Link recuperado de tu sesión anterior.';
+
+    // Mostrar checkout-box padre si corresponde
+    const checkoutBox = document.getElementById('cot-checkout-box');
+    if(checkoutBox) checkoutBox.style.display = 'block';
+
+    lgBox.style.display = 'block';
+    actualizarTextoVencimiento(); // evalúa si ya venció y muestra el botón "Regenerar"
+  } catch(e) {
+    console.warn('No se pudo recuperar el último link:', e);
+  }
+}
+
+function copiarLinkPago() {
+  if(!_ultimoLinkGenerado) return;
+  navigator.clipboard.writeText(_ultimoLinkGenerado.url)
+    .then(() => mostrarToast('Link de pago copiado', 'green'))
+    .catch(() => mostrarToast('No se pudo copiar', 'red'));
+}
+
+async function regenerarLinkPago() {
+  if(!_ultimoLinkGenerado || !_ultimoLinkGenerado.id) {
+    // si no tenemos el id, generamos uno nuevo desde cero con la misma moneda
+    if(_ultimoLinkGenerado && _ultimoLinkGenerado.moneda) {
+      return generarLinkPago(_ultimoLinkGenerado.moneda);
+    }
+    return;
+  }
+  const btn = document.getElementById('btn-regenerar-link');
+  const label = btn.innerHTML;
+  btn.innerHTML = '<span class="spinner"></span> Regenerando...';
+  btn.disabled = true;
+  try {
+    const res = await fetch(`${API}/checkout/regenerar/${_ultimoLinkGenerado.id}`, { method: 'POST' });
     const data = await res.json();
     if(res.ok && data.checkout_url) {
-      if(data.fallback) {
-        mostrarToast('Checkout MP no activado. Usá el link de atribución manual.', 'amber');
-        document.getElementById('cot-link').value = data.checkout_url;
+      _ultimoLinkGenerado = {
+        id: data.link_id,
+        url: data.checkout_url,
+        moneda: data.moneda,
+        expires_at: data.expires_at,
+        plan: data.plan,
+        precio_usd: data.precio_usd,
+        precio_ars: data.precio_ars,
+        tipo_cambio: data.tipo_cambio,
+      };
+      document.getElementById('cot-lg-url').value = data.checkout_url;
+      document.getElementById('cot-link').value = data.checkout_url;
+      const lgTitulo = document.getElementById('cot-lg-titulo');
+      if(data.moneda === 'ars') {
+        lgTitulo.innerHTML = `Link en pesos — <strong>ARS ${Math.round(data.precio_ars).toLocaleString('es-AR')}</strong> (TC ${Number(data.tipo_cambio).toLocaleString('es-AR')})`;
       } else {
-        mostrarToast('¡Checkout generado! Abriendo MercadoPago...', 'green');
-        setTimeout(()=> window.open(data.checkout_url, '_blank'), 400);
+        lgTitulo.innerHTML = `Link en dólares — <strong>USD ${Number(data.precio_usd).toFixed(2)}</strong> (PayPal)`;
       }
+      actualizarTextoVencimiento();
+      mostrarToast('Link regenerado. El anterior quedó invalidado.', 'green');
     } else {
-      mostrarToast('Error al generar checkout. Usá el link manual.', 'amber');
+      mostrarToast(data.detail || 'No se pudo regenerar', 'red');
     }
   } catch(e) {
-    mostrarToast('Error de conexión.', 'red');
+    mostrarToast('Error de conexión', 'red');
+  } finally {
+    btn.innerHTML = label;
+    btn.disabled = false;
   }
-  btn.innerHTML = '<i class="fa-solid fa-credit-card"></i> Pago directo MP';
-  btn.disabled  = false;
 }
+
+// Función legacy — mantengo por compatibilidad si algún handler externo la llama
+async function generarCheckoutReal() { return generarLinkPago('ars'); }
 
 async function obtenerAnalisisIA() {
   const plan     = document.getElementById('cot-plan').value;

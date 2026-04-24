@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Float, Boolean, DateTime, ForeignKey, Text
+from sqlalchemy import Column, Integer, String, Float, Boolean, DateTime, ForeignKey, Text, Numeric
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 from database import Base
@@ -10,7 +10,7 @@ class Aliado(Base):
     __tablename__ = "aliados"
 
     id = Column(Integer, primary_key=True, index=True)
-    codigo = Column(String, unique=True, index=True)       # AL-001, AL-002, etc.
+    codigo = Column(String, unique=True, index=True)
     nombre = Column(String, nullable=False)
     dni = Column(String)
     email = Column(String, unique=True, index=True)
@@ -35,23 +35,28 @@ class Aliado(Base):
     # --- ONBOARDING ---
     onboarding_completado = Column(Boolean, default=False)
 
-    # --- REPUTACIÓN (C) ---
-    reputacion_score = Column(Integer, default=50)         # 0-100
-    badges = Column(Text, default="[]")                    # JSON con badges ganadas
+    # --- REPUTACIÓN ---
+    reputacion_score = Column(Integer, default=50)
+    badges = Column(Text, default="[]")
     reputacion_calculada_en = Column(DateTime, nullable=True)
 
-    # --- CRÉDITOS PARA MARKETPLACE (D) ---
+    # --- CRÉDITOS PARA MARKETPLACE ---
     creditos = Column(Integer, default=0)
 
-    # --- PORTAL PÚBLICO "MARCA BLANCA LITE" (G) ---
+    # --- PORTAL PÚBLICO ---
     portal_publico_activo = Column(Boolean, default=True)
     portal_publico_titular = Column(String, nullable=True)
     portal_publico_bio = Column(Text, nullable=True)
 
     # --- CANAL DE ALIADO ---
-    # "canal1" = Busco clientes (recibe leads del admin, usa Academia, Bolsa, etc.)
-    # "canal2" = Tengo mis clientes (contador, consultor B2B — trae su propia cartera)
     tipo_aliado = Column(String, default="canal1")
+
+    # --- COBRO DE COMISIONES (NUEVO) ---
+    cbu_alias = Column(String, nullable=True)
+
+    # --- CONTRATO DIGITAL (NUEVO) ---
+    terminos_aceptados = Column(Boolean, default=False)
+    terminos_aceptados_en = Column(DateTime, nullable=True)
 
     ventas = relationship("Venta", back_populates="aliado")
     referidos = relationship("Referido", back_populates="aliado")
@@ -125,7 +130,7 @@ class Venta(Base):
     notas = Column(Text, nullable=True)
     creado_en = Column(DateTime, default=func.now())
 
-    # --- FINANCIACIÓN (E) ---
+    # --- FINANCIACIÓN ---
     cuotas = Column(Integer, default=1)
     financiacion_pct = Column(Float, default=0.0)
 
@@ -143,7 +148,7 @@ class Admin(Base):
     creado_en = Column(DateTime, default=func.now())
 
 
-# ─── PROSPECTO (ampliado con perfilado y automation) ─────────────────────────
+# ─── PROSPECTO ───────────────────────────────────────────────────────────────
 class Prospecto(Base):
     __tablename__ = "prospectos"
 
@@ -159,16 +164,16 @@ class Prospecto(Base):
     fecha_respuesta = Column(DateTime, nullable=True)
     creado_en   = Column(DateTime, default=func.now())
 
-    # --- PERFILADO (A) ---
+    # --- PERFILADO ---
     rubro       = Column(String, nullable=True)
-    tamano      = Column(String, nullable=True)            # micro | pyme | mediana | grande
-    urgencia    = Column(String, nullable=True)            # baja | media | alta
-    score_ia    = Column(Integer, default=0)               # 0-100, probabilidad cierre
+    tamano      = Column(String, nullable=True)
+    urgencia    = Column(String, nullable=True)
+    score_ia    = Column(Integer, default=0)
     plan_recomendado = Column(String, nullable=True)
     pitch_sugerido = Column(Text, nullable=True)
     perfilado_en = Column(DateTime, nullable=True)
 
-    # --- PILOTO AUTOMÁTICO (B) ---
+    # --- PILOTO AUTOMÁTICO ---
     piloto_automatico = Column(Boolean, default=False)
     automation_paso = Column(Integer, default=0)
     automation_ultimo_en = Column(DateTime, nullable=True)
@@ -192,7 +197,7 @@ class AuditoriaLog(Base):
     aliado = relationship("Aliado")
 
 
-# ─── BOLSA DE LEADS (ampliada con tier/costo) ────────────────────────────────
+# ─── BOLSA DE LEADS ──────────────────────────────────────────────────────────
 class LeadBolsa(Base):
     __tablename__ = "bolsa_leads"
 
@@ -208,8 +213,8 @@ class LeadBolsa(Base):
     fecha_reclamo = Column(DateTime, nullable=True)
     notif_24h_enviada = Column(Boolean, default=False)
 
-    # --- MARKETPLACE (D) ---
-    tier = Column(String, default="basico")                # basico | calificado | premium
+    # --- MARKETPLACE ---
+    tier = Column(String, default="basico")
     costo_creditos = Column(Integer, default=0)
     score_calidad = Column(Integer, default=50)
     notas_calificacion = Column(Text, nullable=True)
@@ -217,7 +222,7 @@ class LeadBolsa(Base):
     aliado = relationship("Aliado", backref="leads_bolsa")
 
 
-# ─── TRANSACCIÓN DE CRÉDITOS (D) ─────────────────────────────────────────────
+# ─── TRANSACCIÓN DE CRÉDITOS ─────────────────────────────────────────────────
 class TransaccionCredito(Base):
     __tablename__ = "transacciones_credito"
 
@@ -231,13 +236,13 @@ class TransaccionCredito(Base):
     aliado = relationship("Aliado")
 
 
-# ─── COMUNIDAD (F) ───────────────────────────────────────────────────────────
+# ─── COMUNIDAD ───────────────────────────────────────────────────────────────
 class PostComunidad(Base):
     __tablename__ = "comunidad_posts"
 
     id = Column(Integer, primary_key=True, index=True)
     aliado_id = Column(Integer, ForeignKey("aliados.id"))
-    tipo = Column(String, default="tip")                   # tip | win | pregunta
+    tipo = Column(String, default="tip")
     titulo = Column(String, nullable=False)
     cuerpo = Column(Text, nullable=False)
     likes = Column(Integer, default=0)
@@ -261,7 +266,7 @@ class ComentarioComunidad(Base):
     aliado = relationship("Aliado")
 
 
-# ─── AUTOMATION LOG (B) ──────────────────────────────────────────────────────
+# ─── AUTOMATION LOG ──────────────────────────────────────────────────────────
 class AutomationLog(Base):
     __tablename__ = "automation_log"
 
@@ -273,6 +278,68 @@ class AutomationLog(Base):
     asunto = Column(String, nullable=True)
     mensaje = Column(Text, nullable=True)
     exitoso = Column(Boolean, default=True)
+    creado_en = Column(DateTime, default=func.now())
+
+
+# ─── LINK DE PAGO (NUEVO) ────────────────────────────────────────────────────
+class LinkPago(Base):
+    __tablename__ = "links_pago"
+
+    id = Column(Integer, primary_key=True, index=True)
+    aliado_id = Column(Integer, ForeignKey("aliados.id"), index=True)
+    prospecto_id = Column(Integer, ForeignKey("prospectos.id"), nullable=True)
+    plan = Column(String, nullable=False)
+    moneda = Column(String, nullable=False)           # 'ars' | 'usd'
+    precio_usd = Column(Float, nullable=False)
+    precio_ars = Column(Float, nullable=True)
+    tipo_cambio = Column(Float, nullable=True)
+    checkout_url = Column(Text, nullable=False)
+    processor = Column(String, nullable=False)        # 'mercadopago' | 'paypal'
+    external_ref = Column(String, nullable=True, index=True)
+    created_at = Column(DateTime, default=func.now())
+    expires_at = Column(DateTime, nullable=True)
+    estado = Column(String, default="activo")         # 'activo' | 'vencido' | 'pagado'
+
+    aliado = relationship("Aliado")
+    prospecto = relationship("Prospecto")
+
+
+# ─── COMISIÓN (NUEVO) ────────────────────────────────────────────────────────
+class Comision(Base):
+    __tablename__ = "comisiones"
+
+    id = Column(Integer, primary_key=True, index=True)
+    aliado_id = Column(Integer, ForeignKey("aliados.id"), index=True)
+    prospecto_id = Column(Integer, ForeignKey("prospectos.id"), nullable=True)
+    link_pago_id = Column(Integer, ForeignKey("links_pago.id"), nullable=True)
+    plan = Column(String, nullable=False)
+    monto_plan_usd = Column(Float, nullable=False)
+    comision_pct = Column(Float, nullable=False)
+    comision_usd = Column(Float, nullable=False)
+    nombre_cliente = Column(String, nullable=True)
+    estado = Column(String, default="pendiente")      # 'pendiente' | 'abonada'
+    processor = Column(String, nullable=True)         # 'mercadopago' | 'paypal'
+    fecha_pago = Column(DateTime, nullable=True)
+    fecha_abono = Column(DateTime, nullable=True)
+    creado_en = Column(DateTime, default=func.now())
+
+    aliado = relationship("Aliado")
+    prospecto = relationship("Prospecto")
+    link_pago = relationship("LinkPago")
+
+
+# ─── ACADEMIA MÓDULOS (NUEVO) ────────────────────────────────────────────────
+class AcademiaModulo(Base):
+    __tablename__ = "academia_modulos"
+
+    id = Column(Integer, primary_key=True, index=True)
+    orden = Column(Integer, nullable=False)
+    titulo = Column(String, nullable=False)
+    descripcion = Column(Text, nullable=True)
+    tipo = Column(String, nullable=False)             # 'video' | 'pdf' | 'texto'
+    url_contenido = Column(Text, nullable=True)
+    duracion_minutos = Column(Integer, nullable=True)
+    activo = Column(Boolean, default=True)
     creado_en = Column(DateTime, default=func.now())
 
 
@@ -291,7 +358,6 @@ NIVELES = {
     "ELITE":   {"comision": 0.20, "requisito": 5,  "bono": False},
 }
 
-# Recargo por cuotas (E)
 CUOTAS_RECARGO = {
     1:  0.00,
     3:  0.08,
@@ -299,7 +365,6 @@ CUOTAS_RECARGO = {
     12: 0.28,
 }
 
-# Badges del sistema de reputación (C)
 REPUTACION_BADGES = {
     "CLOSER":        {"label": "Closer",        "icono": "🎯", "desc": "Tasa de cierre ≥ 40%"},
     "RAPIDO":        {"label": "Rápido",        "icono": "⚡", "desc": "Contacta leads en < 6hs"},
