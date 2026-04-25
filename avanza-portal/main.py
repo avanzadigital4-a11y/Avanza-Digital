@@ -1,8 +1,9 @@
-from fastapi import FastAPI, Depends, HTTPException, Request, status, BackgroundTasks
+from fastapi import FastAPI, Depends, HTTPException, Request, status, BackgroundTasks, Body
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
 from sqlalchemy import text
+from sqlalchemy.exc import OperationalError, ProgrammingError
 from passlib.context import CryptContext
 from datetime import datetime, timedelta
 from pydantic import BaseModel
@@ -12,70 +13,71 @@ from models import (
     LinkPago, Comision, AcademiaModulo,
     PLANES, NIVELES, CUOTAS_RECARGO, REPUTACION_BADGES
 )
-import random, string, os, smtplib, httpx, json, hmac as hmac_lib, hashlib, base64
+import random, string, os, smtplib, httpx, json, hmac as hmac_lib, hashlib, base64, sys
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from apscheduler.schedulers.background import BackgroundScheduler
 
 from database import engine, get_db, Base
+from auth import (
+    crear_token, current_aliado_required, current_admin_required,
+    verify_ownership_dep, ADMIN_API_KEY, JWT_SECRET,
+)
+import schemas
 
 Base.metadata.create_all(bind=engine)
 
-# Auto-migración SEGURA: Corregido para PostgreSQL (Railway)
-try:
-    with engine.connect() as conn:
-        # PostgreSQL usa TIMESTAMP en lugar de DATETIME. Esto causaba el crash.
-        conn.execute(text("ALTER TABLE aliados ADD COLUMN ultimo_login TIMESTAMP"))
-        conn.commit()
-except Exception as e:
-    pass # Si ya existe, lo ignoramos
 
-try:
-    with engine.connect() as conn:
-        conn.execute(text("ALTER TABLE aliados ADD COLUMN cantidad_logins INTEGER DEFAULT 0"))
-        conn.commit()
-except Exception as e:
-    pass # Si ya existe, lo ignoramos
+# ─── MIGRACIONES IDEMPOTENTES ────────────────────────────────────────────────
+# Helper que solo traga errores de "columna ya existe" / "tabla no existe en
+# orden equivocado". Cualquier otro error se propaga (DB caída, sintaxis, etc.).
+_DUP_COL_TOKENS = (
+    "already exists",            # postgres / sqlite moderno
+    "duplicate column",          # sqlite
+    "duplicate column name",     # sqlite alt
+)
+
+def _aplicar_migracion(sql: str) -> None:
+    """Aplica un ALTER TABLE de forma idempotente.
+    Solo silencia errores que indiquen 'columna ya existe'. Cualquier otro
+    error (sintaxis, DB caída, permisos) sube y mata el proceso para no
+    arrancar con esquema corrupto."""
+    try:
+        with engine.connect() as conn:
+            conn.execute(text(sql))
+            conn.commit()
+    except (OperationalError, ProgrammingError) as e:
+        msg = str(e).lower()
+        if any(t in msg for t in _DUP_COL_TOKENS):
+            return  # esperado: la columna ya existe
+        # Error real: log y re-raise para que el deploy falle limpio
+        print(f"[MIGRACIÓN ERROR] {sql} → {e}", file=sys.stderr)
+        raise
+
+
+# Migraciones legacy (orden cronológico de versiones)
+_aplicar_migracion("ALTER TABLE aliados ADD COLUMN ultimo_login TIMESTAMP")
+_aplicar_migracion("ALTER TABLE aliados ADD COLUMN cantidad_logins INTEGER DEFAULT 0")
 
 # Migraciones para columnas nuevas de LeadBolsa y Red de Aliados
 for col_sql in [
     "ALTER TABLE bolsa_leads ADD COLUMN resultado VARCHAR",
     "ALTER TABLE bolsa_leads ADD COLUMN notif_24h_enviada BOOLEAN DEFAULT FALSE",
-    "ALTER TABLE aliados ADD COLUMN sponsor_id INTEGER REFERENCES aliados(id)"
-]:
-    try:
-        with engine.connect() as conn:
-            conn.execute(text(col_sql))
-            conn.commit()
-    except Exception:
-        pass
-
-# Migraciones para inteligencia de ventas y checkout
-for col_sql in [
+    "ALTER TABLE aliados ADD COLUMN sponsor_id INTEGER REFERENCES aliados(id)",
+    # Inteligencia de ventas y checkout
     "ALTER TABLE prospectos ADD COLUMN rubro VARCHAR",
     "ALTER TABLE prospectos ADD COLUMN tamano VARCHAR",
     "ALTER TABLE prospectos ADD COLUMN urgencia VARCHAR",
     "ALTER TABLE prospectos ADD COLUMN score_ia INTEGER DEFAULT 0",
     "ALTER TABLE aliados ADD COLUMN onboarding_completado BOOLEAN DEFAULT FALSE",
-]:
-    try:
-        with engine.connect() as conn:
-            conn.execute(text(col_sql))
-            conn.commit()
-    except Exception:
-        pass
-
-# ─── MIGRACIONES v1.3 (Perfilado IA + Reputación + Marketplace + Comunidad) ─
-for col_sql in [
-    # Prospecto — perfilado IA completo
+    # v1.3 — Prospecto (perfilado IA + piloto)
     "ALTER TABLE prospectos ADD COLUMN plan_recomendado VARCHAR",
     "ALTER TABLE prospectos ADD COLUMN pitch_sugerido TEXT",
     "ALTER TABLE prospectos ADD COLUMN perfilado_en TIMESTAMP",
-    # Prospecto — piloto automático
     "ALTER TABLE prospectos ADD COLUMN automation_paso INTEGER DEFAULT 0",
     "ALTER TABLE prospectos ADD COLUMN automation_ultimo_en TIMESTAMP",
     "ALTER TABLE prospectos ADD COLUMN automation_activa_desde TIMESTAMP",
-    # Aliado — reputación + créditos + portal público
+    # v1.3 — Aliado (reputación + créditos + portal público)
     "ALTER TABLE aliados ADD COLUMN reputacion_score INTEGER DEFAULT 50",
     "ALTER TABLE aliados ADD COLUMN badges TEXT DEFAULT '[]'",
     "ALTER TABLE aliados ADD COLUMN reputacion_calculada_en TIMESTAMP",
@@ -83,38 +85,21 @@ for col_sql in [
     "ALTER TABLE aliados ADD COLUMN portal_publico_activo BOOLEAN DEFAULT TRUE",
     "ALTER TABLE aliados ADD COLUMN portal_publico_titular VARCHAR",
     "ALTER TABLE aliados ADD COLUMN portal_publico_bio TEXT",
-    # Ventas — financiación
+    # v1.3 — Ventas (financiación)
     "ALTER TABLE ventas ADD COLUMN cuotas INTEGER DEFAULT 1",
     "ALTER TABLE ventas ADD COLUMN financiacion_pct FLOAT DEFAULT 0.0",
-    # Bolsa — marketplace
+    # v1.3 — Bolsa (marketplace)
     "ALTER TABLE bolsa_leads ADD COLUMN tier VARCHAR DEFAULT 'basico'",
     "ALTER TABLE bolsa_leads ADD COLUMN costo_creditos INTEGER DEFAULT 0",
     "ALTER TABLE bolsa_leads ADD COLUMN score_calidad INTEGER DEFAULT 50",
     "ALTER TABLE bolsa_leads ADD COLUMN notas_calificacion TEXT",
-    # Canal de aliado (canal1=busco clientes, canal2=tengo mis clientes)
     "ALTER TABLE aliados ADD COLUMN tipo_aliado VARCHAR DEFAULT 'canal1'",
-]:
-    try:
-        with engine.connect() as conn:
-            conn.execute(text(col_sql))
-            conn.commit()
-    except Exception:
-        pass
-
-
-# ─── MIGRACIONES v1.4 (Checkout dual MP+PayPal, comisiones, academia) ─────────
-for col_sql in [
-    # Aliado — cobro de comisiones y contrato digital
+    # v1.4 — Cobro de comisiones + contrato digital
     "ALTER TABLE aliados ADD COLUMN cbu_alias VARCHAR",
     "ALTER TABLE aliados ADD COLUMN terminos_aceptados BOOLEAN DEFAULT FALSE",
     "ALTER TABLE aliados ADD COLUMN terminos_aceptados_en TIMESTAMP",
 ]:
-    try:
-        with engine.connect() as conn:
-            conn.execute(text(col_sql))
-            conn.commit()
-    except Exception:
-        pass
+    _aplicar_migracion(col_sql)
 
 
 # ─── EMAIL HELPER ─────────────────────────────────────────────────────────────
@@ -261,11 +246,17 @@ def verificar_firma_mp(raw_body: bytes, headers, query_params) -> bool:
     """Verifica firma HMAC-SHA256 del webhook de Mercado Pago.
     MP envía el header x-signature con formato: `ts=<ts>,v1=<hash>`.
     El manifest firmado es: `id:<data.id>;request-id:<x-request-id>;ts:<ts>;`.
-    Devuelve True si la firma es válida. Lanza en modo estricto."""
+
+    FAIL-CLOSED: si MP_WEBHOOK_SECRET no está seteado, devuelve False salvo que
+    AVANZA_INSECURE_WEBHOOKS=1 (modo dev local explícito). Esto previene que un
+    deploy con env var faltante quede aceptando webhooks falsos.
+    """
     if not MP_WEBHOOK_SECRET:
-        # Si no hay secret configurado, no verificamos (modo permisivo legacy)
-        print("[MP WEBHOOK] Sin MP_WEBHOOK_SECRET — validación desactivada (MODO INSEGURO)")
-        return True
+        if os.environ.get("AVANZA_INSECURE_WEBHOOKS") == "1":
+            print("[MP WEBHOOK] AVANZA_INSECURE_WEBHOOKS=1 — validación desactivada (SOLO DEV)")
+            return True
+        print("[MP WEBHOOK] ❌ MP_WEBHOOK_SECRET no seteada — rechazando webhook (fail-closed)")
+        return False
 
     x_signature = headers.get("x-signature") or headers.get("X-Signature")
     x_request_id = headers.get("x-request-id") or headers.get("X-Request-Id") or ""
@@ -309,10 +300,17 @@ def verificar_firma_mp(raw_body: bytes, headers, query_params) -> bool:
 
 # ─── VERIFICACIÓN DE FIRMA DE WEBHOOK DE PAYPAL ──────────────────────────────
 async def verificar_firma_paypal(headers, body_json) -> bool:
-    """Verifica el webhook de PayPal llamando a su endpoint de verificación."""
+    """Verifica el webhook de PayPal llamando a su endpoint de verificación.
+
+    FAIL-CLOSED: si PAYPAL_WEBHOOK_ID no está seteado, devuelve False salvo
+    que AVANZA_INSECURE_WEBHOOKS=1 (modo dev local).
+    """
     if not PAYPAL_WEBHOOK_ID:
-        print("[PAYPAL WEBHOOK] Sin PAYPAL_WEBHOOK_ID — validación desactivada (MODO INSEGURO)")
-        return True
+        if os.environ.get("AVANZA_INSECURE_WEBHOOKS") == "1":
+            print("[PAYPAL WEBHOOK] AVANZA_INSECURE_WEBHOOKS=1 — validación desactivada (SOLO DEV)")
+            return True
+        print("[PAYPAL WEBHOOK] ❌ PAYPAL_WEBHOOK_ID no seteada — rechazando webhook (fail-closed)")
+        return False
     try:
         token = await obtener_paypal_token()
         payload = {
@@ -453,29 +451,70 @@ scheduler.add_job(job_expirar_links_pago, "interval", hours=1)
 scheduler.start()
 
 
-app = FastAPI(title="Avanza Partner Portal", version="1.1")
+app = FastAPI(title="Avanza Partner Portal", version="1.5")
 
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+# ─── RATE LIMITING ───────────────────────────────────────────────────────────
+# Usa slowapi (cliente in-memory por IP). Para multi-instancia mover a Redis.
+from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi.util import get_remote_address
+from slowapi.errors import RateLimitExceeded
+from slowapi.middleware import SlowAPIMiddleware
+
+limiter = Limiter(key_func=get_remote_address, default_limits=["200/minute"])
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+app.add_middleware(SlowAPIMiddleware)
+
+# ─── CORS ────────────────────────────────────────────────────────────────────
+# CORS_ORIGINS = lista CSV de orígenes permitidos. Default razonable.
+# Para dev local podés agregar http://localhost:5500, http://127.0.0.1:5500, etc.
+_default_origins = ",".join([
+    "https://avanzadigital.digital",
+    "https://www.avanzadigital.digital",
+    "https://avanza-digital.onrender.com",
+    "https://avanza-digital-production.up.railway.app",
+])
+_cors_env = os.environ.get("CORS_ORIGINS", _default_origins)
+CORS_ORIGINS = [o.strip() for o in _cors_env.split(",") if o.strip()]
+
+# AVANZA_CORS_OPEN=1 abre el CORS a todo el mundo (solo dev). Si está, log warning.
+if os.environ.get("AVANZA_CORS_OPEN") == "1":
+    print("[CORS] ⚠️  AVANZA_CORS_OPEN=1 — CORS abierto a *. Solo usar en dev.")
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=["*"],
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
+else:
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=CORS_ORIGINS,
+        allow_credentials=True,
+        allow_methods=["GET", "POST", "PATCH", "DELETE", "OPTIONS"],
+        allow_headers=["Authorization", "Content-Type", "X-API-Key"],
+    )
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
-# ─── API KEY ─────────────────────────────────────────────────────────────────
-ADMIN_API_KEY = os.environ.get("ADMIN_API_KEY", "")
-
+# ─── RUTAS ADMIN ─────────────────────────────────────────────────────────────
+# Solo se usan para el middleware de fallback con X-API-Key (legacy).
+# Idealmente todas estas rutas también declararían `Depends(current_admin_required)`
+# explícitamente, pero las que ya delegan en el middleware quedan cubiertas.
 RUTAS_ADMIN = {
     ("POST",   "/aliados/crear"),
     ("POST",   "/admin/setup"),
+    ("POST",   "/admin/login"),
     ("GET",    "/aliados"),
     ("GET",    "/aliados/suspendidos"),
     ("GET",    "/aliados/inactivos"),
     ("PATCH",  "/aliados/{codigo}/nivel"),
+    ("POST",   "/aliados/{codigo}/suspender"),
+    ("POST",   "/aliados/{codigo}/activar"),
+    ("DELETE", "/aliados/{codigo}/eliminar"),
     ("GET",    "/referidos/pendientes"),
     ("POST",   "/ventas/registrar"),
+    ("POST",   "/ventas/{id}/pagar"),
     ("GET",    "/dashboard"),
     ("GET",    "/admin/prospectos"),
     ("GET",    "/admin/auditorias"),
@@ -488,9 +527,7 @@ RUTAS_ADMIN = {
     ("POST",   "/admin/aliados/{codigo}/creditos"),
     ("POST",   "/admin/comunidad/{id}/fijar"),
     ("POST",   "/admin/comunidad/{id}/ocultar"),
-    ("POST",   "/ventas/{id}/pagar"),
     ("POST",   "/referidos/{id}/confirmar"),
-    # --- v1.4: comisiones + academia + pagos ---
     ("GET",    "/admin/comisiones"),
     ("POST",   "/admin/comisiones/{id}/abonar"),
     ("GET",    "/admin/pagos"),
@@ -512,14 +549,47 @@ def _es_ruta_admin(method: str, path: str) -> bool:
             return True
     return False
 
+
 @app.middleware("http")
-async def verificar_api_key(request: Request, call_next):
-    if _es_ruta_admin(request.method, request.url.path):
-        if not ADMIN_API_KEY:
-            return JSONResponse(status_code=503, content={"detail": "ADMIN_API_KEY no configurada."})
-        if request.headers.get("X-API-Key", "") != ADMIN_API_KEY:
-            return JSONResponse(status_code=401, content={"detail": "API key inválida."})
-    return await call_next(request)
+async def verificar_auth_admin(request: Request, call_next):
+    """Middleware de auth admin. Acepta:
+      1. JWT en Authorization: Bearer ... con tipo='admin'  (preferido)
+      2. X-API-Key === ADMIN_API_KEY (legacy, va a deprecarse)
+    Si la ruta NO es admin, deja pasar.
+    Importante: /admin/login NO requiere auth previa (es donde se obtiene el JWT)."""
+    # Excepciones: /admin/login es público
+    if request.url.path == "/admin/login":
+        return await call_next(request)
+
+    if not _es_ruta_admin(request.method, request.url.path):
+        return await call_next(request)
+
+    # 1) Intentar JWT
+    auth_header = request.headers.get("Authorization") or request.headers.get("authorization") or ""
+    if auth_header.lower().startswith("bearer "):
+        token = auth_header.split(None, 1)[1].strip()
+        try:
+            from auth import decodificar_token
+            payload = decodificar_token(token)
+            if payload.get("tipo") == "admin":
+                return await call_next(request)
+        except Exception:
+            pass  # caemos al fallback de API key
+
+    # 2) Fallback: X-API-Key (legacy)
+    if ADMIN_API_KEY:
+        provided = request.headers.get("X-API-Key", "") or request.headers.get("x-api-key", "")
+        if provided:
+            import secrets as _secrets
+            if _secrets.compare_digest(provided, ADMIN_API_KEY):
+                return await call_next(request)
+
+    # Sin auth válida
+    if not ADMIN_API_KEY and not auth_header:
+        return JSONResponse(status_code=503, content={
+            "detail": "Auth admin no configurada. Setear ADMIN_API_KEY o usar /admin/login."
+        })
+    return JSONResponse(status_code=401, content={"detail": "Autenticación de admin inválida."})
 
 
 # ─── HELPERS ─────────────────────────────────────────────────────────────────
@@ -582,17 +652,37 @@ def ver_contrato():
 # ─── AUTO-REGISTRO PÚBLICO CON EFECTO RED ────────────────────────────────────
 
 @app.post("/registrarse")
-def auto_registro(
-    nombre: str, email: str, whatsapp: str,
+@limiter.limit("5/minute")
+def auto_registro(request: Request, 
     background_tasks: BackgroundTasks,
+    body: schemas.RegistroAliadoIn | None = Body(default=None),
+    # === Compatibilidad legacy: query params ===
+    # El frontend viejo manda todo por query string. Se mantiene por una
+    # versión para no romper el portal mientras se actualiza.
+    nombre: str = "", email: str = "", whatsapp: str = "",
     ciudad: str = "", perfil: str = "", password: str = "", dni: str = "",
     ref_sponsor: str = "",
-    tipo_aliado: str = "canal1",  # NUEVO: "canal1" o "canal2"
-    acepto_terminos: bool = False,  # NUEVO: contrato digital
+    tipo_aliado: str = "canal1",
+    acepto_terminos: bool = False,
     db: Session = Depends(get_db)
 ):
     """Registro self-serve público con sistema de Sub-Aliados.
-    Requiere aceptación explícita de términos (contrato digital — bloqueante legal)."""
+
+    PREFERIR body JSON. Los query params siguen aceptándose como fallback
+    para compatibilidad con el portal legacy, pero las contraseñas en
+    query string aparecen en logs — migrar a body cuanto antes.
+    """
+    # Si vino body JSON, gana sobre query (más seguro).
+    if body is not None:
+        nombre, email, whatsapp = body.nombre, body.email, body.whatsapp
+        password, dni = body.password, body.dni
+        ciudad, perfil = body.ciudad, body.perfil
+        ref_sponsor = body.ref_sponsor
+        tipo_aliado = body.tipo_aliado
+        acepto_terminos = body.acepto_terminos
+    else:
+        print("[REGISTRO] ⚠️  Recibido por query string — actualizar cliente a body JSON.")
+
     if not nombre or not email or not whatsapp or not password:
         raise HTTPException(400, "Nombre, email, WhatsApp y contraseña son obligatorios.")
     if len(password) < 6:
@@ -656,14 +746,28 @@ def auto_registro(
         f"<p>Nuevo aliado auto-registrado:<br><strong>{a.nombre}</strong> — {a.email} — {a.whatsapp}<br>Perfil: {a.perfil or '—'} | Ciudad: {a.ciudad or '—'}<br>Código: {a.codigo} | Ref: {a.ref_code}</p>"
     )
 
-    return _aliado_detalle(a)
+    return _aliado_detalle(a, incluir_token=True)
 
 
-# ─── ADMIN SETUP ─────────────────────────────────────────────────────────────
+# ─── ADMIN SETUP / LOGIN ─────────────────────────────────────────────────────
 
 @app.post("/admin/setup")
-def crear_admin_inicial(username: str, password: str, db: Session = Depends(get_db)):
-    """Crea el primer admin. Solo funciona si no existe ninguno. Requiere X-API-Key."""
+def crear_admin_inicial(
+    body: schemas.AdminSetupIn | None = Body(default=None),
+    username: str = "", password: str = "",
+    db: Session = Depends(get_db),
+):
+    """Crea el primer admin. Solo funciona si no existe ninguno.
+
+    Protegido por el middleware admin (requiere X-API-Key o JWT admin) — pero
+    pensado para el bootstrap inicial cuando no existe admin todavía.
+    """
+    if body is not None:
+        username, password = body.username, body.password
+    if not username or not password:
+        raise HTTPException(400, "Faltan username y password.")
+    if len(password) < 8:
+        raise HTTPException(400, "La contraseña de admin debe tener al menos 8 caracteres.")
     if db.query(Admin).count() > 0:
         raise HTTPException(400, "Ya existe al menos un admin.")
     db.add(Admin(username=username, password_hash=hash_password(password)))
@@ -671,27 +775,82 @@ def crear_admin_inicial(username: str, password: str, db: Session = Depends(get_
     return {"mensaje": f"Admin '{username}' creado correctamente."}
 
 
+@app.post("/admin/login")
+@limiter.limit("5/minute")
+def login_admin(request: Request, 
+    body: schemas.AdminLoginIn | None = Body(default=None),
+    username: str = "", password: str = "",
+    db: Session = Depends(get_db),
+):
+    """Login de admin con username + password. Devuelve JWT tipo='admin'.
+
+    Acepta body JSON (preferido) o query (legacy). Si no hay admins creados
+    todavía, devuelve 503 con instrucciones (usar /admin/setup primero).
+    """
+    if body is not None:
+        username, password = body.username, body.password
+
+    if db.query(Admin).count() == 0:
+        raise HTTPException(503, "No hay admins creados. Usar POST /admin/setup primero.")
+
+    if not username or not password:
+        raise HTTPException(400, "Faltan username y password.")
+
+    admin = db.query(Admin).filter(Admin.username == username).first()
+    # Comparación constant-time del password — siempre corre verify para no leakear si existe el user
+    fake_hash = hash_password("dummy_password_for_timing")
+    target_hash = admin.password_hash if admin else fake_hash
+    ok = verify_password(password, target_hash)
+    if not admin or not ok:
+        raise HTTPException(401, "Credenciales inválidas.")
+
+    token = crear_token(sub=admin.username, tipo="admin")
+    return {"token": token, "tipo": "admin", "username": admin.username}
+
+
 # ─── LOGIN ALIADO ─────────────────────────────────────────────────────────────
 
 @app.post("/aliados/login")
-def login_aliado(codigo: str, password: str, db: Session = Depends(get_db)):
-    """Portal del aliado: login con código + contraseña."""
+@limiter.limit("10/minute")
+def login_aliado(request: Request, 
+    body: schemas.LoginAliadoIn | None = Body(default=None),
+    codigo: str = "", password: str = "",
+    db: Session = Depends(get_db),
+):
+    """Portal del aliado: login con código + contraseña.
+
+    Acepta body JSON (preferido) o query string (legacy, queda en logs).
+    Devuelve los datos del aliado + un JWT en el campo `token` para usar en
+    `Authorization: Bearer ...` en requests subsiguientes.
+    """
+    if body is not None:
+        codigo, password = body.codigo, body.password
+    else:
+        print("[LOGIN] ⚠️  Recibido por query string — migrar cliente a body JSON.")
+
+    if not codigo or not password:
+        raise HTTPException(400, "Faltan codigo y password.")
+
+    # Buscar aliado activo con ese código
     a = db.query(Aliado).filter(Aliado.codigo == codigo, Aliado.activo == True).first()
-    if not a:
-        raise HTTPException(404, "Código no encontrado.")
-    if not verify_password(password, a.password_hash):
-        raise HTTPException(401, "Contraseña incorrecta.")
-    
-    # TRACKING: Registramos que acaba de entrar (CON ESCUDO PROTECTOR)
+    # Comparación constant-time del password (corre verify aunque no exista el aliado)
+    fake_hash = hash_password("dummy_password_for_timing")
+    target_hash = a.password_hash if a else fake_hash
+    ok = verify_password(password, target_hash)
+    if not a or not ok:
+        # Mismo mensaje para no leakear si el código existe o no
+        raise HTTPException(401, "Código o contraseña incorrectos.")
+
+    # TRACKING (no bloquea login si falla)
     try:
         a.ultimo_login = datetime.now()
         a.cantidad_logins = (getattr(a, 'cantidad_logins', 0) or 0) + 1
         db.commit()
     except Exception as e:
-        db.rollback() # Si la base de datos falla, aborta el tracking pero PERMITE el login
+        db.rollback()
         print(f"Error guardando tracking de login: {e}")
-    
-    return _aliado_detalle(a)
+
+    return _aliado_detalle(a, incluir_token=True)
 
 
 # ─── ALIADOS — RUTAS FIJAS (deben ir ANTES de /{codigo}) ─────────────────────
@@ -733,9 +892,18 @@ def listar_aliados(db: Session = Depends(get_db)):
 
 
 @app.post("/aliados/crear")
-def crear_aliado(nombre: str, email: str, whatsapp: str, ciudad: str,
+def crear_aliado(body: schemas.CrearAliadoIn | None = Body(default=None),
+                 nombre: str = "", email: str = "", whatsapp: str = "", ciudad: str = "",
                  dni: str = "", perfil: str = "", fecha_firma: str = "",
                  password: str = "avanza2026", db: Session = Depends(get_db)):
+    """Admin crea un aliado manualmente. Acepta body JSON (preferido) o query (legacy)."""
+    if body is not None:
+        nombre, email, whatsapp, ciudad = body.nombre, body.email, body.whatsapp, body.ciudad
+        dni, perfil, fecha_firma = body.dni, body.perfil, body.fecha_firma
+        if body.password:
+            password = body.password
+    if not nombre or not email or not whatsapp or not ciudad:
+        raise HTTPException(400, "Faltan nombre, email, whatsapp o ciudad.")
     if db.query(Aliado).filter(Aliado.email == email).first():
         raise HTTPException(400, "Ya existe un aliado con ese email.")
     a = Aliado(
@@ -756,7 +924,7 @@ def crear_aliado(nombre: str, email: str, whatsapp: str, ciudad: str,
 # ─── ALIADOS — RUTAS CON {codigo} ────────────────────────────────────────────
 
 @app.get("/aliados/{codigo}")
-def ver_aliado(codigo: str, db: Session = Depends(get_db)):
+def ver_aliado(codigo: str, db: Session = Depends(get_db), _owner=Depends(verify_ownership_dep)):
     a = db.query(Aliado).filter(Aliado.codigo == codigo).first()
     if not a: raise HTTPException(404, "Aliado no encontrado.")
     return _aliado_detalle(a)
@@ -786,7 +954,13 @@ def eliminar_aliado(codigo: str, db: Session = Depends(get_db)):
 
 
 @app.patch("/aliados/{codigo}/nivel")
-def cambiar_nivel(codigo: str, nivel: str, db: Session = Depends(get_db)):
+def cambiar_nivel(codigo: str,
+                  body: schemas.CambiarNivelIn | None = Body(default=None),
+                  nivel: str = "",
+                  db: Session = Depends(get_db)):
+    """Admin cambia el nivel de un aliado. (Protegido por middleware admin.)"""
+    if body is not None:
+        nivel = body.nivel
     if nivel not in NIVELES:
         raise HTTPException(400, f"Nivel inválido. Opciones: {list(NIVELES.keys())}")
     a = _get_aliado(codigo, db)
@@ -795,7 +969,7 @@ def cambiar_nivel(codigo: str, nivel: str, db: Session = Depends(get_db)):
 
 
 @app.get("/aliados/{codigo}/red")
-def mi_red_comercial(codigo: str, db: Session = Depends(get_db)):
+def mi_red_comercial(codigo: str, db: Session = Depends(get_db), _owner=Depends(verify_ownership_dep)):
     a = _get_aliado(codigo, db)
     if (getattr(a, "tipo_aliado", "canal1") or "canal1") == "canal2":
         raise HTTPException(403, "Mi Red no está disponible para aliados Canal 2.")
@@ -836,8 +1010,20 @@ def mi_red_comercial(codigo: str, db: Session = Depends(get_db)):
 # ─── REFERIDOS ───────────────────────────────────────────────────────────────
 
 @app.post("/referidos/registrar")
-def registrar_referido(ref_code: str, nombre_cliente: str, plan_elegido: str,
-                        notas: str = "", db: Session = Depends(get_db)):
+@limiter.limit("30/hour")
+def registrar_referido(request: Request, body: schemas.RegistrarReferidoIn | None = Body(default=None),
+                        ref_code: str = "", nombre_cliente: str = "", plan_elegido: str = "",
+                        notas: str = "",
+                        db: Session = Depends(get_db)):
+    """Registra un referido público (NO requiere auth — el ref_code identifica
+    al aliado). Acepta body JSON (preferido) o query (legacy)."""
+    if body is not None:
+        ref_code = body.ref_code
+        nombre_cliente = body.nombre_cliente
+        plan_elegido = body.plan_elegido
+        notas = body.notas
+    if not ref_code or not nombre_cliente or not plan_elegido:
+        raise HTTPException(400, "Faltan ref_code, nombre_cliente o plan_elegido.")
     a = db.query(Aliado).filter(Aliado.ref_code == ref_code).first()
     if not a: raise HTTPException(404, "Código de referido inválido.")
     if (getattr(a, "tipo_aliado", "canal1") or "canal1") == "canal2":
@@ -866,6 +1052,7 @@ def referidos_pendientes(db: Session = Depends(get_db)):
 
 @app.post("/referidos/{id}/confirmar")
 def confirmar_referido(id: int, db: Session = Depends(get_db)):
+    """Admin confirma manualmente un referido. (Protegido por middleware admin.)"""
     r = db.query(Referido).filter(Referido.id == id).first()
     if not r: raise HTTPException(404, "Referido no encontrado.")
     r.acuse_recibo = True; db.commit()
@@ -875,9 +1062,21 @@ def confirmar_referido(id: int, db: Session = Depends(get_db)):
 # ─── VENTAS CON COMISIONES RED ───────────────────────────────────────────────
 
 @app.post("/ventas/registrar")
-def registrar_venta(codigo_aliado: str, nombre_cliente: str, plan: str,
+def registrar_venta(body: schemas.RegistrarVentaIn | None = Body(default=None),
+                    codigo_aliado: str = "", nombre_cliente: str = "", plan: str = "",
                     modalidad_pago: str = "ARS MEP", referido_id: int = None,
-                    notas: str = "", db: Session = Depends(get_db)):
+                    notas: str = "",
+                    db: Session = Depends(get_db)):
+    """Admin registra una venta manualmente. (Protegido por middleware admin.)"""
+    if body is not None:
+        codigo_aliado = body.codigo_aliado
+        nombre_cliente = body.nombre_cliente
+        plan = body.plan
+        modalidad_pago = body.modalidad_pago
+        referido_id = body.referido_id
+        notas = body.notas
+    if not codigo_aliado or not nombre_cliente or not plan:
+        raise HTTPException(400, "Faltan codigo_aliado, nombre_cliente o plan.")
     a = _get_aliado(codigo_aliado, db)
     if plan not in PLANES: raise HTTPException(400, "Plan inválido.")
     valor = PLANES[plan]
@@ -918,7 +1117,13 @@ def registrar_venta(codigo_aliado: str, nombre_cliente: str, plan: str,
 
 
 @app.post("/ventas/{id}/pagar")
-def marcar_pagada(id: int, modalidad: str = "ARS MEP", db: Session = Depends(get_db)):
+def marcar_pagada(id: int,
+                  body: schemas.MarcarPagadaIn | None = Body(default=None),
+                  modalidad: str = "ARS MEP",
+                  db: Session = Depends(get_db)):
+    """Admin marca una venta como pagada. (Protegido por middleware admin.)"""
+    if body is not None:
+        modalidad = body.modalidad
     v = db.query(Venta).filter(Venta.id == id).first()
     if not v: raise HTTPException(404, "Venta no encontrada.")
     v.pagada = True; v.fecha_pago = datetime.now(); v.modalidad_pago = modalidad
@@ -956,26 +1161,74 @@ def dashboard(db: Session = Depends(get_db)):
 # ─── PROSPECTOS ──────────────────────────────────────────────────────────────
 
 @app.post("/prospectos/crear")
-def crear_prospecto(codigo_aliado: str, nombre: str, contacto: str = "",
-                    plan_interes: str = "", nota: str = "", db: Session = Depends(get_db)):
-    """El aliado carga un prospecto nuevo."""
-    a = _get_aliado(codigo_aliado, db)
-    p = Prospecto(aliado_id=a.id, nombre=nombre, contacto=contacto,
+def crear_prospecto(body: schemas.CrearProspectoIn | None = Body(default=None),
+                    codigo_aliado: str = "",  # legacy
+                    nombre: str = "", contacto: str = "",
+                    plan_interes: str = "", nota: str = "",
+                    aliado: Aliado = Depends(current_aliado_required),
+                    db: Session = Depends(get_db)):
+    """El aliado autenticado carga un prospecto nuevo.
+
+    SECURITY: ya NO acepta `codigo_aliado` para asignar a otro aliado.
+    El prospecto siempre se crea para el aliado del JWT.
+    """
+    if body is not None:
+        nombre, contacto = body.nombre, body.contacto
+        plan_interes, nota = body.plan_interes, body.nota
+    if not nombre:
+        raise HTTPException(400, "Falta nombre del prospecto.")
+    p = Prospecto(aliado_id=aliado.id, nombre=nombre, contacto=contacto,
                   plan_interes=plan_interes, nota=nota)
     db.add(p); db.commit(); db.refresh(p)
     return {"mensaje": "Prospecto cargado.", "id": p.id, "nombre": p.nombre}
 
 
 @app.get("/prospectos/aliado/{codigo}")
-def listar_prospectos_aliado(codigo: str, db: Session = Depends(get_db)):
+def listar_prospectos_aliado(codigo: str, db: Session = Depends(get_db), _owner=Depends(verify_ownership_dep)):
     """Portal: prospectos del aliado logueado."""
     a = _get_aliado(codigo, db)
     return [_prospecto_row(p) for p in sorted(a.prospectos, key=lambda x: x.creado_en, reverse=True)]
 
 
+# ─── HELPER: obtener prospecto solo si pertenece al aliado del JWT ───────────
+def _get_prospecto_owned(id: int, aliado: Aliado, db: Session) -> Prospecto:
+    """Devuelve el Prospecto SOLO si pertenece al aliado del JWT (o el JWT es admin).
+    Lanza 404 si no existe, 403 si pertenece a otro."""
+    p = db.query(Prospecto).filter(Prospecto.id == id).first()
+    if not p:
+        raise HTTPException(404, "Prospecto no encontrado.")
+    if p.aliado_id != aliado.id:
+        # Para no leakear "existe pero no es tuyo", devolvemos 404 igual.
+        raise HTTPException(404, "Prospecto no encontrado.")
+    return p
+
+
+def _get_prospecto_owned_or_admin(id: int, request: Request, db: Session) -> Prospecto:
+    """Como _get_prospecto_owned pero acepta JWT admin además del dueño.
+    Útil cuando no podemos saber a priori si el llamante es admin o aliado."""
+    from auth import _extraer_token, decodificar_token
+    p = db.query(Prospecto).filter(Prospecto.id == id).first()
+    if not p:
+        raise HTTPException(404, "Prospecto no encontrado.")
+    token = _extraer_token(request)
+    if not token:
+        raise HTTPException(401, "Falta token.")
+    try:
+        payload = decodificar_token(token)
+    except Exception:
+        raise HTTPException(401, "Token inválido.")
+    if payload.get("tipo") == "admin":
+        return p
+    if payload.get("tipo") == "aliado":
+        a = db.query(Aliado).filter(Aliado.codigo == payload.get("sub")).first()
+        if a and p.aliado_id == a.id:
+            return p
+    raise HTTPException(404, "Prospecto no encontrado.")
+
+
 @app.patch("/prospectos/{id}/contactar")
-def marcar_contactado(id: int, db: Session = Depends(get_db)):
-    p = _get_prospecto(id, db)
+def marcar_contactado(id: int, request: Request, db: Session = Depends(get_db)):
+    p = _get_prospecto_owned_or_admin(id, request, db)
     p.estado = "contactado"
     p.fecha_contacto = datetime.now()
     db.commit()
@@ -983,8 +1236,8 @@ def marcar_contactado(id: int, db: Session = Depends(get_db)):
 
 
 @app.patch("/prospectos/{id}/respondio")
-def marcar_respondio(id: int, db: Session = Depends(get_db)):
-    p = _get_prospecto(id, db)
+def marcar_respondio(id: int, request: Request, db: Session = Depends(get_db)):
+    p = _get_prospecto_owned_or_admin(id, request, db)
     p.estado = "respondio"
     p.fecha_respuesta = datetime.now()
     if not p.fecha_contacto:
@@ -993,13 +1246,10 @@ def marcar_respondio(id: int, db: Session = Depends(get_db)):
     return {"mensaje": "Marcado como respondió.", "estado": p.estado}
 
 
-# NUEVO (spec §8): permitir marcar propuesta_enviada manualmente.
-# El sistema ya lo setea automáticamente al generar link de pago, pero si el aliado
-# mandó una propuesta formal por otro canal (PDF, WhatsApp) quiere poder marcarlo igual.
 @app.patch("/prospectos/{id}/propuesta-enviada")
-def marcar_propuesta_enviada(id: int, db: Session = Depends(get_db)):
+def marcar_propuesta_enviada(id: int, request: Request, db: Session = Depends(get_db)):
     """Marca manualmente un prospecto como 'propuesta_enviada' (spec §8)."""
-    p = _get_prospecto(id, db)
+    p = _get_prospecto_owned_or_admin(id, request, db)
     p.estado = "propuesta_enviada"
     if not p.fecha_contacto:
         p.fecha_contacto = datetime.now()
@@ -1007,13 +1257,15 @@ def marcar_propuesta_enviada(id: int, db: Session = Depends(get_db)):
     return {"mensaje": "Marcado como propuesta enviada.", "estado": p.estado}
 
 
-# NUEVO (spec §8): endpoint genérico para cambio de estado manual.
-# Los estados 'pagado' y 'comision_abonada' quedan reservados para el sistema/admin.
 @app.patch("/prospectos/{id}/estado")
-def cambiar_estado_prospecto(id: int, estado: str, db: Session = Depends(get_db)):
+def cambiar_estado_prospecto(id: int, request: Request,
+                              body: schemas.CambiarEstadoProspectoIn | None = Body(default=None),
+                              estado: str = "",
+                              db: Session = Depends(get_db)):
     """Cambia el estado del prospecto dentro del pipeline del spec §8.
-    Solo permite estados manuales; 'pagado' y 'comision_abonada' los setea el sistema
-    (vía webhook) o el admin."""
+    Solo permite estados manuales; 'pagado' y 'comision_abonada' los setea el sistema."""
+    if body is not None:
+        estado = body.estado
     estados_manuales = {"registrado", "sin_contactar", "contactado", "respondio", "propuesta_enviada"}
     if estado not in estados_manuales:
         raise HTTPException(
@@ -1021,7 +1273,7 @@ def cambiar_estado_prospecto(id: int, estado: str, db: Session = Depends(get_db)
             f"Estado inválido o reservado para el sistema. "
             f"Estados manuales permitidos: {sorted(estados_manuales)}"
         )
-    p = _get_prospecto(id, db)
+    p = _get_prospecto_owned_or_admin(id, request, db)
     p.estado = estado
     if estado in ("contactado", "respondio", "propuesta_enviada") and not p.fecha_contacto:
         p.fecha_contacto = datetime.now()
@@ -1032,30 +1284,39 @@ def cambiar_estado_prospecto(id: int, estado: str, db: Session = Depends(get_db)
 
 
 @app.patch("/prospectos/{id}/nota")
-def actualizar_nota(id: int, nota: str, db: Session = Depends(get_db)):
-    p = _get_prospecto(id, db)
-    p.nota = nota; db.commit()
+def actualizar_nota(id: int, request: Request,
+                    body: schemas.ActualizarNotaIn | None = Body(default=None),
+                    nota: str = "",
+                    db: Session = Depends(get_db)):
+    p = _get_prospecto_owned_or_admin(id, request, db)
+    p.nota = body.nota if body is not None else nota
+    db.commit()
     return {"mensaje": "Nota guardada."}
 
 
 @app.patch("/prospectos/{id}/interesante")
-def toggle_interesante(id: int, db: Session = Depends(get_db)):
-    p = _get_prospecto(id, db)
+def toggle_interesante(id: int, request: Request, db: Session = Depends(get_db)):
+    p = _get_prospecto_owned_or_admin(id, request, db)
     p.interesante = not p.interesante; db.commit()
     return {"interesante": p.interesante}
 
 
 @app.delete("/prospectos/{id}/eliminar")
-def eliminar_prospecto(id: int, db: Session = Depends(get_db)):
-    p = _get_prospecto(id, db)
+def eliminar_prospecto(id: int, request: Request, db: Session = Depends(get_db)):
+    p = _get_prospecto_owned_or_admin(id, request, db)
     db.delete(p); db.commit()
     return {"mensaje": "Prospecto eliminado."}
 
 
 @app.patch("/prospectos/{id}/piloto")
-def toggle_piloto_automatico(id: int, activo: bool, db: Session = Depends(get_db)):
-    """Activa/desactiva el piloto automático de seguimiento para un prospecto."""
-    p = _get_prospecto(id, db)
+def toggle_piloto_automatico(id: int, request: Request,
+                              body: schemas.TogglePilotoIn | None = Body(default=None),
+                              activo: bool = False,
+                              db: Session = Depends(get_db)):
+    """Activa/desactiva el piloto automático de seguimiento."""
+    if body is not None:
+        activo = body.activo
+    p = _get_prospecto_owned_or_admin(id, request, db)
     p.piloto_automatico = activo
     db.commit()
     return {"piloto_automatico": p.piloto_automatico,
@@ -1104,7 +1365,8 @@ def admin_prospectos(db: Session = Depends(get_db)):
 # ─── AUDITORÍAS ──────────────────────────────────────────────────────────────
 
 @app.post("/auditorias/log")
-def log_auditoria(dominio: str, score: int, ref_code: str = "", email: str = "", db: Session = Depends(get_db)):
+@limiter.limit("60/hour")
+def log_auditoria(request: Request, dominio: str, score: int, ref_code: str = "", email: str = "", db: Session = Depends(get_db)):
     """Guarda el log cuando se genera un reporte o se captura un email."""
     aliado_id = None
     if ref_code:
@@ -1225,8 +1487,8 @@ def _aliado_row(a):
         "terminos_aceptados_en": a.terminos_aceptados_en.strftime("%d/%m/%Y %H:%M") if getattr(a, "terminos_aceptados_en", None) else None,
     }
 
-def _aliado_detalle(a):
-    return {
+def _aliado_detalle(a, incluir_token: bool = False):
+    out = {
         "codigo": a.codigo, "nombre": a.nombre, "email": a.email,
         "whatsapp": a.whatsapp, "ciudad": a.ciudad, "perfil": a.perfil,
         "nivel_actual": a.nivel, "nivel_calculado": a.nivel_calculado,
@@ -1250,6 +1512,10 @@ def _aliado_detalle(a):
                     "fecha": v.fecha_venta.strftime("%d/%m/%Y") if v.fecha_venta else None}
                    for v in a.ventas if v.confirmada],
     }
+    if incluir_token:
+        out["token"] = crear_token(sub=a.codigo, tipo="aliado")
+        out["token_tipo"] = "Bearer"
+    return out
 
 # ─── RANKING PÚBLICO (Gamificación) ──────────────────────────────────────────
 
@@ -1449,7 +1715,8 @@ async def _crear_link_paypal(a: Aliado, plan: str, nombre_cliente: str, db: Sess
 
 
 @app.post("/checkout/crear")
-async def crear_checkout(plan: str,
+@limiter.limit("20/hour")
+async def crear_checkout(request: Request, plan: str,
                          ref_code: str,
                          nombre_cliente: str = "Cliente",
                          moneda: str = "ars",
@@ -1779,7 +2046,7 @@ async def regenerar_link(link_id: int, db: Session = Depends(get_db)):
 
 # ─── HISTORIAL DE LINKS DE PAGO DEL ALIADO ───────────────────────────────────
 @app.get("/aliados/{codigo}/links-pago")
-def listar_links_pago_aliado(codigo: str, db: Session = Depends(get_db)):
+def listar_links_pago_aliado(codigo: str, db: Session = Depends(get_db), _owner=Depends(verify_ownership_dep)):
     """Devuelve todos los links de pago generados por el aliado."""
     a = _get_aliado(codigo, db)
     links = db.query(LinkPago).filter(LinkPago.aliado_id == a.id)\
@@ -1805,7 +2072,7 @@ def listar_links_pago_aliado(codigo: str, db: Session = Depends(get_db)):
 # ─── SIGUIENTE MEJOR ACCIÓN ───────────────────────────────────────────────────
 
 @app.get("/aliados/{codigo}/siguiente-accion")
-def siguiente_accion(codigo: str, db: Session = Depends(get_db)):
+def siguiente_accion(codigo: str, db: Session = Depends(get_db), _owner=Depends(verify_ownership_dep)):
     """Analiza la situación del aliado y devuelve la acción más urgente e impactante."""
     a = _get_aliado(codigo, db)
     _aplicar_caducidad_bolsa(db)
@@ -1909,7 +2176,7 @@ def siguiente_accion(codigo: str, db: Session = Depends(get_db)):
 # ─── ONBOARDING DEL ALIADO ────────────────────────────────────────────────────
 
 @app.get("/aliados/{codigo}/onboarding")
-def estado_onboarding(codigo: str, db: Session = Depends(get_db)):
+def estado_onboarding(codigo: str, db: Session = Depends(get_db), _owner=Depends(verify_ownership_dep)):
     """Retorna el progreso del checklist de onboarding del aliado."""
     a = _get_aliado(codigo, db)
     pasos = [
@@ -2027,7 +2294,7 @@ def revocar_lead_bolsa(id: int, db: Session = Depends(get_db)):
 # ─── BOLSA DE LEADS (PORTAL ALIADO) ──────────────────────────────────────────
 
 @app.get("/aliados/{codigo}/bolsa")
-def ver_bolsa_aliado(codigo: str, db: Session = Depends(get_db)):
+def ver_bolsa_aliado(codigo: str, db: Session = Depends(get_db), _owner=Depends(verify_ownership_dep)):
     """Muestra los leads disponibles y los que este aliado ya reclamó."""
     a = _get_aliado(codigo, db)
     if (getattr(a, "tipo_aliado", "canal1") or "canal1") == "canal2":
@@ -2060,8 +2327,16 @@ def ver_bolsa_aliado(codigo: str, db: Session = Depends(get_db)):
 LIMITE_RECLAMOS_ACTIVOS = 3  # Máximo de reclamos simultáneos por aliado
 
 @app.post("/bolsa/{id}/reclamar")
-def reclamar_lead(id: int, codigo_aliado: str, db: Session = Depends(get_db)):
-    a = _get_aliado(codigo_aliado, db)
+def reclamar_lead(id: int,
+                  codigo_aliado: str = "",  # legacy compat
+                  aliado: Aliado = Depends(current_aliado_required),
+                  db: Session = Depends(get_db)):
+    """Reclama un lead para el aliado autenticado.
+
+    SECURITY: ya NO acepta `codigo_aliado` para asignar a otro aliado.
+    Siempre usa el aliado del JWT.
+    """
+    a = aliado  # del token, no del query
     if (getattr(a, "tipo_aliado", "canal1") or "canal1") == "canal2":
         raise HTTPException(403, "Operación no disponible para aliados Canal 2.")
 
@@ -2076,7 +2351,7 @@ def reclamar_lead(id: int, codigo_aliado: str, db: Session = Depends(get_db)):
     lead = db.query(LeadBolsa).filter(LeadBolsa.id == id, LeadBolsa.estado == "disponible").first()
     if not lead:
         raise HTTPException(400, "El lead ya no está disponible. ¡Alguien fue más rápido!")
-    
+
     lead.estado = "reclamado"
     lead.aliado_id = a.id
     lead.fecha_reclamo = datetime.now()
@@ -2084,19 +2359,22 @@ def reclamar_lead(id: int, codigo_aliado: str, db: Session = Depends(get_db)):
     return {"mensaje": "¡Lead reclamado exitosamente!"}
 
 @app.patch("/bolsa/{id}/contactar")
-def contactar_lead_bolsa(id: int, codigo_aliado: str, resultado: str = "exitoso", db: Session = Depends(get_db)):
-    """
-    Marca un lead como contactado. 
-    resultado puede ser: exitoso | no_interesado | no_contesto
-    """
-    a = _get_aliado(codigo_aliado, db)
+def contactar_lead_bolsa(id: int,
+                         body: schemas.ContactarLeadIn | None = Body(default=None),
+                         codigo_aliado: str = "",  # legacy
+                         resultado: str = "exitoso",
+                         aliado: Aliado = Depends(current_aliado_required),
+                         db: Session = Depends(get_db)):
+    """Marca un lead (que pertenece al aliado autenticado) como contactado."""
+    if body is not None:
+        resultado = body.resultado
+    a = aliado
     if (getattr(a, "tipo_aliado", "canal1") or "canal1") == "canal2":
         raise HTTPException(403, "La bolsa de leads no está disponible para aliados Canal 2.")
     RESULTADOS_VALIDOS = {"exitoso", "no_interesado", "no_contesto"}
     if resultado not in RESULTADOS_VALIDOS:
         raise HTTPException(400, f"Resultado inválido. Opciones: {', '.join(RESULTADOS_VALIDOS)}")
 
-    a = _get_aliado(codigo_aliado, db)
     lead = db.query(LeadBolsa).filter(LeadBolsa.id == id, LeadBolsa.aliado_id == a.id).first()
     if not lead:
         raise HTTPException(404, "Lead no encontrado o no te pertenece.")
@@ -2114,7 +2392,7 @@ def contactar_lead_bolsa(id: int, codigo_aliado: str, resultado: str = "exitoso"
 
 
 @app.get("/aliados/{codigo}/historial-bolsa")
-def historial_bolsa_aliado(codigo: str, db: Session = Depends(get_db)):
+def historial_bolsa_aliado(codigo: str, db: Session = Depends(get_db), _owner=Depends(verify_ownership_dep)):
     """Historial completo de leads de un aliado con estadísticas."""
     a = _get_aliado(codigo, db)
     if (getattr(a, "tipo_aliado", "canal1") or "canal1") == "canal2":
@@ -2281,13 +2559,16 @@ def _generar_pitch(nombre: str, rubro: str, tamano: str, urgencia: str, plan: st
 
 
 @app.post("/prospectos/{id}/perfilar")
-def perfilar_prospecto(id: int,
+def perfilar_prospecto(id: int, request: Request,
+                       body: schemas.PerfilarProspectoIn | None = Body(default=None),
                        rubro: str = "",
                        tamano: str = "pyme",
                        urgencia: str = "media",
                        db: Session = Depends(get_db)):
     """Corre el perfilado IA sobre un prospecto y guarda el resultado."""
-    p = _get_prospecto(id, db)
+    if body is not None:
+        rubro, tamano, urgencia = body.rubro, body.tamano, body.urgencia
+    p = _get_prospecto_owned_or_admin(id, request, db)
     if rubro:
         p.rubro = rubro
     p.tamano = tamano
@@ -2311,13 +2592,16 @@ def perfilar_prospecto(id: int,
 
 
 @app.patch("/prospectos/{id}/datos")
-def actualizar_datos_prospecto(id: int,
+def actualizar_datos_prospecto(id: int, request: Request,
+                               body: schemas.ActualizarDatosProspectoIn | None = Body(default=None),
                                rubro: str = "",
                                tamano: str = "",
                                urgencia: str = "",
                                db: Session = Depends(get_db)):
     """Actualiza rubro/tamaño/urgencia sin perfilar."""
-    p = _get_prospecto(id, db)
+    if body is not None:
+        rubro, tamano, urgencia = body.rubro, body.tamano, body.urgencia
+    p = _get_prospecto_owned_or_admin(id, request, db)
     if rubro:    p.rubro = rubro
     if tamano:   p.tamano = tamano
     if urgencia: p.urgencia = urgencia
@@ -2401,7 +2685,7 @@ def _calcular_reputacion(a: Aliado, db: Session) -> dict:
 
 
 @app.get("/aliados/{codigo}/reputacion")
-def ver_reputacion(codigo: str, db: Session = Depends(get_db)):
+def ver_reputacion(codigo: str, db: Session = Depends(get_db), _owner=Depends(verify_ownership_dep)):
     a = _get_aliado(codigo, db)
     calc = _calcular_reputacion(a, db)
     # Persistir
@@ -2575,7 +2859,7 @@ scheduler.add_job(job_piloto_automatico, "interval", hours=1)
 
 
 @app.get("/aliados/{codigo}/automation-log")
-def ver_automation_log(codigo: str, db: Session = Depends(get_db)):
+def ver_automation_log(codigo: str, db: Session = Depends(get_db), _owner=Depends(verify_ownership_dep)):
     """Historial de mensajes automáticos enviados a los prospectos de este aliado."""
     a = _get_aliado(codigo, db)
     logs = db.query(AutomationLog).filter(
@@ -2609,7 +2893,7 @@ def _ajustar_creditos(db: Session, aliado: Aliado, delta: int, motivo: str, ref:
 
 
 @app.get("/aliados/{codigo}/creditos")
-def ver_creditos(codigo: str, db: Session = Depends(get_db)):
+def ver_creditos(codigo: str, db: Session = Depends(get_db), _owner=Depends(verify_ownership_dep)):
     a = _get_aliado(codigo, db)
     movimientos = db.query(TransaccionCredito).filter(
         TransaccionCredito.aliado_id == a.id
@@ -2625,9 +2909,13 @@ def ver_creditos(codigo: str, db: Session = Depends(get_db)):
 
 
 @app.post("/admin/aliados/{codigo}/creditos")
-def admin_ajustar_creditos(codigo: str, delta: int, motivo: str = "recarga_admin",
+def admin_ajustar_creditos(codigo: str,
+                            body: schemas.AjusteCreditosIn | None = Body(default=None),
+                            delta: int = 0, motivo: str = "recarga_admin",
                             db: Session = Depends(get_db)):
-    """Admin: asigna/quita créditos a un aliado."""
+    """Admin: asigna/quita créditos a un aliado. (Protegido por middleware admin.)"""
+    if body is not None:
+        delta, motivo = body.delta, body.motivo
     a = _get_aliado(codigo, db)
     _ajustar_creditos(db, a, delta, motivo, "admin")
     db.commit()
@@ -2635,26 +2923,24 @@ def admin_ajustar_creditos(codigo: str, delta: int, motivo: str = "recarga_admin
 
 
 @app.get("/bolsa/marketplace")
-def ver_marketplace(codigo_aliado: str = "", db: Session = Depends(get_db)):
-    """Lista los leads calificados/premium disponibles con su costo en créditos."""
-    if codigo_aliado:
-        a = db.query(Aliado).filter(Aliado.codigo == codigo_aliado, Aliado.activo == True).first()
-        if a and (getattr(a, "tipo_aliado", "canal1") or "canal1") == "canal2":
-            raise HTTPException(403, "El marketplace de leads no está disponible para aliados Canal 2.")
+def ver_marketplace(codigo_aliado: str = "",
+                    aliado: Aliado = Depends(current_aliado_required),
+                    db: Session = Depends(get_db)):
+    """Lista los leads calificados/premium disponibles con su costo en créditos.
+
+    SECURITY: usa el aliado del JWT, no acepta `codigo_aliado` para spoofing.
+    """
+    a = aliado  # del JWT
+    if (getattr(a, "tipo_aliado", "canal1") or "canal1") == "canal2":
+        raise HTTPException(403, "El marketplace de leads no está disponible para aliados Canal 2.")
     _aplicar_caducidad_bolsa(db)
     leads = db.query(LeadBolsa).filter(
         LeadBolsa.estado == "disponible",
         LeadBolsa.tier.in_(["calificado", "premium"])
     ).order_by(LeadBolsa.costo_creditos.desc(), LeadBolsa.fecha_carga.desc()).all()
 
-    saldo = 0
-    if codigo_aliado:
-        a = db.query(Aliado).filter(Aliado.codigo == codigo_aliado).first()
-        if a:
-            saldo = a.creditos or 0
-
     return {
-        "saldo_creditos": saldo,
+        "saldo_creditos": a.creditos or 0,
         "leads": [
             {
                 "id": l.id,
@@ -2671,9 +2957,12 @@ def ver_marketplace(codigo_aliado: str = "", db: Session = Depends(get_db)):
 
 
 @app.post("/bolsa/{id}/comprar")
-def comprar_lead(id: int, codigo_aliado: str, db: Session = Depends(get_db)):
-    """Compra un lead premium/calificado usando créditos."""
-    a = _get_aliado(codigo_aliado, db)
+def comprar_lead(id: int,
+                 codigo_aliado: str = "",  # legacy
+                 aliado: Aliado = Depends(current_aliado_required),
+                 db: Session = Depends(get_db)):
+    """Compra un lead premium/calificado usando créditos del aliado autenticado."""
+    a = aliado
     if (getattr(a, "tipo_aliado", "canal1") or "canal1") == "canal2":
         raise HTTPException(403, "El marketplace de leads no está disponible para aliados Canal 2.")
     lead = db.query(LeadBolsa).filter(
@@ -2689,7 +2978,6 @@ def comprar_lead(id: int, codigo_aliado: str, db: Session = Depends(get_db)):
     if (a.creditos or 0) < costo:
         raise HTTPException(400, f"Saldo insuficiente. Necesitás {costo} créditos, tenés {a.creditos or 0}.")
 
-    # Límite de reclamos activos también aplica acá
     reclamos_activos = db.query(LeadBolsa).filter(
         LeadBolsa.aliado_id == a.id, LeadBolsa.estado == "reclamado"
     ).count()
@@ -2813,14 +3101,20 @@ class PostCreate(BaseModel):
 
 
 @app.post("/comunidad/post")
-def crear_post(post: PostCreate, db: Session = Depends(get_db)):
+def crear_post(post: schemas.PostComunidadIn,
+                aliado: Aliado = Depends(current_aliado_required),
+                db: Session = Depends(get_db)):
+    """Publica un post en la comunidad como el aliado autenticado.
+
+    SECURITY: el campo `codigo_aliado` del body se ignora — la autoría
+    siempre se toma del JWT para evitar suplantación.
+    """
     if post.tipo not in ("tip", "win", "pregunta"):
         raise HTTPException(400, "Tipo inválido.")
     if len(post.titulo.strip()) < 3 or len(post.cuerpo.strip()) < 5:
         raise HTTPException(400, "Título y cuerpo requeridos.")
-    a = _get_aliado(post.codigo_aliado, db)
     p = PostComunidad(
-        aliado_id=a.id, tipo=post.tipo,
+        aliado_id=aliado.id, tipo=post.tipo,
         titulo=post.titulo.strip()[:200], cuerpo=post.cuerpo.strip()[:3000],
     )
     db.add(p); db.commit(); db.refresh(p)
@@ -2828,7 +3122,10 @@ def crear_post(post: PostCreate, db: Session = Depends(get_db)):
 
 
 @app.post("/comunidad/{id}/like")
-def like_post(id: int, db: Session = Depends(get_db)):
+def like_post(id: int,
+              aliado: Aliado = Depends(current_aliado_required),
+              db: Session = Depends(get_db)):
+    """Like a un post. Requiere aliado autenticado (anti-spam)."""
     p = db.query(PostComunidad).filter(PostComunidad.id == id).first()
     if not p: raise HTTPException(404, "Post no encontrado.")
     p.likes = (p.likes or 0) + 1
@@ -2836,20 +3133,20 @@ def like_post(id: int, db: Session = Depends(get_db)):
     return {"likes": p.likes}
 
 
-class ComentarioCreate(BaseModel):
-    codigo_aliado: str
-    cuerpo: str
-
-
 @app.post("/comunidad/{id}/comentario")
-def comentar(id: int, com: ComentarioCreate, db: Session = Depends(get_db)):
+def comentar(id: int, com: schemas.ComentarioComunidadIn,
+             aliado: Aliado = Depends(current_aliado_required),
+             db: Session = Depends(get_db)):
+    """Comenta un post como el aliado autenticado.
+
+    SECURITY: `codigo_aliado` del body se ignora — autoría va por JWT.
+    """
     p = db.query(PostComunidad).filter(PostComunidad.id == id).first()
     if not p: raise HTTPException(404, "Post no encontrado.")
     if len(com.cuerpo.strip()) < 2:
         raise HTTPException(400, "Comentario vacío.")
-    a = _get_aliado(com.codigo_aliado, db)
     c = ComentarioComunidad(
-        post_id=p.id, aliado_id=a.id, cuerpo=com.cuerpo.strip()[:1000]
+        post_id=p.id, aliado_id=aliado.id, cuerpo=com.cuerpo.strip()[:1000]
     )
     db.add(c); db.commit()
     return {"mensaje": "Comentario publicado."}
@@ -2941,14 +3238,24 @@ a.cta{{display:inline-block;padding:12px 20px;background:#3b82f6;color:#fff!impo
 
 @app.patch("/aliados/{codigo}/portal-publico")
 def configurar_portal_publico(codigo: str,
+                              body: schemas.ActualizarPerfilIn | None = Body(default=None),
                               activo: bool = True,
                               titular: str = "",
                               bio: str = "",
-                              db: Session = Depends(get_db)):
+                              db: Session = Depends(get_db),
+                              _owner=Depends(verify_ownership_dep)):
     a = _get_aliado(codigo, db)
-    a.portal_publico_activo = activo
-    if titular: a.portal_publico_titular = titular[:120]
-    if bio:     a.portal_publico_bio = bio[:500]
+    if body is not None:
+        if body.portal_publico_activo is not None:
+            a.portal_publico_activo = body.portal_publico_activo
+        if body.portal_publico_titular is not None:
+            a.portal_publico_titular = body.portal_publico_titular[:120] or None
+        if body.portal_publico_bio is not None:
+            a.portal_publico_bio = body.portal_publico_bio[:500] or None
+    else:
+        a.portal_publico_activo = activo
+        if titular: a.portal_publico_titular = titular[:120]
+        if bio:     a.portal_publico_bio = bio[:500]
     db.commit()
     return {
         "mensaje": "Portal público actualizado.",
@@ -2968,25 +3275,35 @@ class PerfilAliadoUpdate(BaseModel):
     cbu_alias: str | None = None
 
 @app.patch("/aliado/perfil")
-def actualizar_perfil_aliado(codigo: str,
-                              payload: PerfilAliadoUpdate,
+def actualizar_perfil_aliado(payload: PerfilAliadoUpdate,
+                              aliado: Aliado = Depends(current_aliado_required),
                               db: Session = Depends(get_db)):
-    """Actualiza el CBU/alias del aliado. Ruta usada por el portal."""
-    a = _get_aliado(codigo, db)
+    """Actualiza el CBU/alias del aliado autenticado.
+
+    SECURITY: Toma el aliado del JWT, ya NO acepta `?codigo=` como parámetro
+    (era una via de hijack del CBU para redirigir comisiones).
+    """
     if payload.cbu_alias is not None:
-        a.cbu_alias = payload.cbu_alias.strip()[:120] or None
+        aliado.cbu_alias = payload.cbu_alias.strip()[:120] or None
     db.commit()
     return {
         "mensaje": "Perfil actualizado.",
-        "cbu_alias": a.cbu_alias,
+        "cbu_alias": aliado.cbu_alias,
     }
 
 
 @app.patch("/aliados/{codigo}/cbu")
-def actualizar_cbu(codigo: str, cbu_alias: str = "", db: Session = Depends(get_db)):
-    """Alias alternativo para actualizar CBU por query string (compat con portal viejo)."""
+def actualizar_cbu(codigo: str,
+                   body: schemas.ActualizarCBUIn | None = Body(default=None),
+                   cbu_alias: str = "",
+                   db: Session = Depends(get_db),
+                   _owner=Depends(verify_ownership_dep)):
+    """Alias alternativo para actualizar CBU. Acepta body o query (compat).
+    Protegido con ownership: solo el dueño del JWT (o un admin) puede tocar
+    este aliado. CRÍTICO — afecta a dónde se cobran las comisiones."""
     a = _get_aliado(codigo, db)
-    a.cbu_alias = (cbu_alias or "").strip()[:120] or None
+    nuevo = body.cbu_alias if body is not None else cbu_alias
+    a.cbu_alias = (nuevo or "").strip()[:120] or None
     db.commit()
     return {"mensaje": "CBU/alias guardado.", "cbu_alias": a.cbu_alias}
 
@@ -3009,21 +3326,22 @@ def _comision_row(c: Comision, cliente_fallback: str = ""):
 
 
 @app.get("/aliado/comisiones")
-def listar_comisiones_por_token(request: Request, db: Session = Depends(get_db)):
-    """Ruta que usa el frontend del spec: GET /aliado/comisiones con Authorization: Bearer {codigo}.
-    Devuelve un array plano de comisiones para que el JS pueda hacer .filter() directamente."""
-    auth = request.headers.get("authorization", "")
-    if not auth.lower().startswith("bearer "):
-        raise HTTPException(status_code=401, detail="Se requiere Authorization: Bearer {codigo}")
-    codigo = auth[7:].strip()
-    a = _get_aliado(codigo, db)
-    comisiones = db.query(Comision).filter(Comision.aliado_id == a.id)\
+def listar_comisiones_por_token(aliado: Aliado = Depends(current_aliado_required),
+                                 db: Session = Depends(get_db)):
+    """Comisiones del aliado autenticado.
+
+    SECURITY (rev): la versión anterior tomaba el código directamente del header
+    `Authorization: Bearer <codigo>` SIN validar firma — eso permitía a cualquiera
+    listar comisiones ajenas con solo conocer el código. Ahora valida JWT firmado
+    con HS256 contra JWT_SECRET y resuelve el aliado del subject del token.
+    """
+    comisiones = db.query(Comision).filter(Comision.aliado_id == aliado.id)\
         .order_by(Comision.fecha_pago.desc().nullslast() if hasattr(Comision.fecha_pago, "desc") else Comision.id.desc()).all()
     return [_comision_row(c) for c in comisiones]
 
 
 @app.get("/aliados/{codigo}/comisiones")
-def listar_comisiones_aliado(codigo: str, db: Session = Depends(get_db)):
+def listar_comisiones_aliado(codigo: str, db: Session = Depends(get_db), _owner=Depends(verify_ownership_dep)):
     """Devuelve todas las comisiones del aliado (pendientes + abonadas)
     con totales agregados. Es la vista del panel de comisiones del portal."""
     a = _get_aliado(codigo, db)
@@ -3301,7 +3619,7 @@ except Exception as _e:
 # La ruta vieja /aliados/{codigo}/onboarding ya existe más arriba; sumamos una
 # ruta complementaria que devuelve específicamente los módulos de la Academia.
 @app.get("/aliados/{codigo}/academia")
-def academia_del_aliado(codigo: str, db: Session = Depends(get_db)):
+def academia_del_aliado(codigo: str, db: Session = Depends(get_db), _owner=Depends(verify_ownership_dep)):
     """Devuelve los módulos de la Academia para el aliado, en orden.
     (En esta primera versión no trackeamos completitud por aliado; si en el
     futuro se agrega, mantener la misma forma de respuesta.)"""

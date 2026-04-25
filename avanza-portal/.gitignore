@@ -1,0 +1,54 @@
+# ─── Python ──────────────────────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg-info/
+.eggs/
+build/
+dist/
+
+# ─── Bases de datos (NUNCA commitear datos reales) ───────────────────────────
+*.db
+*.sqlite
+*.sqlite3
+*.db-journal
+backup.sql
+backup_*.sql
+*.dump
+
+# ─── Backups y archivos temporales ───────────────────────────────────────────
+*.bak
+*.tmp
+*.swp
+*~
+.DS_Store
+Thumbs.db
+
+# ─── Variables de entorno (DEBEN ir en el panel de Render/Railway, NO acá) ──
+.env
+.env.local
+.env.production
+.env.*
+
+# ─── IDEs ────────────────────────────────────────────────────────────────────
+.vscode/
+.idea/
+*.iml
+
+# ─── Logs ────────────────────────────────────────────────────────────────────
+*.log
+logs/
+
+# ─── Node (si en algún momento agregás un build de frontend) ────────────────
+node_modules/
+package-lock.json
+yarn.lock
+
+# ─── Imágenes pesadas que no deberían vivir en el repo ──────────────────────
+# Si necesitás versionar imágenes pesadas, usá Git LFS o un CDN.
+# (Comentado: si querés versionar imágenes chicas, sacá esta sección)
+# *.png
+# *.jpg
+# *.jpeg

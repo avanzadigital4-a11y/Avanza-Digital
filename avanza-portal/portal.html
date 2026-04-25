@@ -2280,6 +2280,51 @@
 
 <script>
 const API = 'https://avanza-digital.onrender.com';
+
+// ─── AUTH HELPERS (JWT) ─────────────────────────────────────────────────────
+// Token JWT firmado por el backend (HS256) — viaja en Authorization: Bearer.
+// Antes el portal mandaba password y codigo por query string (quedaban en logs).
+// Ahora todo va por body JSON + JWT en header.
+function _getToken() {
+  return sessionStorage.getItem('avanza_token') || (window.aliado && window.aliado.token) || '';
+}
+function _setToken(t) {
+  if (t) sessionStorage.setItem('avanza_token', t);
+}
+function _clearToken() {
+  sessionStorage.removeItem('avanza_token');
+}
+
+async function apiFetch(url, opts = {}) {
+  opts.headers = opts.headers || {};
+  const tok = _getToken();
+  if (tok && !opts.headers['Authorization']) {
+    opts.headers['Authorization'] = 'Bearer ' + tok;
+  }
+  if (opts.body && typeof opts.body !== 'string' && !(opts.body instanceof FormData)) {
+    opts.body = JSON.stringify(opts.body);
+    opts.headers['Content-Type'] = 'application/json';
+  }
+  if (opts.method === 'POST' || opts.method === 'PATCH' || opts.method === 'PUT') {
+    if (opts.body && typeof opts.body === 'string' && !opts.headers['Content-Type']) {
+      opts.headers['Content-Type'] = 'application/json';
+    }
+  }
+  return fetch(url, opts);
+}
+
+async function apiJSON(url, method = 'GET', body = null) {
+  const opts = { method };
+  if (body) opts.body = body; // apiFetch lo serializa
+  const r = await apiFetch(url, opts);
+  if (r.status === 401) {
+    _clearToken();
+    if (typeof mostrarToast === 'function') mostrarToast('Sesión expirada, ingresá de nuevo.', 'red');
+    location.reload();
+    throw new Error('401');
+  }
+  return r;
+}
 let aliado = null;
 
 const PLANES = { 'Plan Base':1050, 'Plan Pro':2900, 'Plan Industrial':4900, 'Estrategico 360':7500 };
@@ -2481,18 +2526,22 @@ async function registrarse() {
   try {
     const urlParams = new URLSearchParams(window.location.search);
     const refSponsor = urlParams.get('ref') || '';
-    const params = new URLSearchParams({ nombre, email, whatsapp, ciudad, dni, perfil, password: pass, ref_sponsor: refSponsor, tipo_aliado: tipoAliado, acepto_terminos: 'true' });
-    
     // Timeout de 15 segundos para evitar cuelgues infinitos
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 15000);
-    
-    const res = await fetch(`${API}/registrarse?${params}`, { method: 'POST', signal: controller.signal });
+
+    const res = await apiFetch(`${API}/registrarse`, {
+      method: 'POST',
+      signal: controller.signal,
+      body: { nombre, email, whatsapp, ciudad, dni, perfil, password: pass,
+              ref_sponsor: refSponsor, tipo_aliado: tipoAliado, acepto_terminos: true }
+    });
     clearTimeout(timeoutId);
     const data = await res.json();
     if (!res.ok) throw new Error(data.detail || 'Error al registrarse.');
 
     aliado = data;
+    if (aliado.token) _setToken(aliado.token);
     // Ocultar pantalla de registro, mostrar portal
     document.getElementById('registro-screen').style.display = 'none';
     document.getElementById('portal-screen').style.display = 'block';
@@ -2538,10 +2587,13 @@ async function iniciarSesion() {
   btn.innerHTML = '<span class="spinner"></span> Verificando...';
   btn.disabled = true;
   try {
-    const url = `${API}/aliados/login?codigo=${encodeURIComponent(codigo)}&password=${encodeURIComponent(pass)}`;
-    const res = await fetch(url, { method: 'POST' });
+    const res = await apiFetch(`${API}/aliados/login`, {
+      method: 'POST',
+      body: { codigo, password: pass }
+    });
     if (!res.ok) throw new Error();
     aliado = await res.json();
+    if (aliado.token) _setToken(aliado.token);
     document.getElementById('login-screen').style.display = 'none';
     document.getElementById('portal-screen').style.display = 'block';
     cargarTodo();
@@ -2671,7 +2723,7 @@ function cerrarSesion() {
 }
 
 async function cargarTodo() {
-  try { const res = await fetch(`${API}/aliados/${aliado.codigo}`); if(res.ok) aliado = await res.json(); } catch {}
+  try { const res = await apiFetch(`${API}/aliados/${aliado.codigo}`); if(res.ok) aliado = await res.json(); } catch {}
   
   // Configurar visibilidad de tabs y bloques según canal del aliado
   configurarCanal();
@@ -2874,7 +2926,7 @@ async function renderComisiones() {
   el.innerHTML = `<div class="empty-state"><div class="spinner"></div><p style="margin-top:12px;">Cargando comisiones...</p></div>`;
 
   try {
-    const res = await fetch(`${API}/aliados/${aliado.codigo}/comisiones`);
+    const res = await apiFetch(`${API}/aliados/${aliado.codigo}/comisiones`);
     if(!res.ok) throw new Error('HTTP ' + res.status);
     const data = await res.json();
 
@@ -2960,7 +3012,7 @@ async function guardarCBU() {
   btn.disabled  = true;
 
   try {
-    const res = await fetch(`${API}/aliado/perfil?codigo=${encodeURIComponent(aliado.codigo)}`, {
+    const res = await apiFetch(`${API}/aliado/perfil?codigo=${encodeURIComponent(aliado.codigo)}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ cbu_alias: valor }),
@@ -2994,7 +3046,7 @@ async function registrarReferido() {
   if (!nombre||!plan) { alert('Completá el nombre del cliente y el plan elegido.'); return; }
   btn.innerHTML='<span class="spinner"></span> Registrando...'; btn.disabled=true; success.style.display='none';
   try {
-    const res = await fetch(`${API}/referidos/registrar?ref_code=${aliado.ref_code}&nombre_cliente=${encodeURIComponent(nombre)}&plan_elegido=${encodeURIComponent(plan)}&notas=${encodeURIComponent(notas)}`,{method:'POST'});
+    const res = await apiFetch(`${API}/referidos/registrar?ref_code=${aliado.ref_code}&nombre_cliente=${encodeURIComponent(nombre)}&plan_elegido=${encodeURIComponent(plan)}&notas=${encodeURIComponent(notas)}`,{method:'POST'});
     const data = await res.json();
     if (res.ok) {
       const comision = Math.round(PLANES[plan]*pct(aliado.nivel_calculado||'BASIC'));
@@ -3016,7 +3068,7 @@ let filtroProspActivo = 'todos';
 
 async function cargarProspectos() {
   try {
-    const res = await fetch(`${API}/prospectos/aliado/${aliado.codigo}`);
+    const res = await apiFetch(`${API}/prospectos/aliado/${aliado.codigo}`);
     if(!res.ok) return;
     todosProspectos = await res.json();
     renderAlertas();
@@ -3139,14 +3191,14 @@ async function accionProspecto(id, accion) {
   const endpointMap = { seguimiento: 'contactar', propuesta_enviada: 'propuesta_enviada' };
   const endpoint = endpointMap[accion] ?? accion;
   try {
-    const res = await fetch(`${API}/prospectos/${id}/${endpoint}`,{method:'PATCH'});
+    const res = await apiFetch(`${API}/prospectos/${id}/${endpoint}`,{method:'PATCH'});
     if(res.ok) await cargarProspectos();
   } catch {}
 }
 
 async function toggleInteresante(id, actual) {
   try {
-    const res = await fetch(`${API}/prospectos/${id}/interesante`,{method:'PATCH'});
+    const res = await apiFetch(`${API}/prospectos/${id}/interesante`,{method:'PATCH'});
     if(res.ok) await cargarProspectos();
   } catch {}
 }
@@ -3154,7 +3206,7 @@ async function toggleInteresante(id, actual) {
 async function guardarNota(id) {
   const nota = document.getElementById(`nota-input-${id}`).value;
   try {
-    const res = await fetch(`${API}/prospectos/${id}/nota?nota=${encodeURIComponent(nota)}`,{method:'PATCH'});
+    const res = await apiFetch(`${API}/prospectos/${id}/nota?nota=${encodeURIComponent(nota)}`,{method:'PATCH'});
     if(res.ok) {
       const ok = document.getElementById(`nota-ok-${id}`);
       ok.style.display='inline'; setTimeout(()=>ok.style.display='none',2000);
@@ -3174,7 +3226,7 @@ function getInitials(name) {
 
 async function renderLeaderboard() {
   try {
-    const res = await fetch(`${API}/leaderboard`);
+    const res = await apiFetch(`${API}/leaderboard`);
     if (!res.ok) return;
     const lb = await res.json();
     
@@ -3272,7 +3324,7 @@ async function renderLeaderboard() {
 async function cargarBolsa() {
   if(!aliado) return;
   try {
-    const res = await fetch(`${API}/aliados/${aliado.codigo}/bolsa`);
+    const res = await apiFetch(`${API}/aliados/${aliado.codigo}/bolsa`);
     if(!res.ok) return;
     const data = await res.json();
 
@@ -3353,7 +3405,7 @@ async function reclamarLead(id) {
   if(!confirm("¿Estás seguro de reclamar este lead? Recuerda que tendrás 48 horas para llamarlo.")) return;
   
   try {
-    const res = await fetch(`${API}/bolsa/${id}/reclamar?codigo_aliado=${aliado.codigo}`, { method: 'POST' });
+    const res = await apiFetch(`${API}/bolsa/${id}/reclamar?codigo_aliado=${aliado.codigo}`, { method: 'POST' });
     const data = await res.json();
     if(res.ok) {
       mostrarToast('¡Lead reclamado! Tienes 48 horas para contactarlo.', 'green');
@@ -3395,7 +3447,7 @@ async function confirmarResultado(id, resultado) {
   const modal = document.getElementById('modal-resultado');
   if(modal) modal.remove();
   try {
-    const res = await fetch(`${API}/bolsa/${id}/contactar?codigo_aliado=${aliado.codigo}&resultado=${resultado}`, { method: 'PATCH' });
+    const res = await apiFetch(`${API}/bolsa/${id}/contactar?codigo_aliado=${aliado.codigo}&resultado=${resultado}`, { method: 'PATCH' });
     const data = await res.json();
     if(res.ok) {
       const colores = { exitoso: 'green', no_interesado: 'red', no_contesto: 'amber' };
@@ -3411,7 +3463,7 @@ async function confirmarResultado(id, resultado) {
 async function cargarHistorialBolsa() {
   if(!aliado) return;
   try {
-    const res = await fetch(`${API}/aliados/${aliado.codigo}/historial-bolsa`);
+    const res = await apiFetch(`${API}/aliados/${aliado.codigo}/historial-bolsa`);
     if(!res.ok) return;
     const data = await res.json();
     const s = data.stats;
@@ -3453,7 +3505,7 @@ async function cargarRed() {
   document.getElementById('red-invitelink').textContent = `https://avanza-digital.onrender.com/portal.html?ref=${aliado.ref_code}`;
   
   try {
-    const res = await fetch(`${API}/aliados/${aliado.codigo}/red`);
+    const res = await apiFetch(`${API}/aliados/${aliado.codigo}/red`);
     if(!res.ok) return;
     const data = await res.json();
     
@@ -3490,7 +3542,7 @@ function copiarInviteLink() {
 async function cargarSiguienteAccion() {
   if(!aliado) return;
   try {
-    const res = await fetch(`${API}/aliados/${aliado.codigo}/siguiente-accion`);
+    const res = await apiFetch(`${API}/aliados/${aliado.codigo}/siguiente-accion`);
     if(!res.ok) return;
     const data = await res.json();
     const cont = document.getElementById('nba-container');
@@ -3523,7 +3575,7 @@ function cambiarTabDesdeNBA(tab) {
 async function cargarOnboardingChecklist() {
   if(!aliado) return;
   try {
-    const res = await fetch(`${API}/aliados/${aliado.codigo}/onboarding`);
+    const res = await apiFetch(`${API}/aliados/${aliado.codigo}/onboarding`);
     if(!res.ok) return;
     const data = await res.json();
     const box = document.getElementById('onboarding-checklist-box');
@@ -3551,7 +3603,7 @@ let _ultimoLinkGenerado = null; // { id, url, moneda, expires_at }
 
 async function cargarTipoDeCambio() {
   try {
-    const res = await fetch(`${API}/tipo-de-cambio`);
+    const res = await apiFetch(`${API}/tipo-de-cambio`);
     if(!res.ok) throw new Error();
     const data = await res.json();
     _tipoDeCambio = data.venta;
@@ -3711,7 +3763,7 @@ setInterval(actualizarTextoVencimiento, 60000);
 async function recuperarUltimoLinkActivo() {
   if(!aliado) return;
   try {
-    const res = await fetch(`${API}/checkout/ultimo-link?codigo=${encodeURIComponent(aliado.codigo)}`);
+    const res = await apiFetch(`${API}/checkout/ultimo-link?codigo=${encodeURIComponent(aliado.codigo)}`);
     if(!res.ok) return; // 404 = sin link previo, silencioso
     const data = await res.json();
     if(!data || !data.checkout_url) return;
@@ -3773,7 +3825,7 @@ async function regenerarLinkPago() {
   btn.innerHTML = '<span class="spinner"></span> Regenerando...';
   btn.disabled = true;
   try {
-    const res = await fetch(`${API}/checkout/regenerar/${_ultimoLinkGenerado.id}`, { method: 'POST' });
+    const res = await apiFetch(`${API}/checkout/regenerar/${_ultimoLinkGenerado.id}`, { method: 'POST' });
     const data = await res.json();
     if(res.ok && data.checkout_url) {
       _ultimoLinkGenerado = {
@@ -3917,7 +3969,7 @@ function irACotizador(id, nombre, plan) {
 async function togglePiloto(id, actual) {
   try {
     const nuevoEstado = !actual;
-    const res = await fetch(`${API}/prospectos/${id}/piloto?activo=${nuevoEstado}`, {method:'PATCH'});
+    const res = await apiFetch(`${API}/prospectos/${id}/piloto?activo=${nuevoEstado}`, {method:'PATCH'});
     if(res.ok) {
       mostrarToast(nuevoEstado ? '🤖 Piloto automático activado para este lead' : 'Piloto desactivado', nuevoEstado ? 'primary' : 'amber');
       await cargarProspectos();
@@ -3929,7 +3981,7 @@ async function togglePiloto(id, actual) {
 
 async function renderLeaderboard() {
   try {
-    const res = await fetch(`${API}/leaderboard`);
+    const res = await apiFetch(`${API}/leaderboard`);
     if (!res.ok) return;
     const lb = await res.json();
 
@@ -4010,7 +4062,7 @@ async function renderLeaderboard() {
 async function cargarHistorialBolsa() {
   if(!aliado) return;
   try {
-    const res = await fetch(`${API}/aliados/${aliado.codigo}/historial-bolsa`);
+    const res = await apiFetch(`${API}/aliados/${aliado.codigo}/historial-bolsa`);
     if(!res.ok) return;
     const data = await res.json();
     const s = data.stats;
@@ -4066,7 +4118,7 @@ cargarTodo = async function() {
 async function cargarReputacion() {
   if (!aliado) return;
   try {
-    const res = await fetch(`${API}/aliados/${aliado.codigo}/reputacion`);
+    const res = await apiFetch(`${API}/aliados/${aliado.codigo}/reputacion`);
     if (!res.ok) return;
     const data = await res.json();
     const scoreEl = document.getElementById('d-reput-score');
@@ -4094,7 +4146,7 @@ async function cargarReputacion() {
 async function cargarCreditos() {
   if (!aliado) return;
   try {
-    const res = await fetch(`${API}/aliados/${aliado.codigo}/creditos`);
+    const res = await apiFetch(`${API}/aliados/${aliado.codigo}/creditos`);
     if (!res.ok) return;
     const data = await res.json();
     const el = document.getElementById('d-creditos');
@@ -4111,7 +4163,7 @@ async function actualizarCuotas() {
   const box = document.getElementById('cot-cuotas-resultado');
   if (!plan) { if(box) box.style.display='none'; return; }
   try {
-    const res = await fetch(`${API}/cotizador/cuotas?plan=${encodeURIComponent(plan)}&cuotas=${cuotas}`);
+    const res = await apiFetch(`${API}/cotizador/cuotas?plan=${encodeURIComponent(plan)}&cuotas=${cuotas}`);
     if (!res.ok) return;
     const data = await res.json();
     document.getElementById('cot-cuotas-valor').textContent = `USD ${data.valor_cuota.toLocaleString('es-AR',{maximumFractionDigits:0})}`;
@@ -4169,7 +4221,7 @@ async function cargarMarketplace() {
   const tbody = document.getElementById('tabla-marketplace');
   if (!tbody) return;
   try {
-    const res = await fetch(`${API}/bolsa/marketplace?codigo_aliado=${aliado.codigo}`);
+    const res = await apiFetch(`${API}/bolsa/marketplace?codigo_aliado=${aliado.codigo}`);
     if (!res.ok) return;
     const data = await res.json();
     document.getElementById('mkt-saldo').textContent = `${data.saldo_creditos} créditos`;
@@ -4201,7 +4253,7 @@ async function cargarMarketplace() {
 async function comprarLead(id, costo) {
   if (!confirm(`Confirmás la compra de este lead por ${costo} créditos?`)) return;
   try {
-    const res = await fetch(`${API}/bolsa/${id}/comprar?codigo_aliado=${aliado.codigo}`, {method:'POST'});
+    const res = await apiFetch(`${API}/bolsa/${id}/comprar?codigo_aliado=${aliado.codigo}`, {method:'POST'});
     const data = await res.json();
     if (!res.ok) { alert(data.detail || 'Error'); return; }
     mostrarToast(`✅ Lead comprado — saldo: ${data.saldo_restante} créditos`, 'green');
@@ -4217,7 +4269,7 @@ async function cargarComunidad() {
   if (!feed) return;
   feed.innerHTML = `<div style="text-align:center; padding:40px; color:var(--text-dim);">Cargando feed...</div>`;
   try {
-    const res = await fetch(`${API}/comunidad/feed`);
+    const res = await apiFetch(`${API}/comunidad/feed`);
     if (!res.ok) return;
     const data = await res.json();
     if (!data.posts.length) {
@@ -4273,7 +4325,7 @@ async function publicarPost() {
   const cuerpo = document.getElementById('post-cuerpo').value.trim();
   if (titulo.length < 3 || cuerpo.length < 5) { alert('Escribí un título y un cuerpo.'); return; }
   try {
-    const res = await fetch(`${API}/comunidad/post`, {
+    const res = await apiFetch(`${API}/comunidad/post`, {
       method:'POST', headers:{'Content-Type':'application/json'},
       body: JSON.stringify({codigo_aliado: aliado.codigo, tipo, titulo, cuerpo})
     });
@@ -4287,7 +4339,7 @@ async function publicarPost() {
 
 async function darLike(id) {
   try {
-    await fetch(`${API}/comunidad/${id}/like`, {method:'POST'});
+    await apiFetch(`${API}/comunidad/${id}/like`, {method:'POST'});
     cargarComunidad();
   } catch(e){}
 }
@@ -4297,7 +4349,7 @@ async function comentarPost(id) {
   const cuerpo = input.value.trim();
   if (cuerpo.length < 2) return;
   try {
-    const res = await fetch(`${API}/comunidad/${id}/comentario`, {
+    const res = await apiFetch(`${API}/comunidad/${id}/comentario`, {
       method:'POST', headers:{'Content-Type':'application/json'},
       body: JSON.stringify({codigo_aliado: aliado.codigo, cuerpo})
     });

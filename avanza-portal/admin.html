@@ -1008,6 +1008,7 @@ function pct(n) { return {BASIC:.10,SILVER:.12,PREMIUM:.15,ELITE:.20}[n]||.10; }
 
 let todosAliados = [];
 let _apiKey = '';
+let _adminToken = '';
 let todosReferidos = [];
 let todasVentas = [];
 let _confirmCallback = null;
@@ -1021,23 +1022,65 @@ let _confirmCallback = null;
     document.getElementById('login-screen').style.display = 'none';
     document.getElementById('admin-screen').style.display = 'block';
     cargarTodo();
+  } else {
+    const savedToken = sessionStorage.getItem('avanza_admin_token');
+    if (savedToken) {
+      _adminToken = savedToken;
+      document.getElementById('login-screen').style.display = 'none';
+      document.getElementById('admin-screen').style.display = 'block';
+      cargarTodo();
+    }
   }
 })();
 
 async function loginAdmin() {
-  const apikey = document.getElementById('login-apikey') ? document.getElementById('login-apikey').value.trim() : '';
-  const err    = document.getElementById('login-error');
+  // Modo recomendado: username + password vía POST /admin/login → JWT.
+  // Modo legacy: si solo hay un campo `login-apikey`, sigue funcionando con X-API-Key.
+  const userEl = document.getElementById('login-user');
+  const passEl = document.getElementById('login-pass');
+  const apikeyEl = document.getElementById('login-apikey');
+  const err  = document.getElementById('login-error');
   err.style.display = 'none';
 
-  if (!apikey) { err.style.display = 'block'; return; }
+  const username = userEl ? userEl.value.trim() : '';
+  const password = passEl ? passEl.value : '';
+  const apikey   = apikeyEl ? apikeyEl.value.trim() : '';
 
+  // Preferir JWT login si hay usuario+pass
+  if (username && password) {
+    try {
+      const res = await fetch(`${API}/admin/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password })
+      });
+      if (res.ok) {
+        const data = await res.json();
+        _adminToken = data.token;
+        sessionStorage.setItem('avanza_admin_token', data.token);
+        sessionStorage.removeItem('avanza_api_key'); // limpiar legacy
+        _apiKey = '';
+        document.getElementById('login-screen').style.display = 'none';
+        document.getElementById('admin-screen').style.display = 'block';
+        cargarTodo();
+        return;
+      }
+    } catch {}
+    err.style.display = 'block';
+    return;
+  }
+
+  // Fallback legacy: X-API-Key
+  if (!apikey) { err.style.display = 'block'; return; }
   try {
     const res = await fetch(`${API}/aliados`, {
       headers: { 'X-API-Key': apikey }
     });
     if (res.ok) {
       _apiKey = apikey;
+      _adminToken = '';
       sessionStorage.setItem('avanza_api_key', apikey);
+      sessionStorage.removeItem('avanza_admin_token');
       document.getElementById('login-screen').style.display = 'none';
       document.getElementById('admin-screen').style.display = 'block';
       cargarTodo();
@@ -1051,7 +1094,9 @@ async function loginAdmin() {
 
 function logoutAdmin() {
   sessionStorage.removeItem('avanza_api_key');
+  sessionStorage.removeItem('avanza_admin_token');
   _apiKey = '';
+  _adminToken = '';
   document.getElementById('admin-screen').style.display = 'none';
   document.getElementById('login-screen').style.display = 'flex';
   document.getElementById('login-user').value = '';
@@ -1063,11 +1108,18 @@ document.getElementById('login-pass').addEventListener('keydown', e => { if(e.ke
 // ── API FETCH CON AUTH ──────────────────────────────────────────────────────
 function apiFetch(url, opts = {}) {
   opts.headers = opts.headers || {};
-  if (_apiKey) opts.headers['X-API-Key'] = _apiKey;
-  
-  // Esta línea obliga al navegador a pedir SIEMPRE datos frescos al servidor
-  opts.cache = 'no-store'; 
-  
+  if (_adminToken) {
+    opts.headers['Authorization'] = 'Bearer ' + _adminToken;
+  } else if (_apiKey) {
+    opts.headers['X-API-Key'] = _apiKey;
+  }
+  // Si el body es objeto (no string ni FormData), serializar como JSON
+  if (opts.body && typeof opts.body !== 'string' && !(opts.body instanceof FormData)) {
+    opts.body = JSON.stringify(opts.body);
+    if (!opts.headers['Content-Type']) opts.headers['Content-Type'] = 'application/json';
+  }
+  // Datos frescos siempre
+  opts.cache = 'no-store';
   return fetch(url, opts);
 }
 
