@@ -9,21 +9,21 @@
 
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Avanza Partner Network | Programa de Alianzas Estratégicas</title>
-    <meta name="description" content="Únete a la red de aliados de Avanza Digital. Genera comisiones vendiendo sistemas de automatización B2B a PYMES industriales. ¡Cobra en 24h!">
-    
+    <title>Avanza Partner Network | Elegí tu canal de alianza</title>
+    <meta name="description" content="Dos formas de ser aliado de Avanza Digital: empezar sin cartera con la bolsa de leads, o incorporar Avanza a los clientes que ya tenés. Elegí la tuya.">
+
     <meta property="og:title" content="Avanza Partner Network | Programa de Alianzas">
-    <meta property="og:description" content="Vende nuestras soluciones B2B a tus clientes y gana comisiones en 24h. Nosotros implementamos.">
+    <meta property="og:description" content="Elegí tu canal: bolsa de leads sin cartera previa, o monetizá tu red de clientes actual.">
     <meta property="og:image" content="https://avanzadigital.com/logo.png">
     <meta property="og:type" content="website">
-    
+
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><path d=%22M10 20 L40 50 L10 80 L30 80 L60 50 L30 20 Z%22 fill=%22%230044cc%22/><path d=%22M45 20 L75 50 L45 80 L65 80 L95 50 L65 20 Z%22 fill=%22%2300cccc%22/></svg>">
-    
+
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
+
     <link rel="stylesheet" href="style.min.css">
     <style>
         @media (min-width: 769px) {
@@ -34,16 +34,26 @@
             .nav-desktop-buttons { gap: 10px !important; }
             .nav-desktop-buttons a { font-size: 0.82rem !important; }
         }
+        .canal-card-link {
+            text-decoration: none;
+            color: inherit;
+            display: block;
+        }
+        .canal-card-link:hover .canal-card {
+            transform: translateY(-6px);
+        }
+        .canal-card-link:hover #card-canal1 {
+            box-shadow: 0 12px 40px rgba(251,146,60,0.25);
+            border-color: rgba(251,146,60,0.8) !important;
+        }
+        .canal-card-link:hover #card-canal2 {
+            box-shadow: 0 12px 40px rgba(74,222,128,0.25);
+            border-color: rgba(74,222,128,0.8) !important;
+        }
+        .canal-card {
+            transition: all 0.3s;
+        }
     </style>
-    <!-- MailerLite Universal -->
-    <script>
-        (function(w,d,e,u,f,l,n){w[f]=w[f]||function(){(w[f].q=w[f].q||[])
-        .push(arguments);},l=d.createElement(e),l.async=1,l.src=u,
-        n=d.getElementsByTagName(e)[0],n.parentNode.insertBefore(l,n);})
-        (window,document,'script','https://assets.mailerlite.com/js/universal.js','ml');
-        ml('account', '2246059');
-    </script>
-    <!-- End MailerLite Universal -->
 </head>
 <body>
     <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-P499M76P" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
@@ -54,627 +64,207 @@
                 <i class="fa-solid fa-layer-group"></i> Avanza
             </a>
         </div>
-        
+
         <ul class="nav-links" id="nav-links">
             <li><a href="index.html#servicios">Planes</a></li>
             <li><a href="index.html#portafolio">Demos</a></li>
             <li><a href="blog.html">Blog</a></li>
             <li><a href="recursos.html">Recursos</a></li>
             <li><a href="alianzas.html" style="color: var(--primary-color); font-weight: 600;">Alianzas</a></li>
-            
+
             <li class="nav-mobile-login">
                 <a href="avanza-portal/portal.html" style="color: #4ade80; font-weight: 700; border: 1px solid rgba(74,222,128,0.3); border-radius: 8px; margin-top: 10px;">
                     <i class="fa-solid fa-right-to-bracket"></i> Ingresar al Portal
                 </a>
             </li>
         </ul>
-    
+
         <div class="nav-desktop-buttons" style="display: flex; gap: 15px; align-items: center;">
             <a href="avanza-portal/portal.html" style="color: #a1a1aa; font-size: 0.85rem; font-weight: 600; text-decoration: none; transition: 0.3s;" onmouseover="this.style.color='white'" onmouseout="this.style.color='#a1a1aa'">
                 <i class="fa-solid fa-right-to-bracket"></i> Ingresar
             </a>
-            <a href="#contacto-partner" class="btn-nav">Ser Aliado</a>
+            <a href="#selector-canal" class="btn-nav">Ser Aliado</a>
         </div>
-    
+
         <button class="nav-hamburger" id="nav-hamburger" aria-label="Menú" onclick="toggleNav()">
             <span></span><span></span><span></span>
         </button>
     </nav>
 
-    <section class="hero-section" style="padding-top: 160px; padding-bottom: 60px;">
+    <!-- HERO CORTO -->
+    <section class="hero-section" style="padding-top: 160px; padding-bottom: 40px;">
         <div class="container" style="text-align: center;">
             <span class="badge-outline" style="color: #4ade80; border-color: rgba(74, 222, 128, 0.3); background: rgba(74, 222, 128, 0.1);">Programa Oficial</span>
-            <h1 style="font-size: 4rem; font-weight: 900; letter-spacing: -2px; margin: 20px 0; color: white;">Avanza <span class="highlight">Partner Network</span></h1>
-            
-            <p style="font-size: 1.25rem; color: #a1a1aa; max-width: 700px; margin: 0 auto 40px; line-height: 1.6;">
-                ¿Asesoras a PYMES industriales? Convierte nuestros sistemas en tu nueva línea de ingresos. 
-                <br><strong style="color: white;">Tú vendes, nosotros implementamos y te pagamos en 24h.</strong>
+            <h1 style="font-size: 3.6rem; font-weight: 900; letter-spacing: -2px; margin: 20px 0; color: white;">Avanza <span class="highlight">Partner Network</span></h1>
+
+            <p style="font-size: 1.2rem; color: #a1a1aa; max-width: 700px; margin: 0 auto 20px; line-height: 1.6;">
+                Hay <strong style="color: white;">dos formas</strong> de ser aliado de Avanza.
+                Cada una resuelve un punto de partida distinto.
+                <br>Elegí la tuya y empezás en minutos.
             </p>
-            <div style="display: flex; gap: 15px; justify-content: center; flex-wrap: wrap;">
-                <a href="#contacto-partner" class="btn-primary" style="padding: 15px 30px; box-shadow: 0 0 20px rgba(74, 222, 128, 0.4); border-color: #4ade80;">
-                    Quiero ser Aliado <span style="font-size:0.8rem; font-weight:400; display:block;">(Recibe kit comercial y brochure)</span>
+
+            <p style="font-size: 0.95rem; color: #666; max-width: 600px; margin: 0 auto;">
+                <i class="fa-solid fa-arrow-down" style="color: var(--primary-color); margin-right: 6px;"></i>
+                Cada canal tiene su propio portal, kit comercial y flujo de cobro.
+            </p>
+        </div>
+    </section>
+
+    <!-- SELECTOR PRINCIPAL -->
+    <section id="selector-canal" class="section-padding" style="padding-top: 20px; padding-bottom: 70px;">
+        <div class="container">
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 30px; max-width: 1000px; margin: 0 auto;">
+
+                <!-- Canal 1 -->
+                <a href="alianzas-canal1.html" class="canal-card-link">
+                    <div class="bento-box canal-card" id="card-canal1" style="border-color: rgba(251,146,60,0.4); position: relative; overflow: hidden; padding: 32px; height: 100%;">
+                        <div style="position: absolute; top: 0; right: 0; background: #fb923c; color: black; font-size: 0.7rem; font-weight: 800; padding: 5px 16px; border-bottom-left-radius: 10px; letter-spacing: 1px;">CANAL 1</div>
+                        <div style="font-size: 3rem; margin-bottom: 14px;">🚀</div>
+                        <h2 style="color: white; font-size: 1.6rem; margin-bottom: 10px; font-weight: 800;">Empezás sin cartera</h2>
+                        <p style="color: #a1a1aa; font-size: 0.95rem; margin-bottom: 18px; line-height: 1.6;">
+                            Para vendedores independientes, emprendedores digitales y referidores de red.
+                            <strong style="color: white;">No necesitás clientes previos.</strong>
+                        </p>
+
+                        <div style="border-top: 1px solid rgba(251,146,60,0.2); padding-top: 16px; margin-bottom: 20px;">
+                            <p style="color: #d1d5db; font-size: 0.9rem; line-height: 1.7; margin: 0;">
+                                La <strong style="color: #fb923c;">Bolsa de Leads</strong> te trae prospectos calificados.
+                                La IA te prepara el pitch.
+                                Vos cerrás. Cobrás en 24hs.
+                            </p>
+                        </div>
+
+                        <ul style="list-style: none; padding: 0; margin: 0 0 20px 0; font-size: 0.85rem; color: #a1a1aa;">
+                            <li style="padding: 4px 0;"><i class="fa-solid fa-check" style="color: #fb923c; margin-right: 8px;"></i>Leads calificados listos para contactar</li>
+                            <li style="padding: 4px 0;"><i class="fa-solid fa-check" style="color: #fb923c; margin-right: 8px;"></i>Score IA + plan recomendado por lead</li>
+                            <li style="padding: 4px 0;"><i class="fa-solid fa-check" style="color: #fb923c; margin-right: 8px;"></i>Academia + Comunidad de aliados</li>
+                            <li style="padding: 4px 0;"><i class="fa-solid fa-check" style="color: #fb923c; margin-right: 8px;"></i>Leaderboard y badges</li>
+                        </ul>
+
+                        <div style="text-align: center;">
+                            <span style="background: rgba(251,146,60,0.15); border: 1px solid rgba(251,146,60,0.4); color: #fb923c; padding: 10px 28px; border-radius: 50px; font-size: 0.9rem; font-weight: 700; display: inline-block;">
+                                Quiero empezar acá <i class="fa-solid fa-arrow-right" style="margin-left: 6px;"></i>
+                            </span>
+                        </div>
+                    </div>
                 </a>
-                <a href="#beneficios" class="btn-text" style="padding: 15px;">Ver cómo funciona <i class="fa-solid fa-arrow-down"></i></a>
+
+                <!-- Canal 2 -->
+                <a href="alianzas-canal2.html" class="canal-card-link">
+                    <div class="bento-box canal-card" id="card-canal2" style="border-color: rgba(74,222,128,0.4); position: relative; overflow: hidden; padding: 32px; height: 100%;">
+                        <div style="position: absolute; top: 0; right: 0; background: #4ade80; color: black; font-size: 0.7rem; font-weight: 800; padding: 5px 16px; border-bottom-left-radius: 10px; letter-spacing: 1px;">CANAL 2</div>
+                        <div style="font-size: 3rem; margin-bottom: 14px;">🤝</div>
+                        <h2 style="color: white; font-size: 1.6rem; margin-bottom: 10px; font-weight: 800;">Tenés tus propios clientes</h2>
+                        <p style="color: #a1a1aa; font-size: 0.95rem; margin-bottom: 18px; line-height: 1.6;">
+                            Para contadores, consultores industriales, proveedores B2B y agencias digitales.
+                            <strong style="color: white;">Ya tenés la confianza del cliente.</strong>
+                        </p>
+
+                        <div style="border-top: 1px solid rgba(74,222,128,0.2); padding-top: 16px; margin-bottom: 20px;">
+                            <p style="color: #d1d5db; font-size: 0.9rem; line-height: 1.7; margin: 0;">
+                                Incorporás Avanza a la <strong style="color: #4ade80;">relación que ya tenés</strong>.
+                                Más valor para tu cliente, nueva línea de ingreso para vos.
+                            </p>
+                        </div>
+
+                        <ul style="list-style: none; padding: 0; margin: 0 0 20px 0; font-size: 0.85rem; color: #a1a1aa;">
+                            <li style="padding: 4px 0;"><i class="fa-solid fa-check" style="color: #4ade80; margin-right: 8px;"></i>Cerrás en tu canal habitual (llamada, WhatsApp, reunión)</li>
+                            <li style="padding: 4px 0;"><i class="fa-solid fa-check" style="color: #4ade80; margin-right: 8px;"></i>Guion específico por perfil profesional</li>
+                            <li style="padding: 4px 0;"><i class="fa-solid fa-check" style="color: #4ade80; margin-right: 8px;"></i>Kit comercial adaptado a cómo ya trabajás</li>
+                            <li style="padding: 4px 0;"><i class="fa-solid fa-check" style="color: #4ade80; margin-right: 8px;"></i>Comisión en 24hs por cada venta cerrada</li>
+                        </ul>
+
+                        <div style="text-align: center;">
+                            <span style="background: rgba(74,222,128,0.12); border: 1px solid rgba(74,222,128,0.4); color: #4ade80; padding: 10px 28px; border-radius: 50px; font-size: 0.9rem; font-weight: 700; display: inline-block;">
+                                Este es mi caso <i class="fa-solid fa-arrow-right" style="margin-left: 6px;"></i>
+                            </span>
+                        </div>
+                    </div>
+                </a>
+
             </div>
+
+            <p style="text-align: center; color: #666; font-size: 0.85rem; margin-top: 40px; max-width: 600px; margin-left: auto; margin-right: auto;">
+                ¿No estás seguro cuál te corresponde? Si hoy no tenés una cartera de clientes profesional,
+                <a href="alianzas-canal1.html" style="color: #fb923c; text-decoration: none; font-weight: 600;">empezá por Canal 1</a>.
+                Si ya asesorás o le vendés a PyMEs industriales,
+                <a href="alianzas-canal2.html" style="color: #4ade80; text-decoration: none; font-weight: 600;">Canal 2 es tu lugar</a>.
+            </p>
         </div>
     </section>
 
-    <section id="beneficios" class="section-padding">
-        <div class="container">
-            <div class="results-grid" style="grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));">
-                <div class="bento-box result-card">
-                    <div class="result-icon">🤝</div>
-                    <p style="color: var(--primary-color); font-weight: bold; font-size: 0.8rem; letter-spacing: 1px; margin-bottom: 10px;">CERO FRICCIÓN OPERATIVA</p>
-                    <h3>Nosotros hacemos el trabajo</h3>
-                    <p>Tú solo vendes. Nosotros nos encargamos de la implementación técnica y el soporte post-venta. Tú cobras sin carga operativa.</p>
-                </div>
-                <div class="bento-box result-card">
-                    <div class="result-icon">📁</div>
-                    <p style="color: var(--primary-color); font-weight: bold; font-size: 0.8rem; letter-spacing: 1px; margin-bottom: 10px;">MATERIAL DE VENTA</p>
-                    <h3>Brochure Comercial Incluido</h3>
-                    <p>Te entregamos un brochure profesional con todos nuestros planes para que puedas presentarlo directamente a tus clientes.</p>
-                </div>
-                <div class="bento-box result-card">
-                    <div class="result-icon">⚡</div>
-                    <h3>Pago en 24h</h3>
-                    <p>Apenas el cliente abona, te transferimos tu comisión. Sin demoras ni burocracia.</p>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <section class="section-padding" style="background: linear-gradient(to bottom, #050505, #000000);">
-        <div class="container">
-            <div class="section-header">
-                <h2>Diseñado para profesionales B2B</h2>
-                <p>Nuestra infraestructura técnica al servicio de tus clientes.</p>
-            </div>
-            
-            <div class="bento-box" style="border-color: rgba(59, 130, 246, 0.3); max-width: 900px; margin: 0 auto;">
-                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 30px;">
-                    <div>
-                        <h4 style="color: white; font-size: 1.1rem; margin-bottom: 10px;"><i class="fa-solid fa-code" style="color:var(--primary-color);"></i> Agencias y Freelancers</h4>
-                        <p style="color: var(--accent-dim); font-size: 0.95rem;">Tienen clientes que piden webs, pero no quieren lidiar con embudos complejos ni integraciones CRM.</p>
-                    </div>
-                    <div>
-                        <h4 style="color: white; font-size: 1.1rem; margin-bottom: 10px;"><i class="fa-solid fa-calculator" style="color:var(--primary-color);"></i> Estudios Contables</h4>
-                        <p style="color: var(--accent-dim); font-size: 0.95rem;">Asesoran en finanzas, pero notan que la principal debilidad de la PYME es la falta de ventas digitales.</p>
-                    </div>
-                    <div>
-                        <h4 style="color: white; font-size: 1.1rem; margin-bottom: 10px;"><i class="fa-solid fa-chart-line" style="color:var(--primary-color);"></i> Consultores Industriales</h4>
-                        <p style="color: var(--accent-dim); font-size: 0.95rem;">Optimizan fábricas y procesos logísticos, pero necesitan un brazo técnico para digitalizar el área comercial.</p>
-                    </div>
-                    <div>
-                        <h4 style="color: white; font-size: 1.1rem; margin-bottom: 10px;"><i class="fa-solid fa-industry" style="color:var(--primary-color);"></i> Proveedores del Sector</h4>
-                        <p style="color: var(--accent-dim); font-size: 0.95rem;">Venden insumos o maquinaria y buscan dar un valor agregado diferencial a su cartera de clientes.</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- SECCIÓN: Qué NO somos -->
+    <!-- COMISIONES COMPARTIDAS (ambos canales comparten tabla) -->
     <section class="section-padding" style="background: #050505; border-top: 1px solid #111;">
         <div class="container">
             <div class="section-header">
-                <h2>Qué NO somos</h2>
-                <p>Para que entres al programa sabiendo exactamente con quién trabajás.</p>
+                <h2>Mismo esquema de comisiones, sin techo</h2>
+                <p>Los dos canales comparten la tabla. Lo que cambia es cómo llegás al cliente, no cuánto ganás.</p>
             </div>
 
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; max-width: 900px; margin: 0 auto;">
-
-                <div style="display: flex; align-items: flex-start; gap: 15px; background: rgba(220,38,38,0.05); border: 1px solid rgba(220,38,38,0.2); border-radius: 12px; padding: 20px;">
-                    <span style="font-size: 1.5rem; flex-shrink: 0;">❌</span>
-                    <div>
-                        <h4 style="color: white; font-size: 1rem; margin-bottom: 6px;">No somos marketing multinivel</h4>
-                        <p style="color: #a1a1aa; font-size: 0.9rem; line-height: 1.5;">No te pedimos que recrutes aliados ni vivís de comisiones de otros. Ganás por tus propias ventas, punto.</p>
-                    </div>
-                </div>
-
-                <div style="display: flex; align-items: flex-start; gap: 15px; background: rgba(220,38,38,0.05); border: 1px solid rgba(220,38,38,0.2); border-radius: 12px; padding: 20px;">
-                    <span style="font-size: 1.5rem; flex-shrink: 0;">❌</span>
-                    <div>
-                        <h4 style="color: white; font-size: 1rem; margin-bottom: 6px;">No somos un programa de afiliados masivo</h4>
-                        <p style="color: #a1a1aa; font-size: 0.9rem; line-height: 1.5;">No abrimos a cualquiera. Trabajamos con profesionales que tienen acceso real a empresas industriales.</p>
-                    </div>
-                </div>
-
-                <div style="display: flex; align-items: flex-start; gap: 15px; background: rgba(220,38,38,0.05); border: 1px solid rgba(220,38,38,0.2); border-radius: 12px; padding: 20px;">
-                    <span style="font-size: 1.5rem; flex-shrink: 0;">❌</span>
-                    <div>
-                        <h4 style="color: white; font-size: 1rem; margin-bottom: 6px;">No te pedimos inversión inicial</h4>
-                        <p style="color: #a1a1aa; font-size: 0.9rem; line-height: 1.5;">El kit es gratuito. No hay suscripción, ni certificación paga, ni herramientas que debas comprar para arrancar.</p>
-                    </div>
-                </div>
-
-                <div style="display: flex; align-items: flex-start; gap: 15px; background: rgba(74,222,128,0.05); border: 1px solid rgba(74,222,128,0.2); border-radius: 12px; padding: 20px;">
-                    <span style="font-size: 1.5rem; flex-shrink: 0;">✅</span>
-                    <div>
-                        <h4 style="color: #4ade80; font-size: 1rem; margin-bottom: 6px;">Somos una red profesional B2B</h4>
-                        <p style="color: #a1a1aa; font-size: 0.9rem; line-height: 1.5;">Consultores, contadores y vendedores con experiencia real. Cada aliado representa la marca con materiales profesionales.</p>
-                    </div>
-                </div>
-
-            </div>
-        </div>
-    </section>
-
-    <section class="section-padding">
-        <div class="container">
-            <div class="section-header">
-                <h2>El proceso en 3 pasos</h2>
-                <p>Vende, notifica y cobra en 24h.</p>
-            </div>
-            <div class="steps-grid" style="grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));">
-                <div class="bento-box step-card" style="text-align: center;">
-                    <div class="step-num" style="color: var(--primary-color);">01</div>
-                    <h4 style="color: white; margin-bottom: 10px; font-size: 1.2rem;">Ofreces la solución</h4>
-                    <p>Usa nuestro Brochure Comercial para presentar los planes a tu cliente y cerrar la venta.</p>
-                </div>
-                <div class="bento-box step-card" style="text-align: center;">
-                    <div class="step-num" style="color: var(--primary-color);">02</div>
-                    <h4 style="color: white; margin-bottom: 10px; font-size: 1.2rem;">Cierras y nos notificas</h4>
-                    <p>Una vez que el cliente acepta, nos envías un WhatsApp o email con sus datos <strong>antes de que pague</strong> para registrar la venta a tu nombre.</p>
-                </div>
-                <div class="bento-box step-card" style="text-align: center;">
-                    <div class="step-num" style="color: var(--primary-color);">03</div>
-                    <h4 style="color: white; margin-bottom: 10px; font-size: 1.2rem;">Cobras en 24h y ejecutamos</h4>
-                    <p>En cuanto el pago del cliente se acredita, te transferimos tu comisión. Nuestro equipo comienza la implementación.</p>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <section class="section-padding" style="background: #0a0a0a; border-top: 1px solid #1a1a1a;">
-        <div class="container">
-            <div class="section-header">
-                <h2>Lo que dicen nuestros Aliados</h2>
-                <p>Profesionales que ya están monetizando su red de contactos.</p>
-            </div>
-            
-            <div class="testimonials-grid" style="grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); max-width: 900px; margin: 0 auto;">
-                
-                <div class="bento-box testimonial-card" style="border-color: rgba(74, 222, 128, 0.3);">
-                    <div class="testimonial-header">
-                        <div class="stars">★★★★★</div>
-                        <div class="metric-badge"><i class="fa-solid fa-money-bill-wave"></i> Pagado en 24h</div>
-                    </div>
-                    <p class="quote">"Le vendí el Plan Industrial a un cliente de mi estudio contable usando el catálogo de Avanza. El cliente transfirió, avisé por WhatsApp y al otro día ya tenía mi comisión. Una nueva línea de ingresos espectacular."</p>
-                    <div class="author">
-                        <div class="avatar">MG</div>
-                        <div class="info"><h4>Martín G.</h4><span>Consultor Financiero PYME</span></div>
-                    </div>
-                </div>
-
-                <div class="bento-box testimonial-card" style="display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; border: 1px dashed rgba(255,255,255,0.2); background: transparent;">
-                    <i class="fa-solid fa-handshake-angle" style="font-size: 2.5rem; color: var(--accent-dim); margin-bottom: 15px;"></i>
-                    <h3 style="color: white; margin-bottom: 10px;">¿Serás nuestro próximo caso de éxito?</h3>
-                    <p style="color: var(--accent-dim); font-size: 0.95rem; margin-bottom: 20px;">Únete a la red y comienza a vender hoy mismo.</p>
-                    <a href="#contacto-partner" class="btn-primary" style="padding: 10px 20px; font-size: 0.9rem;">Activar mi cuenta</a>
-                </div>
-
-            </div>
-        </div>
-    </section>
-
-    <!-- 1. Tangibilidad: Escenarios de Ingresos Reales -->
-    <section class="section-padding">
-        <div class="container">
-            <div class="section-header">
-                <h2>El poder de una sola venta</h2>
-                <p>Impacto real en tu bolsillo con cada recomendación.</p>
-            </div>
-            <div class="bento-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 30px; max-width: 900px; margin: 0 auto;">
-                <!-- Tarjeta de impacto: Plan Industrial -->
-                <div class="bento-box" style="background: linear-gradient(145deg, #0a0a0a, #111); border-color: #4ade80;">
-                    <div style="font-size: 3rem; margin-bottom: 10px;">🏭</div>
-                    <h3 style="color: white;">El Efecto Industrial</h3>
-                    <p style="font-size: 2rem; font-weight: 800; color: #4ade80; margin: 10px 0;">USD 490</p>
-                    <p style="color: #a1a1aa;">Eso es lo que ganas <strong>de inmediato</strong> con una sola recomendación exitosa del Plan Industrial. Cubre el alquiler de tu oficina, un servicio o una herramienta profesional con un solo mensaje.</p>
-                </div>
-                <!-- Calculadora de proyección simple -->
-                <div class="bento-box">
-                    <div style="font-size: 3rem; margin-bottom: 10px;">📊</div>
-                    <h3 style="color: white;">Proyección mensual</h3>
-                    <ul style="list-style: none; padding: 0; color: #a1a1aa; line-height: 2;">
-                        <li><span style="color: #4ade80;">2 ventas Pro</span> → USD 580</li>
-                        <li><span style="color: #4ade80;">1 venta Industrial</span> → USD 490</li>
-                        <li style="border-top: 1px solid #333; margin-top: 10px; padding-top: 10px;"><strong style="color: white;">Total mensual:</strong> <span style="color: #4ade80; font-size: 1.5rem;">USD 1.070</span></li>
-                    </ul>
-                    <p style="color: #a1a1aa; font-size: 0.9rem;">Extra para tu consultora sin moverte de tu negocio.</p>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- Estructura de Comisiones (original) + nuevos niveles Silver y Elite -->
-    <section class="section-padding">
-        <div class="container">
-            <div class="section-header">
-                <h2>Estructura de Comisiones</h2>
-                <p>Pago en 24h desde la acreditación del cliente.</p>
-            </div>
-            
-            <div class="bento-grid-plans" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 30px; max-width: 1200px; margin: 0 auto;">
-                
-                <!-- Basic (existente) -->
-                <div class="bento-box">
-                    <div class="badge-outline">Punto de partida</div>
-                    <h3 style="margin: 15px 0 5px; font-size: 2rem; color: white;">Aliado Basic</h3>
-                    <p style="color: var(--accent-dim); margin-bottom: 25px; padding-bottom: 25px; border-bottom: 1px solid rgba(255,255,255,0.1);">Para quienes venden de forma ocasional.</p>
-                    
-                    <ul class="check-list" style="margin-bottom: 30px; flex-grow: 1;">
-                        <li><strong>Requisito:</strong> Ninguno, registro gratuito.</li>
-                        <li><strong>Comisión por venta:</strong> <span style="color: #4ade80; font-weight: bold; font-size: 1.1rem;">10%</span> en Pagos Únicos.</li>
-                        <li>Kit digital de bienvenida + Brochure Comercial.</li>
-                        <li>Soporte vía email.</li>
-                    </ul>
-                </div>
-
-                <!-- NUEVO: Silver (intermedio) -->
-                <div class="bento-box" style="border-color: #c0c0c0;">
-                    <div class="badge-outline" style="color: #c0c0c0; border-color: #c0c0c0;">Primeros pasos</div>
-                    <h3 style="margin: 15px 0 5px; font-size: 2rem; color: white;">Aliado Silver</h3>
-                    <p style="color: var(--accent-dim); margin-bottom: 25px; padding-bottom: 25px; border-bottom: 1px solid rgba(255,255,255,0.1);">Se activa con tu primera venta.</p>
-                    
-                    <ul class="check-list" style="margin-bottom: 30px; flex-grow: 1;">
-                        <li><strong>Comisión:</strong> <span style="color: #4ade80; font-weight: bold; font-size: 1.1rem;">12%</span> en Pagos Únicos.</li>
-                        <li><strong>Bono Kickstarter:</strong> + USD 50 extra en tu primera venta (si cierras dentro de los primeros 30 días).</li>
-                        <li>Acceso a canal grupal de WhatsApp con otros aliados para compartir tácticas.</li>
-                        <li>Soporte prioritario por email.</li>
-                    </ul>
-                </div>
-                
-                <!-- Premium (existente mejorado) -->
-                <div class="bento-box" style="background: #171717; border-color: var(--primary-color); position: relative;">
-                    <div style="position: absolute; top: 0; right: 0; background: var(--primary-color); color: white; padding: 5px 15px; font-size: 0.8rem; font-weight: bold; border-bottom-left-radius: 12px;">RECOMENDADO</div>
-                    <div class="badge-fill">Socio constante</div>
-                    <h3 style="margin: 15px 0 5px; font-size: 2rem; color: white;">Aliado Premium</h3>
-                    <p style="color: var(--accent-dim); margin-bottom: 25px; padding-bottom: 25px; border-bottom: 1px solid rgba(255,255,255,0.1);">Para consultores con flujo de clientes.</p>
-                    
-                    <ul class="check-list" style="margin-bottom: 30px; flex-grow: 1;">
-                        <li><strong>Requisito:</strong> +2 ventas efectivas en 6 meses.</li>
-                        <li><strong>Comisión:</strong> <span style="color: #4ade80; font-weight: bold; font-size: 1.1rem;">15%</span> en Pagos Únicos.</li>
-                        <li><strong>Soporte Prioritario:</strong> Canal directo vía WhatsApp con tu asesor.</li>
-                        <li>Badge digital <strong>"Aliado Oficial"</strong> para tu web.</li>
-                    </ul>
-                </div>
-
-                <!-- NUEVO: Elite (Gold/Master) -->
-                <div class="bento-box" style="background: #1a1a1a; border-color: gold;">
-                    <div class="badge-fill" style="background: gold; color: black;">Alto rendimiento</div>
-                    <h3 style="margin: 15px 0 5px; font-size: 2rem; color: white;">Aliado Elite</h3>
-                    <p style="color: var(--accent-dim); margin-bottom: 25px; padding-bottom: 25px; border-bottom: 1px solid rgba(255,255,255,0.1);">Para máquinas de ventas.</p>
-                    
-                    <ul class="check-list" style="margin-bottom: 30px; flex-grow: 1;">
-                        <li><strong>Requisito:</strong> +5 ventas en 6 meses.</li>
-                        <li><strong>Comisión:</strong> <span style="color: gold; font-weight: bold; font-size: 1.1rem;">20%</span> en Pagos Únicos.</li>
-                        <li><strong>Apareces en nuestro directorio web</strong> como "Consultor de Implementación Recomendado" (generamos leads para ti).</li>
-                        <li>Badge de "Elite Partner" y sesión estratégica trimestral con nuestro equipo.</li>
-                    </ul>
-                </div>
-
-            </div>
-
-            <!-- Tabla de ganancias (original) -->
-            <div class="bento-box table-container" style="margin-top: 40px; max-width: 900px; margin-left: auto; margin-right: auto; background: #0f0f0f;">
-                <h3 style="color: white; margin-bottom: 25px; text-align: center;">💰 Ganancias estimadas por venta (pago único)</h3>
-                
-                <div style="display: flex; flex-wrap: wrap; gap: 40px; justify-content: center;">
-                    
-                    <div style="flex: 1; min-width: 280px;">
-                        <h4 style="color: #a1a1aa; margin-bottom: 15px; text-align: center; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 10px;">Aliado Basic (10%)</h4>
-                        <table class="vs-table" style="width: 100%; font-size: 0.95rem;">
-                            <tbody>
-                                <tr>
-                                    <td style="color: #ccc; padding: 10px 0;">Plan Base</td>
-                                    <td style="text-align: right; color: white; font-weight: bold;">USD 105</td>
-                                </tr>
-                                <tr>
-                                    <td style="color: #ccc; padding: 10px 0;">Plan Pro</td>
-                                    <td style="text-align: right; color: white; font-weight: bold;">USD 290</td>
-                                </tr>
-                                <tr>
-                                    <td style="color: #ccc; padding: 10px 0;">Plan Industrial</td>
-                                    <td style="text-align: right; color: white; font-weight: bold;">USD 490</td>
-                                </tr>
-                                <tr>
-                                    <td style="color: #ccc; padding: 10px 0;">Estratégico 360</td>
-                                    <td style="text-align: right; color: white; font-weight: bold;">USD 750</td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-
-                    <div style="flex: 1; min-width: 280px;">
-                        <div style="display: flex; align-items: center; justify-content: center; gap: 10px; margin-bottom: 15px; border-bottom: 1px solid rgba(74, 222, 128, 0.3); padding-bottom: 10px;">
-                            <h4 style="color: #4ade80; margin: 0;">Aliado Premium (15%)</h4>
-                            <span class="badge-fill" style="font-size: 0.7rem; padding: 2px 8px; margin: 0; background: #4ade80; color: black;">Recomendado</span>
-                        </div>
-                        <table class="vs-table" style="width: 100%; font-size: 0.95rem;">
-                            <tbody>
-                                <tr>
-                                    <td style="color: #ccc; padding: 10px 0;">Plan Base</td>
-                                    <td style="text-align: right; color: #4ade80; font-weight: 800;">USD 157,50</td>
-                                </tr>
-                                <tr>
-                                    <td style="color: #ccc; padding: 10px 0;">Plan Pro</td>
-                                    <td style="text-align: right; color: #4ade80; font-weight: 800;">USD 435,00</td>
-                                </tr>
-                                <tr>
-                                    <td style="color: #ccc; padding: 10px 0;">Plan Industrial</td>
-                                    <td style="text-align: right; color: #4ade80; font-weight: 800;">USD 735,00</td>
-                                </tr>
-                                <tr>
-                                    <td style="color: #ccc; padding: 10px 0;">Estratégico 360</td>
-                                    <td style="text-align: right; color: #4ade80; font-weight: 800;">USD 1.125,00</td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-
-                </div>
-                <p style="text-align: center; margin-top: 25px; font-size: 0.8rem; color: #555;">* Montos estimados. La comisión se liquida en 24h hábiles desde la acreditación del pago del cliente.</p>
-            </div>
-            
-        </div>
-    </section>
-
-    <!-- SECCIÓN: Cómo subir de nivel -->
-    <section class="section-padding" style="background: #0a0a0a; border-top: 1px solid #1a1a1a;">
-        <div class="container">
-            <div class="section-header">
-                <h2>¿Cómo subís de nivel?</h2>
-                <p>Cuanto más vendés, más ganás. Así de simple.</p>
-            </div>
-
-            <!-- Tabla de progresión -->
-            <div class="bento-box" style="max-width: 900px; margin: 0 auto; padding: 0; overflow: hidden;">
-                <table style="width: 100%; border-collapse: collapse; font-size: 0.95rem;">
+            <div class="bento-box" style="max-width: 900px; margin: 0 auto; overflow-x: auto; padding: 20px;">
+                <table style="width: 100%; border-collapse: collapse; font-size: 0.9rem; color: #d1d5db;">
                     <thead>
-                        <tr style="background: #111;">
-                            <th style="padding: 16px 20px; text-align: left; color: #a1a1aa; font-weight: 600; border-bottom: 1px solid #222;">NIVEL</th>
-                            <th style="padding: 16px 20px; text-align: center; color: #a1a1aa; font-weight: 600; border-bottom: 1px solid #222;">COMISIÓN</th>
-                            <th style="padding: 16px 20px; text-align: center; color: #a1a1aa; font-weight: 600; border-bottom: 1px solid #222;">REQUISITO</th>
-                            <th style="padding: 16px 20px; text-align: left; color: #a1a1aa; font-weight: 600; border-bottom: 1px solid #222;">BENEFICIO EXTRA</th>
+                        <tr style="background: rgba(251,146,60,0.15); color: #fb923c;">
+                            <th style="padding: 14px; text-align: left; font-weight: 700;">Plan</th>
+                            <th style="padding: 14px; text-align: right; font-weight: 700;">Precio</th>
+                            <th style="padding: 14px; text-align: right; font-weight: 700;">Basic 10%</th>
+                            <th style="padding: 14px; text-align: right; font-weight: 700;">Silver 12%</th>
+                            <th style="padding: 14px; text-align: right; font-weight: 700;">Premium 15%</th>
+                            <th style="padding: 14px; text-align: right; font-weight: 700;">Elite 20%</th>
                         </tr>
                     </thead>
                     <tbody>
-                        <tr style="border-bottom: 1px solid #1a1a1a;">
-                            <td style="padding: 18px 20px;">
-                                <span style="color: white; font-weight: 700; font-size: 1rem;">🤝 Basic</span>
-                            </td>
-                            <td style="padding: 18px 20px; text-align: center;">
-                                <span style="color: white; font-weight: 800; font-size: 1.2rem;">10%</span>
-                            </td>
-                            <td style="padding: 18px 20px; text-align: center;">
-                                <span style="color: #a1a1aa; font-size: 0.9rem;">Sin requisitos<br>Arrancás acá</span>
-                            </td>
-                            <td style="padding: 18px 20px;">
-                                <span style="color: #a1a1aa; font-size: 0.9rem;">Kit comercial + Brochure</span>
-                            </td>
-                        </tr>
-                        <tr style="border-bottom: 1px solid #1a1a1a; background: rgba(192,192,192,0.03);">
-                            <td style="padding: 18px 20px;">
-                                <span style="color: #c0c0c0; font-weight: 700; font-size: 1rem;">⭐ Silver</span>
-                            </td>
-                            <td style="padding: 18px 20px; text-align: center;">
-                                <span style="color: #4ade80; font-weight: 800; font-size: 1.2rem;">12%</span>
-                            </td>
-                            <td style="padding: 18px 20px; text-align: center;">
-                                <span style="color: #a1a1aa; font-size: 0.9rem;">1 venta cerrada</span>
-                            </td>
-                            <td style="padding: 18px 20px;">
-                                <span style="color: #a1a1aa; font-size: 0.9rem;">+ USD 50 bono primera venta<br>Grupo WhatsApp aliados</span>
-                            </td>
-                        </tr>
-                        <tr style="border-bottom: 1px solid #1a1a1a; background: rgba(0,170,255,0.04);">
-                            <td style="padding: 18px 20px;">
-                                <span style="color: var(--primary-color); font-weight: 700; font-size: 1rem;">🏆 Premium</span>
-                                <span style="display: inline-block; margin-left: 8px; background: var(--primary-color); color: white; font-size: 0.65rem; font-weight: 700; padding: 2px 8px; border-radius: 20px;">RECOMENDADO</span>
-                            </td>
-                            <td style="padding: 18px 20px; text-align: center;">
-                                <span style="color: #4ade80; font-weight: 800; font-size: 1.2rem;">15%</span>
-                            </td>
-                            <td style="padding: 18px 20px; text-align: center;">
-                                <span style="color: #a1a1aa; font-size: 0.9rem;">2 ventas en 6 meses</span>
-                            </td>
-                            <td style="padding: 18px 20px;">
-                                <span style="color: #a1a1aa; font-size: 0.9rem;">WhatsApp directo con tu asesor<br>Badge "Aliado Oficial"</span>
-                            </td>
-                        </tr>
-                        <tr style="background: rgba(255,215,0,0.04);">
-                            <td style="padding: 18px 20px;">
-                                <span style="color: gold; font-weight: 700; font-size: 1rem;">👑 Elite</span>
-                            </td>
-                            <td style="padding: 18px 20px; text-align: center;">
-                                <span style="color: gold; font-weight: 800; font-size: 1.2rem;">20%</span>
-                            </td>
-                            <td style="padding: 18px 20px; text-align: center;">
-                                <span style="color: #a1a1aa; font-size: 0.9rem;">5 ventas en 6 meses</span>
-                            </td>
-                            <td style="padding: 18px 20px;">
-                                <span style="color: #a1a1aa; font-size: 0.9rem;">Directorio web como consultor<br>recomendado + sesión trimestral</span>
-                            </td>
-                        </tr>
+                        <tr style="border-bottom: 1px solid #1a1a1a;"><td style="padding: 14px; color: white; font-weight: 600;">Plan Base</td><td style="padding: 14px; text-align: right;">USD 1.050</td><td style="padding: 14px; text-align: right; color: #fb923c;">USD 105</td><td style="padding: 14px; text-align: right; color: #fb923c;">USD 126</td><td style="padding: 14px; text-align: right; color: #fb923c;">USD 157</td><td style="padding: 14px; text-align: right; color: #fb923c;">USD 210</td></tr>
+                        <tr style="border-bottom: 1px solid #1a1a1a;"><td style="padding: 14px; color: white; font-weight: 600;">Plan Pro</td><td style="padding: 14px; text-align: right;">USD 2.900</td><td style="padding: 14px; text-align: right; color: #fb923c;">USD 290</td><td style="padding: 14px; text-align: right; color: #fb923c;">USD 348</td><td style="padding: 14px; text-align: right; color: #fb923c;">USD 435</td><td style="padding: 14px; text-align: right; color: #fb923c;">USD 580</td></tr>
+                        <tr style="border-bottom: 1px solid #1a1a1a;"><td style="padding: 14px; color: white; font-weight: 600;">Plan Industrial</td><td style="padding: 14px; text-align: right;">USD 4.900</td><td style="padding: 14px; text-align: right; color: #fb923c;">USD 490</td><td style="padding: 14px; text-align: right; color: #fb923c;">USD 588</td><td style="padding: 14px; text-align: right; color: #fb923c;">USD 735</td><td style="padding: 14px; text-align: right; color: #fb923c;">USD 980</td></tr>
+                        <tr><td style="padding: 14px; color: white; font-weight: 600;">Estratégico 360</td><td style="padding: 14px; text-align: right;">USD 7.500</td><td style="padding: 14px; text-align: right; color: #fb923c;">USD 750</td><td style="padding: 14px; text-align: right; color: #fb923c;">USD 900</td><td style="padding: 14px; text-align: right; color: #fb923c;">USD 1.125</td><td style="padding: 14px; text-align: right; color: #fb923c;">USD 1.500</td></tr>
                     </tbody>
                 </table>
-            </div>
 
-            <!-- Barra de progresión visual -->
-            <div class="bento-box" style="max-width: 900px; margin: 30px auto 0; background: #111;">
-                <p style="color: #a1a1aa; font-size: 0.85rem; text-align: center; margin-bottom: 20px;">TU CAMINO AL NIVEL ELITE</p>
-                <div style="display: flex; align-items: center; justify-content: space-between; position: relative; padding: 0 10px;">
-                    <!-- Línea de progreso -->
-                    <div style="position: absolute; top: 20px; left: 10%; right: 10%; height: 3px; background: linear-gradient(to right, #4ade80, gold); z-index: 0;"></div>
-                    <!-- Pasos -->
-                    <div style="text-align: center; position: relative; z-index: 1;">
-                        <div style="width: 40px; height: 40px; background: #4ade80; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 10px; font-weight: 800; color: black;">1</div>
-                        <span style="color: white; font-size: 0.8rem; font-weight: 600;">Registrarte</span><br>
-                        <span style="color: #a1a1aa; font-size: 0.75rem;">Basic 10%</span>
-                    </div>
-                    <div style="text-align: center; position: relative; z-index: 1;">
-                        <div style="width: 40px; height: 40px; background: #c0c0c0; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 10px; font-weight: 800; color: black;">2</div>
-                        <span style="color: white; font-size: 0.8rem; font-weight: 600;">1ra venta</span><br>
-                        <span style="color: #a1a1aa; font-size: 0.75rem;">Silver 12%</span>
-                    </div>
-                    <div style="text-align: center; position: relative; z-index: 1;">
-                        <div style="width: 40px; height: 40px; background: var(--primary-color); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 10px; font-weight: 800; color: white;">3</div>
-                        <span style="color: white; font-size: 0.8rem; font-weight: 600;">2 ventas</span><br>
-                        <span style="color: #a1a1aa; font-size: 0.75rem;">Premium 15%</span>
-                    </div>
-                    <div style="text-align: center; position: relative; z-index: 1;">
-                        <div style="width: 40px; height: 40px; background: gold; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 10px; font-weight: 800; color: black;">👑</div>
-                        <span style="color: gold; font-size: 0.8rem; font-weight: 600;">5 ventas</span><br>
-                        <span style="color: #a1a1aa; font-size: 0.75rem;">Elite 20%</span>
-                    </div>
-                </div>
-                <p style="color: #555; font-size: 0.8rem; text-align: center; margin-top: 25px;">* Los niveles se calculan en ventanas de 6 meses. La subida de nivel es automática.</p>
+                <p style="margin: 20px 0 0; padding: 14px 18px; background: rgba(251,146,60,0.08); border-left: 3px solid #fb923c; border-radius: 4px; color: #d1d5db; font-size: 0.88rem;">
+                    <strong style="color: white;">Proyección realista:</strong>
+                    2 ventas Pro + 1 Industrial al mes = USD 1.070 extra. Sin techo superior ni mínimo forzoso.
+                </p>
             </div>
         </div>
     </section>
 
-    <!-- 3. Incentivos de Retención: Ingresos Recurrentes -->
-    <section class="section-padding" style="background: #0a0a0a;">
-        <div class="container">
-            <div class="section-header">
-                <h2>Construye un sueldo pasivo</h2>
-                <p>Sigue ganando mientras tus clientes crecen con nosotros.</p>
-            </div>
-            <div class="bento-box" style="max-width: 700px; margin: 0 auto; text-align: center;">
-                <i class="fa-solid fa-chart-simple" style="font-size: 3rem; color: #4ade80; margin-bottom: 20px;"></i>
-                <h3 style="color: white; font-size: 2rem;">Ingresos recurrentes</h3>
-                <p style="color: #a1a1aa; font-size: 1.1rem; margin-bottom: 20px;">Mantén un <strong>10% de comisión mensual</strong> sobre el mantenimiento o suscripción de cada cliente que refieras, mientras sigan activos.</p>
-                <div style="background: #111; padding: 20px; border-radius: 12px;">
-                    <p style="color: white;"><strong>Ejemplo real:</strong> Con 10 clientes en Plan Pro (mantenimiento USD 50/mes) generas <span style="color: #4ade80; font-size: 1.5rem;">USD 50</span> todos los meses sin mover un dedo.</p>
-                    <p style="color: #4ade80; font-size: 0.9rem;">+10 clientes → +USD 100/mes pasivos</p>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- 4. Herramientas de Cierre "White Label" -->
+    <!-- QUÉ RECIBÍS (común a ambos canales) -->
     <section class="section-padding">
         <div class="container">
             <div class="section-header">
-                <h2>Te damos todo para cerrar como socio</h2>
-                <p>No solo te pagamos, te acompañamos.</p>
+                <h2>Qué recibís al registrarte</h2>
+                <p>Sin costo de registro. Sin contrato forzoso. Mismo kit para ambos canales.</p>
             </div>
-                <div class="bento-box">
-                    <i class="fa-solid fa-pen-to-square" style="font-size: 2rem; color: var(--primary-color);"></i>
-                    <h3 style="color: white;">Brochure personalizable</h3>
-                    <p>Te entregamos el Kit Comercial en formato editable para que puedas agregar tu logo y aparezca como "Powered by Avanza" junto al tuyo.</p>
-                </div>
-            </div>
-        </div>
-    </section>
 
-    <!-- 5. Gamificación y Reconocimiento -->
-    <section class="section-padding" style="background: #0a0a0a;">
-        <div class="container">
-            <div class="section-header">
-                <h2>Crecemos juntos</h2>
-                <p>Reconocimiento y premios por tu desempeño.</p>
-            </div>
-            <div class="bento-grid" style="grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); max-width: 900px; margin: 0 auto;">
-                <div class="bento-box" style="text-align: center;">
-                    <i class="fa-solid fa-medal" style="font-size: 2.5rem; color: gold;"></i>
-                    <h3 style="color: white;">Aliado del Mes</h3>
-                    <p>El que más ventas haya cerrado en los últimos 30 días. Lo mencionamos en LinkedIn con su perfil, dándole visibilidad y autoridad.</p>
-                </div>
-                <div class="bento-box" style="text-align: center;">
-                    <i class="fa-solid fa-trophy" style="font-size: 2.5rem; color: #4ade80;"></i>
-                    <h3 style="color: white;">Hito de volumen</h3>
-                    <p>Al llegar a tu quinta venta, <strong>te regalamos la implementación completa de tu propio sistema de automatización</strong> para tu consultora o agencia (valorado en USD 1.500).</p>
-                </div>
+            <div class="results-grid" style="grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); max-width: 1000px; margin: 0 auto;">
+                <div class="bento-box result-card"><div class="result-icon">📘</div><h3>Brochure comercial</h3><p>PDF con planes, precios y casos reales listo para compartir con tu cliente.</p></div>
+                <div class="bento-box result-card"><div class="result-icon">📝</div><h3>Guión de ventas</h3><p>Paso a paso con las objeciones más frecuentes ya resueltas. Adaptado a tu canal.</p></div>
+                <div class="bento-box result-card"><div class="result-icon">🖥️</div><h3>Portal de aliado</h3><p>Tu dashboard para registrar ventas, seguir comisiones y acceder al kit comercial completo.</p></div>
+                <div class="bento-box result-card"><div class="result-icon">⚡</div><h3>Comisión en 24hs</h3><p>Apenas el cliente paga, te transferimos. Factura A o B aceptada.</p></div>
             </div>
         </div>
     </section>
 
-    <section class="section-padding" style="background: #0a0a0a; border-top: 1px solid #1a1a1a;">
-        <div class="container">
-            <div class="section-header">
-                <h2>Preguntas Frecuentes del Programa</h2>
-                <p>Todo lo que necesitas saber antes de empezar a vender.</p>
+    <!-- CTA FINAL -->
+    <section class="section-padding" style="background: #0a0a0a; border-top: 1px solid #1a1a1a; padding-bottom: 80px;">
+        <div class="container" style="text-align: center; max-width: 700px;">
+            <h2 style="color: white; font-size: 2rem; margin-bottom: 14px;">Tu primera venta puede ser esta semana</h2>
+            <p style="color: #a1a1aa; margin-bottom: 30px;">Elegí tu canal y completás el registro en 2 minutos.</p>
+
+            <div style="display: flex; gap: 15px; justify-content: center; flex-wrap: wrap;">
+                <a href="alianzas-canal1.html" style="background: #fb923c; color: black; padding: 14px 28px; border-radius: 8px; text-decoration: none; font-weight: 700; font-size: 0.95rem;">
+                    🚀 Empezar sin cartera (Canal 1)
+                </a>
+                <a href="alianzas-canal2.html" style="background: #4ade80; color: black; padding: 14px 28px; border-radius: 8px; text-decoration: none; font-weight: 700; font-size: 0.95rem;">
+                    🤝 Tengo mi cartera (Canal 2)
+                </a>
             </div>
-            <div class="bento-box faq-container" style="max-width: 800px; margin: 0 auto;">
-                <details class="faq-item">
-                    <summary>¿Puedo ser aliado si soy freelancer independiente?</summary>
-                    <p>Absolutamente. No necesitas ser una gran agencia. Si tienes clientes PYMES industriales, contables o corporativos, eres un candidato ideal.</p>
-                </details>
-                <details class="faq-item">
-                    <summary>¿Cómo evito confusiones con los pagos de mis clientes?</summary>
-                    <p>Es muy simple: antes de que tu cliente realice el pago, debes enviarnos un WhatsApp o email confirmando el nombre de la empresa y el plan vendido. Así vinculamos ese ingreso directamente a tu cuenta de comisiones.</p>
-                </details>
-                <details class="faq-item">
-                    <summary>¿Hay exclusividad geográfica?</summary>
-                    <p>No. Puedes vender a clientes de cualquier parte de Argentina (y el mundo). Nuestro servicio es 100% digital.</p>
-                </details>
-                <details class="faq-item">
-                    <summary>¿Cómo y cuándo cobro mis comisiones?</summary>
-                    <p>Las comisiones se liquidan y transfieren en un plazo máximo de 24 horas hábiles desde que el cliente final realiza el pago a la cuenta de Avanza Digital. Te solicitaremos una factura (A o B) o recibo válido.</p>
-                </details>
-                <details class="faq-item">
-                    <summary>¿Necesito firmar un contrato?</summary>
-                    <p>Sí. Al registrarte te enviaremos un acuerdo de confidencialidad y los términos del programa para formalizar la relación y proteger tu cartera de clientes.</p>
-                </details>
-                <!-- Agregamos una FAQ sobre ingresos recurrentes -->
-                <details class="faq-item">
-                    <summary>¿Cómo funcionan las comisiones recurrentes?</summary>
-                    <p>Una vez que el cliente contrata un plan con mantenimiento mensual, recibirás un 10% de ese pago recurrente mientras el cliente siga activo. Es un ingreso pasivo que crece con tu cartera.</p>
-                </details>
-            </div>
-        </div>
-    </section>
 
-    <section id="contacto-partner" class="section-padding">
-        <div class="container">
-            <div class="bento-box contact-box" style="border-color: rgba(74, 222, 128, 0.3);">
-                <div class="contact-content" style="max-width: 600px;">
-                    <h2 style="font-size: 2.2rem; color: white;">Solicita tu Kit de Aliado</h2>
-                    <p style="margin-bottom: 30px;">Déjanos tus datos, cuéntanos a qué te dedicas y te enviaremos el Brochure Comercial y el acuerdo de confidencialidad para que empieces a vender hoy.</p>
-                    
-                    <form class="contact-form" action="https://formspree.io/f/mgolyaoz" method="POST">
-                        
-                        <input type="hidden" name="_next" value="https://avanzadigital.com/gracias-aliado.html">
-                        <input type="hidden" name="_subject" value="¡Nuevo Lead - Partner Network!">
-                        <input type="hidden" name="origen" value="Landing Alianzas">
-                        <input type="hidden" name="_captcha" value="false">
-                        <input type="hidden" name="ref_aliado" id="ref_aliado" value="">
-
-                        <div class="form-row">
-                            <input type="text" name="nombre" placeholder="Tu Nombre Completo" required>
-                            <input type="text" name="empresa" placeholder="Empresa o Profesión">
-                        </div>
-                        <input type="email" name="email" placeholder="Email de contacto" required style="margin-bottom: 15px;">
-                        <input type="tel" name="telefono" placeholder="WhatsApp / Teléfono" required style="margin-bottom: 15px;">
-                        
-                        <select name="perfil" style="width: 100%; padding: 15px; background: rgba(255,255,255,0.05); border: 1px solid transparent; border-radius: 8px; color: #a1a1aa; font-family: inherit; margin-bottom: 15px;" required>
-                            <option value="" disabled selected>Selecciona tu perfil profesional...</option>
-                            <option value="Agencia/Dev">Agencia de Marketing / Desarrollador</option>
-                            <option value="Estudio Contable">Estudio Contable / Financiero</option>
-                            <option value="Consultor">Consultor de Negocios / Industrial</option>
-                            <option value="Proveedor">Proveedor B2B</option>
-                            <option value="Otro">Otro</option>
-                        </select>
-
-                        <div style="text-align: left; margin-bottom: 15px; display: flex; align-items: start; gap: 10px;">
-                            <input type="checkbox" name="terminos" id="check-terminos" required style="width: auto; margin-top: 5px; accent-color: var(--primary-color);">
-                            <label for="check-terminos" style="font-size: 0.85rem; color: #a1a1aa; cursor: pointer;">
-                                Acepto los <a href="terminos-aliados.html" target="_blank" style="color: white; text-decoration: underline;">Términos y Condiciones</a> del programa de aliados.
-                            </label>
-                        </div>
-
-                        <button type="submit" class="btn-primary" style="background: white; color: black; border: none; font-size: 1.1rem; padding: 15px;">Activar mi cuenta de Partner</button>
-                    </form>
-                    <p style="font-size: 0.8rem; color: #666; margin-top: 15px;">* Recibirás el brochure, el acuerdo y acceso a la comunidad Silver si activas el bono.</p>
-
-                    <!-- MailerLite: formulario oculto para suscripción automática -->
-                    <div id="ml-aliados-form" style="display:none;position:absolute;pointer-events:none;opacity:0;">
-                        <div class="ml-embedded" data-form="uof7pj"></div>
-                    </div>
-                </div>
-            </div>
+            <p style="margin-top: 30px; color: #666; font-size: 0.85rem;">
+                ¿Dudas antes de elegir? WhatsApp
+                <a href="https://wa.me/5493424392759" style="color: #4ade80; text-decoration: none; font-weight: 600;">+54 9 342 439 2759</a>
+            </p>
         </div>
     </section>
 
@@ -700,51 +290,22 @@
             </div>
         </div>
     </footer>
-    
+
     <script src="script.js"></script>
     <script>
-      // Captura ?ref= de la URL y lo guarda en el formulario + localStorage
+      // Captura ?ref= de la URL y lo guarda en localStorage
       (function() {
         const params = new URLSearchParams(window.location.search);
         const ref = params.get('ref');
         if (ref) {
-          // Guarda en el campo oculto del formulario
-          const campo = document.getElementById('ref_aliado');
-          if (campo) campo.value = ref;
-
-          // Guarda en localStorage por si el cliente navega antes de llenar el form
           localStorage.setItem('avanza_ref', ref);
-
-          // Muestra banner sutil indicando que viene referido
           const banner = document.createElement('div');
           banner.style.cssText = 'position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:rgba(74,222,128,0.12);border:1px solid rgba(74,222,128,0.3);color:#4ade80;padding:10px 20px;border-radius:50px;font-size:0.82rem;font-family:Inter,sans-serif;z-index:9999;backdrop-filter:blur(10px);white-space:nowrap;';
           banner.innerHTML = '<i class="fa-solid fa-handshake" style="margin-right:8px;"></i>Accediste a través de un aliado Avanza';
           document.body.appendChild(banner);
           setTimeout(() => banner.remove(), 5000);
-        } else {
-          // Si no hay ref en URL, intentar recuperar del localStorage
-          const refGuardado = localStorage.getItem('avanza_ref');
-          if (refGuardado) {
-            const campo = document.getElementById('ref_aliado');
-            if (campo) campo.value = refGuardado;
-          }
         }
       })();
-
-      // ── MailerLite: suscribir al aliado automáticamente al enviar el form ──
-      document.querySelector('.contact-form')?.addEventListener('submit', function() {
-          try {
-              const email = this.querySelector('input[name="email"]')?.value || '';
-              const nombre = this.querySelector('input[name="nombre"]')?.value || '';
-              const mlEmail = document.querySelector('#ml-aliados-form input[type="email"]');
-              const mlName  = document.querySelector('#ml-aliados-form input[name="fields[name]"]');
-              const mlBtn   = document.querySelector('#ml-aliados-form button[type="submit"]');
-              if (mlEmail && mlBtn) {
-                  mlEmail.value = email;
-                  if (mlName) mlName.value = nombre;
-                  mlBtn.click();
-              }
-          } catch(e) { console.warn('MailerLite aliados error:', e); }
-      });
     </script>
+</body>
 </html>
