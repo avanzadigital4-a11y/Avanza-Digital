@@ -1,0 +1,17 @@
+User-agent: *
+Allow: /
+
+# Bloqueamos rutas internas y páginas que no deben indexarse
+Disallow: /avanza-portal/
+Disallow: /gracias-aliado.html
+Disallow: /casos_exito_seccion.html
+Disallow: /demos/
+
+# Bots de IA — los dejamos rastrear porque tu sitio aparece en ChatGPT (lo vimos en GA4)
+# Si en algún momento querés bloquearlos, descomenta:
+# User-agent: GPTBot
+# Disallow: /
+# User-agent: ClaudeBot
+# Disallow: /
+
+Sitemap: https://avanzadigital.digital/sitemap.xml

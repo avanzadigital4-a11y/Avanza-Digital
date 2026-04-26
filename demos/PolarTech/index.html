@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>POLAR | Service Técnico HVAC y Refrigeración Industrial — Santa Fe</title>
+    <meta name="description" content="Service técnico de aire acondicionado, refrigeración industrial y climatización en Santa Fe. Atención de urgencias 24/7. Respuesta en menos de 2 horas.">
+    <link rel="canonical" href="https://avanzadigital.digital/tecnico.html">
+    <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+    <style>
+        :root {
+            --polar-dark: #0a1628;
+            --polar-navy: #0d2137;
+            --polar-cyan: #00b8d9;
+            --polar-ice: #e0f7ff;
+            --polar-red: #e63946;
+            --white: #fff;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Inter', sans-serif; color: #1a1a2e; background: #f5f9ff; overflow-x: hidden; }
+        h1, h2, h3, .heading { font-family: 'Barlow Condensed', sans-serif; text-transform: uppercase; letter-spacing: 0.5px; }
+        .container { max-width: 1180px; margin: 0 auto; padding: 0 24px; }
+        .top-bar { background: var(--polar-dark); color: #8899aa; font-size: 0.78rem; padding: 8px 0; border-bottom: 1px solid #1a2a3a; }
+        .top-bar .container { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; }
+        .top-bar .urgencia { color: var(--polar-red); font-weight: 700; letter-spacing: 1px; }
+        header { background: var(--polar-dark); position: sticky; top: 0; z-index: 200; box-shadow: 0 2px 20px rgba(0,0,0,0.4); }
+        .nav-inner { display: flex; justify-content: space-between; align-items: center; padding: 16px 0; gap: 20px; }
+        .logo { display: flex; align-items: center; gap: 12px; text-decoration: none; }
+        .logo-icon { width: 44px; height: 44px; background: var(--polar-cyan); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 1.4rem; }
+        .logo-text .logo-name { font-family: 'Barlow Condensed', sans-serif; font-size: 1.6rem; font-weight: 800; color: var(--white); letter-spacing: 2px; display: block; }
+        .logo-text .logo-sub { font-size: 0.65rem; color: var(--polar-cyan); letter-spacing: 2px; font-weight: 600; }
+        .nav-links { display: flex; gap: 28px; list-style: none; }
+        .nav-links a { color: #99aabb; text-decoration: none; font-size: 0.88rem; font-weight: 500; transition: 0.2s; }
+        .nav-links a:hover { color: var(--white); }
+        .btn-urgencia-nav { background: var(--polar-red); color: white; padding: 10px 22px; border-radius: 6px; font-weight: 700; font-size: 0.88rem; text-decoration: none; display: flex; align-items: center; gap: 8px; white-space: nowrap; animation: pulse-red 2s infinite; }
+        @keyframes pulse-red { 0%,100%{ box-shadow: 0 0 0 0 rgba(230,57,70,0.4); } 50%{ box-shadow: 0 0 0 8px rgba(230,57,70,0); } }
+        .hero { min-height: 88vh; background: linear-gradient(135deg, rgba(10,22,40,0.92) 0%, rgba(13,33,55,0.85) 100%), url('https://images.unsplash.com/photo-1621905252507-b35492cc74b4?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80'); background-size: cover; background-position: center; display: flex; align-items: center; padding: 100px 0 60px; }
+        .hero-inner { display: grid; grid-template-columns: 1fr 1fr; gap: 60px; align-items: center; }
+        .hero-badge { display: inline-flex; align-items: center; gap: 8px; background: rgba(0,184,217,0.15); border: 1px solid rgba(0,184,217,0.4); color: var(--polar-cyan); font-size: 0.78rem; font-weight: 700; padding: 6px 14px; border-radius: 50px; letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 22px; }
+        .hero h1 { font-size: clamp(2.4rem, 5vw, 4rem); color: white; line-height: 1.05; margin-bottom: 20px; }
+        .hero h1 span { color: var(--polar-cyan); }
+        .hero p { color: #8899bb; font-size: 1.05rem; line-height: 1.7; margin-bottom: 32px; }
+        .hero-pills { display: flex; flex-wrap: wrap; gap: 10px; }
+        .pill { background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12); color: #ccd; padding: 6px 14px; border-radius: 50px; font-size: 0.82rem; display: flex; align-items: center; gap: 6px; }
+        .pill i { color: var(--polar-cyan); }
+        .urgencia-widget { background: white; border-radius: 14px; box-shadow: 0 24px 60px rgba(0,0,0,0.35); overflow: hidden; border-top: 4px solid var(--polar-red); }
+        .widget-header { background: var(--polar-red); color: white; padding: 16px 24px; display: flex; align-items: center; gap: 12px; }
+        .widget-header .dot { width: 10px; height: 10px; background: #ff8; border-radius: 50%; animation: blink 1s infinite; flex-shrink: 0; }
+        @keyframes blink { 0%,100%{ opacity: 1; } 50%{ opacity: 0.3; } }
+        .widget-header strong { font-size: 1.05rem; font-family: 'Barlow Condensed', sans-serif; letter-spacing: 1px; }
+        .widget-header span { font-size: 0.78rem; opacity: 0.85; display: block; }
+        .timer-badge { display: inline-flex; align-items: center; gap: 6px; background: rgba(255,255,255,0.2); color: white; padding: 4px 10px; border-radius: 50px; font-size: 0.75rem; font-weight: 700; margin-left: auto; white-space: nowrap; }
+        .widget-body { padding: 24px; }
+        .w-group { margin-bottom: 18px; }
+        .w-group label { display: block; font-size: 0.78rem; font-weight: 700; color: #556; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
+        .w-select, .w-input { width: 100%; padding: 12px 14px; border: 1.5px solid #e0e8f0; border-radius: 8px; font-family: 'Inter', sans-serif; font-size: 0.93rem; color: #1a2a3a; background: #f8faff; outline: none; transition: 0.2s; }
+        .w-select:focus, .w-input:focus { border-color: var(--polar-cyan); background: white; }
+        .w-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+        .btn-urgencia-widget { width: 100%; background: var(--polar-red); color: white; border: none; padding: 16px; border-radius: 8px; font-size: 1.05rem; font-weight: 700; font-family: 'Barlow Condensed', sans-serif; text-transform: uppercase; letter-spacing: 1px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; transition: 0.2s; }
+        .btn-urgencia-widget:hover { background: #c0303b; transform: translateY(-1px); }
+        .widget-footer { padding: 14px 24px; background: #f8faff; border-top: 1px solid #e8f0f8; display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 0.8rem; color: #778; }
+        .logo-bar { background: var(--polar-navy); padding: 24px 0; border-bottom: 1px solid #162030; }
+        .logo-bar .container { display: flex; justify-content: space-around; align-items: center; flex-wrap: wrap; gap: 20px; }
+        .cert-badge { display: flex; align-items: center; gap: 10px; color: #889aaa; font-size: 0.85rem; font-weight: 600; }
+        .cert-badge i { color: var(--polar-cyan); font-size: 1.4rem; }
+        .section { padding: 80px 0; }
+        .section-header { text-align: center; margin-bottom: 50px; }
+        .section-label { font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 2.5px; color: var(--polar-cyan); margin-bottom: 10px; }
+        .section-header h2 { font-size: clamp(2rem, 4vw, 2.8rem); color: var(--polar-dark); margin-bottom: 12px; }
+        .section-header p { color: #667; max-width: 580px; margin: 0 auto; font-size: 1rem; line-height: 1.6; }
+        .services-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 24px; }
+        .svc-card { background: white; border-radius: 14px; padding: 32px 28px; border: 1.5px solid #e8f0f8; transition: 0.3s; position: relative; overflow: hidden; }
+        .svc-card::before { content: ''; position: absolute; top: 0; left: 0; width: 4px; height: 100%; background: var(--polar-cyan); transform: scaleY(0); transition: 0.3s; transform-origin: bottom; }
+        .svc-card:hover { transform: translateY(-6px); box-shadow: 0 16px 40px rgba(0,100,160,0.1); border-color: var(--polar-cyan); }
+        .svc-card:hover::before { transform: scaleY(1); }
+        .svc-icon { width: 56px; height: 56px; background: var(--polar-ice); border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; color: var(--polar-cyan); margin-bottom: 20px; }
+        .svc-card h3 { font-size: 1.3rem; color: var(--polar-dark); margin-bottom: 10px; }
+        .svc-card p { color: #778; font-size: 0.9rem; line-height: 1.6; margin-bottom: 16px; }
+        .svc-tag { display: inline-block; background: #f0f8ff; color: var(--polar-cyan); font-size: 0.75rem; font-weight: 700; padding: 4px 10px; border-radius: 50px; }
+        .mant-section { background: var(--polar-dark); padding: 80px 0; }
+        .mant-inner { display: grid; grid-template-columns: 1fr 1fr; gap: 60px; align-items: center; }
+        .mant-text h2 { font-size: clamp(2rem, 4vw, 2.8rem); color: white; margin-bottom: 16px; }
+        .mant-text p { color: #8899bb; line-height: 1.7; margin-bottom: 28px; }
+        .mant-list { list-style: none; }
+        .mant-list li { display: flex; align-items: center; gap: 12px; color: #ccd; font-size: 0.95rem; padding: 10px 0; border-bottom: 1px solid rgba(255,255,255,0.06); }
+        .mant-list li:last-child { border-bottom: none; }
+        .mant-list li i { color: var(--polar-cyan); width: 20px; flex-shrink: 0; }
+        .mant-form-box { background: #0d2137; border: 1.5px solid rgba(0,184,217,0.2); border-radius: 14px; padding: 36px; }
+        .mant-form-box h3 { font-size: 1.5rem; color: white; margin-bottom: 6px; font-family: 'Barlow Condensed', sans-serif; text-transform: uppercase; }
+        .mant-form-box p { color: #889aaa; font-size: 0.85rem; margin-bottom: 24px; }
+        .mf-group { margin-bottom: 16px; }
+        .mf-group label { display: block; font-size: 0.75rem; font-weight: 600; color: #778899; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px; }
+        .mf-input, .mf-select { width: 100%; padding: 12px 14px; background: rgba(255,255,255,0.05); border: 1.5px solid rgba(255,255,255,0.1); border-radius: 8px; color: white; font-family: 'Inter', sans-serif; font-size: 0.9rem; outline: none; transition: 0.2s; }
+        .mf-input::placeholder { color: #556677; }
+        .mf-input:focus, .mf-select:focus { border-color: var(--polar-cyan); }
+        .mf-select option { background: #0d2137; }
+        .btn-mant { width: 100%; background: var(--polar-cyan); color: var(--polar-dark); border: none; padding: 14px; border-radius: 8px; font-weight: 800; font-size: 1rem; font-family: 'Barlow Condensed', sans-serif; letter-spacing: 1px; text-transform: uppercase; cursor: pointer; transition: 0.2s; margin-top: 8px; }
+        .btn-mant:hover { background: #00d4f5; }
+        .stats-section { background: var(--polar-ice); padding: 60px 0; }
+        .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 30px; }
+        .stat { text-align: center; }
+        .stat h4 { font-size: 3.2rem; font-family: 'Barlow Condensed', sans-serif; color: var(--polar-dark); line-height: 1; margin-bottom: 8px; }
+        .stat h4 span { color: var(--polar-cyan); }
+        .stat p { color: #667; font-size: 0.82rem; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; }
+        footer { background: var(--polar-dark); color: #6677aa; padding-top: 60px; font-size: 0.88rem; }
+        .footer-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 40px; padding-bottom: 40px; }
+        .footer-logo-wrap { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; }
+        .footer-logo-icon { width: 36px; height: 36px; background: var(--polar-cyan); border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; }
+        .footer-name { font-family: 'Barlow Condensed', sans-serif; font-size: 1.3rem; font-weight: 800; color: white; letter-spacing: 2px; }
+        .footer-link { color: #667799; text-decoration: none; display: block; margin-bottom: 10px; transition: 0.2s; }
+        .footer-link:hover { color: var(--polar-cyan); }
+        .footer-divider { border-top: 1px solid #162030; padding: 20px 0; text-align: center; }
+        .footer-h { font-family: 'Barlow Condensed', sans-serif; color: white; font-size: 1rem; letter-spacing: 1px; margin-bottom: 16px; }
+        .wa-float { position: fixed; bottom: 28px; right: 28px; z-index: 999; background: #25D366; color: white; width: 58px; height: 58px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.6rem; text-decoration: none; box-shadow: 0 6px 20px rgba(37,211,102,0.4); transition: 0.2s; }
+        .wa-float:hover { transform: scale(1.1); }
+        @media (max-width: 900px) { .hero-inner, .mant-inner { grid-template-columns: 1fr; } .stats-grid { grid-template-columns: repeat(2, 1fr); } .nav-links { display: none; } }
+        @media (max-width: 520px) { .w-row { grid-template-columns: 1fr; } }
+    </style>
+</head>
+<body>
+
+<div class="top-bar">
+    <div class="container">
+        <span><i class="fa-solid fa-location-dot"></i> Santa Fe · Santo Tomé · Paraná · Rosario</span>
+        <span class="urgencia"><i class="fa-solid fa-bolt"></i> URGENCIAS 24/7 — Respuesta &lt;2 horas</span>
+        <span><i class="fa-regular fa-clock"></i> Lun–Vie 7–20 · Sáb 8–14</span>
+    </div>
+</div>
+
+<header>
+    <div class="container">
+        <div class="nav-inner">
+            <a href="#" class="logo">
+                <div class="logo-icon">❄️</div>
+                <div class="logo-text">
+                    <span class="logo-name">POLAR</span>
+                    <span class="logo-sub">HVAC & Refrigeración Industrial</span>
+                </div>
+            </a>
+            <ul class="nav-links">
+                <li><a href="#servicios">Servicios</a></li>
+                <li><a href="#mantenimiento">Mantenimiento</a></li>
+                <li><a href="#contacto">Contacto</a></li>
+            </ul>
+            <a href="#urgencia" class="btn-urgencia-nav">
+                <i class="fa-solid fa-bolt"></i> SOLICITAR TÉCNICO
+            </a>
+        </div>
+    </div>
+</header>
+
+<section class="hero" id="urgencia">
+    <div class="container">
+        <div class="hero-inner">
+            <div data-aos="fade-right">
+                <div class="hero-badge">
+                    <i class="fa-solid fa-circle" style="font-size:0.5rem;color:#4ade80;"></i>
+                    Técnicos disponibles ahora en zona
+                </div>
+                <h1>¿TU AIRE O<br>EQUIPO DEJÓ<br>DE <span>FUNCIONAR?</span></h1>
+                <p>Service técnico especializado en HVAC, refrigeración industrial y climatización. Diagnóstico en el día, repuesto en mano, garantía por escrito.</p>
+                <div class="hero-pills">
+                    <span class="pill"><i class="fa-solid fa-clock"></i> Respuesta &lt;2 hs</span>
+                    <span class="pill"><i class="fa-solid fa-shield-halved"></i> Garantía 6 meses</span>
+                    <span class="pill"><i class="fa-solid fa-file-invoice"></i> Factura A y B</span>
+                    <span class="pill"><i class="fa-solid fa-building"></i> Clientes B2B</span>
+                </div>
+            </div>
+            <div data-aos="fade-left" data-aos-delay="150">
+                <div class="urgencia-widget">
+                    <div class="widget-header">
+                        <div class="dot"></div>
+                        <div>
+                            <strong>SOLICITUD DE SERVICIO</strong>
+                            <span>Completá — te contactamos en minutos</span>
+                        </div>
+                        <div class="timer-badge"><i class="fa-solid fa-bolt"></i> 24/7</div>
+                    </div>
+                    <div class="widget-body">
+                        <div class="w-row">
+                            <div class="w-group">
+                                <label>Tipo de equipo</label>
+                                <select class="w-select" id="tipoEquipo">
+                                    <option value="">Seleccioná...</option>
+                                    <option>Aire acondicionado split</option>
+                                    <option>Aire central / ductos</option>
+                                    <option>Cámara frigorífica</option>
+                                    <option>Chiller industrial</option>
+                                    <option>Heladera / freezer comercial</option>
+                                    <option>Ventilación industrial</option>
+                                    <option>Otro equipo</option>
+                                </select>
+                            </div>
+                            <div class="w-group">
+                                <label>Problema</label>
+                                <select class="w-select" id="problema">
+                                    <option value="">¿Qué pasa?</option>
+                                    <option>No enfría</option>
+                                    <option>No enciende</option>
+                                    <option>Hace ruido raro</option>
+                                    <option>Pierde agua / gas</option>
+                                    <option>Error en pantalla</option>
+                                    <option>Mantenimiento preventivo</option>
+                                    <option>Instalación nueva</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="w-row">
+                            <div class="w-group">
+                                <label>Tu nombre</label>
+                                <input class="w-input" id="nombre" type="text" placeholder="Ej: Carlos López">
+                            </div>
+                            <div class="w-group">
+                                <label>Zona / Ciudad</label>
+                                <input class="w-input" id="zona" type="text" placeholder="Ej: Santa Fe Capital">
+                            </div>
+                        </div>
+                        <button class="btn-urgencia-widget" onclick="solicitarServicio()">
+                            <i class="fa-brands fa-whatsapp"></i> ENVIAR SOLICITUD DE URGENCIA
+                        </button>
+                    </div>
+                    <div class="widget-footer">
+                        <i class="fa-brands fa-whatsapp" style="font-size:1rem;color:#25D366;"></i>
+                        Tu solicitud llega directo al técnico de guardia. Sin intermediarios.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<div class="logo-bar">
+    <div class="container">
+        <div class="cert-badge"><i class="fa-solid fa-certificate"></i> Técnicos Matriculados</div>
+        <div class="cert-badge"><i class="fa-solid fa-snowflake"></i> Gas refrigerante certificado</div>
+        <div class="cert-badge"><i class="fa-solid fa-building"></i> Habilitación AFIP</div>
+        <div class="cert-badge"><i class="fa-solid fa-shield-halved"></i> Seguro de RC</div>
+        <div class="cert-badge"><i class="fa-solid fa-file-invoice-dollar"></i> Factura A y B</div>
+    </div>
+</div>
+
+<section class="section" id="servicios">
+    <div class="container">
+        <div class="section-header" data-aos="fade-up">
+            <div class="section-label">Lo que hacemos</div>
+            <h2>Servicios Técnicos Especializados</h2>
+            <p>Atendemos equipos residenciales, comerciales e industriales. Del split del home office al chiller de la planta frigorífica.</p>
+        </div>
+        <div class="services-grid">
+            <div class="svc-card" data-aos="fade-up">
+                <div class="svc-icon"><i class="fa-solid fa-wind"></i></div>
+                <h3>HVAC & Climatización</h3>
+                <p>Reparación e instalación de sistemas de aire acondicionado residenciales y comerciales. Split, multisplit, central por conductos y VRF.</p>
+                <span class="svc-tag">Urgencias 24hs</span>
+            </div>
+            <div class="svc-card" data-aos="fade-up" data-aos-delay="80">
+                <div class="svc-icon"><i class="fa-solid fa-snowflake"></i></div>
+                <h3>Refrigeración Industrial</h3>
+                <p>Cámaras frigoríficas, túneles de congelado, chillers y sistemas de frío para frigoríficos y supermercados.</p>
+                <span class="svc-tag">Equipos industriales</span>
+            </div>
+            <div class="svc-card" data-aos="fade-up" data-aos-delay="160">
+                <div class="svc-icon"><i class="fa-solid fa-wrench"></i></div>
+                <h3>Mantenimiento Preventivo</h3>
+                <p>Contratos de mantenimiento mensual o trimestral. Limpieza de filtros, carga de gas, revisión eléctrica y mecánica completa.</p>
+                <span class="svc-tag">Contratos anuales</span>
+            </div>
+            <div class="svc-card" data-aos="fade-up" data-aos-delay="240">
+                <div class="svc-icon"><i class="fa-solid fa-plug-circle-bolt"></i></div>
+                <h3>Instalaciones Nuevas</h3>
+                <p>Proyecto, suministro e instalación de sistemas nuevos. Dimensionamiento por carga térmica. Habilitación y puesta en marcha incluidas.</p>
+                <span class="svc-tag">Proyecto + ejecución</span>
+            </div>
+            <div class="svc-card" data-aos="fade-up" data-aos-delay="320">
+                <div class="svc-icon"><i class="fa-solid fa-building"></i></div>
+                <h3>Clientes Corporativos</h3>
+                <p>Contratos anuales para empresas, industrias, hospitales y edificios. Portal cliente con historial de visitas e informes técnicos.</p>
+                <span class="svc-tag">Contratos B2B</span>
+            </div>
+            <div class="svc-card" data-aos="fade-up" data-aos-delay="400">
+                <div class="svc-icon"><i class="fa-solid fa-gas-pump"></i></div>
+                <h3>Carga de Gas Refrigerante</h3>
+                <p>Recarga con R32, R410A, R22 y otros. Técnico matriculado. Se emite certificado de carga y control de hermeticidad.</p>
+                <span class="svc-tag">Con certificado</span>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="mant-section" id="mantenimiento">
+    <div class="container">
+        <div class="mant-inner">
+            <div class="mant-text" data-aos="fade-right">
+                <div class="section-label" style="margin-bottom:12px;">Para empresas</div>
+                <h2>CONTRATOS DE MANTENIMIENTO ANUAL</h2>
+                <p>Si tenés más de 3 equipos o una cámara frigorífica, un contrato de mantenimiento preventivo es más barato que una falla en temporada alta.</p>
+                <ul class="mant-list">
+                    <li><i class="fa-solid fa-check"></i> Visitas programadas cada 3 meses</li>
+                    <li><i class="fa-solid fa-check"></i> Prioridad en urgencias fuera de contrato</li>
+                    <li><i class="fa-solid fa-check"></i> Informe técnico digital por cada visita</li>
+                    <li><i class="fa-solid fa-check"></i> Portal cliente con historial completo</li>
+                    <li><i class="fa-solid fa-check"></i> Descuento en repuestos y mano de obra</li>
+                    <li><i class="fa-solid fa-check"></i> Facturación mensual A o B</li>
+                </ul>
+            </div>
+            <div class="mant-form-box" data-aos="fade-left" data-aos-delay="150">
+                <h3>Pedí una cotización</h3>
+                <p>Para tu planta, edificio o cadena de locales.</p>
+                <div class="mf-group">
+                    <label>Empresa</label>
+                    <input class="mf-input" id="mf-empresa" type="text" placeholder="Nombre de tu empresa">
+                </div>
+                <div class="mf-group">
+                    <label>Responsable</label>
+                    <input class="mf-input" id="mf-nombre" type="text" placeholder="Tu nombre">
+                </div>
+                <div class="mf-group">
+                    <label>Cantidad de equipos aprox.</label>
+                    <select class="mf-select" id="mf-equipos">
+                        <option>1 a 5 equipos</option>
+                        <option>6 a 15 equipos</option>
+                        <option>16 a 30 equipos</option>
+                        <option>Más de 30 / planta industrial</option>
+                    </select>
+                </div>
+                <div class="mf-group">
+                    <label>Ciudad</label>
+                    <input class="mf-input" id="mf-ciudad" type="text" placeholder="Ej: Santa Fe, Rosario, Paraná">
+                </div>
+                <button class="btn-mant" onclick="cotizarMant()">
+                    COTIZAR CONTRATO <i class="fa-solid fa-arrow-right"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="stats-section">
+    <div class="container">
+        <div class="stats-grid">
+            <div class="stat" data-aos="zoom-in"><h4>+<span>12</span></h4><p>Años en el mercado</p></div>
+            <div class="stat" data-aos="zoom-in" data-aos-delay="100"><h4>&lt;<span>2</span>hs</h4><p>Tiempo de respuesta</p></div>
+            <div class="stat" data-aos="zoom-in" data-aos-delay="200"><h4>+<span>380</span></h4><p>Clientes activos</p></div>
+            <div class="stat" data-aos="zoom-in" data-aos-delay="300"><h4><span>6</span>m</h4><p>Garantía en reparaciones</p></div>
+        </div>
+    </div>
+</section>
+
+<footer id="contacto">
+    <div class="container">
+        <div class="footer-grid">
+            <div>
+                <div class="footer-logo-wrap">
+                    <div class="footer-logo-icon">❄️</div>
+                    <div class="footer-name">POLAR</div>
+                </div>
+                <p>Service técnico HVAC y refrigeración industrial en Santa Fe y región. Técnicos matriculados, garantía por escrito.</p>
+            </div>
+            <div>
+                <div class="footer-h">Servicios</div>
+                <a href="#" class="footer-link">Aire acondicionado</a>
+                <a href="#" class="footer-link">Refrigeración industrial</a>
+                <a href="#" class="footer-link">Mantenimiento preventivo</a>
+                <a href="#" class="footer-link">Contratos anuales</a>
+            </div>
+            <div>
+                <div class="footer-h">Contacto</div>
+                <p style="margin-bottom:10px;"><i class="fa-solid fa-location-dot" style="color:var(--polar-cyan);margin-right:6px;"></i> Santa Fe, Argentina</p>
+                <p style="margin-bottom:10px;"><i class="fa-solid fa-phone" style="color:var(--polar-cyan);margin-right:6px;"></i> 0342 — XXX XXXX</p>
+                <p style="color:var(--polar-cyan);font-weight:700;">URGENCIAS: WhatsApp 24hs</p>
+            </div>
+        </div>
+        <div class="footer-divider">
+            © 2026 Polar HVAC & Refrigeración · Desarrollado por <a href="https://avanzadigital.digital" style="color:var(--polar-cyan);">Avanza Digital</a>
+        </div>
+    </div>
+</footer>
+
+<a href="https://wa.me/5493424392759" class="wa-float" target="_blank">
+    <i class="fa-brands fa-whatsapp"></i>
+</a>
+
+<script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+<script>
+    AOS.init({ once: true, duration: 600 });
+
+    function solicitarServicio() {
+        const equipo   = document.getElementById('tipoEquipo').value || 'Equipo no especificado';
+        const problema = document.getElementById('problema').value   || 'Problema no especificado';
+        const nombre   = document.getElementById('nombre').value     || 'Sin nombre';
+        const zona     = document.getElementById('zona').value       || 'Sin zona';
+        const msg = `Hola Polar ❄️, necesito servicio técnico urgente:\n\n🔧 Equipo: ${equipo}\n⚠️ Problema: ${problema}\n👤 Nombre: ${nombre}\n📍 Zona: ${zona}\n\n¿Pueden venir hoy?`;
+        window.open('https://wa.me/5493424392759?text=' + encodeURIComponent(msg), '_blank');
+    }
+
+    function cotizarMant() {
+        const empresa = document.getElementById('mf-empresa').value || 'Sin especificar';
+        const nombre  = document.getElementById('mf-nombre').value  || 'Sin nombre';
+        const equipos = document.getElementById('mf-equipos').value;
+        const ciudad  = document.getElementById('mf-ciudad').value  || 'Sin ciudad';
+        const msg = `Hola Polar ❄️, quiero cotizar un contrato de mantenimiento anual:\n\n🏢 Empresa: ${empresa}\n👤 Responsable: ${nombre}\n⚙️ Equipos: ${equipos}\n📍 Ciudad: ${ciudad}\n\nQuedo a la espera de su propuesta.`;
+        window.open('https://wa.me/5493424392759?text=' + encodeURIComponent(msg), '_blank');
+    }
+</script>
+<script type="text/javascript" id="hs-script-loader" async defer src="//js.hs-scripts.com/51067454.js"></script>
+</body>
+</html>
