@@ -455,6 +455,13 @@ scheduler.add_job(job_expirar_links_pago, "interval", hours=1)
 scheduler.start()
 
 
+def _tier_badge(tier: str) -> str:
+    if tier == 'calificado':
+        return '<span style="color:#fbbf24;">⭐</span>'
+    elif tier == 'premium':
+        return '<span style="color:#a78bfa;">💎</span>'
+    return ''
+
 app = FastAPI(title="Avanza Partner Portal", version="1.5")
 
 # ─── RATE LIMITING ───────────────────────────────────────────────────────────
@@ -3157,7 +3164,7 @@ def cargar_leads_bulk(payload: LeadBolsaBulkPayload, db: Session = Depends(get_d
                 f"<td style='padding:8px 12px;font-weight:600;'>{l.empresa}</td>"
                 f"<td style='padding:8px 12px;color:#94a3b8;'>{l.rubro or '—'}</td>"
                 f"<td style='padding:8px 12px;'>"
-                f"{'<span style=\"color:#fbbf24;\">⭐</span>' if l.tier == 'calificado' else '<span style=\"color:#a78bfa;\">💎</span>' if l.tier == 'premium' else ''}"
+                f"{_tier_badge(l.tier)}"
                 f"</td></tr>"
                 for l in insertados
             )
