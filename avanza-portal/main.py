@@ -3121,7 +3121,7 @@ def cargar_lead_bolsa_v2(lead: LeadBolsaCreateAdv, db: Session = Depends(get_db)
 # ─── BOLSA: CARGA MASIVA (CSV) ───────────────────────────────────────────────
 
 class LeadBolsaBulkPayload(BaseModel):
-    leads: List[LeadBolsaCreateAdv]
+    leads: list[LeadBolsaCreateAdv]
 
 @app.post("/admin/bolsa/bulk")
 def cargar_leads_bulk(payload: LeadBolsaBulkPayload, db: Session = Depends(get_db)):
