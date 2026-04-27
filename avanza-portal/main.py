@@ -3722,7 +3722,7 @@ def salud_programa(db: Session = Depends(get_db)):
     }
 
 
-�─ ACADEMIA: CONTENIDO DE ONBOARDING (spec §18) ────────────────────────────
+# ─ ACADEMIA: CONTENIDO DE ONBOARDING (spec §18) ────────────────────────────
 
 class AcademiaModuloCreate(BaseModel):
     orden: int
