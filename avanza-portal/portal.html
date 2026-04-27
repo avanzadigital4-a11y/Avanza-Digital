@@ -1062,8 +1062,8 @@
       <button class="tab-btn tab-canal1" onclick="cambiarTab('referidos',this)"><i class="fa-solid fa-user-plus"></i> Referidos</button>
       <button class="tab-btn" onclick="cambiarTab('ventas',this)"><i class="fa-solid fa-handshake"></i> Ventas</button>
       <button class="tab-btn" onclick="cambiarTab('comisiones',this)"><i class="fa-solid fa-dollar-sign"></i> Comisiones</button>
-      <button class="tab-btn tab-canal1" onclick="cambiarTab('red',this)"><i class="fa-solid fa-users-rays" style="color:var(--amber);"></i> Mi Red</button>
-      <button class="tab-btn tab-canal1" onclick="cambiarTab('comunidad',this)"><i class="fa-solid fa-comments" style="color:#c084fc;"></i> Comunidad <span style="background:#c084fc;color:#000;font-size:.6rem;font-weight:800;padding:2px 6px;border-radius:4px;margin-left:4px;">NUEVO</span></button>
+      <button class="tab-btn" onclick="cambiarTab('red',this)"><i class="fa-solid fa-users-rays" style="color:var(--amber);"></i> Mi Red</button>
+      <button class="tab-btn" onclick="cambiarTab('comunidad',this)"><i class="fa-solid fa-comments" style="color:#c084fc;"></i> Comunidad <span style="background:#c084fc;color:#000;font-size:.6rem;font-weight:800;padding:2px 6px;border-radius:4px;margin-left:4px;">NUEVO</span></button>
     </div>
 
     <div id="tab-dashboard" class="tab-panel active">
@@ -1076,7 +1076,7 @@
       </div>
 
       <!-- SIGUIENTE MEJOR ACCIÓN (Canal 1 only) -->
-      <div id="nba-container" class="d-canal1-only" style="display:none;">
+      <div id="nba-container" style="display:none;">
         <!-- Populated by JS -->
       </div>
 
@@ -1151,6 +1151,14 @@
           <div class="ref-url" id="d-reflink">Cargando...</div>
         </div>
         <button class="btn-copy" onclick="copiarLink()"><i class="fa-solid fa-copy"></i> Copiar</button>
+      </div>
+
+      <div class="ref-card" id="perfil-publico-card" style="background:rgba(59,130,246,0.06); border:1px solid rgba(59,130,246,0.25); display:none;">
+        <div style="flex:1;">
+          <div class="ref-label" style="color:var(--primary);"><i class="fa-solid fa-id-card"></i> &nbsp;Tu página de ventas personal &mdash; compartila con tus prospectos</div>
+          <div class="ref-url" id="d-perfillink" style="color:var(--text);">Cargando...</div>
+        </div>
+        <button class="btn-copy" style="background:var(--primary);color:#fff;" onclick="copiarPerfilLink()"><i class="fa-solid fa-copy"></i> Copiar</button>
       </div>
 
       <!-- ONBOARDING CHECKLIST -->
@@ -1247,9 +1255,9 @@
             <div style="font-size:.95rem;font-weight:800;margin-bottom:4px;">Guía de Conversación</div>
             <div style="font-size:.8rem;color:var(--text-muted);line-height:1.5;">Cómo abrir la conversación, qué preguntar y cómo presentar el servicio sin sonar a vendedor. Incluye las objeciones más comunes y cómo responderlas.</div>
           </div>
-          <button onclick="mostrarToast('El PDF de guía estará disponible en las próximas horas','green')" class="btn-primary" style="display:inline-flex;align-items:center;gap:6px;font-size:.82rem;padding:10px 16px;border-radius:8px;width:fit-content;">
+          <a href="#" onclick="descargarPDF('https://drive.google.com/uc?export=download&id=171PGzSjcdVREo0OeprFJLt4hj_qz3JMg','Guion_Ventas_Por_Rubro_v2.pdf');return false;" class="btn-primary" style="display:inline-flex;align-items:center;gap:6px;font-size:.82rem;padding:10px 16px;text-decoration:none;border-radius:8px;width:fit-content;">
             <i class="fa-solid fa-download"></i> Descargar PDF
-          </button>
+          </a>
         </div>
 
         <!-- Card 3: Guión por Rubro -->
@@ -1782,6 +1790,22 @@
             </select>
           </div>
           <div>
+            <label style="font-size:.75rem;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;display:block;margin-bottom:6px;">Rubro del cliente</label>
+            <select id="np-rubro" style="width:100%;background:#111;border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px 14px;color:var(--text);font-size:.9rem;font-family:'Inter',sans-serif;outline:none;">
+              <option value="">— No sé aún —</option>
+              <option value="Metalúrgica / Manufactura">Metalúrgica / Manufactura</option>
+              <option value="Agro / Maquinaria agrícola">Agro / Maquinaria agrícola</option>
+              <option value="Logística / Transporte">Logística / Transporte</option>
+              <option value="Servicios B2B / Consultoría">Servicios B2B / Consultoría</option>
+              <option value="Comercio / Retail B2B">Comercio / Retail B2B</option>
+              <option value="Construcción / Obras">Construcción / Obras</option>
+              <option value="Salud / Clínicas">Salud / Clínicas</option>
+              <option value="Educación / Capacitación">Educación / Capacitación</option>
+              <option value="Tecnología / Software">Tecnología / Software</option>
+              <option value="Otro">Otro</option>
+            </select>
+          </div>
+          <div>
             <label style="font-size:.75rem;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;display:block;margin-bottom:6px;">Nota inicial</label>
             <input type="text" id="np-nota" placeholder="Ej: pide info, evalúa con socio..." style="width:100%;background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px 14px;color:var(--text);font-size:.9rem;font-family:'Inter',sans-serif;outline:none;">
           </div>
@@ -2104,36 +2128,24 @@
       </div>
     </div>
 
+    <!-- MIS LEADS RECLAMADOS -->
     <div class="table-wrap" style="margin-bottom:0;">
       <div class="table-head">
         <h3><i class="fa-solid fa-lock" style="color:var(--amber);"></i> Mis Leads Reclamados</h3>
       </div>
-      <div style="overflow-x:auto;">
-        <table>
-          <thead><tr>
-            <th>Empresa</th><th>Rubro</th><th>Datos de Contacto</th><th>Estado / Tiempo</th><th>Acción</th>
-          </tr></thead>
-          <tbody id="tabla-mis-reclamos">
-            <tr><td colspan="5" style="text-align:center;padding:24px;color:var(--text-dim);">Cargando...</td></tr>
-          </tbody>
-        </table>
+      <div id="tabla-mis-reclamos" style="padding:16px;display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px;">
+        <div style="text-align:center;padding:24px;color:var(--text-dim);grid-column:1/-1;">Cargando...</div>
       </div>
     </div>
 
+    <!-- DISPONIBLES EN LA BOLSA -->
     <div class="table-wrap" style="margin-bottom:0;">
       <div class="table-head">
         <h3><i class="fa-solid fa-unlock" style="color:var(--green);"></i> Disponibles en la Bolsa</h3>
         <button onclick="cargarBolsa()" style="background:transparent;border:1px solid var(--border);color:var(--text-muted);border-radius:8px;padding:7px 14px;font-size:.8rem;cursor:pointer;"><i class="fa-solid fa-rotate-right"></i> Refrescar</button>
       </div>
-      <div style="overflow-x:auto;">
-        <table>
-          <thead><tr>
-            <th>Empresa</th><th>Rubro</th><th>Teléfono / Email</th><th>Acción</th>
-          </tr></thead>
-          <tbody id="tabla-bolsa-disponibles">
-            <tr><td colspan="4" style="text-align:center;padding:24px;color:var(--text-dim);">Cargando...</td></tr>
-          </tbody>
-        </table>
+      <div id="tabla-bolsa-disponibles" style="padding:16px;display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px;">
+        <div style="text-align:center;padding:24px;color:var(--text-dim);grid-column:1/-1;">Cargando...</div>
       </div>
     </div>
 
@@ -2611,6 +2623,7 @@ function cambiarTab(tab, btn) {
   if (panel) panel.classList.add('active');
   if (btn) btn.classList.add('active');
   if(tab==='prospectos') cargarProspectos();
+  if(tab==='selector-rubro') cargarBadgesRubro();
   if(tab==='bolsa') { cargarBolsa(); cargarHistorialBolsa(); cargarMarketplace(); }
   if(tab==='red') cargarRed();
   if(tab==='comunidad') cargarComunidad();
@@ -2637,6 +2650,54 @@ function toggleRubro(id) {
     detalle.style.display = 'block';
     chevron.style.transform = 'rotate(180deg)';
   }
+}
+
+
+// Mapeo: valor guardado en el prospecto → ID de la card del Selector
+const RUBRO_A_CARD = {
+  'Metalúrgica / Manufactura':   'metalurgica',
+  'Agro / Maquinaria agrícola':  'metalurgica',
+  'Logística / Transporte':      'logistica',
+  'Servicios B2B / Consultoría': 'servicios',
+  'Educación / Capacitación':    'servicios',
+  'Tecnología / Software':       'servicios',
+  'Comercio / Retail B2B':       'corporativo',
+  'Construcción / Obras':        'corporativo',
+  'Salud / Clínicas':            'corporativo',
+  'Otro':                        null,
+};
+
+async function cargarBadgesRubro() {
+  // Si todosProspectos aún no está cargado, lo traemos primero
+  if (!todosProspectos.length) {
+    try {
+      const res = await apiFetch(`${API}/prospectos/aliado/${aliado.codigo}`);
+      if (res.ok) todosProspectos = await res.json();
+    } catch { return; }
+  }
+
+  // Contar prospectos por card
+  const conteo = { metalurgica: 0, logistica: 0, servicios: 0, corporativo: 0 };
+  todosProspectos.forEach(p => {
+    const card = RUBRO_A_CARD[p.rubro];
+    if (card) conteo[card]++;
+  });
+
+  // Inyectar o actualizar badge en cada card
+  Object.entries(conteo).forEach(([id, n]) => {
+    const card = document.getElementById(`rubro-${id}`);
+    if (!card) return;
+    let badge = card.querySelector('.rubro-badge-count');
+    if (n === 0) { if (badge) badge.remove(); return; }
+    if (!badge) {
+      badge = document.createElement('span');
+      badge.className = 'rubro-badge-count';
+      badge.style.cssText = 'display:inline-flex;align-items:center;gap:4px;background:rgba(74,222,128,0.15);border:1px solid rgba(74,222,128,0.35);color:#4ade80;font-size:.7rem;font-weight:700;padding:3px 9px;border-radius:50px;margin-left:8px;white-space:nowrap;';
+      const header = card.querySelector('div[style*="display:flex"]') || card.firstElementChild;
+      if (header) header.appendChild(badge);
+    }
+    badge.innerHTML = `<i class="fa-solid fa-user" style="font-size:.6rem;"></i> ${n} prospecto${n > 1 ? 's' : ''}`;
+  });
 }
 
 function copiarTexto(id) {
@@ -2745,11 +2806,43 @@ async function cargarTodo() {
   const refBox = document.getElementById('onboard-ref-link');
   if (refBox && aliado) refBox.textContent = `avanzadigital.digital/alianzas?ref=${aliado.ref_code}`;
 
+  // Onboarding primer login: guion recomendado para Canal 2
+  _inyectarGuionRecomendado(aliado);
+
   // Onboarding primer login
   const key = `portal_onboarded_${aliado.codigo}`;
   if (!localStorage.getItem(key)) {
     setTimeout(() => document.getElementById('modal-onboarding').classList.add('open'), 600);
   }
+}
+
+function _inyectarGuionRecomendado(aliado) {
+  if (!aliado || aliado.tipo_aliado !== 'canal2') return;
+  const GUIONES_C2 = {
+    'Consultor Industrial':    { id: '1cZICwO6cfT4MmLj7gn37clCr-nN6mgcW', nombre: 'Guón Canal 2 — Consultores' },
+    'Estudio Contable':        { id: '1hT4iHxV-2suvC4LAlg2Y0y7gvUsM25iN', nombre: 'Guón Canal 2 — Contadores' },
+    'Agencia B2B':             { id: '1GH0y75Db9LtTRUweAnQBm4ZKw9fHkf1H', nombre: 'Guón Canal 2 — Agencias' },
+    'Proveedor de Industrias': { id: '1HzOldnXGD8jkPrFuY95XyXcQ5-7SKT7w', nombre: 'Guón Canal 2 — Proveedores' },
+  };
+  const guion = GUIONES_C2[aliado.perfil];
+  if (!guion) return;
+  const kitBox = document.querySelector('#modal-onboarding .onboard-col-left > div:first-child');
+  if (!kitBox) return;
+  const url = `https://drive.google.com/uc?export=download&id=${guion.id}`;
+  const card = document.createElement('a');
+  card.href = '#';
+  card.onclick = (e) => { e.preventDefault(); descargarPDF(url, guion.nombre + '.pdf'); };
+  card.style.cssText = 'display:flex;align-items:center;gap:10px;background:rgba(74,222,128,0.1);border:1px solid rgba(74,222,128,0.4);border-radius:8px;padding:12px;text-decoration:none;color:var(--text);transition:all .2s;margin-bottom:10px;';
+  card.innerHTML = `
+    <i class="fa-solid fa-star" style="color:#4ade80;font-size:1.1rem;flex-shrink:0;"></i>
+    <div>
+      <div style="font-size:.65rem;font-weight:800;text-transform:uppercase;letter-spacing:1.2px;color:#4ade80;margin-bottom:2px;">Recomendado para vos</div>
+      <div style="font-weight:700;font-size:.83rem;">${guion.nombre}</div>
+      <div style="font-size:.71rem;color:var(--text-muted);">El guión exacto para tu perfil</div>
+    </div>
+    <i class="fa-solid fa-download" style="margin-left:auto;color:#4ade80;flex-shrink:0;"></i>
+  `;
+  kitBox.insertBefore(card, kitBox.firstChild);
 }
 
 function cerrarOnboarding() {
@@ -2793,6 +2886,15 @@ function renderDashboard() {
   
   document.getElementById('d-reflink').textContent = linkGeneral;
   document.getElementById('d-auditlink').textContent = linkAuditoria;
+
+  // Página de ventas personal (/p/{ref_code})
+  const perfilCard = document.getElementById('perfil-publico-card');
+  if (aliado.portal_publico_activo && aliado.link_perfil) {
+    document.getElementById('d-perfillink').textContent = aliado.link_perfil;
+    if (perfilCard) perfilCard.style.display = 'flex';
+  } else {
+    if (perfilCard) perfilCard.style.display = 'none';
+  }
   document.getElementById('d-wpp-link').textContent = linkAuditoria;
 
   const proxMap = {BASIC:'SILVER (1 venta)',SILVER:'PREMIUM (2 ventas)',PREMIUM:'ELITE (5 ventas)',ELITE:'¡Nivel máximo!'};
@@ -2846,6 +2948,12 @@ function renderDashboard() {
 function copiarLink() {
   navigator.clipboard.writeText(document.getElementById('d-reflink').textContent).then(()=>{
     mostrarToast('Link copiado', 'green');
+  });
+}
+
+function copiarPerfilLink() {
+  navigator.clipboard.writeText(document.getElementById('d-perfillink').textContent).then(()=>{
+    mostrarToast('Página de ventas copiada — compartíla con tus prospectos', 'green');
   });
 }
 
@@ -3171,14 +3279,16 @@ async function crearProspecto() {
   if(!nombre) { alert('El nombre es obligatorio.'); return; }
   const contacto    = document.getElementById('np-contacto').value.trim();
   const plan        = document.getElementById('np-plan').value;
+  const rubro       = document.getElementById('np-rubro').value;
   const nota        = document.getElementById('np-nota').value.trim();
-  const url = `${API}/prospectos/crear?codigo_aliado=${aliado.codigo}&nombre=${encodeURIComponent(nombre)}&contacto=${encodeURIComponent(contacto)}&plan_interes=${encodeURIComponent(plan)}&nota=${encodeURIComponent(nota)}`;
+  const url = `${API}/prospectos/crear?codigo_aliado=${aliado.codigo}&nombre=${encodeURIComponent(nombre)}&contacto=${encodeURIComponent(contacto)}&plan_interes=${encodeURIComponent(plan)}&rubro=${encodeURIComponent(rubro)}&nota=${encodeURIComponent(nota)}`;
   try {
     const res = await fetch(url, {method:'POST'});
     if(res.ok) {
       document.getElementById('np-nombre').value='';
       document.getElementById('np-contacto').value='';
       document.getElementById('np-plan').value='';
+      document.getElementById('np-rubro').value='';
       document.getElementById('np-nota').value='';
       const msg = document.getElementById('np-msg');
       msg.style.display='inline'; setTimeout(()=>msg.style.display='none',2500);
@@ -3341,48 +3451,67 @@ async function cargarBolsa() {
     }
     const limitAlcanzado = activos >= limite;
 
-    // 1. Renderizar Mis Reclamos
+    // ── helpers de tarjeta ──────────────────────────────────────────
+    const fila = (icono, label, valor, color='') =>
+      valor ? `<div style="display:flex;align-items:flex-start;gap:8px;margin-bottom:7px;">
+        <span style="min-width:16px;color:var(--text-dim);font-size:.78rem;margin-top:1px;">${icono}</span>
+        <div>
+          <div style="font-size:.68rem;text-transform:uppercase;letter-spacing:.06em;color:var(--text-dim);margin-bottom:1px;">${label}</div>
+          <div style="font-size:.87rem;color:${color||'var(--text)'};font-weight:500;">${valor}</div>
+        </div>
+      </div>` : '';
+
+    // 1. Renderizar Mis Reclamos — tarjetas
     const tbodyReclamos = document.getElementById('tabla-mis-reclamos');
     if(!data.mis_reclamos.length) {
-      tbodyReclamos.innerHTML = '<tr><td colspan="5"><div class="empty-state" style="padding:20px;"><p>No tenés leads reclamados. ¡Aprovechá la bolsa!</p></div></td></tr>';
+      tbodyReclamos.innerHTML = '<div style="text-align:center;padding:24px;color:var(--text-dim);grid-column:1/-1;"><p>No tenés leads reclamados. ¡Aprovechá la bolsa!</p></div>';
     } else {
       tbodyReclamos.innerHTML = data.mis_reclamos.map(l => {
-        let tiempoHtml = '';
-        let accionHtml = '<span style="color:var(--text-dim);font-size:.8rem;"><i class="fa-solid fa-check-double"></i> Gestionado</span>';
-        
-        if (l.estado === 'reclamado') {
-           const colorReloj = l.horas_restantes < 12 ? 'var(--red)' : 'var(--amber)';
-           tiempoHtml = `<div style="color:${colorReloj}; font-weight:700; font-size:.8rem;"><i class="fa-solid fa-hourglass-half"></i> Quedan ${l.horas_restantes}h</div>`;
-           accionHtml = `<button class="btn-green" style="padding:6px 12px; font-size:.75rem;" onclick="marcarContactadoBolsa(${l.id})"><i class="fa-solid fa-phone"></i> Ya lo contacté</button>`;
-        } else if (l.estado === 'contactado') {
-           tiempoHtml = `<span class="badge badge-blue">Contactado</span>`;
-        }
-
-        return `<tr style="background: ${l.estado==='reclamado' ? 'rgba(245,158,11,0.03)' : 'transparent'};">
-          <td style="font-weight:700; color:var(--text);">${l.empresa}</td>
-          <td>${l.rubro}</td>
-          <td style="font-family:monospace; color:var(--primary);">${l.telefono} <br> <span style="color:var(--text-dim);font-size:.75rem;">${l.email||''}</span></td>
-          <td>${tiempoHtml}</td>
-          <td>${accionHtml}</td>
-        </tr>`;
+        const esPendiente = l.estado === 'reclamado';
+        const colorReloj = l.horas_restantes < 12 ? 'var(--red)' : 'var(--amber)';
+        const estadoBadge = esPendiente
+          ? `<span style="background:rgba(245,158,11,0.15);color:var(--amber);border:1px solid rgba(245,158,11,0.3);border-radius:20px;font-size:.7rem;font-weight:700;padding:3px 10px;"><i class="fa-solid fa-hourglass-half"></i> Quedan ${l.horas_restantes}h</span>`
+          : `<span style="background:rgba(59,130,246,0.12);color:#60a5fa;border:1px solid rgba(59,130,246,0.25);border-radius:20px;font-size:.7rem;font-weight:700;padding:3px 10px;"><i class="fa-solid fa-check"></i> Contactado</span>`;
+        const accionBtn = esPendiente
+          ? `<button class="btn-green" style="width:100%;padding:9px;font-size:.82rem;" onclick="marcarContactadoBolsa(${l.id})"><i class="fa-solid fa-phone"></i> Ya lo contacté</button>`
+          : `<div style="text-align:center;font-size:.78rem;color:var(--text-dim);"><i class="fa-solid fa-check-double"></i> Gestionado</div>`;
+        return `<div style="background:var(--bg2);border:1px solid ${esPendiente?'rgba(245,158,11,0.35)':'var(--border)'};border-radius:12px;padding:16px;display:flex;flex-direction:column;gap:4px;">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px;">
+            <div>
+              <div style="font-size:1rem;font-weight:800;color:var(--text);line-height:1.2;">${l.empresa}</div>
+              ${l.ciudad ? `<div style="font-size:.75rem;color:var(--text-dim);margin-top:2px;"><i class="fa-solid fa-location-dot"></i> ${l.ciudad}</div>` : ''}
+            </div>
+            ${estadoBadge}
+          </div>
+          ${fila('🏭','Rubro', l.rubro)}
+          ${fila('👤','Contacto', l.nombre_contacto||'')}
+          ${fila('📞','Teléfono', l.telefono||'')}
+          ${fila('📱','WhatsApp', l.whatsapp && l.whatsapp !== l.telefono ? l.whatsapp : '', 'var(--green)')}
+          ${fila('✉️','Email', l.email)}
+          <div style="margin-top:10px;">${accionBtn}</div>
+        </div>`;
       }).join('');
     }
 
-    // 2. Renderizar Disponibles
+    // 2. Renderizar Disponibles — tarjetas
     const tbodyDisp = document.getElementById('tabla-bolsa-disponibles');
     if(!data.disponibles.length) {
-      tbodyDisp.innerHTML = '<tr><td colspan="4"><div class="empty-state" style="padding:20px;"><p>No hay leads disponibles en este momento. Volvé más tarde.</p></div></td></tr>';
+      tbodyDisp.innerHTML = '<div style="text-align:center;padding:24px;color:var(--text-dim);grid-column:1/-1;"><p>No hay leads disponibles en este momento. Volvé más tarde.</p></div>';
     } else {
       tbodyDisp.innerHTML = data.disponibles.map(l => {
         const btnReclamar = limitAlcanzado
-          ? `<button disabled style="padding:6px 12px; font-size:.75rem; opacity:.45; cursor:not-allowed; background:var(--border); color:var(--text-dim); border:none; border-radius:6px;"><i class="fa-solid fa-lock"></i> Límite alcanzado</button>`
-          : `<button class="btn-primary" style="padding:6px 12px; font-size:.75rem;" onclick="reclamarLead(${l.id})"><i class="fa-solid fa-hand-sparkles"></i> Reclamar Lead</button>`;
-        return `<tr>
-          <td style="font-weight:700; color:var(--text);">${l.empresa}</td>
-          <td>${l.rubro}</td>
-          <td style="color:var(--text-dim); font-style:italic; font-size:.8rem;"><i class="fa-solid fa-lock"></i> Oculto hasta reclamar</td>
-          <td>${btnReclamar}</td>
-        </tr>`;
+          ? `<button disabled style="width:100%;padding:9px;font-size:.82rem;opacity:.45;cursor:not-allowed;background:var(--border);color:var(--text-dim);border:none;border-radius:8px;"><i class="fa-solid fa-lock"></i> Límite alcanzado</button>`
+          : `<button class="btn-primary" style="width:100%;padding:9px;font-size:.82rem;" onclick="reclamarLead(${l.id})"><i class="fa-solid fa-hand-sparkles"></i> Reclamar Lead</button>`;
+        return `<div style="background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:16px;">
+          <div style="font-size:1rem;font-weight:800;color:var(--text);margin-bottom:4px;">${l.empresa}</div>
+          ${l.ciudad ? `<div style="font-size:.75rem;color:var(--text-dim);margin-bottom:10px;"><i class="fa-solid fa-location-dot"></i> ${l.ciudad}</div>` : '<div style="margin-bottom:10px;"></div>'}
+          ${fila('🏭','Rubro', l.rubro)}
+          <div style="display:flex;align-items:center;gap:6px;margin-bottom:12px;margin-top:2px;">
+            <i class="fa-solid fa-lock" style="font-size:.75rem;color:var(--text-dim);"></i>
+            <span style="font-size:.8rem;color:var(--text-dim);font-style:italic;">Contacto visible al reclamar</span>
+          </div>
+          ${btnReclamar}
+        </div>`;
       }).join('');
     }
 
@@ -3546,9 +3675,11 @@ async function cargarSiguienteAccion() {
     if(!res.ok) return;
     const data = await res.json();
     const cont = document.getElementById('nba-container');
+    const bannerC2 = document.getElementById('d-canal2-banner');
     if(!data.siguiente_accion) { cont.style.display='none'; return; }
     const a = data.siguiente_accion;
     cont.style.display = 'block';
+    if(bannerC2) bannerC2.style.display = 'none';
     cont.innerHTML = `
       <div class="nba-card ${a.color}">
         <div class="nba-icon">${a.icono}</div>

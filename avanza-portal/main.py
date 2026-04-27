@@ -63,6 +63,10 @@ _aplicar_migracion("ALTER TABLE aliados ADD COLUMN cantidad_logins INTEGER DEFAU
 for col_sql in [
     "ALTER TABLE bolsa_leads ADD COLUMN resultado VARCHAR",
     "ALTER TABLE bolsa_leads ADD COLUMN notif_24h_enviada BOOLEAN DEFAULT FALSE",
+    # Campos de contacto enriquecidos
+    "ALTER TABLE bolsa_leads ADD COLUMN nombre_contacto VARCHAR",
+    "ALTER TABLE bolsa_leads ADD COLUMN ciudad VARCHAR",
+    "ALTER TABLE bolsa_leads ADD COLUMN whatsapp VARCHAR",
     "ALTER TABLE aliados ADD COLUMN sponsor_id INTEGER REFERENCES aliados(id)",
     # Inteligencia de ventas y checkout
     "ALTER TABLE prospectos ADD COLUMN rubro VARCHAR",
@@ -531,6 +535,7 @@ RUTAS_ADMIN = {
     ("GET",    "/admin/comisiones"),
     ("POST",   "/admin/comisiones/{id}/abonar"),
     ("GET",    "/admin/pagos"),
+    ("GET",    "/admin/programa/salud"),
     ("GET",    "/admin/academia"),
     ("POST",   "/admin/academia"),
     ("PATCH",  "/admin/academia/{id}"),
@@ -1164,7 +1169,7 @@ def dashboard(db: Session = Depends(get_db)):
 def crear_prospecto(body: schemas.CrearProspectoIn | None = Body(default=None),
                     codigo_aliado: str = "",  # legacy
                     nombre: str = "", contacto: str = "",
-                    plan_interes: str = "", nota: str = "",
+                    plan_interes: str = "", rubro: str = "", nota: str = "",
                     aliado: Aliado = Depends(current_aliado_required),
                     db: Session = Depends(get_db)):
     """El aliado autenticado carga un prospecto nuevo.
@@ -1174,11 +1179,11 @@ def crear_prospecto(body: schemas.CrearProspectoIn | None = Body(default=None),
     """
     if body is not None:
         nombre, contacto = body.nombre, body.contacto
-        plan_interes, nota = body.plan_interes, body.nota
+        plan_interes, rubro, nota = body.plan_interes, body.rubro, body.nota
     if not nombre:
         raise HTTPException(400, "Falta nombre del prospecto.")
     p = Prospecto(aliado_id=aliado.id, nombre=nombre, contacto=contacto,
-                  plan_interes=plan_interes, nota=nota)
+                  plan_interes=plan_interes, rubro=rubro or None, nota=nota)
     db.add(p); db.commit(); db.refresh(p)
     return {"mensaje": "Prospecto cargado.", "id": p.id, "nombre": p.nombre}
 
@@ -1497,7 +1502,9 @@ def _aliado_detalle(a, incluir_token: bool = False):
         "total_ganado": round(a.total_ganado, 2),
         "total_pendiente": round(a.total_pendiente, 2),
         "ref_code": a.ref_code,
-        "link_ref": f"https://avanzadigital.digital/alianzas?ref={a.ref_code}",
+        "link_ref":    f"https://avanzadigital.digital/alianzas?ref={a.ref_code}",
+        "link_perfil": f"{PORTAL_URL}/p/{a.ref_code}",
+        "portal_publico_activo": bool(getattr(a, "portal_publico_activo", True)),
         "tipo_aliado": getattr(a, "tipo_aliado", "canal1") or "canal1",
         "cbu_alias": getattr(a, "cbu_alias", None),
         "terminos_aceptados": bool(getattr(a, "terminos_aceptados", False)),
@@ -2091,7 +2098,24 @@ def siguiente_accion(codigo: str, db: Session = Depends(get_db), _owner=Depends(
             "color": "green"
         })
 
-    # 2. Prospectos sin contactar
+    # 2. Propuesta enviada sin respuesta (>= 3 dias)
+    propuestas_sin_resp = [
+        p for p in a.prospectos
+        if p.estado == "propuesta_enviada" and p.fecha_contacto
+        and (datetime.now() - p.fecha_contacto).days >= 3
+    ]
+    if propuestas_sin_resp:
+        urgente = max(propuestas_sin_resp, key=lambda p: (datetime.now() - p.fecha_contacto).days)
+        dias_esp = (datetime.now() - urgente.fecha_contacto).days
+        acciones.append({
+            "tipo": "seguimiento_propuesta", "urgencia": 4, "icono": "\U0001f4c4",
+            "titulo": f"Seguimiento: {urgente.nombre} tiene tu propuesta",
+            "descripcion": f"Enviaste la propuesta hace {dias_esp} días y no hubo respuesta. Un mensaje corto puede desbloquearla: \u2018¿Pudiste revisarla? Cualquier duda te aclaro.\u2019",
+            "accion_id": urgente.id, "boton": "Ver Prospecto", "tab": "prospectos",
+            "color": "amber"
+        })
+
+    # 3. Prospectos sin contactar
     sin_contactar = [p for p in a.prospectos if p.estado == "sin_contactar"]
     if sin_contactar:
         viejo = min(sin_contactar, key=lambda p: p.creado_en)
@@ -2179,14 +2203,18 @@ def siguiente_accion(codigo: str, db: Session = Depends(get_db), _owner=Depends(
 def estado_onboarding(codigo: str, db: Session = Depends(get_db), _owner=Depends(verify_ownership_dep)):
     """Retorna el progreso del checklist de onboarding del aliado."""
     a = _get_aliado(codigo, db)
+    es_canal2 = (getattr(a, "tipo_aliado", "canal1") or "canal1") == "canal2"
     pasos = [
         {"id": "registro",    "titulo": "Te registraste",           "completado": True},
         {"id": "referido",    "titulo": "Registraste tu 1er referido",
          "completado": len(a.referidos) > 0},
         {"id": "prospecto",   "titulo": "Cargaste un prospecto",
          "completado": len(a.prospectos) > 0},
-        {"id": "bolsa",       "titulo": "Reclamaste un lead de la bolsa",
-         "completado": any(l.aliado_id == a.id for l in db.query(LeadBolsa).all())},
+    ]
+    if not es_canal2:
+        pasos.append({"id": "bolsa", "titulo": "Reclamaste un lead de la bolsa",
+                      "completado": db.query(LeadBolsa).filter(LeadBolsa.aliado_id == a.id).first() is not None})
+    pasos += [
         {"id": "primera_venta","titulo": "Cerraste tu primera venta",
          "completado": a.ventas_6_meses > 0},
         {"id": "red",         "titulo": "Invitaste a tu primer sub-aliado",
@@ -2221,6 +2249,45 @@ def _aplicar_caducidad_bolsa(db: Session):
     if vencidos:
         db.commit()
 
+def _notificar_nuevo_lead_bolsa(db: Session, empresa: str, rubro: str, tier: str = "basico"):
+    """Broadcast a todos los aliados Canal 1 activos con email cuando entra un lead nuevo."""
+    try:
+        aliados = db.query(Aliado).filter(
+            Aliado.activo == True,
+            Aliado.email != None,
+            Aliado.email != "",
+            (Aliado.tipo_aliado == "canal1") | (Aliado.tipo_aliado == None),
+        ).all()
+
+        if not aliados:
+            return
+
+        tier_badge = {"calificado": "⭐ Calificado", "premium": "💎 Premium"}.get(tier, "")
+        tier_line = f"<p style=\"margin:4px 0;\"><strong>Tier:</strong> {tier_badge}</p>" if tier_badge else ""
+
+        for aliado in aliados:
+            nombre = (aliado.nombre or "").split()[0] or "Aliado"
+            html = f"""
+            <div style="font-family:sans-serif;max-width:520px;margin:auto;padding:32px;background:#0f172a;color:#e2e8f0;border-radius:12px;">
+              <h2 style="color:#4ade80;margin-bottom:8px;">🔔 Nuevo lead en la bolsa</h2>
+              <p>Hola <strong>{nombre}</strong>, acaba de entrar un lead disponible para reclamar.</p>
+              <div style="background:#1e293b;border:1px solid #334155;border-radius:8px;padding:16px;margin:16px 0;">
+                <p style="margin:4px 0;"><strong>Empresa:</strong> {empresa}</p>
+                <p style="margin:4px 0;"><strong>Rubro:</strong> {rubro or '—'}</p>
+                {tier_line}
+              </div>
+              <p style="color:#94a3b8;font-size:.9rem;">Los leads se asignan al primero en reclamarlos. Entrá ahora para no perderlo.</p>
+              <a href="{PORTAL_URL}/portal.html" style="display:inline-block;margin-top:16px;padding:12px 24px;background:#3b82f6;color:#fff;border-radius:8px;text-decoration:none;font-weight:700;">Ver la bolsa →</a>
+              <p style="margin-top:24px;font-size:.8rem;color:#64748b;">Avanza Digital · Partner Network</p>
+            </div>
+            """
+            enviar_email(aliado.email, f"🔔 Avanza: nuevo lead disponible — {empresa}", html)
+
+        print(f"[NUEVO LEAD] Broadcast enviado a {len(aliados)} aliado(s) — empresa: {empresa}")
+    except Exception as e:
+        print(f"[NUEVO LEAD NOTIF ERROR] {e}")
+
+
 @app.post("/admin/bolsa")
 def cargar_lead_bolsa(lead: LeadBolsaCreate, db: Session = Depends(get_db)):
     nuevo = LeadBolsa(
@@ -2232,6 +2299,7 @@ def cargar_lead_bolsa(lead: LeadBolsaCreate, db: Session = Depends(get_db)):
     )
     db.add(nuevo)
     db.commit()
+    _notificar_nuevo_lead_bolsa(db, lead.empresa, lead.rubro)
     return {"mensaje": "Lead subido a la bolsa."}
 
 @app.get("/admin/bolsa")
@@ -2313,12 +2381,21 @@ def ver_bolsa_aliado(codigo: str, db: Session = Depends(get_db), _owner=Depends(
             
         reclamos_formateados.append({
             "id": l.id, "empresa": l.empresa, "rubro": l.rubro,
-            "telefono": l.telefono, "email": l.email, "estado": l.estado,
-            "horas_restantes": horas_restantes
+            "nombre_contacto": l.nombre_contacto, "ciudad": l.ciudad,
+            "telefono": l.telefono, "whatsapp": l.whatsapp, "email": l.email,
+            "estado": l.estado, "horas_restantes": horas_restantes
         })
         
     return {
-        "disponibles": [{"id": l.id, "empresa": l.empresa, "rubro": l.rubro} for l in disponibles],
+        "disponibles": [
+            {
+                "id": l.id, "empresa": l.empresa, "rubro": l.rubro,
+                "ciudad": l.ciudad, "nombre_contacto": l.nombre_contacto,
+                "tier": l.tier, "score_calidad": l.score_calidad,
+                "costo_creditos": l.costo_creditos
+            }
+            for l in disponibles
+        ],
         "mis_reclamos": reclamos_formateados,
         "reclamos_activos": sum(1 for r in reclamos_formateados if r["estado"] == "reclamado"),
         "limite_reclamos": 3
@@ -2660,15 +2737,14 @@ def _calcular_reputacion(a: Aliado, db: Session) -> dict:
         badges.append("EMBAJADOR")
     if tasa_bolsa >= 0.30 and len(leads_bolsa) >= 3:
         badges.append("BOLSA_MASTER")
-    # "Rápido": contacta leads de bolsa en < 6hs
+    # "Rápido": reclaimó al menos 3 leads en < 6hs desde que entraron a la bolsa
     tiempos = []
     for l in leads_bolsa:
-        if l.estado in ("contactado",) and l.fecha_reclamo:
-            # Aproximamos con fecha_carga vs fecha_reclamo (tiempo que tardó en reclamar) —
-            # es una proxy razonable de "reacción".
-            pass  # se deja como bonus futuro si queremos tiempo exacto de contacto
-    # Simple: si ya tiene 2 contactos y el lead fue reclamado rápido, damos la badge
-    if len(leads_bolsa) >= 2 and exitosos >= 1:
+        if l.fecha_carga and l.fecha_reclamo:
+            horas = (l.fecha_reclamo - l.fecha_carga).total_seconds() / 3600
+            tiempos.append(horas)
+    rapidos = sum(1 for h in tiempos if h <= 6)
+    if rapidos >= 3:
         badges.append("RAPIDO")
 
     return {
@@ -3003,7 +3079,10 @@ def comprar_lead(id: int,
 class LeadBolsaCreateAdv(BaseModel):
     empresa: str
     rubro: str
+    nombre_contacto: str = ""
+    ciudad: str = ""
     telefono: str
+    whatsapp: str = ""
     email: str = ""
     tier: str = "basico"            # basico | calificado | premium
     costo_creditos: int = 0
@@ -3017,13 +3096,99 @@ def cargar_lead_bolsa_v2(lead: LeadBolsaCreateAdv, db: Session = Depends(get_db)
     if lead.tier not in ("basico", "calificado", "premium"):
         raise HTTPException(400, "Tier inválido. Usá: basico | calificado | premium")
     nuevo = LeadBolsa(
-        empresa=lead.empresa, rubro=lead.rubro, telefono=lead.telefono,
-        email=lead.email, estado="disponible",
+        empresa=lead.empresa, rubro=lead.rubro,
+        nombre_contacto=lead.nombre_contacto or None,
+        ciudad=lead.ciudad or None,
+        telefono=lead.telefono,
+        whatsapp=lead.whatsapp or None,
+        email=lead.email or None,
+        estado="disponible",
         tier=lead.tier, costo_creditos=lead.costo_creditos,
         score_calidad=lead.score_calidad, notas_calificacion=lead.notas_calificacion,
     )
     db.add(nuevo); db.commit()
+    _notificar_nuevo_lead_bolsa(db, lead.empresa, lead.rubro, lead.tier)
     return {"mensaje": f"Lead cargado en tier '{lead.tier}'."}
+
+
+# ─── BOLSA: CARGA MASIVA (CSV) ───────────────────────────────────────────────
+
+class LeadBolsaBulkPayload(BaseModel):
+    leads: List[LeadBolsaCreateAdv]
+
+@app.post("/admin/bolsa/bulk")
+def cargar_leads_bulk(payload: LeadBolsaBulkPayload, db: Session = Depends(get_db)):
+    """Inserta una lista de leads de una vez y manda UN solo digest a los aliados.
+    Usar en lugar de llamar /admin/bolsa-v2 en loop desde el CSV importer."""
+    if not payload.leads:
+        raise HTTPException(400, "La lista de leads está vacía.")
+
+    insertados = []
+    for lead in payload.leads:
+        tier = lead.tier if lead.tier in ("basico", "calificado", "premium") else "basico"
+        nuevo = LeadBolsa(
+            empresa=lead.empresa, rubro=lead.rubro,
+            nombre_contacto=lead.nombre_contacto or None,
+            ciudad=lead.ciudad or None,
+            telefono=lead.telefono,
+            whatsapp=lead.whatsapp or None,
+            email=lead.email or None,
+            estado="disponible",
+            tier=tier, costo_creditos=lead.costo_creditos,
+            score_calidad=lead.score_calidad, notas_calificacion=lead.notas_calificacion,
+        )
+        db.add(nuevo)
+        insertados.append(lead)
+
+    db.commit()
+
+    # Un solo email por aliado con el resumen de todos los leads nuevos
+    try:
+        aliados = db.query(Aliado).filter(
+            Aliado.activo == True,
+            Aliado.email != None,
+            Aliado.email != "",
+            (Aliado.tipo_aliado == "canal1") | (Aliado.tipo_aliado == None),
+        ).all()
+
+        if aliados:
+            filas_html = "".join(
+                f"<tr style='border-bottom:1px solid #1e293b;'>"
+                f"<td style='padding:8px 12px;font-weight:600;'>{l.empresa}</td>"
+                f"<td style='padding:8px 12px;color:#94a3b8;'>{l.rubro or '—'}</td>"
+                f"<td style='padding:8px 12px;'>"
+                f"{'<span style=\"color:#fbbf24;\">⭐</span>' if l.tier == 'calificado' else '<span style=\"color:#a78bfa;\">💎</span>' if l.tier == 'premium' else ''}"
+                f"</td></tr>"
+                for l in insertados
+            )
+            for aliado in aliados:
+                nombre = (aliado.nombre or "").split()[0] or "Aliado"
+                html = f"""
+                <div style="font-family:sans-serif;max-width:580px;margin:auto;padding:32px;background:#0f172a;color:#e2e8f0;border-radius:12px;">
+                  <h2 style="color:#4ade80;margin-bottom:4px;">🔔 {len(insertados)} leads nuevos en la bolsa</h2>
+                  <p>Hola <strong>{nombre}</strong>, acaban de cargarse oportunidades disponibles para reclamar.</p>
+                  <table style="width:100%;border-collapse:collapse;margin:16px 0;font-size:.9rem;">
+                    <thead>
+                      <tr style="background:#1e293b;color:#94a3b8;text-align:left;">
+                        <th style="padding:8px 12px;">Empresa</th>
+                        <th style="padding:8px 12px;">Rubro</th>
+                        <th style="padding:8px 12px;">Tier</th>
+                      </tr>
+                    </thead>
+                    <tbody>{filas_html}</tbody>
+                  </table>
+                  <p style="color:#94a3b8;font-size:.9rem;">Los leads se asignan al primero en reclamarlos.</p>
+                  <a href="{PORTAL_URL}/portal.html" style="display:inline-block;margin-top:16px;padding:12px 24px;background:#3b82f6;color:#fff;border-radius:8px;text-decoration:none;font-weight:700;">Ver la bolsa →</a>
+                  <p style="margin-top:24px;font-size:.8rem;color:#64748b;">Avanza Digital · Partner Network</p>
+                </div>
+                """
+                enviar_email(aliado.email, f"🔔 Avanza: {len(insertados)} leads nuevos disponibles", html)
+
+            print(f"[BULK LEAD] {len(insertados)} leads insertados. Digest enviado a {len(aliados)} aliado(s).")
+    except Exception as e:
+        print(f"[BULK LEAD NOTIF ERROR] {e}")
+
+    return {"mensaje": f"{len(insertados)} leads cargados.", "total": len(insertados)}
 
 
 # ─── FINANCIACIÓN / CUOTAS (E) ───────────────────────────────────────────────
@@ -3473,7 +3638,91 @@ def admin_listar_pagos(db: Session = Depends(get_db)):
     return out
 
 
-# ─── ACADEMIA: CONTENIDO DE ONBOARDING (spec §18) ────────────────────────────
+# ─�
+
+# --- SALUD DEL PROGRAMA ---------------------------------------------------
+
+@app.get("/admin/programa/salud")
+def salud_programa(db: Session = Depends(get_db)):
+    """Vista consolidada de salud del programa."""
+    ahora = datetime.now()
+    hace_7d  = ahora - timedelta(days=7)
+    hace_30d = ahora - timedelta(days=30)
+
+    todos_aliados = db.query(Aliado).filter(Aliado.activo == True).all()
+    total_aliados = len(todos_aliados)
+    activos_7d = sum(
+        1 for a in todos_aliados
+        if getattr(a, "ultimo_login", None) and a.ultimo_login >= hace_7d
+    )
+    inactivos_30d = sum(
+        1 for a in todos_aliados
+        if not getattr(a, "ultimo_login", None) or a.ultimo_login < hace_30d
+    )
+
+    total_prospectos  = db.query(Prospecto).count()
+    sin_contactar     = db.query(Prospecto).filter(Prospecto.estado == "sin_contactar").count()
+    calientes         = db.query(Prospecto).filter(Prospecto.estado == "respondio").count()
+    propuesta_enviada = db.query(Prospecto).filter(Prospecto.estado == "propuesta_enviada").count()
+
+    leads_reclamados = db.query(LeadBolsa).filter(LeadBolsa.estado == "reclamado").count()
+    leads_disponibles = db.query(LeadBolsa).filter(LeadBolsa.estado == "disponible").count()
+
+    total_referidos = db.query(Referido).count()
+    referidos_conv  = db.query(Referido).filter(Referido.convertido == True).count()
+    tasa_conversion = round(referidos_conv / total_referidos * 100, 1) if total_referidos else 0.0
+
+    ventas_7d = db.query(Venta).filter(
+        Venta.confirmada == True,
+        Venta.fecha_venta >= hace_7d
+    ).all()
+    ventas_semana_count = len(ventas_7d)
+    ventas_semana_usd   = round(sum(v.valor_usd for v in ventas_7d), 2)
+
+    alertas = []
+    if total_aliados and inactivos_30d / total_aliados > 0.4:
+        alertas.append({"nivel": "rojo", "msg": f"{inactivos_30d} aliados sin actividad en 30+ dias"})
+    if leads_reclamados > 2:
+        alertas.append({"nivel": "rojo", "msg": f"{leads_reclamados} leads reclamados bloqueados sin contactar"})
+    if tasa_conversion < 5 and total_referidos >= 10:
+        alertas.append({"nivel": "amber", "msg": f"Tasa de conversion baja: {tasa_conversion}%"})
+    if calientes > 0:
+        plu = "s" if calientes != 1 else ""
+        alertas.append({"nivel": "amber", "msg": f"{calientes} prospecto{plu} caliente{plu} esperando propuesta"})
+    if ventas_semana_count == 0:
+        alertas.append({"nivel": "amber", "msg": "Sin ventas confirmadas en los ultimos 7 dias"})
+
+    return {
+        "generado_en": ahora.strftime("%d/%m/%Y %H:%M"),
+        "aliados": {
+            "total": total_aliados,
+            "activos_7d": activos_7d,
+            "inactivos_30d": inactivos_30d,
+        },
+        "prospectos": {
+            "total": total_prospectos,
+            "sin_contactar": sin_contactar,
+            "calientes": calientes,
+            "propuesta_enviada": propuesta_enviada,
+        },
+        "bolsa": {
+            "leads_disponibles": leads_disponibles,
+            "leads_reclamados": leads_reclamados,
+        },
+        "conversion": {
+            "total_referidos": total_referidos,
+            "convertidos": referidos_conv,
+            "tasa_pct": tasa_conversion,
+        },
+        "ventas_7d": {
+            "cantidad": ventas_semana_count,
+            "usd": ventas_semana_usd,
+        },
+        "alertas": alertas,
+    }
+
+
+�─ ACADEMIA: CONTENIDO DE ONBOARDING (spec §18) ────────────────────────────
 
 class AcademiaModuloCreate(BaseModel):
     orden: int

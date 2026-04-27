@@ -63,6 +63,7 @@ class CrearProspectoIn(_Base):
     nombre: str = Field(..., min_length=1, max_length=200)
     contacto: str = ""
     plan_interes: str = ""
+    rubro: str = ""
     nota: str = ""
 
 

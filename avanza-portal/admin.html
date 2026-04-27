@@ -407,6 +407,52 @@ tr:hover td { background:rgba(255,255,255,0.02); }
         </button>
       </div>
 
+      <div class="table-wrap" id="salud-programa-wrap" style="margin-bottom:20px;">
+        <div class="table-head" style="display:flex;align-items:center;justify-content:space-between;">
+          <h3><i class="fa-solid fa-heart-pulse" style="color:#f87171;"></i> Salud del Programa</h3>
+          <span id="salud-generado" style="font-size:.72rem;color:var(--text-dim);">Actualizando...</span>
+        </div>
+        <div id="salud-alertas" style="padding:0 20px 12px;display:none;"></div>
+        <div class="metrics-grid" id="salud-grid" style="padding:0 20px 20px;">
+          <div class="metric-card" id="sc-activos7d">
+            <div class="metric-icon mi-green"><i class="fa-solid fa-circle-check"></i></div>
+            <div class="metric-label">Activos últimos 7 días</div>
+            <div class="metric-value mv-green" id="sv-activos7d">—</div>
+            <div class="metric-sub" id="ss-activos7d">de — aliados totales</div>
+          </div>
+          <div class="metric-card" id="sc-inactivos30d">
+            <div class="metric-icon mi-red"><i class="fa-solid fa-moon"></i></div>
+            <div class="metric-label">Inactivos +30 días</div>
+            <div class="metric-value mv-red" id="sv-inactivos30d">—</div>
+            <div class="metric-sub">Sin login en el último mes</div>
+          </div>
+          <div class="metric-card" id="sc-leads">
+            <div class="metric-icon mi-amber"><i class="fa-solid fa-triangle-exclamation"></i></div>
+            <div class="metric-label">Leads bloqueados</div>
+            <div class="metric-value mv-amber" id="sv-leads">—</div>
+            <div class="metric-sub" id="ss-leads">— disponibles en bolsa</div>
+          </div>
+          <div class="metric-card" id="sc-conversion">
+            <div class="metric-icon mi-purple"><i class="fa-solid fa-percent"></i></div>
+            <div class="metric-label">Tasa de conversión</div>
+            <div class="metric-value mv-purple" id="sv-conversion">—</div>
+            <div class="metric-sub" id="ss-conversion">— de — referidos</div>
+          </div>
+          <div class="metric-card" id="sc-ventas7d">
+            <div class="metric-icon mi-green"><i class="fa-solid fa-rocket"></i></div>
+            <div class="metric-label">Ventas esta semana</div>
+            <div class="metric-value mv-green" id="sv-ventas7d">—</div>
+            <div class="metric-sub" id="ss-ventas7d">USD — generados</div>
+          </div>
+          <div class="metric-card" id="sc-calientes">
+            <div class="metric-icon mi-amber"><i class="fa-solid fa-fire"></i></div>
+            <div class="metric-label">Prospectos calientes</div>
+            <div class="metric-value mv-amber" id="sv-calientes">—</div>
+            <div class="metric-sub" id="ss-calientes">— con propuesta enviada</div>
+          </div>
+        </div>
+      </div>
+
       <div class="table-wrap">
         <div class="table-head"><h3><i class="fa-solid fa-layer-group" style="color:#3b82f6;"></i> Distribución por nivel</h3></div>
         <div id="niveles-dist" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:0;"></div>
@@ -601,11 +647,19 @@ tr:hover td { background:rgba(255,255,255,0.02); }
         <div class="section-sub">Estos contactos estarán disponibles públicamente para que los aliados los reclamen.</div>
         <div class="form-2col" style="margin-top:16px;">
           <div class="form-row"><label>Empresa *</label><input type="text" id="bl-empresa" placeholder="Ej: Metalúrgica San Martín"></div>
-          <div class="form-row"><label>Rubro *</label><input type="text" id="bl-rubro" placeholder="Ej: Industria Automotriz"></div>
+          <div class="form-row"><label>Rubro *</label><input type="text" id="bl-rubro" placeholder="Ej: Metalúrgica / Manufactura"></div>
         </div>
         <div class="form-2col">
-          <div class="form-row"><label>Teléfono *</label><input type="text" id="bl-telefono" placeholder="+54 9..."></div>
-          <div class="form-row"><label>Email (Opcional)</label><input type="email" id="bl-email" placeholder="contacto@empresa.com"></div>
+          <div class="form-row"><label>Nombre del contacto</label><input type="text" id="bl-nombre-contacto" placeholder="Ej: Juan Rodríguez"></div>
+          <div class="form-row"><label>Ciudad / Localidad</label><input type="text" id="bl-ciudad" placeholder="Ej: Rafaela, Santa Fe"></div>
+        </div>
+        <div class="form-2col">
+          <div class="form-row"><label>Teléfono *</label><input type="text" id="bl-telefono" placeholder="+54 9 342..."></div>
+          <div class="form-row"><label>WhatsApp (si es diferente)</label><input type="text" id="bl-whatsapp" placeholder="+54 9 342..."></div>
+        </div>
+        <div class="form-2col">
+          <div class="form-row"><label>Email</label><input type="email" id="bl-email" placeholder="contacto@empresa.com"></div>
+          <div class="form-row"><label>Notas internas</label><input type="text" id="bl-notas" placeholder="Ej: Ya pidió presupuesto, budget confirmado"></div>
         </div>
         <!-- v1.3: Tier + costo -->
         <div class="form-2col">
@@ -629,7 +683,7 @@ tr:hover td { background:rgba(255,255,255,0.02); }
           </div>
           <div class="form-row">
             <label>Notas de calificación</label>
-            <input type="text" id="bl-notas" placeholder="Ej: Ya pidió presupuesto, budget confirmado">
+            <input type="text" id="bl-notas-calificacion" placeholder="Ej: Ya pidió presupuesto, budget confirmado">
           </div>
         </div>
         <button class="btn-green" onclick="cargarLeadBolsa()"><i class="fa-solid fa-upload"></i> Subir a la Bolsa</button>
@@ -637,42 +691,61 @@ tr:hover td { background:rgba(255,255,255,0.02); }
 
       <!-- MODO MASIVO -->
       <div id="modo-masivo" class="table-wrap" style="margin-bottom:24px; padding: 24px; display:none;">
-        <div class="section-title"><i class="fa-solid fa-paste" style="color:var(--primary);"></i> &nbsp;Importación Masiva</div>
-        <div class="section-sub" style="margin-bottom:12px;">Pegá tu lista de contactos. El sistema detecta los rubros por los encabezados (🔩 METALÚRGICAS, 🌾 AGRO, etc.) y carga todos los leads de una sola vez.</div>
-
-        <div style="background:rgba(255,255,255,0.03);border:1px dashed var(--border);border-radius:8px;padding:12px;font-size:.78rem;color:var(--text-muted);margin-bottom:14px;line-height:1.8;">
-          <strong style="color:var(--text);">Formato aceptado:</strong><br>
-          🔩 METALÚRGICAS — Santa Fe Capital<br>
-          EmpresaDirecciónTeléfono<br>
-          Tornería Metalúrgica VergnaniAv. Zuviría 5661+54 342 631-7101<br>
-          ...<br>
-          🌾 AGRO — Santa Fe Capital<br>
-          EmpresaDirecciónTeléfono<br>
-          Stamatti Denis SemilleríaRuta 11 km 478+54 342 490-5249
+        <div class="section-title"><i class="fa-solid fa-file-csv" style="color:var(--primary);"></i> &nbsp;Importación Masiva — CSV</div>
+        <div class="section-sub" style="margin-bottom:16px; line-height:1.6;">
+          Subí el CSV generado por la IA y el sistema carga todos los leads con <strong>todos los campos</strong> de una sola vez.
         </div>
 
-        <textarea id="bulk-texto" rows="12" style="width:100%;background:rgba(0,0,0,0.3);border:1px solid var(--border);border-radius:8px;color:var(--text);padding:14px;font-size:.83rem;resize:vertical;font-family:monospace;" placeholder="Pegá acá tu lista de contactos..."></textarea>
+        <div style="background:rgba(255,255,255,0.03);border:1px dashed var(--border);border-radius:8px;padding:14px;font-size:.78rem;color:var(--text-muted);margin-bottom:18px;line-height:1.9;">
+          <strong style="color:var(--text); display:block; margin-bottom:6px;">📋 Columnas requeridas (separadas por punto y coma):</strong>
+          <code style="background:rgba(0,0,0,0.4);padding:6px 10px;border-radius:6px;display:block;font-size:.77rem;color:#93c5fd;margin-bottom:8px;">
+            empresa ; rubro ; nombre_contacto ; ciudad ; telefono ; whatsapp ; email ; tier ; costo_creditos ; score_calidad
+          </code>
+          <span style="color:var(--amber);">⚠️ tier</span> solo acepta: <code>basico</code> | <code>calificado</code> | <code>premium</code><br>
+          <span style="color:var(--amber);">⚠️ costo_creditos</span>: 0 para básico · 10 para calificado · 20 para premium<br>
+          <span style="color:var(--amber);">⚠️ score_calidad</span>: número entre 0 y 100 — La primera fila (encabezado) se ignora automáticamente.
+        </div>
 
-        <div style="display:flex;align-items:center;gap:12px;margin-top:12px;flex-wrap:wrap;">
-          <button class="btn-green" onclick="previsualizarMasivo()" style="display:flex;align-items:center;gap:6px;">
-            <i class="fa-solid fa-eye"></i> Previsualizar
+        <!-- Zona de drop / selector de archivo -->
+        <div id="drop-zone" onclick="document.getElementById('csv-file-input').click()"
+          style="border:2px dashed rgba(99,102,241,0.5);border-radius:10px;padding:32px;text-align:center;cursor:pointer;transition:all .2s;margin-bottom:16px;background:rgba(99,102,241,0.04);"
+          ondragover="event.preventDefault();this.style.borderColor='var(--primary)';"
+          ondragleave="this.style.borderColor='rgba(99,102,241,0.5)';"
+          ondrop="event.preventDefault();this.style.borderColor='rgba(99,102,241,0.5)';handleCSVDrop(event.dataTransfer.files[0]);">
+          <i class="fa-solid fa-cloud-arrow-up" style="font-size:2rem;color:var(--primary);margin-bottom:10px;display:block;"></i>
+          <div style="font-weight:700;color:var(--text);margin-bottom:4px;">Arrastrá tu CSV acá o hacé click para seleccionar</div>
+          <div style="font-size:.8rem;color:var(--text-muted);">Archivos .csv separados por punto y coma (;)</div>
+          <input type="file" id="csv-file-input" accept=".csv,.txt" style="display:none;" onchange="handleCSVFile(this.files[0])">
+        </div>
+
+        <div style="display:flex;align-items:center;gap:12px;margin-top:4px;flex-wrap:wrap;">
+          <button id="btn-importar-masivo" onclick="importarMasivo()" style="display:none;padding:10px 22px;background:var(--primary);color:#fff;border:none;border-radius:8px;font-weight:700;cursor:pointer;font-size:.9rem;">
+            <i class="fa-solid fa-upload"></i> Subir todos (<span id="count-masivo">0</span>)
           </button>
-          <button id="btn-importar-masivo" onclick="importarMasivo()" style="display:none;padding:10px 20px;background:var(--primary);color:#fff;border:none;border-radius:8px;font-weight:700;cursor:pointer;font-size:.9rem;">
-            <i class="fa-solid fa-upload"></i> Importar todos (<span id="count-masivo">0</span>)
+          <button onclick="limpiarImportacion()" style="display:none;padding:9px 18px;background:transparent;border:1px solid var(--border);border-radius:8px;color:var(--text-muted);font-size:.85rem;cursor:pointer;" id="btn-limpiar-masivo">
+            <i class="fa-solid fa-xmark"></i> Limpiar
           </button>
           <span id="bulk-status" style="font-size:.82rem;color:var(--text-muted);"></span>
         </div>
 
         <!-- Tabla de previsualización -->
-        <div id="bulk-preview" style="display:none;margin-top:18px;">
-          <div style="font-weight:700;margin-bottom:8px;color:var(--text);">Vista previa — revisá antes de importar:</div>
-          <div style="overflow-x:auto;max-height:320px;overflow-y:auto;">
-            <table style="width:100%;font-size:.82rem;">
-              <thead><tr>
-                <th style="padding:8px;text-align:left;border-bottom:1px solid var(--border);">Empresa</th>
-                <th style="padding:8px;text-align:left;border-bottom:1px solid var(--border);">Rubro</th>
-                <th style="padding:8px;text-align:left;border-bottom:1px solid var(--border);">Teléfono</th>
-              </tr></thead>
+        <div id="bulk-preview" style="display:none;margin-top:20px;">
+          <div style="font-weight:700;margin-bottom:10px;color:var(--text);display:flex;align-items:center;gap:8px;">
+            <i class="fa-solid fa-eye" style="color:var(--primary);"></i> Vista previa — revisá antes de importar:
+          </div>
+          <div style="overflow-x:auto;max-height:360px;overflow-y:auto;border-radius:8px;border:1px solid var(--border);">
+            <table style="width:100%;font-size:.8rem;border-collapse:collapse;">
+              <thead>
+                <tr style="background:rgba(255,255,255,0.04);position:sticky;top:0;">
+                  <th style="padding:9px 10px;text-align:left;border-bottom:1px solid var(--border);white-space:nowrap;">Empresa</th>
+                  <th style="padding:9px 10px;text-align:left;border-bottom:1px solid var(--border);white-space:nowrap;">Rubro</th>
+                  <th style="padding:9px 10px;text-align:left;border-bottom:1px solid var(--border);white-space:nowrap;">Contacto</th>
+                  <th style="padding:9px 10px;text-align:left;border-bottom:1px solid var(--border);white-space:nowrap;">Ciudad</th>
+                  <th style="padding:9px 10px;text-align:left;border-bottom:1px solid var(--border);white-space:nowrap;">Teléfono</th>
+                  <th style="padding:9px 10px;text-align:left;border-bottom:1px solid var(--border);white-space:nowrap;">Tier</th>
+                  <th style="padding:9px 10px;text-align:left;border-bottom:1px solid var(--border);white-space:nowrap;">Score</th>
+                </tr>
+              </thead>
               <tbody id="bulk-preview-body"></tbody>
             </table>
           </div>
@@ -1128,7 +1201,7 @@ async function cargarTodo() {
   await cargarAliados(); 
   
   // 2. LUEGO cargamos el resto (que ahora sí pueden usar la lista de 'todosAliados')
-  await Promise.all([cargarReferidos(), cargarVentas(), cargarSuspendidos()]);
+  await Promise.all([cargarReferidos(), cargarVentas(), cargarSuspendidos(), cargarSaludPrograma()]);
   
   // 3. Finalmente renderizamos la interfaz
   renderDashboard();
@@ -1137,6 +1210,82 @@ async function cargarTodo() {
   renderReferidos('todos');
   renderVentas();
   poblarSelectAliados();
+}
+
+async function cargarSaludPrograma() {
+  try {
+    const r = await apiFetch(`${API}/admin/programa/salud`);
+    if (!r.ok) return;
+    const d = await r.json();
+
+    const totalAliados = d.aliados.total || 1;
+
+    // Activos 7d
+    const a7 = d.aliados.activos_7d;
+    document.getElementById("sv-activos7d").textContent = a7;
+    document.getElementById("ss-activos7d").textContent = `de ${d.aliados.total} aliados activos`;
+    const pctActivos = Math.round(a7 / totalAliados * 100);
+    const cardActivos = document.getElementById("sc-activos7d");
+    if (pctActivos < 30) cardActivos.style.borderColor = "rgba(248,113,113,0.4)";
+    else if (pctActivos < 60) cardActivos.style.borderColor = "rgba(251,191,36,0.4)";
+    else cardActivos.style.borderColor = "rgba(74,222,128,0.3)";
+
+    // Inactivos 30d
+    const i30 = d.aliados.inactivos_30d;
+    document.getElementById("sv-inactivos30d").textContent = i30;
+    const cardInact = document.getElementById("sc-inactivos30d");
+    if (i30 === 0) { cardInact.style.borderColor = "rgba(74,222,128,0.3)"; document.getElementById("sv-inactivos30d").className = "metric-value mv-green"; }
+    else if (i30 / totalAliados > 0.4) cardInact.style.borderColor = "rgba(248,113,113,0.4)";
+
+    // Leads bloqueados (reclamados sin contactar)
+    const lbloq = d.bolsa.leads_reclamados;
+    document.getElementById("sv-leads").textContent = lbloq;
+    document.getElementById("ss-leads").textContent = `${d.bolsa.leads_disponibles} disponibles en bolsa`;
+    const cardLeads = document.getElementById("sc-leads");
+    if (lbloq === 0) { cardLeads.style.borderColor = "rgba(74,222,128,0.3)"; document.getElementById("sv-leads").className = "metric-value mv-green"; }
+    else if (lbloq > 2) cardLeads.style.borderColor = "rgba(248,113,113,0.4)";
+
+    // Tasa conversion
+    const tasa = d.conversion.tasa_pct;
+    document.getElementById("sv-conversion").textContent = `${tasa}%`;
+    document.getElementById("ss-conversion").textContent = `${d.conversion.convertidos} de ${d.conversion.total_referidos} referidos`;
+    const cardConv = document.getElementById("sc-conversion");
+    if (tasa >= 20) cardConv.style.borderColor = "rgba(74,222,128,0.3)";
+    else if (tasa < 5 && d.conversion.total_referidos >= 10) cardConv.style.borderColor = "rgba(248,113,113,0.4)";
+
+    // Ventas semana
+    const vs = d.ventas_7d.cantidad;
+    document.getElementById("sv-ventas7d").textContent = vs;
+    document.getElementById("ss-ventas7d").textContent = `USD ${Math.round(d.ventas_7d.usd).toLocaleString()} generados`;
+    const cardVentas = document.getElementById("sc-ventas7d");
+    if (vs === 0) { cardVentas.style.borderColor = "rgba(248,113,113,0.3)"; document.getElementById("sv-ventas7d").className = "metric-value mv-red"; }
+
+    // Prospectos calientes
+    const cal = d.prospectos.calientes;
+    document.getElementById("sv-calientes").textContent = cal;
+    document.getElementById("ss-calientes").textContent = `${d.prospectos.propuesta_enviada} con propuesta enviada`;
+
+    // Timestamp
+    document.getElementById("salud-generado").textContent = `Actualizado: ${d.generado_en}`;
+
+    // Alertas
+    const alertasEl = document.getElementById("salud-alertas");
+    if (d.alertas && d.alertas.length > 0) {
+      const colores = { rojo: "#f87171", amber: "#fbbf24" };
+      const iconos  = { rojo: "fa-circle-xmark", amber: "fa-triangle-exclamation" };
+      alertasEl.innerHTML = d.alertas.map(al => `
+        <div style="display:flex;align-items:center;gap:8px;padding:8px 12px;margin-bottom:6px;border-radius:8px;background:rgba(0,0,0,0.2);border-left:3px solid ${colores[al.nivel] || "#fbbf24"};">
+          <i class="fa-solid ${iconos[al.nivel] || "fa-info-circle"}" style="color:${colores[al.nivel]};font-size:.8rem;flex-shrink:0;"></i>
+          <span style="font-size:.82rem;color:var(--text);">${al.msg}</span>
+        </div>`).join("");
+      alertasEl.style.display = "block";
+    } else {
+      alertasEl.innerHTML = `<div style="padding:8px 12px;margin-bottom:6px;border-radius:8px;background:rgba(74,222,128,0.08);border-left:3px solid #4ade80;font-size:.82rem;color:#4ade80;"><i class="fa-solid fa-circle-check" style="margin-right:6px;"></i>Sin alertas — el programa está operando bien.</div>`;
+      alertasEl.style.display = "block";
+    }
+  } catch (e) {
+    console.error("Error cargando salud del programa:", e);
+  }
 }
 
 async function cargarAliados() {
@@ -1931,124 +2080,137 @@ function setModoCarga(modo) {
   }
 }
 
-function parsearTextoMasivo(texto) {
+function parsearCSVMasivo(texto) {
+  const lineas = texto.split(/\r?\n/).map(l => l.trim()).filter(l => l.length > 3);
+  if (lineas.length < 2) return [];
+  const sep = lineas[0].includes(';') ? ';' : ',';
+  const filas = lineas.slice(1); // saltar encabezado
   const leads = [];
-  let norm = texto
-    .replace(/([\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}])/gu, '\n$1')
-    .replace(/(\+54[\s\d\-\(\)]{5,})/g, '\n$1\n')
-    .replace(/(\b0\d{2,4}[\s\-]?\d{6,8})/g, '\n$1\n')
-    .split('\n').map(l => l.trim()).filter(l => l.length > 2);
-
-  const EMOJIS       = /^[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}]/u;
-  const HEADER_TABLA = /^empresa\s*direcci/i;
-  const TELEFONO_RE  = /^(\+?54[\d\s\-\(\)]{5,}|\+?[\d][\d\s\-\(\)]{8,})/;
-  const DIR_KEYWORDS = /^(Av\.|Ruta\s|Calle\s|Gral\.|Gdor\.|G\.\s+de|Gorriti|Suipacha|Sarmiento|Necochea|Urquiza|Rivadavia|Misiones|Blas\s+P|Pedro\s+de|C\.18|1\u00b0|25\s+de|27\s+de|Francia\s+\d|C\u00f3rdoba\s+\d|Lamadrid|Esqui\u00fa)/i;
-
-  let rubroActual = '';
-  let empresaActual = '';
-
-  for (const linea of norm) {
-    if (EMOJIS.test(linea) || (/\u2014|\-\-/.test(linea) && !TELEFONO_RE.test(linea) && linea.length < 100)) {
-      rubroActual = linea.replace(/^[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}\s]+/u, '').replace(/\s*[-—–]+.*$/, '').trim();
-      empresaActual = '';
-      continue;
-    }
-    if (HEADER_TABLA.test(linea)) { empresaActual = ''; continue; }
-    if (TELEFONO_RE.test(linea)) {
-      const tel = linea.replace(/📱/g, '').trim();
-      if (empresaActual && rubroActual) {
-        leads.push({ empresa: empresaActual, rubro: rubroActual, telefono: tel, email: '' });
-      }
-      empresaActual = '';
-      continue;
-    }
-    if (DIR_KEYWORDS.test(linea)) continue;
-    if (rubroActual && linea.length > 2 && linea.length < 120) {
-      // Separar empresa de dirección si vienen pegadas
-      let emp = linea;
-      // Cortar antes de Av., Gral., Calle, o número de calle grande
-      emp = emp.replace(/(Gral\.|Gdor\.|Av\.|Bv\.|Pje\.|Ruta\s+\d|Calle\s+|Blas\s|Delf|Zuvir|Pellegrini|Lavalle|Lamas|Zeballos|Saavedra|Quiroga|Huergo|Mayo\s+\d|Junín|Belgrano\s+\d|Esquiú|Gorriti|Rivadavia|Urquiza|Francia\s+\d|Suipacha|Necochea|Sarmiento\s+\d|\bSF\b|,\s*Santa).*$/i, '');
-      emp = emp.replace(/\s*\d{4,}.*$/, ''); // cortar ante número de calle largo
-      emp = emp.replace(/,.*$/, '');           // cortar ante coma
-      emp = emp.replace(/\s+/g, ' ').trim();
-      empresaActual = emp;
-    }
+  for (const fila of filas) {
+    const cols = fila.split(sep).map(c => c.trim().replace(/^["']|["']$/g, ''));
+    if (cols.length < 5) continue;
+    const [empresa, rubro, nombre_contacto, ciudad, telefono, whatsapp, email, tier_raw, costo_raw, score_raw] = cols;
+    if (!empresa || !rubro || !telefono) continue;
+    const tier = ['basico','calificado','premium'].includes((tier_raw||'').toLowerCase())
+      ? tier_raw.toLowerCase() : 'basico';
+    const costo_creditos = parseInt(costo_raw || '0') || 0;
+    const score_calidad  = Math.min(100, Math.max(0, parseInt(score_raw || '50') || 50));
+    leads.push({ empresa, rubro, nombre_contacto: nombre_contacto||'', ciudad: ciudad||'',
+      telefono, whatsapp: whatsapp||telefono, email: email||'', tier,
+      costo_creditos, score_calidad, notas_calificacion: '' });
   }
   return leads;
 }
 
-function previsualizarMasivo() {
-  const texto = document.getElementById('bulk-texto').value;
-  if (!texto.trim()) {
-    document.getElementById('bulk-status').textContent = '⚠️ Pegá el texto primero.';
-    return;
-  }
+function handleCSVFile(file) {
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (e) => procesarCSVTexto(e.target.result, file.name);
+  reader.readAsText(file, 'UTF-8');
+}
 
-  _leadsMasivos = parsearTextoMasivo(texto);
+function handleCSVDrop(file) {
+  if (!file) return;
+  handleCSVFile(file);
+}
 
-  const preview = document.getElementById('bulk-preview');
-  const tbody   = document.getElementById('bulk-preview-body');
-  const status  = document.getElementById('bulk-status');
-  const btnImp  = document.getElementById('btn-importar-masivo');
-  const count   = document.getElementById('count-masivo');
+function procesarCSVTexto(texto, nombre) {
+  _leadsMasivos = parsearCSVMasivo(texto);
+  const preview  = document.getElementById('bulk-preview');
+  const tbody    = document.getElementById('bulk-preview-body');
+  const status   = document.getElementById('bulk-status');
+  const btnImp   = document.getElementById('btn-importar-masivo');
+  const btnLimp  = document.getElementById('btn-limpiar-masivo');
+  const count    = document.getElementById('count-masivo');
+  const dropZone = document.getElementById('drop-zone');
 
   if (_leadsMasivos.length === 0) {
-    status.textContent = '❌ No se detectaron contactos. Verificá el formato.';
+    status.textContent = '❌ No se detectaron leads válidos. Verificá el formato del CSV.';
     preview.style.display = 'none';
     btnImp.style.display  = 'none';
+    btnLimp.style.display = 'none';
     return;
   }
 
-  tbody.innerHTML = _leadsMasivos.map((l, i) => `
-    <tr style="border-bottom:1px solid var(--border);">
-      <td style="padding:7px 8px; font-weight:600;">${l.empresa}</td>
-      <td style="padding:7px 8px; color:var(--text-muted);">${l.rubro}</td>
-      <td style="padding:7px 8px;">${l.telefono}</td>
+  dropZone.innerHTML = `
+    <i class="fa-solid fa-file-csv" style="font-size:2rem;color:#4ade80;margin-bottom:10px;display:block;"></i>
+    <div style="font-weight:700;color:#4ade80;margin-bottom:4px;">${nombre}</div>
+    <div style="font-size:.8rem;color:var(--text-muted);">Hacé click para cambiar el archivo</div>
+    <input type="file" id="csv-file-input" accept=".csv,.txt" style="display:none;" onchange="handleCSVFile(this.files[0])">
+  `;
+
+  const tierColor = { basico: 'var(--text-muted)', calificado: 'var(--amber)', premium: '#a78bfa' };
+  const tierIcon  = { basico: '', calificado: '⭐', premium: '💎' };
+
+  tbody.innerHTML = _leadsMasivos.map(l => `
+    <tr style="border-bottom:1px solid rgba(255,255,255,0.05);">
+      <td style="padding:7px 10px;font-weight:700;color:var(--text);">${l.empresa}</td>
+      <td style="padding:7px 10px;color:var(--text-muted);">${l.rubro}</td>
+      <td style="padding:7px 10px;color:var(--text-muted);">${l.nombre_contacto||'—'}</td>
+      <td style="padding:7px 10px;color:var(--text-muted);">${l.ciudad||'—'}</td>
+      <td style="padding:7px 10px;">${l.telefono}</td>
+      <td style="padding:7px 10px;color:${tierColor[l.tier]||'var(--text-muted)'};font-weight:700;">${tierIcon[l.tier]||''} ${l.tier}</td>
+      <td style="padding:7px 10px;">
+        <div style="display:flex;align-items:center;gap:6px;">
+          <div style="width:36px;height:5px;background:rgba(255,255,255,0.1);border-radius:3px;overflow:hidden;">
+            <div style="width:${l.score_calidad}%;height:100%;background:var(--green);"></div>
+          </div>
+          <span style="font-size:.75rem;color:var(--text-muted);">${l.score_calidad}</span>
+        </div>
+      </td>
     </tr>
   `).join('');
 
-  count.textContent    = _leadsMasivos.length;
-  status.textContent   = `✅ ${_leadsMasivos.length} contactos detectados.`;
+  count.textContent = _leadsMasivos.length;
+  status.textContent = `✅ ${_leadsMasivos.length} leads detectados. Revisá y confirmá.`;
   preview.style.display = 'block';
   btnImp.style.display  = 'inline-flex';
+  btnLimp.style.display = 'inline-flex';
+}
+
+function limpiarImportacion() {
+  _leadsMasivos = [];
+  document.getElementById('bulk-preview').style.display  = 'none';
+  document.getElementById('btn-importar-masivo').style.display = 'none';
+  document.getElementById('btn-limpiar-masivo').style.display  = 'none';
+  document.getElementById('bulk-status').textContent = '';
+  document.getElementById('drop-zone').innerHTML = `
+    <i class="fa-solid fa-cloud-arrow-up" style="font-size:2rem;color:var(--primary);margin-bottom:10px;display:block;"></i>
+    <div style="font-weight:700;color:var(--text);margin-bottom:4px;">Arrastrá tu CSV acá o hacé click para seleccionar</div>
+    <div style="font-size:.8rem;color:var(--text-muted);">Archivos .csv separados por punto y coma (;)</div>
+    <input type="file" id="csv-file-input" accept=".csv,.txt" style="display:none;" onchange="handleCSVFile(this.files[0])">
+  `;
 }
 
 async function importarMasivo() {
   if (!_leadsMasivos.length) return;
-
   const btnImp = document.getElementById('btn-importar-masivo');
   const status = document.getElementById('bulk-status');
   btnImp.disabled = true;
   btnImp.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Importando...';
-
-  let ok = 0, err = 0;
-
-  for (const lead of _leadsMasivos) {
-    try {
-      const res = await apiFetch(`${API}/admin/bolsa`, {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify(lead)
-      });
-      if (res.ok) ok++; else err++;
-    } catch { err++; }
+  status.textContent = `⏳ Subiendo ${_leadsMasivos.length} leads...`;
+  try {
+    const res = await apiFetch(`${API}/admin/bolsa/bulk`, {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({ leads: _leadsMasivos })
+    });
+    if (res.ok) {
+      const data = await res.json();
+      mostrarToast(`✅ ${data.total} leads subidos. Los aliados recibieron un digest.`, 'green');
+      limpiarImportacion();
+      cargarAdminBolsa();
+    } else {
+      const err = await res.json().catch(() => ({}));
+      mostrarToast(`Error al importar: ${err.detail || res.status}`, 'red');
+    }
+  } catch (e) {
+    mostrarToast(`Error de red: ${e.message}`, 'red');
   }
-
   btnImp.disabled = false;
-  btnImp.innerHTML = `<i class="fa-solid fa-upload"></i> Importar todos (<span id="count-masivo">${_leadsMasivos.length}</span>)`;
-
-  if (err === 0) {
-    mostrarToast(`✅ ${ok} leads importados correctamente.`, 'green');
-    document.getElementById('bulk-texto').value = '';
-    document.getElementById('bulk-preview').style.display = 'none';
-    btnImp.style.display = 'none';
-    status.textContent = '';
-    _leadsMasivos = [];
-    cargarAdminBolsa();
-  } else {
-    mostrarToast(`Importados: ${ok} ✅ — Fallidos: ${err} ❌`, 'amber');
-  }
+  btnImp.innerHTML = `<i class="fa-solid fa-upload"></i> Subir todos (<span id="count-masivo">${_leadsMasivos.length}</span>)`;
 }
+
 
 async function cargarAdminBolsa() {
   try {
@@ -2107,12 +2269,16 @@ async function cargarAdminBolsa() {
 async function cargarLeadBolsa() {
   const empresa = document.getElementById('bl-empresa').value.trim();
   const rubro = document.getElementById('bl-rubro').value.trim();
+  const nombre_contacto = document.getElementById('bl-nombre-contacto').value.trim();
+  const ciudad = document.getElementById('bl-ciudad').value.trim();
   const telefono = document.getElementById('bl-telefono').value.trim();
+  const whatsapp = document.getElementById('bl-whatsapp').value.trim();
   const email = document.getElementById('bl-email').value.trim();
   const tier = document.getElementById('bl-tier').value;
   const costo_creditos = parseInt(document.getElementById('bl-costo').value || '0');
   const score_calidad = parseInt(document.getElementById('bl-score').value || '50');
-  const notas_calificacion = document.getElementById('bl-notas').value.trim();
+  const notas = document.getElementById('bl-notas').value.trim();
+  const notas_calificacion = document.getElementById('bl-notas-calificacion').value.trim();
 
   if(!empresa || !rubro || !telefono) {
     mostrarToast('Empresa, Rubro y Teléfono son obligatorios.', 'amber');
@@ -2127,12 +2293,12 @@ async function cargarLeadBolsa() {
     const res = await apiFetch(`${API}/admin/bolsa-v2`, {
       method: 'POST',
       headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({empresa, rubro, telefono, email, tier, costo_creditos, score_calidad, notas_calificacion})
+      body: JSON.stringify({empresa, rubro, nombre_contacto, ciudad, telefono, whatsapp, email, notas, tier, costo_creditos, score_calidad, notas_calificacion})
     });
     if(res.ok) {
       const tierLabel = {basico:'básico', calificado:'calificado ⭐', premium:'premium 💎'}[tier] || tier;
       mostrarToast(`¡Lead ${tierLabel} agregado a la bolsa!`, 'green');
-      ['bl-empresa', 'bl-rubro', 'bl-telefono', 'bl-email', 'bl-notas'].forEach(id => document.getElementById(id).value = '');
+      ['bl-empresa','bl-rubro','bl-nombre-contacto','bl-ciudad','bl-telefono','bl-whatsapp','bl-email','bl-notas','bl-notas-calificacion'].forEach(id => document.getElementById(id).value = '');
       document.getElementById('bl-costo').value = '0';
       document.getElementById('bl-score').value = '50';
       document.getElementById('bl-tier').value = 'basico';
