@@ -1531,11 +1531,25 @@ async function activarAliado(codigo) {
 
 async function eliminarAliado(codigo, nombre) {
   try {
-    await apiFetch(`${API}/aliados/${codigo}/eliminar`, {method:'DELETE'});
+    const r = await apiFetch(`${API}/aliados/${codigo}/eliminar`, {method:'DELETE'});
+    if (!r.ok) {
+      let msg = `Error al eliminar (HTTP ${r.status})`;
+      try {
+        const err = await r.json();
+        if (err && err.detail) msg = err.detail;
+      } catch {}
+      mostrarToast(msg, 'red');
+      return;
+    }
     mostrarToast(`${nombre} eliminado permanentemente — código ${codigo} liberado`, 'green');
+    await cargarAliados();
     await cargarSuspendidos();
+    renderAliados();
     renderSuspendidos();
-  } catch { mostrarToast('Error al eliminar', 'red'); }
+    renderDashboard();
+  } catch (e) {
+    mostrarToast('Error de conexión al eliminar', 'red');
+  }
 }
 
 function renderSuspendidos() {

@@ -958,11 +958,116 @@ def activar_aliado(codigo: str, db: Session = Depends(get_db)):
 
 @app.delete("/aliados/{codigo}/eliminar")
 def eliminar_aliado(codigo: str, db: Session = Depends(get_db)):
+    """
+    Borra un aliado de forma permanente, limpiando primero TODAS las tablas
+    con FK hacia aliados.id (Referido, Venta, Prospecto, Comision, LinkPago,
+    AutomationLog, PostComunidad, ComentarioComunidad, TransaccionCredito,
+    BolsaLead, AuditoriaLog, sub-aliados, etc.).
+
+    Sin esta limpieza, PostgreSQL rechaza el DELETE con un IntegrityError
+    (foreign key violation) — que es lo que disparaba "Error al eliminar".
+    """
     a = _get_aliado(codigo, db)
-    db.query(Referido).filter(Referido.aliado_id == a.id).delete()
-    db.query(Venta).filter(Venta.aliado_id == a.id).delete()
-    db.delete(a); db.commit()
-    return {"mensaje": f"{codigo} eliminado permanentemente."}
+    aid = a.id
+
+    try:
+        # 1) IDs auxiliares que vamos a necesitar para limpiar tablas hijas
+        prospecto_ids = [p.id for p in db.query(Prospecto.id).filter(Prospecto.aliado_id == aid).all()]
+        post_ids      = [p.id for p in db.query(PostComunidad.id).filter(PostComunidad.aliado_id == aid).all()]
+
+        # 2) Comentarios de comunidad: los que hizo el aliado + los que recibieron sus posts
+        if post_ids:
+            db.query(ComentarioComunidad)\
+              .filter(ComentarioComunidad.post_id.in_(post_ids))\
+              .delete(synchronize_session=False)
+        db.query(ComentarioComunidad)\
+          .filter(ComentarioComunidad.aliado_id == aid)\
+          .delete(synchronize_session=False)
+
+        # 3) Posts del aliado
+        db.query(PostComunidad)\
+          .filter(PostComunidad.aliado_id == aid)\
+          .delete(synchronize_session=False)
+
+        # 4) Comisiones (depende de LinkPago y Prospecto, así que va antes)
+        db.query(Comision)\
+          .filter(Comision.aliado_id == aid)\
+          .delete(synchronize_session=False)
+        if prospecto_ids:
+            db.query(Comision)\
+              .filter(Comision.prospecto_id.in_(prospecto_ids))\
+              .delete(synchronize_session=False)
+
+        # 5) Links de pago (depende de Prospecto)
+        db.query(LinkPago)\
+          .filter(LinkPago.aliado_id == aid)\
+          .delete(synchronize_session=False)
+        if prospecto_ids:
+            db.query(LinkPago)\
+              .filter(LinkPago.prospecto_id.in_(prospecto_ids))\
+              .delete(synchronize_session=False)
+
+        # 6) Logs de automatización (referencia Prospecto y Aliado)
+        db.query(AutomationLog)\
+          .filter(AutomationLog.aliado_id == aid)\
+          .delete(synchronize_session=False)
+        if prospecto_ids:
+            db.query(AutomationLog)\
+              .filter(AutomationLog.prospecto_id.in_(prospecto_ids))\
+              .delete(synchronize_session=False)
+
+        # 7) Ventas (referencian Referido)
+        db.query(Venta)\
+          .filter(Venta.aliado_id == aid)\
+          .delete(synchronize_session=False)
+
+        # 8) Referidos del aliado
+        db.query(Referido)\
+          .filter(Referido.aliado_id == aid)\
+          .delete(synchronize_session=False)
+
+        # 9) Prospectos del aliado (ahora seguros de borrar)
+        db.query(Prospecto)\
+          .filter(Prospecto.aliado_id == aid)\
+          .delete(synchronize_session=False)
+
+        # 10) Transacciones de créditos
+        db.query(TransaccionCredito)\
+          .filter(TransaccionCredito.aliado_id == aid)\
+          .delete(synchronize_session=False)
+
+        # 11) Auditoría: la dejamos pero desvinculamos (preserva historial)
+        db.query(AuditoriaLog)\
+          .filter(AuditoriaLog.aliado_id == aid)\
+          .update({AuditoriaLog.aliado_id: None}, synchronize_session=False)
+
+        # 12) Bolsa de leads: liberar los reclamados por este aliado, vuelven a estar disponibles
+        db.query(LeadBolsa)\
+          .filter(LeadBolsa.aliado_id == aid)\
+          .update({
+              LeadBolsa.aliado_id: None,
+              LeadBolsa.estado: "disponible",
+              LeadBolsa.fecha_reclamo: None,
+          }, synchronize_session=False)
+
+        # 13) Sub-aliados: desvincular sponsor (NO los borramos, solo los orfanamos)
+        db.query(Aliado)\
+          .filter(Aliado.sponsor_id == aid)\
+          .update({Aliado.sponsor_id: None}, synchronize_session=False)
+
+        # 14) Por fin: el aliado
+        db.delete(a)
+        db.commit()
+        return {"mensaje": f"{codigo} eliminado permanentemente."}
+
+    except Exception as e:
+        db.rollback()
+        # Log al stderr para que aparezca en Railway logs
+        print(f"[eliminar_aliado] ERROR borrando {codigo}: {type(e).__name__}: {e}", file=sys.stderr)
+        raise HTTPException(
+            status_code=500,
+            detail=f"No se pudo eliminar al aliado: {type(e).__name__}. Revisar logs del servidor."
+        )
 
 
 @app.patch("/aliados/{codigo}/nivel")
