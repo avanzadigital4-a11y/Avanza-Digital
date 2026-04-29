@@ -755,15 +755,30 @@ tr:hover td { background:rgba(255,255,255,0.02); }
       <div class="table-wrap">
         <div class="table-head">
           <h3><i class="fa-solid fa-briefcase" style="color:var(--primary);"></i> Monitor de Reclamos</h3>
-          <button onclick="cargarAdminBolsa()" style="background:transparent;border:1px solid var(--border);color:var(--text-muted);border-radius:8px;padding:7px 14px;font-size:.8rem;cursor:pointer;"><i class="fa-solid fa-rotate-right"></i> Actualizar</button>
+          <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+            <div id="bolsa-selection-bar" style="display:none;align-items:center;gap:8px;">
+              <span id="bolsa-sel-count" style="font-size:.82rem;color:var(--text-muted);"></span>
+              <button class="btn-red" onclick="eliminarLeadsSeleccionados()" id="btn-borrar-sel" style="padding:7px 14px;font-size:.8rem;">
+                <i class="fa-solid fa-trash"></i> Borrar seleccionados
+              </button>
+            </div>
+            <button class="btn-red" onclick="borrarTodosLosLeads()" id="btn-borrar-todos" style="padding:7px 14px;font-size:.8rem;" title="Eliminar TODOS los leads de la bolsa">
+              <i class="fa-solid fa-trash-can"></i> Borrar todo
+            </button>
+            <button onclick="cargarAdminBolsa()" style="background:transparent;border:1px solid var(--border);color:var(--text-muted);border-radius:8px;padding:7px 14px;font-size:.8rem;cursor:pointer;"><i class="fa-solid fa-rotate-right"></i> Actualizar</button>
+          </div>
         </div>
         <div style="overflow-x:auto;">
           <table>
             <thead><tr>
+              <th style="width:40px;text-align:center;">
+                <input type="checkbox" id="bolsa-check-all" onchange="toggleSelectAllLeads(this)"
+                  style="width:15px;height:15px;cursor:pointer;accent-color:var(--primary);">
+              </th>
               <th>Empresa</th><th>Rubro</th><th>Estado</th><th>Asignado A</th><th>Tiempo</th><th>Acción</th>
             </tr></thead>
             <tbody id="tabla-bolsa-body">
-              <tr><td colspan="6" style="text-align:center;padding:32px;color:var(--text-muted);">Cargando...</td></tr>
+              <tr><td colspan="7" style="text-align:center;padding:32px;color:var(--text-muted);">Cargando...</td></tr>
             </tbody>
           </table>
         </div>
@@ -2246,6 +2261,11 @@ async function cargarAdminBolsa() {
       return;
     }
 
+    // Resetear selección y checkbox maestro
+    const chkAll = document.getElementById('bolsa-check-all');
+    if (chkAll) { chkAll.checked = false; chkAll.indeterminate = false; }
+    actualizarBarraSeleccionBolsa();
+
     tbody.innerHTML = data.leads.map(l => {
       let estadoBadge = '';
       if(l.estado === 'disponible') estadoBadge = '<span class="badge badge-green"><i class="fa-solid fa-unlock"></i> Disponible</span>';
@@ -2253,13 +2273,21 @@ async function cargarAdminBolsa() {
       if(l.estado === 'contactado') estadoBadge = '<span class="badge badge-blue"><i class="fa-solid fa-phone"></i> Contactado</span>';
 
       return `<tr style="border-bottom:1px solid var(--border); transition:background .15s;" onmouseover="this.style.background='rgba(255,255,255,0.03)'" onmouseout="this.style.background='transparent'">
+        <td style="text-align:center;padding:10px 12px;">
+          <input type="checkbox" class="bolsa-row-check" data-id="${l.id}"
+            onchange="actualizarBarraSeleccionBolsa()"
+            style="width:15px;height:15px;cursor:pointer;accent-color:var(--primary);">
+        </td>
         <td style="font-weight:700; color:var(--text);">${l.empresa}</td>
         <td>${l.rubro}</td>
         <td>${estadoBadge}</td>
         <td style="color:var(--text-muted); font-weight:600;">${l.asignado_a || '<span style="color:var(--text-dim);font-weight:400;">—</span>'}</td>
         <td style="font-size:.8rem; color:var(--text-dim);">${l.tiempo_transcurrido || '—'}</td>
         <td>
-          ${l.estado === 'reclamado' ? `<button class="btn-outline" style="border-color:rgba(239,68,68,0.3);color:var(--red);padding:5px 10px;font-size:.75rem;" onclick="confirmarAccion('¿Revocar este lead?', 'Se le quitará al aliado y volverá a la bolsa para que otro lo tome.', 'fa-rotate-left', 'red', () => revocarLead(${l.id}))"><i class="fa-solid fa-rotate-left"></i> Revocar</button>` : '<span style="color:var(--text-dim);">—</span>'}
+          <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;">
+            ${l.estado === 'reclamado' ? `<button class="btn-outline" style="border-color:rgba(239,68,68,0.3);color:var(--red);padding:5px 10px;font-size:.75rem;" onclick="confirmarAccion('¿Revocar este lead?', 'Se le quitará al aliado y volverá a la bolsa para que otro lo tome.', 'fa-rotate-left', 'red', () => revocarLead(${l.id}))"><i class="fa-solid fa-rotate-left"></i> Revocar</button>` : ''}
+            <button class="btn-outline" style="border-color:rgba(239,68,68,0.3);color:var(--red);padding:5px 10px;font-size:.75rem;" onclick="confirmarAccion('¿Eliminar este lead?', 'Se borrará permanentemente de la bolsa y de la lista de cualquier aliado que lo tuviera reclamado.', 'fa-trash', 'red', () => eliminarLead(${l.id}))"><i class="fa-solid fa-trash"></i></button>
+          </div>
         </td>
       </tr>`;
     }).join('');
@@ -2353,8 +2381,107 @@ async function revocarLead(id) {
   } catch(e) { mostrarToast('Error al revocar lead', 'red'); }
 }
 
+async function eliminarLead(id) {
+  try {
+    const res = await apiFetch(`${API}/admin/bolsa/${id}`, { method: 'DELETE' });
+    if (res.ok) {
+      mostrarToast('Lead eliminado de la bolsa.', 'green');
+      cargarAdminBolsa();
+    } else {
+      const err = await res.json().catch(() => ({}));
+      mostrarToast(err.detail || 'Error al eliminar', 'red');
+    }
+  } catch(e) { mostrarToast('Error de conexión', 'red'); }
+}
+
+function actualizarBarraSeleccionBolsa() {
+  const checks = [...document.querySelectorAll('.bolsa-row-check')];
+  const seleccionados = checks.filter(c => c.checked);
+  const bar = document.getElementById('bolsa-selection-bar');
+  const count = document.getElementById('bolsa-sel-count');
+  const chkAll = document.getElementById('bolsa-check-all');
+  if (!bar) return;
+  if (seleccionados.length > 0) {
+    bar.style.display = 'flex';
+    count.textContent = `${seleccionados.length} seleccionado${seleccionados.length !== 1 ? 's' : ''}`;
+  } else {
+    bar.style.display = 'none';
+  }
+  if (chkAll) {
+    chkAll.checked = checks.length > 0 && seleccionados.length === checks.length;
+    chkAll.indeterminate = seleccionados.length > 0 && seleccionados.length < checks.length;
+  }
+}
+
+function toggleSelectAllLeads(masterChk) {
+  document.querySelectorAll('.bolsa-row-check').forEach(c => { c.checked = masterChk.checked; });
+  actualizarBarraSeleccionBolsa();
+}
+
+function eliminarLeadsSeleccionados() {
+  const ids = [...document.querySelectorAll('.bolsa-row-check:checked')].map(c => parseInt(c.dataset.id));
+  if (!ids.length) return;
+  confirmarAccion(
+    `¿Eliminar ${ids.length} empresa${ids.length !== 1 ? 's' : ''}?`,
+    'Se borrarán permanentemente de la bolsa y desaparecerán de la lista de todos los aliados que las tuvieran reclamadas.',
+    'fa-trash', 'red',
+    async () => {
+      const btn = document.getElementById('btn-borrar-sel');
+      if (btn) { btn.disabled = true; btn.innerHTML = '<span class="spinner"></span> Borrando...'; }
+      try {
+        const res = await apiFetch(`${API}/admin/bolsa/bulk`, {
+          method: 'DELETE',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ ids }),
+        });
+        if (res.ok) {
+          const data = await res.json();
+          mostrarToast(`✅ ${data.eliminados} lead${data.eliminados !== 1 ? 's' : ''} eliminado${data.eliminados !== 1 ? 's' : ''}.`, 'green');
+          cargarAdminBolsa();
+        } else {
+          const err = await res.json().catch(() => ({}));
+          mostrarToast(err.detail || 'Error al eliminar', 'red');
+        }
+      } catch(e) { mostrarToast('Error de conexión', 'red'); }
+      if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fa-solid fa-trash"></i> Borrar seleccionados'; }
+    }
+  );
+}
+
+// ─── BORRAR TODOS LOS LEADS DE LA BOLSA (de una sola vez) ───────────────────
+function borrarTodosLosLeads() {
+  const filas = [...document.querySelectorAll('.bolsa-row-check')];
+  const total = filas.length;
+  if (total === 0) {
+    mostrarToast('La bolsa ya está vacía.', 'amber');
+    return;
+  }
+  confirmarAccion(
+    `¿Borrar las ${total} empresa${total !== 1 ? 's' : ''} de la bolsa?`,
+    '⚠️ Esta acción es permanente e irreversible. Se eliminarán de la bolsa y desaparecerán del panel de TODOS los aliados que las tuvieran reclamadas.',
+    'fa-trash-can', 'red',
+    async () => {
+      const btn = document.getElementById('btn-borrar-todos');
+      if (btn) { btn.disabled = true; btn.innerHTML = '<span class="spinner"></span> Borrando...'; }
+      try {
+        const res = await apiFetch(`${API}/admin/bolsa/all`, { method: 'DELETE' });
+        if (res.ok) {
+          const data = await res.json();
+          mostrarToast(`✅ ${data.eliminados} empresa${data.eliminados !== 1 ? 's' : ''} eliminada${data.eliminados !== 1 ? 's' : ''} de la bolsa.`, 'green');
+          await cargarAdminBolsa();
+        } else {
+          const err = await res.json().catch(() => ({}));
+          mostrarToast(err.detail || 'Error al borrar', 'red');
+        }
+      } catch (e) {
+        mostrarToast('Error de conexión', 'red');
+      }
+      if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fa-solid fa-trash-can"></i> Borrar todo'; }
+    }
+  );
+}
+
 // ═══════════════════════════════════════════════════════════════════════════
-// TAB COMISIONES (§12 + §15)
 // ═══════════════════════════════════════════════════════════════════════════
 
 let filtroComis = 'pendiente';

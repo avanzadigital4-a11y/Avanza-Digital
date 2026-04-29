@@ -1241,7 +1241,21 @@
             <div style="font-size:.95rem;font-weight:800;margin-bottom:4px;">Brochure de Planes</div>
             <div style="font-size:.8rem;color:var(--text-muted);line-height:1.5;">El PDF que le mostrás al cliente. Resume los 4 planes, los casos de éxito y los precios. Mandalo por WhatsApp antes o después de la conversación.</div>
           </div>
-          <a href="https://avanzadigital.digital/descargas/Avanza_Partner_Network_2026_v2.pdf" target="_blank" class="btn-primary" style="display:inline-flex;align-items:center;gap:6px;font-size:.82rem;padding:10px 16px;text-decoration:none;border-radius:8px;width:fit-content;">
+          <a href="#" onclick="descargarPDF('https://drive.google.com/uc?export=download&id=1RL3N3TQLa4gZBBema51LNaqiCc2SsJ0M','Brochure_Comercial_AvanzaDigital_v4.pdf');return false;" class="btn-primary" style="display:inline-flex;align-items:center;gap:6px;font-size:.82rem;padding:10px 16px;text-decoration:none;border-radius:8px;width:fit-content;">
+            <i class="fa-solid fa-download"></i> Descargar PDF
+          </a>
+        </div>
+
+        <!-- Card 1b: Avanza Partner Intro -->
+        <div style="background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:var(--radius);padding:24px;display:flex;flex-direction:column;gap:12px;">
+          <div style="width:40px;height:40px;background:rgba(192,132,252,0.15);border-radius:10px;display:flex;align-items:center;justify-content:center;">
+            <i class="fa-solid fa-handshake" style="color:#c084fc;font-size:1.1rem;"></i>
+          </div>
+          <div>
+            <div style="font-size:.95rem;font-weight:800;margin-bottom:4px;">Intro al Programa</div>
+            <div style="font-size:.8rem;color:var(--text-muted);line-height:1.5;">Todo lo que necesitás saber sobre el Avanza Partner Network: cómo funciona, qué se espera de vos y cómo arranca tu primera venta.</div>
+          </div>
+          <a href="#" onclick="descargarPDF('https://drive.google.com/uc?export=download&id=1Cc9CTpt0yVNaHfeRzxUZySB__pGf17xt','Avanza_Partner_Intro.pdf');return false;" class="btn-primary" style="display:inline-flex;align-items:center;gap:6px;font-size:.82rem;padding:10px 16px;text-decoration:none;border-radius:8px;width:fit-content;">
             <i class="fa-solid fa-download"></i> Descargar PDF
           </a>
         </div>
@@ -3631,7 +3645,7 @@ async function cargarHistorialBolsa() {
 // Funciones de MI RED
 async function cargarRed() {
   if(!aliado) return;
-  document.getElementById('red-invitelink').textContent = `https://avanza-digital.onrender.com/portal.html?ref=${aliado.ref_code}`;
+  document.getElementById('red-invitelink').textContent = `https://avanzadigital.digital/avanza-portal/portal.html?ref=${aliado.ref_code}`;
   
   try {
     const res = await apiFetch(`${API}/aliados/${aliado.codigo}/red`);

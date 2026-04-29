@@ -2366,6 +2366,44 @@ def revocar_lead_bolsa(id: int, db: Session = Depends(get_db)):
     return {"mensaje": "Lead revocado con éxito"}
 
 
+class BulkDeleteLeads(BaseModel):
+    ids: list[int]
+
+
+@app.delete("/admin/bolsa/bulk")
+def eliminar_leads_bulk(payload: BulkDeleteLeads, db: Session = Depends(get_db)):
+    """Elimina permanentemente múltiples leads de la bolsa (y los quita de los aliados que los tenían)."""
+    deleted = 0
+    for lead_id in payload.ids:
+        lead = db.query(LeadBolsa).filter(LeadBolsa.id == lead_id).first()
+        if lead:
+            db.delete(lead)
+            deleted += 1
+    db.commit()
+    return {"eliminados": deleted}
+
+
+@app.delete("/admin/bolsa/all")
+def eliminar_todos_los_leads(db: Session = Depends(get_db)):
+    """Elimina TODOS los leads de la bolsa de una sola vez.
+    Al borrar los registros LeadBolsa, desaparecen automáticamente de la
+    bolsa de cualquier aliado que los tuviera reclamados (aliado_id queda huérfano)."""
+    result = db.query(LeadBolsa).delete()
+    db.commit()
+    return {"eliminados": result, "mensaje": f"{result} lead(s) eliminados de la bolsa."}
+
+
+@app.delete("/admin/bolsa/{id}")
+def eliminar_lead_bolsa(id: int, db: Session = Depends(get_db)):
+    """Elimina permanentemente un lead de la bolsa (se quita también de la bolsa de cualquier aliado que lo tuviera)."""
+    lead = db.query(LeadBolsa).filter(LeadBolsa.id == id).first()
+    if not lead:
+        raise HTTPException(404, "Lead no encontrado")
+    db.delete(lead)
+    db.commit()
+    return {"mensaje": "Lead eliminado."}
+
+
 # ─── BOLSA DE LEADS (PORTAL ALIADO) ──────────────────────────────────────────
 
 @app.get("/aliados/{codigo}/bolsa")
