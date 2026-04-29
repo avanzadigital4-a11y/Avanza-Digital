@@ -960,113 +960,129 @@ def activar_aliado(codigo: str, db: Session = Depends(get_db)):
 def eliminar_aliado(codigo: str, db: Session = Depends(get_db)):
     """
     Borra un aliado de forma permanente, limpiando primero TODAS las tablas
-    con FK hacia aliados.id (Referido, Venta, Prospecto, Comision, LinkPago,
-    AutomationLog, PostComunidad, ComentarioComunidad, TransaccionCredito,
-    BolsaLead, AuditoriaLog, sub-aliados, etc.).
+    con FK hacia aliados.id.
 
-    Sin esta limpieza, PostgreSQL rechaza el DELETE con un IntegrityError
-    (foreign key violation) — que es lo que disparaba "Error al eliminar".
+    Cada paso usa un savepoint independiente: si alguna tabla todavía no existe
+    en la BD de producción (ProgrammingError / OperationalError), ese paso se
+    descarta silenciosamente y el resto continúa — evitando que un schema
+    desactualizado aborte toda la transacción (que era el ProgrammingError que
+    se veía en pantalla).
     """
     a = _get_aliado(codigo, db)
     aid = a.id
 
-    try:
-        # 1) IDs auxiliares que vamos a necesitar para limpiar tablas hijas
-        prospecto_ids = [p.id for p in db.query(Prospecto.id).filter(Prospecto.aliado_id == aid).all()]
-        post_ids      = [p.id for p in db.query(PostComunidad.id).filter(PostComunidad.aliado_id == aid).all()]
+    def _sp(fn):
+        """Ejecuta fn() en un savepoint; si falla por tabla/columna inexistente lo ignora."""
+        sp = db.begin_nested()
+        try:
+            fn()
+            sp.commit()
+        except (ProgrammingError, OperationalError) as e:
+            sp.rollback()
+            print(f"[eliminar_aliado] SKIP (tabla/col faltante) — {type(e).__name__}: {e}", file=sys.stderr)
 
-        # 2) Comentarios de comunidad: los que hizo el aliado + los que recibieron sus posts
+    try:
+        # 1) Obtener IDs auxiliares dentro de savepoints (por si las tablas no existen aún)
+        prospecto_ids: list = []
+        post_ids: list = []
+
+        def _get_aux():
+            nonlocal prospecto_ids, post_ids
+            prospecto_ids = [r[0] for r in db.query(Prospecto.id).filter(Prospecto.aliado_id == aid).all()]
+            post_ids      = [r[0] for r in db.query(PostComunidad.id).filter(PostComunidad.aliado_id == aid).all()]
+        _sp(_get_aux)
+
+        # 2) Comentarios de comunidad (hijos de posts + propios del aliado)
         if post_ids:
-            db.query(ComentarioComunidad)\
-              .filter(ComentarioComunidad.post_id.in_(post_ids))\
-              .delete(synchronize_session=False)
-        db.query(ComentarioComunidad)\
-          .filter(ComentarioComunidad.aliado_id == aid)\
-          .delete(synchronize_session=False)
+            _sp(lambda: db.query(ComentarioComunidad)
+                .filter(ComentarioComunidad.post_id.in_(post_ids))
+                .delete(synchronize_session=False))
+        _sp(lambda: db.query(ComentarioComunidad)
+            .filter(ComentarioComunidad.aliado_id == aid)
+            .delete(synchronize_session=False))
 
         # 3) Posts del aliado
-        db.query(PostComunidad)\
-          .filter(PostComunidad.aliado_id == aid)\
-          .delete(synchronize_session=False)
+        _sp(lambda: db.query(PostComunidad)
+            .filter(PostComunidad.aliado_id == aid)
+            .delete(synchronize_session=False))
 
-        # 4) Comisiones (depende de LinkPago y Prospecto, así que va antes)
-        db.query(Comision)\
-          .filter(Comision.aliado_id == aid)\
-          .delete(synchronize_session=False)
+        # 4) Comisiones (depende de LinkPago y Prospecto → va antes)
+        _sp(lambda: db.query(Comision)
+            .filter(Comision.aliado_id == aid)
+            .delete(synchronize_session=False))
         if prospecto_ids:
-            db.query(Comision)\
-              .filter(Comision.prospecto_id.in_(prospecto_ids))\
-              .delete(synchronize_session=False)
+            _sp(lambda: db.query(Comision)
+                .filter(Comision.prospecto_id.in_(prospecto_ids))
+                .delete(synchronize_session=False))
 
-        # 5) Links de pago (depende de Prospecto)
-        db.query(LinkPago)\
-          .filter(LinkPago.aliado_id == aid)\
-          .delete(synchronize_session=False)
+        # 5) Links de pago
+        _sp(lambda: db.query(LinkPago)
+            .filter(LinkPago.aliado_id == aid)
+            .delete(synchronize_session=False))
         if prospecto_ids:
-            db.query(LinkPago)\
-              .filter(LinkPago.prospecto_id.in_(prospecto_ids))\
-              .delete(synchronize_session=False)
+            _sp(lambda: db.query(LinkPago)
+                .filter(LinkPago.prospecto_id.in_(prospecto_ids))
+                .delete(synchronize_session=False))
 
-        # 6) Logs de automatización (referencia Prospecto y Aliado)
-        db.query(AutomationLog)\
-          .filter(AutomationLog.aliado_id == aid)\
-          .delete(synchronize_session=False)
+        # 6) Logs de automatización
+        _sp(lambda: db.query(AutomationLog)
+            .filter(AutomationLog.aliado_id == aid)
+            .delete(synchronize_session=False))
         if prospecto_ids:
-            db.query(AutomationLog)\
-              .filter(AutomationLog.prospecto_id.in_(prospecto_ids))\
-              .delete(synchronize_session=False)
+            _sp(lambda: db.query(AutomationLog)
+                .filter(AutomationLog.prospecto_id.in_(prospecto_ids))
+                .delete(synchronize_session=False))
 
-        # 7) Ventas (referencian Referido)
-        db.query(Venta)\
-          .filter(Venta.aliado_id == aid)\
-          .delete(synchronize_session=False)
+        # 7) Ventas
+        _sp(lambda: db.query(Venta)
+            .filter(Venta.aliado_id == aid)
+            .delete(synchronize_session=False))
 
-        # 8) Referidos del aliado
-        db.query(Referido)\
-          .filter(Referido.aliado_id == aid)\
-          .delete(synchronize_session=False)
+        # 8) Referidos
+        _sp(lambda: db.query(Referido)
+            .filter(Referido.aliado_id == aid)
+            .delete(synchronize_session=False))
 
-        # 9) Prospectos del aliado (ahora seguros de borrar)
-        db.query(Prospecto)\
-          .filter(Prospecto.aliado_id == aid)\
-          .delete(synchronize_session=False)
+        # 9) Prospectos
+        _sp(lambda: db.query(Prospecto)
+            .filter(Prospecto.aliado_id == aid)
+            .delete(synchronize_session=False))
 
         # 10) Transacciones de créditos
-        db.query(TransaccionCredito)\
-          .filter(TransaccionCredito.aliado_id == aid)\
-          .delete(synchronize_session=False)
+        _sp(lambda: db.query(TransaccionCredito)
+            .filter(TransaccionCredito.aliado_id == aid)
+            .delete(synchronize_session=False))
 
-        # 11) Auditoría: la dejamos pero desvinculamos (preserva historial)
-        db.query(AuditoriaLog)\
-          .filter(AuditoriaLog.aliado_id == aid)\
-          .update({AuditoriaLog.aliado_id: None}, synchronize_session=False)
+        # 11) Auditoría: preservar con aliado_id = NULL
+        _sp(lambda: db.query(AuditoriaLog)
+            .filter(AuditoriaLog.aliado_id == aid)
+            .update({AuditoriaLog.aliado_id: None}, synchronize_session=False))
 
-        # 12) Bolsa de leads: liberar los reclamados por este aliado, vuelven a estar disponibles
-        db.query(LeadBolsa)\
-          .filter(LeadBolsa.aliado_id == aid)\
-          .update({
-              LeadBolsa.aliado_id: None,
-              LeadBolsa.estado: "disponible",
-              LeadBolsa.fecha_reclamo: None,
-          }, synchronize_session=False)
+        # 12) Bolsa de leads: liberar → vuelven a estar disponibles
+        _sp(lambda: db.query(LeadBolsa)
+            .filter(LeadBolsa.aliado_id == aid)
+            .update({
+                LeadBolsa.aliado_id: None,
+                LeadBolsa.estado: "disponible",
+                LeadBolsa.fecha_reclamo: None,
+            }, synchronize_session=False))
 
-        # 13) Sub-aliados: desvincular sponsor (NO los borramos, solo los orfanamos)
-        db.query(Aliado)\
-          .filter(Aliado.sponsor_id == aid)\
-          .update({Aliado.sponsor_id: None}, synchronize_session=False)
+        # 13) Sub-aliados: solo desvincular sponsor, no borrar
+        _sp(lambda: db.query(Aliado)
+            .filter(Aliado.sponsor_id == aid)
+            .update({Aliado.sponsor_id: None}, synchronize_session=False))
 
-        # 14) Por fin: el aliado
+        # 14) Por fin: el aliado mismo
         db.delete(a)
         db.commit()
         return {"mensaje": f"{codigo} eliminado permanentemente."}
 
     except Exception as e:
         db.rollback()
-        # Log al stderr para que aparezca en Railway logs
         print(f"[eliminar_aliado] ERROR borrando {codigo}: {type(e).__name__}: {e}", file=sys.stderr)
         raise HTTPException(
             status_code=500,
-            detail=f"No se pudo eliminar al aliado: {type(e).__name__}. Revisar logs del servidor."
+            detail=f"No se pudo eliminar al aliado: {type(e).__name__}: {str(e)[:200]}"
         )
 
 
