@@ -3517,6 +3517,7 @@ def portal_publico_aliado(ref_code: str, db: Session = Depends(get_db)):
 
     planes_html = ""
     for nombre_plan, precio in PLANES.items():
+        plan_id = nombre_plan.replace(" ", "_").lower()
         planes_html += f"""
         <div style='background:#111;border:1px solid #222;border-radius:12px;padding:24px;margin-bottom:16px;'>
           <div style='display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;'>
@@ -3524,10 +3525,10 @@ def portal_publico_aliado(ref_code: str, db: Session = Depends(get_db)):
               <h3 style='font-size:1.1rem;font-weight:800;margin-bottom:4px;'>{nombre_plan}</h3>
               <p style='color:#a1a1aa;font-size:0.85rem;'>USD {int(precio)}</p>
             </div>
-            <a href='/checkout/crear?plan={nombre_plan}&ref_code={ref_code}' method='post'
-               style='padding:12px 20px;background:#3b82f6;color:#fff;border-radius:8px;text-decoration:none;font-weight:700;'>
+            <button onclick="abrirModal('{nombre_plan}','{ref_code}')"
+               style='padding:12px 20px;background:#3b82f6;color:#fff;border-radius:8px;border:none;cursor:pointer;font-weight:700;font-size:1rem;'>
               Contratar →
-            </a>
+            </button>
           </div>
         </div>
         """
@@ -3563,6 +3564,50 @@ a.cta{{display:inline-block;padding:12px 20px;background:#3b82f6;color:#fff!impo
     <p style="margin-top:8px;"><a href="https://avanzadigital.digital" style="color:#3b82f6;">avanzadigital.digital</a></p>
   </div>
 </div>
+
+<!-- Modal nombre -->
+<div id="modal-overlay" onclick="cerrarModal()" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:100;align-items:center;justify-content:center;">
+  <div onclick="event.stopPropagation()" style="background:#111;border:1px solid #333;border-radius:16px;padding:32px;width:90%;max-width:400px;">
+    <h3 style="margin:0 0 8px;font-size:1.2rem;">¿Cuál es tu nombre?</h3>
+    <p style="color:#a1a1aa;font-size:0.88rem;margin:0 0 20px;">Lo usamos para personalizar tu proceso de compra.</p>
+    <input id="modal-nombre" type="text" placeholder="Tu nombre completo"
+      style="width:100%;box-sizing:border-box;padding:12px;border-radius:8px;border:1px solid #444;background:#1a1a1a;color:#fff;font-size:1rem;margin-bottom:16px;"
+      onkeydown="if(event.key==='Enter') confirmarContratacion()">
+    <div style="display:flex;gap:12px;">
+      <button onclick="cerrarModal()" style="flex:1;padding:12px;border-radius:8px;border:1px solid #444;background:transparent;color:#aaa;cursor:pointer;font-size:0.95rem;">Cancelar</button>
+      <button onclick="confirmarContratacion()" style="flex:1;padding:12px;border-radius:8px;border:none;background:#3b82f6;color:#fff;cursor:pointer;font-weight:700;font-size:0.95rem;">Continuar →</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  let _plan = '', _ref = '';
+  function abrirModal(plan, ref) {{
+    _plan = plan; _ref = ref;
+    document.getElementById('modal-overlay').style.display = 'flex';
+    setTimeout(() => document.getElementById('modal-nombre').focus(), 50);
+  }}
+  function cerrarModal() {{
+    document.getElementById('modal-overlay').style.display = 'none';
+    document.getElementById('modal-nombre').value = '';
+  }}
+  async function confirmarContratacion() {{
+    const nombre = document.getElementById('modal-nombre').value.trim();
+    if (!nombre) {{ document.getElementById('modal-nombre').style.borderColor='#ef4444'; return; }}
+    const btn = event.target;
+    btn.textContent = 'Procesando...'; btn.disabled = true;
+    try {{
+      const res = await fetch(`/checkout/crear?plan=${{encodeURIComponent(_plan)}}&ref_code=${{_ref}}&nombre_cliente=${{encodeURIComponent(nombre)}}`, {{method:'POST'}});
+      const data = await res.json();
+      if (data.checkout_url) window.location.href = data.checkout_url;
+      else alert('Error al generar el link de pago. Intentá de nuevo.');
+    }} catch(e) {{
+      alert('Error de conexión. Intentá de nuevo.');
+    }} finally {{
+      btn.textContent = 'Continuar →'; btn.disabled = false;
+    }}
+  }}
+</script>
 </body></html>"""
     return HTMLResponse(html)
 
