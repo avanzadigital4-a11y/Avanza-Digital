@@ -89,6 +89,9 @@ for col_sql in [
     "ALTER TABLE aliados ADD COLUMN portal_publico_activo BOOLEAN DEFAULT TRUE",
     "ALTER TABLE aliados ADD COLUMN portal_publico_titular VARCHAR",
     "ALTER TABLE aliados ADD COLUMN portal_publico_bio TEXT",
+    "ALTER TABLE prospectos ADD COLUMN piloto_automatico BOOLEAN DEFAULT FALSE",
+    # v1.5 — Comisiones ligadas a link de pago
+    "ALTER TABLE comisiones ADD COLUMN link_pago_id INTEGER REFERENCES links_pago(id)",
     # v1.3 — Ventas (financiación)
     "ALTER TABLE ventas ADD COLUMN cuotas INTEGER DEFAULT 1",
     "ALTER TABLE ventas ADD COLUMN financiacion_pct FLOAT DEFAULT 0.0",
