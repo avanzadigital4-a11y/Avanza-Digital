@@ -732,6 +732,12 @@ def auto_registro(request: Request,
     )
     db.add(a); db.commit(); db.refresh(a)
 
+    # 30 créditos de bienvenida — para que el aliado pueda explorar el
+    # marketplace desde el primer día. Sin esto, ve "0 créditos" y la
+    # función parece rota. Es señal de bienvenida, no costo real.
+    _ajustar_creditos(db, a, 30, "bienvenida", "registro")
+    db.commit()
+
     # Email de bienvenida — EN SEGUNDO PLANO (no bloquea la respuesta)
     background_tasks.add_task(
         enviar_email,
@@ -746,6 +752,10 @@ def auto_registro(request: Request,
             <p style="margin:0;font-size:2rem;font-weight:900;color:#f97316;letter-spacing:2px;">{a.codigo}</p>
           </div>
           <p style="color:#a1a1aa;margin-bottom:8px;">Tu comisión arranca en <strong style="color:#fff;">10% (BASIC)</strong> y sube automáticamente con cada venta.</p>
+          <div style="background:rgba(168,85,247,0.08);border:1px solid rgba(168,85,247,0.25);border-radius:8px;padding:14px 18px;margin-bottom:24px;">
+            <p style="margin:0;color:#c084fc;font-weight:700;font-size:.95rem;">🎁 Te regalamos 30 créditos de bienvenida</p>
+            <p style="margin:6px 0 0;color:#a1a1aa;font-size:.82rem;">Usalos en el Marketplace de Leads del portal para reservar contactos pre-calificados.</p>
+          </div>
           <p style="color:#a1a1aa;margin-bottom:28px;">Tu link de referido: <a href="https://avanzadigital.digital/alianzas?ref={a.ref_code}" style="color:#3b82f6;">/alianzas?ref={a.ref_code}</a></p>
           <a href="https://avanza-digital-production.up.railway.app/portal.html" style="display:inline-block;padding:14px 28px;background:#f97316;color:#000;border-radius:8px;text-decoration:none;font-weight:800;font-size:1rem;">Ingresar al portal →</a>
           <p style="margin-top:32px;font-size:.8rem;color:#71717a;">Avanza Digital · Partner Network · Santa Fe, Argentina</p>
