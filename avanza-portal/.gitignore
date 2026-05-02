@@ -51,4 +51,4 @@ yarn.lock
 # (Comentado: si querés versionar imágenes chicas, sacá esta sección)
 # *.png
 # *.jpg
-# *.jpeg
+# *.jpeg__pycache__/
