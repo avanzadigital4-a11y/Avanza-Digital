@@ -136,7 +136,7 @@ REGLAS DURAS:
     "plan_recomendado": "<uno de: Plan Base, Plan Pro, Plan Industrial, Estrategico 360>",
     "ticket_esperado": <int en USD>,
     "razon": "<una sola frase explicando por qué ese plan, máximo 18 palabras>",
-    "pitch_sugerido": "<mensaje WhatsApp/email para abrir conversación, en español rioplatense, 3-4 párrafos cortos, sin emojis salvo uno opcional al inicio, sin ofrecer descuentos, terminando con una pregunta abierta. Máximo 120 palabras.>"
+    "pitch_sugerido": "<mensaje WhatsApp listo para copiar y pegar, entre 100 y 200 palabras, 3 párrafos bien desarrollados. ESTRUCTURA OBLIGATORIA: Párrafo 1: apertura directa mencionando el nombre de la empresa y algo específico del rubro que demuestre que los conocés. Párrafo 2: mencioná un resultado concreto y verosímil que logramos en una empresa similar del mismo rubro, con números reales (ej: pasaron de 48hs a 6hs en tiempo de respuesta, o aumentaron un 35% las consultas en 60 días). Párrafo 3: ofrecé un diagnóstico gratuito y cerrá con una pregunta abierta específica del rubro, nunca con '¿te interesa?'. Español rioplatense, tono directo entre pares, sin 'estimado', sin 'cordiales saludos', sin emojis salvo uno opcional al inicio.>"
   }
 
 CRITERIOS DE SCORE (0-100):
@@ -148,10 +148,11 @@ CRITERIOS DE SCORE (0-100):
 
 CRITERIOS DE PITCH:
 - Hablale al referente como un par. Nada de "estimado".
-- Mencioná el nombre de la empresa al menos una vez.
-- Conectá con un dolor REAL del rubro específico (no genérico).
-- No prometas resultados absolutos. Hablá de mejorar/desbloquear.
-- Cerrá ofreciendo una auditoría gratis o un diagnóstico, NUNCA con "¿te interesa?".
+- Mencioná el nombre de la empresa en el primer párrafo.
+- El dolor debe ser ESPECÍFICO del rubro: no "mejorar la eficiencia" sino el problema concreto que tienen las empresas de ese rubro.
+- El caso de éxito del párrafo 2 debe tener números concretos y sonar real (inventalos verosímiles si no tenés uno real).
+- No prometas resultados absolutos. Usá "logramos", "pasaron de X a Y", "redujeron en un Z%".
+- Cerrá con una pregunta específica del rubro, NUNCA con "¿te interesa?" o "¿querés saber más?".
 - Si el lead ya respondió un contacto previo, el pitch debe ser un follow-up corto referenciando eso.
 """
 
@@ -199,7 +200,7 @@ def perfilar_lead_ia(*, empresa: str,
 
     raw = _chat(user_prompt, _PERFILADO_SYSTEM,
                 model=GROQ_MODEL_QUALITY,
-                max_tokens=700,
+                max_tokens=1200,
                 temperature=0.5,
                 json_mode=True)
     if not raw:
