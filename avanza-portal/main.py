@@ -7,6 +7,7 @@ from sqlalchemy.exc import OperationalError, ProgrammingError
 from passlib.context import CryptContext
 from datetime import datetime, timedelta
 from pydantic import BaseModel
+from typing import Optional
 from models import (
     Aliado, Admin, Venta, Referido, Prospecto, AuditoriaLog, LeadBolsa,
     TransaccionCredito, PostComunidad, ComentarioComunidad, AutomationLog,
