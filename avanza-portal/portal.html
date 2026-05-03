@@ -3736,6 +3736,41 @@ async function cargarBolsa() {
           ${fila('📞','Teléfono', l.telefono||'')}
           ${fila('📱','WhatsApp', l.whatsapp && l.whatsapp !== l.telefono ? l.whatsapp : '', 'var(--green)')}
           ${fila('✉️','Email', l.email)}
+          ${l.web ? `
+          <div style="margin-top:6px;display:flex;align-items:center;gap:6px;">
+            <span style="font-size:.8rem;color:var(--text-dim);">🌐</span>
+            <a href="${l.web.startsWith('http') ? l.web : 'https://'+l.web}" target="_blank" rel="noopener"
+               style="font-size:.82rem;color:var(--primary);text-decoration:underline;">Ver sitio web</a>
+          </div>` : ''}
+          ${l.instagram ? `
+          <div style="margin-top:4px;display:flex;align-items:center;gap:6px;">
+            <span style="font-size:.8rem;color:var(--text-dim);">📸</span>
+            <span style="font-size:.82rem;color:var(--text-muted);">${l.instagram}</span>
+          </div>` : ''}
+          ${l.observacion ? `
+          <div style="margin-top:8px;background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:8px;padding:10px 12px;">
+            <div style="font-size:.72rem;color:var(--text-dim);font-weight:700;margin-bottom:4px;text-transform:uppercase;letter-spacing:.04em;">💬 Nota del prospectador</div>
+            <div style="font-size:.82rem;color:var(--text-muted);line-height:1.5;">${l.observacion}</div>
+          </div>` : ''}
+          ${!l.web ? (() => {
+            if (l.tiene_web && l.tiene_redes) {
+              return `<div style="margin-top:8px;background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.25);border-radius:8px;padding:10px 12px;font-size:.8rem;color:var(--amber);line-height:1.5;">
+                <i class="fa-solid fa-lightbulb"></i> Esta empresa tiene sitio web y redes sociales — buscala en Google antes de llamar para llegar mejor preparado.
+              </div>`;
+            } else if (l.tiene_web) {
+              return `<div style="margin-top:8px;background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.25);border-radius:8px;padding:10px 12px;font-size:.8rem;color:var(--amber);line-height:1.5;">
+                <i class="fa-solid fa-lightbulb"></i> Esta empresa tiene sitio web — buscala en Google antes de llamar.
+              </div>`;
+            } else if (l.tiene_redes) {
+              return `<div style="margin-top:8px;background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.25);border-radius:8px;padding:10px 12px;font-size:.8rem;color:var(--amber);line-height:1.5;">
+                <i class="fa-solid fa-lightbulb"></i> Esta empresa tiene redes sociales — buscala en Instagram o Facebook antes de contactar.
+              </div>`;
+            } else {
+              return `<div style="margin-top:8px;background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.25);border-radius:8px;padding:10px 12px;font-size:.8rem;color:var(--amber);line-height:1.5;">
+                <i class="fa-solid fa-magnifying-glass"></i> Buscá <strong>${l.empresa}</strong> en Google, LinkedIn o Instagram antes de contactar para llegar mejor preparado.
+              </div>`;
+            }
+          })() : ''}
           ${l.score_ia && l.score_ia > 0 ? `
           <div style="margin-top:10px;background:rgba(168,85,247,0.08);border:1px solid rgba(168,85,247,0.25);border-radius:8px;padding:10px 12px;display:flex;flex-direction:column;gap:4px;">
             <strong style="color:#c084fc;font-size:.82rem;"><i class="fa-solid fa-brain"></i> Score IA: ${l.score_ia}/100</strong>

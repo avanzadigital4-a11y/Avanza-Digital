@@ -133,6 +133,28 @@ class ContactarLeadIn(_Base):
     resultado: str = "exitoso"
 
 
+class LeadBolsaCreateIn(_Base):
+    """Schema de creación de lead de bolsa — incluye campos de presencia digital (v1.6)."""
+    empresa: str
+    rubro: str
+    nombre_contacto: str = ""
+    ciudad: str = ""
+    telefono: str
+    whatsapp: str = ""
+    email: str = ""
+    notas: str = ""
+    tier: str = "basico"
+    costo_creditos: int = 0
+    score_calidad: int = 50
+    notas_calificacion: str = ""
+    # v1.6 — presencia digital
+    web: Optional[str] = None
+    instagram: Optional[str] = None
+    tiene_web: bool = False
+    tiene_redes: bool = False
+    observacion: Optional[str] = None
+
+
 # ─── COMUNIDAD ───────────────────────────────────────────────────────────────
 class PostComunidadIn(_Base):
     codigo_aliado: str

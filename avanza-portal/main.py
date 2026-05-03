@@ -106,6 +106,12 @@ for col_sql in [
     "ALTER TABLE aliados ADD COLUMN cbu_alias VARCHAR",
     "ALTER TABLE aliados ADD COLUMN terminos_aceptados BOOLEAN DEFAULT FALSE",
     "ALTER TABLE aliados ADD COLUMN terminos_aceptados_en TIMESTAMP",
+    # v1.6 — Presencia digital en leads de bolsa
+    "ALTER TABLE bolsa_leads ADD COLUMN web VARCHAR",
+    "ALTER TABLE bolsa_leads ADD COLUMN instagram VARCHAR",
+    "ALTER TABLE bolsa_leads ADD COLUMN tiene_web BOOLEAN DEFAULT FALSE",
+    "ALTER TABLE bolsa_leads ADD COLUMN tiene_redes BOOLEAN DEFAULT FALSE",
+    "ALTER TABLE bolsa_leads ADD COLUMN observacion TEXT",
 ]:
     _aplicar_migracion(col_sql)
 
@@ -2800,7 +2806,11 @@ def ver_bolsa_aliado(codigo: str, db: Session = Depends(get_db), _owner=Depends(
             "id": l.id, "empresa": l.empresa, "rubro": l.rubro,
             "nombre_contacto": l.nombre_contacto, "ciudad": l.ciudad,
             "telefono": l.telefono, "whatsapp": l.whatsapp, "email": l.email,
-            "estado": l.estado, "horas_restantes": horas_restantes
+            "estado": l.estado, "horas_restantes": horas_restantes,
+            # v1.6 — presencia digital
+            "web": l.web, "instagram": l.instagram,
+            "tiene_web": bool(l.tiene_web), "tiene_redes": bool(l.tiene_redes),
+            "observacion": l.observacion,
         })
         
     return {
@@ -3159,6 +3169,12 @@ def perfilar_lead_bolsa(lead_id: int, request: Request,
         tamano=tamano_ef,
         urgencia=urgencia_ef,
         ciudad=lead.ciudad,
+        # v1.6 — presencia digital
+        web=lead.web,
+        instagram=lead.instagram,
+        tiene_web=bool(lead.tiene_web),
+        tiene_redes=bool(lead.tiene_redes),
+        observacion=lead.observacion,
     )
     if ia:
         return {
@@ -3916,6 +3932,12 @@ class LeadBolsaCreateAdv(BaseModel):
     costo_creditos: int = 0
     score_calidad: int = 50
     notas_calificacion: str = ""
+    # v1.6 — presencia digital
+    web: Optional[str] = None
+    instagram: Optional[str] = None
+    tiene_web: bool = False
+    tiene_redes: bool = False
+    observacion: Optional[str] = None
 
 
 @app.post("/admin/bolsa-v2")
@@ -3933,6 +3955,12 @@ def cargar_lead_bolsa_v2(lead: LeadBolsaCreateAdv, db: Session = Depends(get_db)
         estado="disponible",
         tier=lead.tier, costo_creditos=lead.costo_creditos,
         score_calidad=lead.score_calidad, notas_calificacion=lead.notas_calificacion,
+        # v1.6 — presencia digital
+        web=lead.web or None,
+        instagram=lead.instagram or None,
+        tiene_web=bool(lead.tiene_web),
+        tiene_redes=bool(lead.tiene_redes),
+        observacion=lead.observacion or None,
     )
     db.add(nuevo); db.commit()
     _notificar_nuevo_lead_bolsa(db, lead.empresa, lead.rubro, lead.tier)
@@ -3964,6 +3992,12 @@ def cargar_leads_bulk(payload: LeadBolsaBulkPayload, db: Session = Depends(get_d
             estado="disponible",
             tier=tier, costo_creditos=lead.costo_creditos,
             score_calidad=lead.score_calidad, notas_calificacion=lead.notas_calificacion,
+            # v1.6 — presencia digital
+            web=lead.web or None,
+            instagram=lead.instagram or None,
+            tiene_web=bool(lead.tiene_web),
+            tiene_redes=bool(lead.tiene_redes),
+            observacion=lead.observacion or None,
         )
         db.add(nuevo)
         insertados.append(lead)

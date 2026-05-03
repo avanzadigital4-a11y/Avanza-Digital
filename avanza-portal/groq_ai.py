@@ -162,7 +162,13 @@ def perfilar_lead_ia(*, empresa: str,
                        urgencia: Optional[str],
                        estado: Optional[str] = None,
                        nota_aliado: Optional[str] = None,
-                       ciudad: Optional[str] = None) -> Optional[dict]:
+                       ciudad: Optional[str] = None,
+                       # v1.6 — presencia digital
+                       web: Optional[str] = None,
+                       instagram: Optional[str] = None,
+                       tiene_web: bool = False,
+                       tiene_redes: bool = False,
+                       observacion: Optional[str] = None) -> Optional[dict]:
     """
     Devuelve {score, plan_recomendado, pitch_sugerido, ticket_esperado, razon}
     o None si Groq falla → el llamador usa su fallback heurístico.
@@ -178,6 +184,17 @@ def perfilar_lead_ia(*, empresa: str,
     if tamano:   partes.append(f"Tamaño: {tamano}")
     if urgencia: partes.append(f"Urgencia detectada: {urgencia}")
     if ciudad:   partes.append(f"Ciudad: {ciudad}")
+    # v1.6 — presencia digital
+    if web:
+        partes.append(f"Sitio web: {web}")
+    elif tiene_web:
+        partes.append("Tiene sitio web (URL no disponible en este tier)")
+    if instagram:
+        partes.append(f"Instagram/Facebook: {instagram}")
+    elif tiene_redes:
+        partes.append("Tiene redes sociales (usuario no disponible en este tier)")
+    if observacion:
+        partes.append(f"Observacion del prospectador: {observacion[:300]}")
     if estado:
         estado_legible = {
             "sin_contactar":      "todavía no fue contactado",
@@ -197,6 +214,14 @@ def perfilar_lead_ia(*, empresa: str,
         "Analizá este lead y devolveme la recomendación en JSON estricto:\n\n"
         + "\n".join(partes)
     )
+
+    # v1.6 — refuerzo cuando hay presencia digital cargada
+    if web or instagram:
+        user_prompt += (
+            "\n\nIMPORTANTE: Este lead tiene presencia digital cargada. En el pitch, "
+            "menciona específicamente que revisaste su presencia online y conecta "
+            "con lo que probablemente les falta mejorar según su rubro."
+        )
 
     raw = _chat(user_prompt, _PERFILADO_SYSTEM,
                 model=GROQ_MODEL_QUALITY,

@@ -686,6 +686,33 @@ tr:hover td { background:rgba(255,255,255,0.02); }
             <input type="text" id="bl-notas-calificacion" placeholder="Ej: Ya pidió presupuesto, budget confirmado">
           </div>
         </div>
+        <!-- v1.6: Presencia digital — checkboxes para TODOS los tiers -->
+        <div class="form-2col" style="margin-top:4px;">
+          <div class="form-row" style="flex-direction:row; align-items:center; gap:16px; flex-wrap:wrap;">
+            <label style="margin:0; white-space:nowrap;">¿Tiene presencia digital?</label>
+            <label style="display:flex;align-items:center;gap:6px;font-weight:400;cursor:pointer;">
+              <input type="checkbox" id="bl-tiene-web" style="width:16px;height:16px;accent-color:var(--primary);">
+              Tiene sitio web
+            </label>
+            <label style="display:flex;align-items:center;gap:6px;font-weight:400;cursor:pointer;">
+              <input type="checkbox" id="bl-tiene-redes" style="width:16px;height:16px;accent-color:var(--primary);">
+              Tiene redes sociales
+            </label>
+          </div>
+        </div>
+
+        <!-- v1.6: Campos adicionales — solo visibles en calificado/premium -->
+        <div id="bl-campos-premium" style="display:none;">
+          <div class="form-2col" style="margin-top:4px;">
+            <div class="form-row"><label>Sitio web</label><input type="text" id="bl-web" placeholder="URL del sitio web (ej: www.empresa.com.ar)"></div>
+            <div class="form-row"><label>Instagram / Facebook</label><input type="text" id="bl-instagram" placeholder="Instagram o Facebook (ej: @empresa)"></div>
+          </div>
+          <div class="form-row" style="margin-top:4px;">
+            <label>Observación del prospectador</label>
+            <textarea id="bl-observacion" rows="3" placeholder="Qué viste, qué problema tiene, qué oportunidad hay..." style="width:100%;background:#111;border:1px solid var(--border);color:white;padding:10px;border-radius:8px;resize:vertical;font-size:.9rem;"></textarea>
+          </div>
+        </div>
+
         <button class="btn-green" onclick="cargarLeadBolsa()"><i class="fa-solid fa-upload"></i> Subir a la Bolsa</button>
       </div>
 
@@ -699,11 +726,14 @@ tr:hover td { background:rgba(255,255,255,0.02); }
         <div style="background:rgba(255,255,255,0.03);border:1px dashed var(--border);border-radius:8px;padding:14px;font-size:.78rem;color:var(--text-muted);margin-bottom:18px;line-height:1.9;">
           <strong style="color:var(--text); display:block; margin-bottom:6px;">📋 Columnas requeridas (separadas por punto y coma):</strong>
           <code style="background:rgba(0,0,0,0.4);padding:6px 10px;border-radius:6px;display:block;font-size:.77rem;color:#93c5fd;margin-bottom:8px;">
-            empresa ; rubro ; nombre_contacto ; ciudad ; telefono ; whatsapp ; email ; tier ; costo_creditos ; score_calidad
+            empresa ; rubro ; nombre_contacto ; ciudad ; telefono ; whatsapp ; email ; web ; instagram ; tiene_web ; tiene_redes ; observacion ; tier ; costo_creditos ; score_calidad
           </code>
           <span style="color:var(--amber);">⚠️ tier</span> solo acepta: <code>basico</code> | <code>calificado</code> | <code>premium</code><br>
           <span style="color:var(--amber);">⚠️ costo_creditos</span>: 0 para básico · 10 para calificado · 20 para premium<br>
-          <span style="color:var(--amber);">⚠️ score_calidad</span>: número entre 0 y 100 — La primera fila (encabezado) se ignora automáticamente.
+          <span style="color:var(--amber);">⚠️ score_calidad</span>: número entre 0 y 100 — La primera fila (encabezado) se ignora automáticamente.<br>
+          <span style="color:var(--amber);">⚠️ tiene_web / tiene_redes</span>: poner <code>1</code> si tiene, <code>0</code> si no tiene<br>
+          <span style="color:var(--amber);">⚠️ web / instagram</span>: URL o usuario (@empresa), dejar vacío si no se tiene<br>
+          <span style="color:var(--amber);">⚠️ observacion</span>: nota corta del prospectador, dejar vacío si no hay
         </div>
 
         <!-- Zona de drop / selector de archivo -->
@@ -742,6 +772,7 @@ tr:hover td { background:rgba(255,255,255,0.02); }
                   <th style="padding:9px 10px;text-align:left;border-bottom:1px solid var(--border);white-space:nowrap;">Contacto</th>
                   <th style="padding:9px 10px;text-align:left;border-bottom:1px solid var(--border);white-space:nowrap;">Ciudad</th>
                   <th style="padding:9px 10px;text-align:left;border-bottom:1px solid var(--border);white-space:nowrap;">Teléfono</th>
+                  <th style="padding:9px 10px;text-align:left;border-bottom:1px solid var(--border);white-space:nowrap;">Web</th>
                   <th style="padding:9px 10px;text-align:left;border-bottom:1px solid var(--border);white-space:nowrap;">Tier</th>
                   <th style="padding:9px 10px;text-align:left;border-bottom:1px solid var(--border);white-space:nowrap;">Score</th>
                 </tr>
@@ -2118,7 +2149,9 @@ function parsearCSVMasivo(texto) {
   for (const fila of filas) {
     const cols = fila.split(sep).map(c => c.trim().replace(/^["']|["']$/g, ''));
     if (cols.length < 5) continue;
-    const [empresa, rubro, nombre_contacto, ciudad, telefono, whatsapp, email, tier_raw, costo_raw, score_raw] = cols;
+    const [empresa, rubro, nombre_contacto, ciudad, telefono, whatsapp,
+           email, web, instagram, tiene_web_raw, tiene_redes_raw,
+           observacion, tier_raw, costo_raw, score_raw] = cols;
     if (!empresa || !rubro || !telefono) continue;
     const tier = ['basico','calificado','premium'].includes((tier_raw||'').toLowerCase())
       ? tier_raw.toLowerCase() : 'basico';
@@ -2126,7 +2159,12 @@ function parsearCSVMasivo(texto) {
     const score_calidad  = Math.min(100, Math.max(0, parseInt(score_raw || '50') || 50));
     leads.push({ empresa, rubro, nombre_contacto: nombre_contacto||'', ciudad: ciudad||'',
       telefono, whatsapp: whatsapp||telefono, email: email||'', tier,
-      costo_creditos, score_calidad, notas_calificacion: '' });
+      costo_creditos, score_calidad, notas_calificacion: '',
+      web: web||'',
+      instagram: instagram||'',
+      tiene_web: tiene_web_raw === '1' || tiene_web_raw === 'true',
+      tiene_redes: tiene_redes_raw === '1' || tiene_redes_raw === 'true',
+      observacion: observacion||'' });
   }
   return leads;
 }
@@ -2178,6 +2216,9 @@ function procesarCSVTexto(texto, nombre) {
       <td style="padding:7px 10px;color:var(--text-muted);">${l.nombre_contacto||'—'}</td>
       <td style="padding:7px 10px;color:var(--text-muted);">${l.ciudad||'—'}</td>
       <td style="padding:7px 10px;">${l.telefono}</td>
+      <td style="padding:7px 10px;color:var(--text-muted);font-size:.75rem;">
+        ${l.web ? `<a href="${l.web.startsWith('http') ? l.web : 'https://'+l.web}" target="_blank" style="color:var(--primary);">web</a>` : l.tiene_web ? '🌐' : '—'}
+      </td>
       <td style="padding:7px 10px;color:${tierColor[l.tier]||'var(--text-muted)'};font-weight:700;">${tierIcon[l.tier]||''} ${l.tier}</td>
       <td style="padding:7px 10px;">
         <div style="display:flex;align-items:center;gap:6px;">
@@ -2321,6 +2362,12 @@ async function cargarLeadBolsa() {
   const score_calidad = parseInt(document.getElementById('bl-score').value || '50');
   const notas = document.getElementById('bl-notas').value.trim();
   const notas_calificacion = document.getElementById('bl-notas-calificacion').value.trim();
+  // v1.6 — presencia digital
+  const web = document.getElementById('bl-web').value.trim();
+  const instagram = document.getElementById('bl-instagram').value.trim();
+  const tiene_web = document.getElementById('bl-tiene-web').checked;
+  const tiene_redes = document.getElementById('bl-tiene-redes').checked;
+  const observacion = document.getElementById('bl-observacion').value.trim();
 
   if(!empresa || !rubro || !telefono) {
     mostrarToast('Empresa, Rubro y Teléfono son obligatorios.', 'amber');
@@ -2335,15 +2382,23 @@ async function cargarLeadBolsa() {
     const res = await apiFetch(`${API}/admin/bolsa-v2`, {
       method: 'POST',
       headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({empresa, rubro, nombre_contacto, ciudad, telefono, whatsapp, email, notas, tier, costo_creditos, score_calidad, notas_calificacion})
+      body: JSON.stringify({
+        empresa, rubro, nombre_contacto, ciudad, telefono, whatsapp, email,
+        notas, tier, costo_creditos, score_calidad, notas_calificacion,
+        web, instagram, tiene_web, tiene_redes, observacion
+      })
     });
     if(res.ok) {
       const tierLabel = {basico:'básico', calificado:'calificado ⭐', premium:'premium 💎'}[tier] || tier;
       mostrarToast(`¡Lead ${tierLabel} agregado a la bolsa!`, 'green');
-      ['bl-empresa','bl-rubro','bl-nombre-contacto','bl-ciudad','bl-telefono','bl-whatsapp','bl-email','bl-notas','bl-notas-calificacion'].forEach(id => document.getElementById(id).value = '');
+      ['bl-empresa','bl-rubro','bl-nombre-contacto','bl-ciudad','bl-telefono',
+       'bl-whatsapp','bl-email','bl-notas','bl-notas-calificacion',
+       'bl-web','bl-instagram','bl-observacion'].forEach(id => document.getElementById(id).value = '');
       document.getElementById('bl-costo').value = '0';
       document.getElementById('bl-score').value = '50';
       document.getElementById('bl-tier').value = 'basico';
+      document.getElementById('bl-tiene-web').checked = false;
+      document.getElementById('bl-tiene-redes').checked = false;
       actualizarCostoLead();
       cargarAdminBolsa();
     } else {
@@ -2356,15 +2411,19 @@ function actualizarCostoLead() {
   const tier = document.getElementById('bl-tier').value;
   const costoInput = document.getElementById('bl-costo');
   const hint = document.getElementById('bl-costo-hint');
+  const camposPremium = document.getElementById('bl-campos-premium');
+
   if (tier === 'basico') {
     costoInput.value = 0;
     costoInput.disabled = true;
     if (hint) hint.textContent = '(los básicos son gratis)';
+    if (camposPremium) camposPremium.style.display = 'none';
   } else {
     costoInput.disabled = false;
     const sugerido = tier === 'premium' ? 20 : 10;
     if (parseInt(costoInput.value||'0') === 0) costoInput.value = sugerido;
     if (hint) hint.textContent = `(sugerido: ${sugerido})`;
+    if (camposPremium) camposPremium.style.display = 'block';
   }
 }
 
