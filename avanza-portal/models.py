@@ -222,6 +222,13 @@ class LeadBolsa(Base):
     score_calidad = Column(Integer, default=50)
     notas_calificacion = Column(Text, nullable=True)
 
+    # --- PRESENCIA DIGITAL (v1.6) ---
+    web = Column(String, nullable=True)
+    instagram = Column(String, nullable=True)
+    tiene_web = Column(Boolean, default=False)
+    tiene_redes = Column(Boolean, default=False)
+    observacion = Column(Text, nullable=True)
+
     aliado = relationship("Aliado", backref="leads_bolsa")
 
 
