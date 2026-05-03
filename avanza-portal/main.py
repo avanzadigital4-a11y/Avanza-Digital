@@ -24,6 +24,7 @@ from auth import (
     verify_ownership_dep, ADMIN_API_KEY, JWT_SECRET,
 )
 import schemas
+import groq_ai  # IA opcional — si GROQ_API_KEY no está, todo cae a fallback heurístico
 
 Base.metadata.create_all(bind=engine)
 
@@ -412,16 +413,53 @@ def job_liberar_leads_48h():
             lead.notif_24h_enviada = False
 
             if aliado_email:
-                html = f"""
-                <div style="font-family:sans-serif;max-width:520px;margin:auto;padding:32px;background:#0f172a;color:#e2e8f0;border-radius:12px;">
-                  <h2 style="color:#f87171;margin-bottom:8px;">🚨 Lead liberado automáticamente</h2>
-                  <p>Hola <strong>{aliado_nombre.split()[0] if aliado_nombre else ''}</strong>,</p>
-                  <p>El lead <strong>{lead.empresa}</strong> volvió a la bolsa porque pasaron más de 48 horas sin que lo marcaras como contactado.</p>
-                  <p style="color:#a1a1aa;">Otros aliados ya pueden reclamarlo. Si tiene buen potencial, podés volver a tomarlo si sigue disponible.</p>
-                  <a href="{PORTAL_URL}/portal.html" style="display:inline-block;margin-top:16px;padding:12px 24px;background:#3b82f6;color:#fff;border-radius:8px;text-decoration:none;font-weight:700;">Ir a la bolsa →</a>
-                </div>
-                """
-                enviar_email(aliado_email, f"🚨 Avanza: perdiste el lead {lead.empresa} (48hs sin contactar)", html)
+                # Calculamos contadores históricos para que la IA pueda detectar patrones.
+                if aliado:
+                    leads_perdidos = sum(
+                        1 for l in (aliado.leads_bolsa or [])
+                        if l.id != lead.id and l.resultado is None and l.estado == "disponible"
+                    )
+                    leads_exitosos = sum(
+                        1 for l in (aliado.leads_bolsa or [])
+                        if l.resultado == "exitoso"
+                    )
+                else:
+                    leads_perdidos = 0
+                    leads_exitosos = 0
+
+                email_ia = groq_ai.personalizar_email_lead_liberado_ia(
+                    aliado_nombre=aliado_nombre,
+                    lead_empresa=lead.empresa,
+                    lead_rubro=lead.rubro,
+                    leads_perdidos_previos=leads_perdidos,
+                    leads_exitosos_previos=leads_exitosos,
+                )
+
+                if email_ia:
+                    parrafos = [pr.strip() for pr in email_ia["cuerpo_texto"].split("\n\n") if pr.strip()]
+                    cuerpo_html_inner = "".join(f"<p style='margin:0 0 12px 0;'>{pr.replace(chr(10), '<br>')}</p>" for pr in parrafos)
+                    asunto_lead = email_ia["asunto"]
+                    html = f"""
+                    <div style="font-family:sans-serif;max-width:520px;margin:auto;padding:32px;background:#0f172a;color:#e2e8f0;border-radius:12px;">
+                      <div style="font-size:.78rem;color:#a855f7;font-weight:700;letter-spacing:.6px;text-transform:uppercase;margin-bottom:8px;">✨ Mensaje personalizado</div>
+                      <div style="line-height:1.55;">{cuerpo_html_inner}</div>
+                      <a href="{PORTAL_URL}/portal.html" style="display:inline-block;margin-top:16px;padding:12px 24px;background:#3b82f6;color:#fff;border-radius:8px;text-decoration:none;font-weight:700;">Ir a la bolsa →</a>
+                    </div>
+                    """
+                else:
+                    # Fallback: template fijo
+                    asunto_lead = f"🚨 Avanza: perdiste el lead {lead.empresa} (48hs sin contactar)"
+                    html = f"""
+                    <div style="font-family:sans-serif;max-width:520px;margin:auto;padding:32px;background:#0f172a;color:#e2e8f0;border-radius:12px;">
+                      <h2 style="color:#f87171;margin-bottom:8px;">🚨 Lead liberado automáticamente</h2>
+                      <p>Hola <strong>{aliado_nombre.split()[0] if aliado_nombre else ''}</strong>,</p>
+                      <p>El lead <strong>{lead.empresa}</strong> volvió a la bolsa porque pasaron más de 48 horas sin que lo marcaras como contactado.</p>
+                      <p style="color:#a1a1aa;">Otros aliados ya pueden reclamarlo. Si tiene buen potencial, podés volver a tomarlo si sigue disponible.</p>
+                      <a href="{PORTAL_URL}/portal.html" style="display:inline-block;margin-top:16px;padding:12px 24px;background:#3b82f6;color:#fff;border-radius:8px;text-decoration:none;font-weight:700;">Ir a la bolsa →</a>
+                    </div>
+                    """
+
+                enviar_email(aliado_email, asunto_lead, html)
 
         db.commit()
     except Exception as e:
@@ -1412,7 +1450,7 @@ def cambiar_estado_prospecto(id: int, request: Request,
     Solo permite estados manuales; 'pagado' y 'comision_abonada' los setea el sistema."""
     if body is not None:
         estado = body.estado
-    estados_manuales = {"registrado", "sin_contactar", "contactado", "respondio", "propuesta_enviada"}
+    estados_manuales = {"registrado", "sin_contactar", "contactado", "respondio", "propuesta_enviada", "perdido"}
     if estado not in estados_manuales:
         raise HTTPException(
             400,
@@ -2025,8 +2063,42 @@ def _procesar_pago_confirmado(db: Session,
     db.commit()
 
     # --- Notificación al aliado (spec §7) ---
-    enviar_email(a.email, f"💰 ¡Nuevo cliente cerrado! — {plan}",
-        f"""<div style="font-family:sans-serif;background:#050505;color:#fff;padding:32px;max-width:520px;margin:auto;border-radius:12px;">
+    # Intentamos personalizar el email con IA: coaching del próximo movimiento.
+    # Si Groq falla → usamos el template fijo de siempre.
+    n_ventas_aliado = a.ventas_6_meses or 0
+    es_primera_venta = (n_ventas_aliado <= 1)  # ya se actualizó arriba al sumar 1
+
+    email_ia = groq_ai.personalizar_email_venta_cerrada_ia(
+        aliado_nombre=a.nombre,
+        cliente_nombre=nombre_cliente,
+        plan=plan,
+        comision_usd=comision_usd,
+        es_primera_venta=es_primera_venta,
+        ventas_totales_aliado=n_ventas_aliado,
+    )
+
+    if email_ia:
+        # Convertimos texto plano en párrafos HTML
+        parrafos = [pr.strip() for pr in email_ia["cuerpo_texto"].split("\n\n") if pr.strip()]
+        cuerpo_html_inner = "".join(f"<p style='margin:0 0 12px 0;'>{pr.replace(chr(10), '<br>')}</p>" for pr in parrafos)
+        asunto_email = email_ia["asunto"]
+        # El bloque con el monto va abajo del coaching como dato hard.
+        cuerpo_email = f"""<div style="font-family:sans-serif;background:#050505;color:#fff;padding:32px;max-width:520px;margin:auto;border-radius:12px;">
+          <div style="font-size:.78rem;color:#a855f7;font-weight:700;letter-spacing:.6px;text-transform:uppercase;margin-bottom:8px;">✨ Mensaje personalizado</div>
+          <h2 style="color:#4ade80;margin:0 0 16px 0;">¡Cerraste con {nombre_cliente}!</h2>
+          <div style="color:#e2e8f0;line-height:1.55;">{cuerpo_html_inner}</div>
+          <div style="background:#111;border:1px solid #222;border-radius:8px;padding:16px;margin:20px 0;">
+            <p style="margin:4px 0;"><strong>Plan:</strong> {plan}</p>
+            <p style="margin:4px 0;"><strong>Cliente:</strong> {nombre_cliente}</p>
+            <p style="margin:4px 0;"><strong>Tu comisión:</strong> <span style="color:#4ade80;font-size:1.3rem;font-weight:900;">USD {comision_usd:,.0f}</span></p>
+            <p style="margin:4px 0;font-size:.85rem;color:#71717a;">Se abona en 24hs al CBU/alias registrado.</p>
+          </div>
+          <a href="{PORTAL_URL}/portal.html" style="display:inline-block;margin-top:8px;padding:12px 24px;background:#3b82f6;color:#fff;border-radius:8px;text-decoration:none;font-weight:700;">Ver mi portal →</a>
+        </div>"""
+    else:
+        # Fallback: template fijo de siempre.
+        asunto_email = f"💰 ¡Nuevo cliente cerrado! — {plan}"
+        cuerpo_email = f"""<div style="font-family:sans-serif;background:#050505;color:#fff;padding:32px;max-width:520px;margin:auto;border-radius:12px;">
           <h2 style="color:#4ade80;">¡Tu cliente {nombre_cliente} acaba de pagar! 🎉</h2>
           <p>Hola <strong>{a.nombre.split()[0]}</strong>, llegó un pago a través de <strong>{modalidad}</strong>.</p>
           <div style="background:#111;border:1px solid #222;border-radius:8px;padding:16px;margin:16px 0;">
@@ -2036,7 +2108,9 @@ def _procesar_pago_confirmado(db: Session,
           </div>
           <p style="color:#71717a;font-size:.85rem;">Se te abona dentro de las 24hs al CBU/alias registrado.</p>
           <a href="{PORTAL_URL}/portal.html" style="display:inline-block;margin-top:16px;padding:12px 24px;background:#3b82f6;color:#fff;border-radius:8px;text-decoration:none;font-weight:700;">Ver mi portal →</a>
-        </div>""")
+        </div>"""
+
+    enviar_email(a.email, asunto_email, cuerpo_email)
 
     return {"status": "ok", "venta_registrada": True, "comision_id": c.id,
             "comision_usd": comision_usd, "aliado": a.codigo}
@@ -2319,6 +2393,45 @@ def siguiente_accion(codigo: str, db: Session = Depends(get_db), _owner=Depends(
 
     acciones.sort(key=lambda x: x["urgencia"], reverse=True)
 
+    # ─── ENRIQUECIMIENTO IA — solo para la acción priorizada ─────────────────
+    # Llamamos a Groq SOLO para la acción más urgente. Las otras 3 se quedan
+    # con sus textos plantilla. Esto limita el volumen de requests a Groq y
+    # mantiene la latencia baja.
+    if acciones and acciones[0].get("accion_id"):
+        principal = acciones[0]
+        prospecto_obj = next(
+            (pp for pp in a.prospectos if pp.id == principal["accion_id"]),
+            None
+        )
+        if prospecto_obj is not None:
+            # Calculamos `dias_relevantes` según el tipo de acción.
+            dias = None
+            if principal["tipo"] == "seguimiento_propuesta" and prospecto_obj.fecha_contacto:
+                dias = (datetime.now() - prospecto_obj.fecha_contacto).days
+            elif principal["tipo"] == "contactar_prospecto":
+                dias = (datetime.now() - prospecto_obj.creado_en).days if prospecto_obj.creado_en else None
+            elif principal["tipo"] == "seguimiento" and prospecto_obj.fecha_contacto:
+                dias = (datetime.now() - prospecto_obj.fecha_contacto).days
+
+            ia_msg = groq_ai.siguiente_accion_ia(
+                tipo=principal["tipo"],
+                prospecto_nombre=prospecto_obj.nombre,
+                prospecto_rubro=prospecto_obj.rubro,
+                prospecto_tamano=prospecto_obj.tamano,
+                prospecto_urgencia=prospecto_obj.urgencia,
+                dias_relevantes=dias,
+                ultima_nota=prospecto_obj.nota,
+                aliado_nombre=a.nombre,
+            )
+            if ia_msg:
+                # Pisamos la descripción genérica con la personalizada por IA.
+                principal["descripcion"] = ia_msg["descripcion"]
+                # Y añadimos el mensaje listo para copiar/pegar como campo nuevo.
+                principal["mensaje_sugerido"] = ia_msg["mensaje_sugerido"]
+                principal["fuente"] = "ia"
+            else:
+                principal["fuente"] = "plantilla"
+
     # Stats del aliado para el contexto
     total_prospectos = len(a.prospectos)
     tasa_cierre_pct = 0
@@ -2364,6 +2477,131 @@ def estado_onboarding(codigo: str, db: Session = Depends(get_db), _owner=Depends
     completados = sum(1 for p in pasos if p["completado"])
     return {"pasos": pasos, "completados": completados, "total": len(pasos),
             "pct": round(completados / len(pasos) * 100)}
+
+
+# ─── COACH DE ONBOARDING IA (Prioridad #10) ──────────────────────────────────
+# Agregado al checklist estático: un consejo IA personalizado según la actividad
+# real del aliado (no solo qué pasos tildó). Devuelve diagnóstico + siguiente
+# paso + razón + plantilla opcional.
+
+@app.get("/aliados/{codigo}/coach-onboarding")
+def coach_onboarding(codigo: str, db: Session = Depends(get_db),
+                     _owner=Depends(verify_ownership_dep)):
+    """
+    Devuelve un diagnóstico IA + siguiente paso accionable basado en el estado
+    real del aliado (no solo el checklist).
+    """
+    a = _get_aliado(codigo, db)
+    es_canal2 = (getattr(a, "tipo_aliado", "canal1") or "canal1") == "canal2"
+
+    # ─── Recolectar datos de actividad real ─────────────────────────────────
+    ahora = datetime.now()
+    dias_desde_registro = (ahora - a.creado_en).days if a.creado_en else 0
+    ultimo_login_dias = (ahora - a.ultimo_login).days if getattr(a, "ultimo_login", None) else None
+
+    prospectos = a.prospectos or []
+    n_prosp = len(prospectos)
+    n_sin_contactar = sum(1 for p in prospectos if p.estado == "sin_contactar")
+    n_contactados   = sum(1 for p in prospectos if p.estado == "contactado")
+    n_respondio     = sum(1 for p in prospectos if p.estado == "respondio")
+    n_leads_bolsa   = db.query(LeadBolsa).filter(LeadBolsa.aliado_id == a.id).count() if not es_canal2 else 0
+    n_ventas        = a.ventas_6_meses or 0
+    n_sub_aliados   = len(getattr(a, "sub_aliados", []) or [])
+
+    # ─── Reconstruir checklist para saber pct y pasos pendientes ─────────────
+    pasos_check = [
+        ("Registrarte", True),
+        ("Registrar tu primer referido", len(a.referidos or []) > 0),
+        ("Cargar un prospecto", n_prosp > 0),
+    ]
+    if not es_canal2:
+        pasos_check.append(("Reclamar un lead de la bolsa", n_leads_bolsa > 0))
+    pasos_check += [
+        ("Cerrar tu primera venta", n_ventas > 0),
+        ("Invitar a tu primer sub-aliado", n_sub_aliados > 0),
+    ]
+    completados = sum(1 for _, ok in pasos_check if ok)
+    pct = round(completados / len(pasos_check) * 100) if pasos_check else 0
+    pasos_pendientes = [t for t, ok in pasos_check if not ok]
+
+    # ─── Llamar a IA ─────────────────────────────────────────────────────────
+    ia = groq_ai.coach_onboarding_ia(
+        aliado_nombre=a.nombre,
+        dias_desde_registro=dias_desde_registro,
+        es_canal2=es_canal2,
+        tiene_prospectos=(n_prosp > 0),
+        n_prospectos=n_prosp,
+        n_prospectos_sin_contactar=n_sin_contactar,
+        n_prospectos_contactados=n_contactados,
+        n_prospectos_respondio=n_respondio,
+        n_leads_bolsa_reclamados=n_leads_bolsa,
+        n_ventas=n_ventas,
+        n_sub_aliados=n_sub_aliados,
+        ultimo_login_dias=ultimo_login_dias,
+        checklist_pct=pct,
+        pasos_pendientes=pasos_pendientes,
+    )
+
+    if ia:
+        return {
+            "modo": "ia",
+            "diagnostico": ia["diagnostico"],
+            "siguiente_paso": ia["siguiente_paso"],
+            "razon": ia["razon"],
+            "plantilla": ia["plantilla"],
+            "checklist_pct": pct,
+        }
+
+    # ─── Fallback heurístico: árbol de decisión simple ───────────────────────
+    if n_prosp == 0:
+        diag = "No hay prospectos cargados todavía. Sin inputs no hay outputs."
+        nxt  = "Cargá 3 prospectos hoy: empresas conocidas que no tengan presencia digital."
+        razon = "Tener pipeline es la condición mínima para que cualquier otra cosa funcione."
+        plantilla = ""
+    elif n_sin_contactar > 0 and n_sin_contactar == n_prosp:
+        diag = f"Cargaste {n_prosp} prospecto{'s' if n_prosp != 1 else ''} pero no contactaste a ninguno."
+        nxt  = "Mandale el link de la auditoría gratuita al primero de la lista hoy mismo."
+        razon = "Inventario sin acción se enfría en 7 días — perdés la ventana."
+        plantilla = "Hola, soy [tu nombre]. Te paso un diagnóstico digital gratuito de tu empresa, toma 30 seg: [link]. Si te hace ruido lo que devuelve, hablamos."
+    elif n_respondio > 0 and n_ventas == 0:
+        diag = f"Tenés {n_respondio} prospecto{'s' if n_respondio != 1 else ''} que respondieron pero ninguna venta cerrada."
+        nxt  = "Usá el Cotizador para mandarles una propuesta concreta esta semana."
+        razon = "Una respuesta sin propuesta concreta enfría en 5 días."
+        plantilla = ""
+    elif n_contactados > n_respondio and (n_contactados - n_respondio) >= 3:
+        diag = f"{n_contactados - n_respondio} prospectos contactados que no respondieron — necesitan re-enganche."
+        nxt  = "Usá el botón 'Follow-up IA' en cada prospecto contactado hace más de 3 días."
+        razon = "Sin follow-up sistemático, el 80% de los leads se enfrían."
+        plantilla = ""
+    elif not es_canal2 and n_leads_bolsa == 0:
+        diag = "Hay leads disponibles en la bolsa que no estás reclamando."
+        nxt  = "Entrá a la Bolsa y reclamá 1 lead que matchee tu rubro fuerte."
+        razon = "La bolsa son clientes pre-calificados — costo cero comparado con prospectar en frío."
+        plantilla = ""
+    elif n_ventas == 0 and n_prosp >= 5:
+        diag = "Pipeline lleno pero cero ventas — el problema está en cierre, no en captación."
+        nxt  = "Revisá los prospectos perdidos con el botón 'Marcar perdido + analizar IA'."
+        razon = "Diagnosticar pérdidas pasadas es más rápido que cargar más prospectos."
+        plantilla = ""
+    elif n_sub_aliados == 0 and n_ventas >= 1:
+        diag = "Ya cerraste ventas pero tu red de sub-aliados está plana."
+        nxt  = "Invitá a 1 conocido que ya esté en venta consultiva (consultor, agencia, contador)."
+        razon = "Cada sub-aliado activo te suma ingresos pasivos sin más esfuerzo."
+        plantilla = ""
+    else:
+        diag = f"Tu progreso del checklist está en {pct}%."
+        nxt  = "Avanzá con el siguiente paso pendiente: " + (pasos_pendientes[0] if pasos_pendientes else "todo completo, mantené el ritmo.")
+        razon = "Cada paso del checklist desbloquea capacidades nuevas del programa."
+        plantilla = ""
+
+    return {
+        "modo": "fallback",
+        "diagnostico": diag,
+        "siguiente_paso": nxt,
+        "razon": razon,
+        "plantilla": plantilla,
+        "checklist_pct": pct,
+    }
 
 
 # ─── BOLSA DE LEADS (ADMIN) ──────────────────────────────────────────────────
@@ -2737,7 +2975,30 @@ URGENCIA_SCORE = {"baja": 10, "media": 25, "alta": 40}
 
 
 def _perfilar_prospecto(p: Prospecto) -> dict:
-    """Corazón del perfilado IA: calcula score 0-100, plan recomendado y pitch."""
+    """Corazón del perfilado IA: intenta Groq primero, fallback a heurística."""
+
+    # ─── INTENTO 1: IA real (Groq) ──────────────────────────────────────────
+    ia = groq_ai.perfilar_lead_ia(
+        empresa=p.nombre,
+        rubro=p.rubro,
+        tamano=p.tamano,
+        urgencia=p.urgencia,
+        estado=p.estado,
+        nota_aliado=p.nota,
+    )
+    if ia:
+        # Si el aliado fijó un plan_interes manual, lo respetamos por encima de la IA.
+        if p.plan_interes and p.plan_interes in PLANES:
+            ia["plan_recomendado"] = p.plan_interes
+            ia["ticket_esperado"] = round(PLANES[p.plan_interes] * TAMANOS_MULT.get(p.tamano or "pyme", 1.0), 0)
+        return ia
+
+    # ─── INTENTO 2: Fallback heurístico (lo de siempre) ─────────────────────
+    return _perfilar_prospecto_heuristico(p)
+
+
+def _perfilar_prospecto_heuristico(p: Prospecto) -> dict:
+    """Heurística determinística — el fallback de siempre cuando Groq no responde."""
     score = 20  # base
 
     # 1. Rubro → +20 si es rubro de alta necesidad, plan sugerido
@@ -2863,6 +3124,339 @@ def actualizar_datos_prospecto(id: int, request: Request,
     if urgencia: p.urgencia = urgencia
     db.commit()
     return {"mensaje": "Datos actualizados."}
+
+
+# ─── PERFILADO IA DE LEADS DE LA BOLSA ──────────────────────────────────────
+# Antes esto era 100% JavaScript con templates en portal.html. Ahora pasa por
+# Groq y devuelve un pitch real personalizado por empresa. Si Groq falla,
+# devolvemos el resultado del fallback heurístico (el front sigue funcionando).
+
+@app.post("/bolsa/{lead_id}/perfilar-ia")
+def perfilar_lead_bolsa(lead_id: int, request: Request,
+                        rubro: str = "",
+                        tamano: str = "pyme",
+                        urgencia: str = "media",
+                        db: Session = Depends(get_db),
+                        _aliado=Depends(current_aliado_required)):
+    """
+    Perfilado IA para un lead de la Bolsa.
+    El aliado solo necesita estar autenticado (no necesita haber reclamado el lead todavía
+    — perfilar antes de reclamar es parte del flow para decidir si vale el costo).
+    """
+    lead = db.query(LeadBolsa).filter(LeadBolsa.id == lead_id).first()
+    if not lead:
+        raise HTTPException(404, "Lead no encontrado.")
+
+    # Si el aliado no pasó rubro, usamos el del lead.
+    rubro_efectivo = (rubro or "").strip() or (lead.rubro or "")
+    tamano_ef = (tamano or "pyme").strip()
+    urgencia_ef = (urgencia or "media").strip()
+
+    # ─── Intento 1: Groq ─────────────────────────────────────────────────────
+    ia = groq_ai.perfilar_lead_ia(
+        empresa=lead.empresa,
+        rubro=rubro_efectivo,
+        tamano=tamano_ef,
+        urgencia=urgencia_ef,
+        ciudad=lead.ciudad,
+    )
+    if ia:
+        return {
+            "modo": "ia",
+            "score": ia["score"],
+            "plan_recomendado": ia["plan_recomendado"],
+            "pitch_sugerido": ia["pitch_sugerido"],
+            "ticket_esperado": ia["ticket_esperado"],
+            "razon": ia["razon"],
+        }
+
+    # ─── Intento 2: Fallback heurístico ──────────────────────────────────────
+    # Reusamos la misma lógica del prospecto montando un objeto temporal.
+    class _LeadShim:
+        nombre   = lead.empresa
+        rubro    = rubro_efectivo
+        tamano   = tamano_ef
+        urgencia = urgencia_ef
+        estado   = "sin_contactar"
+        plan_interes = None
+        nota = None
+    res = _perfilar_prospecto_heuristico(_LeadShim())
+    res["modo"] = "fallback"
+    return res
+
+
+# ─── GENERADOR DE FOLLOW-UP IA (Prioridad #4) ────────────────────────────────
+# El aliado abre un prospecto y pide "generame un mensaje de seguimiento".
+# Devuelve un mensaje listo para copiar+pegar. El aliado puede pedir varias
+# veces para regenerar — cada llamada es un request a Groq.
+
+@app.post("/prospectos/{id}/followup-ia")
+def generar_followup_prospecto(id: int, request: Request,
+                                tono: str = "directo",
+                                db: Session = Depends(get_db)):
+    """
+    Genera un mensaje de follow-up para un prospecto que no responde.
+    Tono válido: 'amigable' | 'directo' | 'ultimo' | 'valor' (default: directo).
+    """
+    p = _get_prospecto_owned_or_admin(id, request, db)
+
+    # Calcular días sin responder según el estado.
+    dias = None
+    if p.estado in ("contactado", "propuesta_enviada") and p.fecha_contacto:
+        dias = (datetime.now() - p.fecha_contacto).days
+    elif p.fecha_respuesta:
+        dias = (datetime.now() - p.fecha_respuesta).days
+    elif p.creado_en:
+        dias = (datetime.now() - p.creado_en).days
+
+    aliado_obj = p.aliado
+
+    ia = groq_ai.generar_followup_ia(
+        prospecto_nombre=p.nombre,
+        rubro=p.rubro,
+        tamano=p.tamano,
+        plan_recomendado=p.plan_recomendado or p.plan_interes,
+        dias_sin_responder=dias,
+        ultima_nota=p.nota,
+        aliado_nombre=aliado_obj.nombre if aliado_obj else None,
+        tono=tono if tono in ("amigable", "directo", "ultimo", "valor") else "directo",
+    )
+    if ia:
+        return {
+            "modo": "ia",
+            "mensaje": ia["mensaje"],
+            "estrategia": ia["estrategia"],
+            "tono": tono,
+            "dias_sin_responder": dias,
+        }
+
+    # ─── Fallback heurístico — mensajes plantilla por tono ───────────────────
+    nombre_corto = (p.nombre or "").split()[0] or "Hola"
+    plantillas = {
+        "amigable": f"¡Hola {nombre_corto}! ¿Cómo va? Quería retomar lo que estábamos charlando. ¿Tenés un momento esta semana para repasarlo?",
+        "directo":  f"Hola {nombre_corto}, soy [tu nombre]. Te escribo para retomar la propuesta. ¿Avanzamos o lo pausamos por ahora?",
+        "ultimo":   f"Hola {nombre_corto}, este es mi último mensaje para no hacerme pesado. Si no es el momento, perfecto — quedate con mi contacto para cuando quieras retomar.",
+        "valor":    f"Hola {nombre_corto}, te paso un dato del rubro {p.rubro or 'tuyo'} que quizás te sirve aunque no avancemos: empresas similares pierden hasta 30% de consultas por temas digitales simples. ¿Te interesa que te muestre cómo evaluarlo?",
+    }
+    return {
+        "modo": "fallback",
+        "mensaje": plantillas.get(tono, plantillas["directo"]),
+        "estrategia": "Mensaje plantilla — la IA no estaba disponible.",
+        "tono": tono,
+        "dias_sin_responder": dias,
+    }
+
+
+# ─── RESPUESTA A OBJECIONES IA (Prioridad #5) ────────────────────────────────
+# El aliado pega la objeción que le dijeron y Groq devuelve cómo responder.
+
+@app.post("/prospectos/{id}/objecion-ia")
+def responder_objecion_prospecto(id: int, request: Request,
+                                  objecion: str = "",
+                                  db: Session = Depends(get_db)):
+    """
+    Genera una respuesta a una objeción. El aliado pasa el texto de la objeción
+    como query param (URL-encoded).
+    """
+    p = _get_prospecto_owned_or_admin(id, request, db)
+    obj_text = (objecion or "").strip()
+    if not obj_text:
+        raise HTTPException(400, "Falta el texto de la objeción (?objecion=...)")
+
+    ia = groq_ai.responder_objecion_ia(
+        objecion=obj_text,
+        prospecto_nombre=p.nombre,
+        rubro=p.rubro,
+        tamano=p.tamano,
+        plan_recomendado=p.plan_recomendado or p.plan_interes,
+        ticket_esperado=(PLANES.get(p.plan_recomendado or "", 0)
+                         * TAMANOS_MULT.get(p.tamano or "pyme", 1.0)) if p.plan_recomendado else None,
+    )
+    if ia:
+        return {"modo": "ia", **ia}
+
+    # ─── Fallback: respuestas plantilla por palabra clave ────────────────────
+    bajo = obj_text.lower()
+    if any(k in bajo for k in ("caro", "precio", "presupuesto", "no tengo plata")):
+        return {
+            "modo": "fallback",
+            "respuesta": "Te entiendo. La pregunta no es cuánto cuesta sino cuánto te cuesta NO tenerlo. Empresas similares pierden 20-40% de consultas por mes por temas digitales. ¿Hacemos un diagnóstico rápido para medirlo en tu caso?",
+            "explicacion": "Reformula precio a costo de oportunidad.",
+            "siguiente_pregunta": "¿Cuántas consultas mensuales recibís hoy?",
+        }
+    if any(k in bajo for k in ("ya tengo", "tengo web", "tengo página", "ya hice")):
+        return {
+            "modo": "fallback",
+            "respuesta": "Buenísimo. Tener algo es mejor que nada. La pregunta clave es: ¿cuántas consultas reales te trae al mes y cómo se compara con el potencial del rubro? A veces conviene ajustar lo que hay, otras conviene rehacerlo.",
+            "explicacion": "Calificá la web actual antes de proponer reemplazo.",
+            "siguiente_pregunta": "¿Cuándo se hizo y qué métricas tenés?",
+        }
+    if any(k in bajo for k in ("no es el momento", "más adelante", "en unos meses", "otro momento")):
+        return {
+            "modo": "fallback",
+            "respuesta": "Lo respeto. Igualmente te propongo algo: una llamada corta de diagnóstico (15 min) para que cuando SÍ sea el momento ya tengas los datos en la mano. Sin compromiso.",
+            "explicacion": "Mantené la puerta abierta sin presionar.",
+            "siguiente_pregunta": "¿Te queda mejor esta o la próxima semana?",
+        }
+    if any(k in bajo for k in ("pensar", "voy a ver", "consultar")):
+        return {
+            "modo": "fallback",
+            "respuesta": "Perfecto. Para que la pensada te sirva, ¿qué información te faltaría tener para decidir? Te la armo y te la mando.",
+            "explicacion": "Convertí 'lo pienso' en una pregunta concreta.",
+            "siguiente_pregunta": "¿Qué dato te falta para definirlo?",
+        }
+    return {
+        "modo": "fallback",
+        "respuesta": "Te entiendo. ¿Me podés contar un poco más de qué es lo que más te frena? Así te respondo con algo concreto y no con un genérico.",
+        "explicacion": "Pediles que aterricen la objeción.",
+        "siguiente_pregunta": "¿Qué es lo que más te hace dudar?",
+    }
+
+
+# ─── ANÁLISIS DE VENTA PERDIDA IA (Prioridad #8) ─────────────────────────────
+# Cuando un prospecto se marca como 'perdido', el aliado puede pedir un
+# diagnóstico IA del historial completo: qué pasó, qué se hizo mal, qué hacer
+# distinto la próxima, y si se puede recuperar más adelante.
+
+@app.post("/prospectos/{id}/analizar-perdida")
+def analizar_venta_perdida(id: int, request: Request,
+                            motivo: str = "",
+                            db: Session = Depends(get_db)):
+    """
+    Analiza el historial de un prospecto perdido y devuelve diagnóstico IA.
+    Antes de analizar, marca el estado como 'perdido' si todavía no lo está
+    y guarda el motivo en la nota (anteponiendo "[PERDIDO] ...").
+    """
+    p = _get_prospecto_owned_or_admin(id, request, db)
+
+    # 1. Estado anterior antes de cambiarlo (lo necesita el análisis).
+    estado_anterior = p.estado
+
+    # 2. Marcar como perdido si todavía no lo está.
+    if p.estado != "perdido":
+        p.estado = "perdido"
+
+    # 3. Guardar motivo en nota (sin pisar lo que ya había).
+    motivo_clean = (motivo or "").strip()
+    if motivo_clean:
+        prefix = "[PERDIDO]"
+        if p.nota and prefix not in p.nota:
+            p.nota = f"{prefix} {motivo_clean}\n---\n{p.nota}"
+        elif not p.nota:
+            p.nota = f"{prefix} {motivo_clean}"
+        # Si ya tenía un [PERDIDO], no duplicamos.
+
+    db.commit()
+
+    # 4. Calcular días relevantes para el análisis.
+    ahora = datetime.now()
+    dias_pipeline = (ahora - p.creado_en).days if p.creado_en else None
+    dias_contacto = (ahora - p.fecha_contacto).days if p.fecha_contacto else None
+    dias_respuesta = (ahora - p.fecha_respuesta).days if p.fecha_respuesta else None
+
+    ticket_esp = None
+    if p.plan_recomendado and p.plan_recomendado in PLANES:
+        mult = TAMANOS_MULT.get(p.tamano or "pyme", 1.0)
+        ticket_esp = PLANES[p.plan_recomendado] * mult
+
+    # 5. Llamar a Groq.
+    ia = groq_ai.analizar_venta_perdida_ia(
+        prospecto_nombre=p.nombre,
+        rubro=p.rubro,
+        tamano=p.tamano,
+        urgencia_perfilada=p.urgencia,
+        plan_recomendado=p.plan_recomendado or p.plan_interes,
+        ticket_esperado=ticket_esp,
+        estado_anterior=estado_anterior,
+        dias_en_pipeline=dias_pipeline,
+        fecha_contacto_dias=dias_contacto,
+        fecha_respuesta_dias=dias_respuesta,
+        pasos_piloto=p.automation_paso or 0,
+        notas=p.nota,
+        motivo_aliado=motivo_clean or None,
+    )
+    if ia:
+        return {"modo": "ia", "estado": p.estado, **ia}
+
+    # ─── Fallback: análisis heurístico básico ────────────────────────────────
+    errores = []
+    distinto = []
+    podria_rec = False
+
+    # Caso 1: nunca contactado o contactado pero nunca respondió
+    if estado_anterior in ("sin_contactar", "contactado"):
+        errores.append("El prospecto pudo nunca haber recibido un mensaje claro de valor.")
+        if dias_pipeline and dias_pipeline > 14:
+            errores.append(f"Estuvo {dias_pipeline} días en pipeline sin avanzar — el lead se enfrió.")
+        distinto.append("Cargá menos prospectos pero contactá a todos en las primeras 48hs.")
+        distinto.append("Usá el botón 'Follow-up IA' a los 3 días de no recibir respuesta.")
+        que_paso = "El prospecto no avanzó del primer contacto. Probable que el mensaje inicial no haya conectado o no haya habido follow-up sistemático."
+        podria_rec = True
+
+    # Caso 2: respondió pero no se cerró
+    elif estado_anterior in ("respondio", "propuesta_enviada"):
+        errores.append("Hubo interés pero no se cerró — falta presión positiva o el plan no encajó.")
+        errores.append("Posiblemente faltó calificar urgencia/presupuesto antes de mandar la propuesta.")
+        distinto.append("Antes de enviar propuesta, validar urgencia y decisor real.")
+        distinto.append("Después de propuesta, agendar fecha concreta para revisarla juntos.")
+        que_paso = "El prospecto entró en conversación pero la propuesta no avanzó. Suele indicar falta de calificación previa o ausencia de próximo paso definido."
+        podria_rec = True
+
+    else:
+        errores.append("No hay suficiente historial para diagnosticar con precisión.")
+        distinto.append("Anotá siempre el motivo de la pérdida en la nota para futuras revisiones.")
+        que_paso = "Pocos datos del historial — registrá más contexto al cerrar prospectos."
+
+    return {
+        "modo": "fallback",
+        "estado": p.estado,
+        "que_paso": que_paso,
+        "errores_posibles": errores,
+        "que_hacer_distinto": distinto,
+        "podria_recuperarse": podria_rec,
+        "mensaje_recuperacion": "" if not podria_rec else f"Hola, hace un tiempo charlamos sobre {p.nombre} y la presencia digital. ¿Cambió algo en estos meses? Te paso un diagnóstico actualizado sin compromiso.",
+    }
+
+
+# ─── ASISTENTE PARA POSTS DE COMUNIDAD (Prioridad #7) ────────────────────────
+# El aliado escribe unos datos cortos en el composer y Groq genera título+cuerpo.
+
+@app.post("/comunidad/asistente-ia")
+def asistente_post_comunidad(request: Request,
+                              tipo: str = "tip",
+                              datos: str = "",
+                              db: Session = Depends(get_db),
+                              aliado=Depends(current_aliado_required)):
+    """
+    Genera {titulo, cuerpo} para un post de comunidad.
+    tipo: 'win' | 'tip' | 'pregunta'
+    datos: texto libre con los datos clave que aporta el aliado.
+    """
+    datos_text = (datos or "").strip()
+    if not datos_text:
+        raise HTTPException(400, "Necesito unos datos clave para redactar el post.")
+    if tipo not in ("win", "tip", "pregunta"):
+        raise HTTPException(400, "Tipo inválido. Usá: win, tip o pregunta.")
+
+    ia = groq_ai.redactar_post_comunidad_ia(
+        tipo=tipo,
+        datos_clave=datos_text,
+        aliado_nombre=aliado.nombre,
+    )
+    if ia:
+        return {"modo": "ia", **ia}
+
+    # Fallback básico — devolvemos un esqueleto con los datos del aliado al menos formateados.
+    plantilla_titulo = {
+        "win":      "Compartiendo un cierre",
+        "tip":      "Tip de la semana",
+        "pregunta": "Una consulta para la red",
+    }[tipo]
+    return {
+        "modo": "fallback",
+        "titulo": plantilla_titulo,
+        "cuerpo": datos_text,
+    }
 
 
 # ─── SISTEMA DE REPUTACIÓN (C) ───────────────────────────────────────────────
@@ -2998,7 +3592,73 @@ PILOTO_MAX_PASOS = 3
 
 
 def _render_mensaje_piloto(p: Prospecto, paso: int) -> tuple:
-    """Devuelve (asunto, cuerpo_html) para el paso N."""
+    """
+    Devuelve (asunto, cuerpo_html) para el paso N del piloto automático.
+
+    Estrategia:
+      1. Intentamos generar asunto+cuerpo con Groq (personalizado por rubro/tamaño).
+      2. Si Groq falla → caemos al template fijo de siempre (_render_mensaje_piloto_template).
+      3. En ambos casos envolvemos el cuerpo en el HTML del email + disclaimer + CTA.
+    """
+    aliado = p.aliado
+    nombre_aliado_corto = aliado.nombre.split()[0] if aliado and aliado.nombre else ""
+
+    # ─── Intento 1: Groq ─────────────────────────────────────────────────────
+    ia = groq_ai.generar_mensaje_piloto_ia(
+        paso=paso,
+        prospecto_nombre=p.nombre,
+        rubro=p.rubro,
+        tamano=p.tamano,
+        plan_recomendado=p.plan_recomendado or p.plan_interes,
+        aliado_nombre=aliado.nombre if aliado else None,
+    )
+    if ia:
+        # Convertir texto plano a HTML — preservar saltos de párrafo dobles.
+        cuerpo_texto = ia["cuerpo_texto"]
+        parrafos = [pr.strip() for pr in cuerpo_texto.split("\n\n") if pr.strip()]
+        cuerpo_html_inner = "<br><br>".join(p_.replace("\n", "<br>") for p_ in parrafos)
+
+        # Agregamos CTA estándar (link al diagnóstico/whatsapp según paso) al final
+        # solo si la IA no incluyó link explícito ya.
+        cta = ""
+        if aliado and aliado.ref_code and paso == 1 and "http" not in cuerpo_html_inner.lower():
+            cta = (
+                f"<br><br><a href='https://avanzadigital.digital/alianzas?ref={aliado.ref_code}' "
+                f"style='color:#3b82f6;'>Te dejo este link al diagnóstico gratuito</a> por si te sirve."
+            )
+        elif aliado and aliado.whatsapp and paso == 3 and "http" not in cuerpo_html_inner.lower():
+            cta = (
+                f"<br><br>Si querés retomar: "
+                f"<a href='https://wa.me/{aliado.whatsapp}' style='color:#3b82f6;'>"
+                f"escribime por WhatsApp</a>."
+            )
+
+        firma = f"<br><br>— {aliado.nombre if aliado else ''}"
+
+        return ia["asunto"], _envolver_email_piloto(cuerpo_html_inner + cta + firma, aliado)
+
+    # ─── Intento 2: Fallback — template fijo ─────────────────────────────────
+    return _render_mensaje_piloto_template(p, paso)
+
+
+def _envolver_email_piloto(cuerpo_html_inner: str, aliado) -> str:
+    """Envuelve el cuerpo en el contenedor HTML del email con disclaimer."""
+    nombre_aliado = aliado.nombre if aliado else "Avanza Digital"
+    return f"""
+    <div style='font-family:Inter,sans-serif;background:#050505;color:#e2e8f0;padding:32px;
+                max-width:560px;margin:0 auto;border-radius:12px;'>
+      {cuerpo_html_inner}
+      <hr style='margin:24px 0;border:none;border-top:1px solid #222;'>
+      <p style='font-size:0.75rem;color:#71717a;'>
+        Este mensaje fue enviado por el sistema de seguimiento automático de Avanza Digital en
+        nombre de {nombre_aliado}. Para dejar de recibirlos, respondé 'BAJA' a este mail.
+      </p>
+    </div>
+    """
+
+
+def _render_mensaje_piloto_template(p: Prospecto, paso: int) -> tuple:
+    """Templates fijos — fallback de siempre cuando Groq no responde."""
     aliado = p.aliado
     nombre_prospecto = p.nombre.split()[0] if p.nombre else "Hola"
     plan = p.plan_recomendado or p.plan_interes or "Plan Pro"
@@ -3037,18 +3697,7 @@ def _render_mensaje_piloto(p: Prospecto, paso: int) -> tuple:
             f"— {aliado.nombre}"
         )
 
-    html = f"""
-    <div style='font-family:Inter,sans-serif;background:#050505;color:#e2e8f0;padding:32px;
-                max-width:560px;margin:0 auto;border-radius:12px;'>
-      {mensaje}
-      <hr style='margin:24px 0;border:none;border-top:1px solid #222;'>
-      <p style='font-size:0.75rem;color:#71717a;'>
-        Este mensaje fue enviado por el sistema de seguimiento automático de Avanza Digital en
-        nombre de {aliado.nombre}. Para dejar de recibirlos, respondé 'BAJA' a este mail.
-      </p>
-    </div>
-    """
-    return asunto, html
+    return asunto, _envolver_email_piloto(mensaje, aliado)
 
 
 def job_piloto_automatico():

@@ -1966,7 +1966,10 @@
           <input type="text" id="post-titulo" placeholder="Título (ej: Cómo cerré un Industrial en 3 días)" style="background:#111; border:1px solid var(--border); color:white; padding:10px 12px; border-radius:8px;">
         </div>
         <textarea id="post-cuerpo" rows="4" placeholder="Contá tu idea, tu cierre o tu pregunta..." style="width:100%; background:#111; border:1px solid var(--border); color:white; padding:12px; border-radius:8px; font-family:inherit; resize:vertical; margin-bottom:12px;"></textarea>
-        <button onclick="publicarPost()" class="btn-primary" style="padding:10px 20px;"><i class="fa-solid fa-paper-plane"></i> Publicar</button>
+        <div style="display:flex; gap:10px; flex-wrap:wrap;">
+          <button onclick="abrirAsistenteComunidad()" style="background:rgba(192,132,252,0.12); color:#c084fc; border:1px solid rgba(192,132,252,0.3); padding:10px 16px; border-radius:8px; font-size:.85rem; font-weight:700; cursor:pointer;"><i class="fa-solid fa-wand-magic-sparkles"></i> Asistente IA</button>
+          <button onclick="publicarPost()" class="btn-primary" style="padding:10px 20px;"><i class="fa-solid fa-paper-plane"></i> Publicar</button>
+        </div>
       </div>
 
       <div id="comunidad-feed"></div>
@@ -2174,6 +2177,146 @@
         <div style="font-size:.75rem; color:var(--text-muted); text-transform:uppercase; letter-spacing:1px; font-weight:700; margin-bottom:8px;">Pitch sugerido</div>
         <pre id="perf-pitch" style="white-space:pre-wrap; background:rgba(0,0,0,0.3); padding:12px; border-radius:8px; font-family:inherit; font-size:.85rem; color:var(--text); line-height:1.5;">—</pre>
         <button onclick="copiarPitch()" style="margin-top:10px; background:rgba(192,132,252,0.15); color:#c084fc; border:1px solid rgba(192,132,252,0.3); padding:8px 14px; border-radius:8px; font-size:.82rem; font-weight:700; cursor:pointer;"><i class="fa-solid fa-copy"></i> Copiar pitch</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════════════════════
+     MODAL ASISTENTE IA — Follow-up + Objeciones (reutilizable)
+     ════════════════════════════════════════════════════════════════════════ -->
+<div class="modal-overlay" id="modal-asistente-ia">
+  <div class="onboarding-box" style="max-width:560px; max-height:92vh; overflow-y:auto; padding:24px;">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+      <h3 style="font-size:1.1rem; font-weight:800;">
+        <i class="fa-solid fa-wand-magic-sparkles" style="color:#c084fc;"></i>
+        <span id="ai-modal-titulo">Asistente IA</span>
+      </h3>
+      <button onclick="cerrarAsistenteIA()" style="background:transparent; border:none; color:var(--text-muted); font-size:1.4rem; cursor:pointer;">&times;</button>
+    </div>
+    <p id="ai-modal-sub" style="color:var(--text-muted); font-size:0.85rem; margin-bottom:14px;">—</p>
+    <input type="hidden" id="ai-prosp-id">
+    <input type="hidden" id="ai-modo">
+
+    <!-- Subforma: solo se muestra para FOLLOWUP (selector de tono) -->
+    <div id="ai-form-followup" style="display:none; margin-bottom:14px;">
+      <label style="display:block; font-size:.8rem; font-weight:700; margin-bottom:6px; color:var(--text-muted);">Tono del mensaje</label>
+      <select id="ai-tono" style="width:100%; background:#111; border:1px solid var(--border); color:white; padding:10px; border-radius:8px;">
+        <option value="directo" selected>Directo — sin vueltas, cerrá o pasá</option>
+        <option value="amigable">Amigable — cálido, como a un colega</option>
+        <option value="valor">Aportá valor — un dato/insight antes de pedir</option>
+        <option value="ultimo">Último mensaje — cierre elegante</option>
+      </select>
+    </div>
+
+    <!-- Subforma: solo se muestra para OBJECION (input de objeción) -->
+    <div id="ai-form-objecion" style="display:none; margin-bottom:14px;">
+      <label style="display:block; font-size:.8rem; font-weight:700; margin-bottom:6px; color:var(--text-muted);">¿Qué te dijo el prospecto?</label>
+      <textarea id="ai-objecion" rows="3" placeholder="Pegá la objeción tal como la dijo. Ej: 'me parece muy caro, ahora no podemos invertir tanto'" style="width:100%; background:#111; border:1px solid var(--border); color:white; padding:10px; border-radius:8px; font-family:inherit; resize:vertical;"></textarea>
+      <div style="display:flex; gap:6px; margin-top:8px; flex-wrap:wrap;">
+        <button onclick="aiRellenarObjecion('Me parece muy caro, no entra en el presupuesto')" style="background:rgba(255,255,255,0.04); color:var(--text-muted); border:1px solid var(--border); padding:5px 10px; border-radius:50px; font-size:.72rem; cursor:pointer;">muy caro</button>
+        <button onclick="aiRellenarObjecion('Ya tengo una página web hecha hace un tiempo')" style="background:rgba(255,255,255,0.04); color:var(--text-muted); border:1px solid var(--border); padding:5px 10px; border-radius:50px; font-size:.72rem; cursor:pointer;">ya tengo web</button>
+        <button onclick="aiRellenarObjecion('No es el momento, lo veo más adelante')" style="background:rgba(255,255,255,0.04); color:var(--text-muted); border:1px solid var(--border); padding:5px 10px; border-radius:50px; font-size:.72rem; cursor:pointer;">no es el momento</button>
+        <button onclick="aiRellenarObjecion('Lo voy a pensar y te aviso')" style="background:rgba(255,255,255,0.04); color:var(--text-muted); border:1px solid var(--border); padding:5px 10px; border-radius:50px; font-size:.72rem; cursor:pointer;">lo voy a pensar</button>
+      </div>
+    </div>
+
+    <button onclick="ejecutarAsistenteIA()" id="ai-btn-generar" class="btn-primary" style="width:100%; padding:12px; margin-bottom:14px;">
+      <i class="fa-solid fa-wand-magic-sparkles"></i> <span id="ai-btn-label">Generar</span>
+    </button>
+
+    <div id="ai-resultado" style="display:none; background:rgba(192,132,252,0.06); border:1px solid rgba(192,132,252,0.2); border-radius:10px; padding:16px;">
+      <div id="ai-meta" style="font-size:.72rem; color:#a855f7; text-transform:uppercase; letter-spacing:.6px; font-weight:800; margin-bottom:8px;">—</div>
+      <pre id="ai-output" style="white-space:pre-wrap; background:rgba(0,0,0,0.3); padding:12px; border-radius:8px; font-family:inherit; font-size:.88rem; color:var(--text); line-height:1.5; margin:0;">—</pre>
+      <div id="ai-extra" style="display:none; margin-top:10px; font-size:.78rem; color:var(--text-muted); padding:8px 10px; background:rgba(0,0,0,0.2); border-radius:6px; border-left:3px solid #a855f7;"></div>
+      <div style="display:flex; gap:8px; margin-top:12px; flex-wrap:wrap;">
+        <button onclick="copiarOutputIA()" style="background:rgba(192,132,252,0.15); color:#c084fc; border:1px solid rgba(192,132,252,0.3); padding:8px 14px; border-radius:8px; font-size:.82rem; font-weight:700; cursor:pointer;"><i class="fa-solid fa-copy"></i> Copiar</button>
+        <button onclick="ejecutarAsistenteIA()" style="background:rgba(255,255,255,0.04); color:var(--text-muted); border:1px solid var(--border); padding:8px 14px; border-radius:8px; font-size:.82rem; font-weight:700; cursor:pointer;"><i class="fa-solid fa-rotate"></i> Regenerar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════════════════════
+     MODAL ASISTENTE COMUNIDAD — Generar post con IA
+     ════════════════════════════════════════════════════════════════════════ -->
+<div class="modal-overlay" id="modal-asistente-comunidad">
+  <div class="onboarding-box" style="max-width:560px; max-height:92vh; overflow-y:auto; padding:24px;">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+      <h3 style="font-size:1.1rem; font-weight:800;">
+        <i class="fa-solid fa-wand-magic-sparkles" style="color:#c084fc;"></i> Asistente para tu post
+      </h3>
+      <button onclick="document.getElementById('modal-asistente-comunidad').classList.remove('open')" style="background:transparent; border:none; color:var(--text-muted); font-size:1.4rem; cursor:pointer;">&times;</button>
+    </div>
+    <p style="color:var(--text-muted); font-size:0.85rem; margin-bottom:14px;">Escribí los datos clave en pocas palabras. La IA te arma título y cuerpo.</p>
+
+    <label style="display:block; font-size:.8rem; font-weight:700; margin-bottom:6px; color:var(--text-muted);">Datos clave (sin estructura — escribí natural)</label>
+    <textarea id="aic-datos" rows="5" placeholder="Ejemplos:&#10;• 'Cerré un Plan Industrial con una metalúrgica de Rosario, 4900 USD, en 6 días desde el primer contacto'&#10;• 'Tip: usar el cotizador antes de mandar la propuesta acelera el cierre'&#10;• '¿Cómo manejan ustedes la objeción de cuotas vs pago único?'" style="width:100%; background:#111; border:1px solid var(--border); color:white; padding:10px; border-radius:8px; font-family:inherit; resize:vertical; margin-bottom:14px;"></textarea>
+
+    <button onclick="ejecutarAsistenteComunidad()" id="aic-btn-generar" class="btn-primary" style="width:100%; padding:12px; margin-bottom:14px;">
+      <i class="fa-solid fa-wand-magic-sparkles"></i> <span id="aic-btn-label">Generar post</span>
+    </button>
+
+    <div id="aic-resultado" style="display:none; background:rgba(192,132,252,0.06); border:1px solid rgba(192,132,252,0.2); border-radius:10px; padding:16px;">
+      <div id="aic-meta" style="font-size:.72rem; color:#a855f7; text-transform:uppercase; letter-spacing:.6px; font-weight:800; margin-bottom:8px;">—</div>
+      <div style="font-size:.7rem; color:var(--text-muted); margin-bottom:4px; font-weight:700;">TÍTULO</div>
+      <div id="aic-titulo" style="font-weight:700; font-size:.95rem; color:var(--text); margin-bottom:10px; padding:8px 10px; background:rgba(0,0,0,0.25); border-radius:6px;">—</div>
+      <div style="font-size:.7rem; color:var(--text-muted); margin-bottom:4px; font-weight:700;">CUERPO</div>
+      <pre id="aic-cuerpo" style="white-space:pre-wrap; background:rgba(0,0,0,0.25); padding:10px; border-radius:6px; font-family:inherit; font-size:.86rem; color:var(--text); line-height:1.5; margin:0;">—</pre>
+      <div style="display:flex; gap:8px; margin-top:12px; flex-wrap:wrap;">
+        <button onclick="usarPostGenerado()" class="btn-primary" style="padding:8px 14px; font-size:.82rem;"><i class="fa-solid fa-check"></i> Usar este post</button>
+        <button onclick="ejecutarAsistenteComunidad()" style="background:rgba(255,255,255,0.04); color:var(--text-muted); border:1px solid var(--border); padding:8px 14px; border-radius:8px; font-size:.82rem; font-weight:700; cursor:pointer;"><i class="fa-solid fa-rotate"></i> Regenerar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════════════════════
+     MODAL MARCAR PERDIDO + ANÁLISIS IA (Prioridad #8)
+     ════════════════════════════════════════════════════════════════════════ -->
+<div class="modal-overlay" id="modal-perdida">
+  <div class="onboarding-box" style="max-width:560px; max-height:92vh; overflow-y:auto; padding:24px;">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+      <h3 style="font-size:1.1rem; font-weight:800;">
+        <i class="fa-solid fa-circle-xmark" style="color:#a1a1aa;"></i>
+        <span>Marcar como perdido</span>
+      </h3>
+      <button onclick="document.getElementById('modal-perdida').classList.remove('open')" style="background:transparent; border:none; color:var(--text-muted); font-size:1.4rem; cursor:pointer;">&times;</button>
+    </div>
+    <p style="color:var(--text-muted); font-size:0.85rem; margin-bottom:14px;">
+      Vamos a marcar a <strong id="perdida-nombre" style="color:var(--text);">—</strong> como perdido y la IA te va a dar un análisis de qué pudo haber salido mal.
+    </p>
+    <input type="hidden" id="perdida-id">
+
+    <label style="display:block; font-size:.8rem; font-weight:700; margin-bottom:6px; color:var(--text-muted);">¿Qué pasó? (opcional pero ayuda al análisis)</label>
+    <textarea id="perdida-motivo" rows="3" placeholder="Ej: 'Dijo que era muy caro y no lo va a pensar' / 'No nos contestó nunca después de la propuesta' / 'Eligió otra opción'" style="width:100%; background:#111; border:1px solid var(--border); color:white; padding:10px; border-radius:8px; font-family:inherit; resize:vertical; margin-bottom:14px;"></textarea>
+
+    <button onclick="ejecutarMarcarPerdido()" id="perdida-btn" class="btn-primary" style="width:100%; padding:12px; margin-bottom:14px;">
+      <i class="fa-solid fa-circle-xmark"></i> <span id="perdida-btn-label">Marcar perdido y analizar</span>
+    </button>
+
+    <div id="perdida-resultado" style="display:none; background:rgba(192,132,252,0.06); border:1px solid rgba(192,132,252,0.2); border-radius:10px; padding:16px;">
+      <div id="perdida-meta" style="font-size:.72rem; color:#a855f7; text-transform:uppercase; letter-spacing:.6px; font-weight:800; margin-bottom:10px;">Análisis IA</div>
+
+      <div style="margin-bottom:14px;">
+        <div style="font-size:.7rem; color:var(--text-muted); margin-bottom:4px; font-weight:700;">QUÉ PASÓ</div>
+        <div id="perdida-quepaso" style="font-size:.88rem; color:var(--text); line-height:1.55; padding:8px 10px; background:rgba(0,0,0,0.25); border-radius:6px; border-left:3px solid #a855f7;">—</div>
+      </div>
+
+      <div style="margin-bottom:14px;">
+        <div style="font-size:.7rem; color:var(--text-muted); margin-bottom:4px; font-weight:700;">ERRORES POSIBLES</div>
+        <ul id="perdida-errores" style="font-size:.85rem; color:var(--text); line-height:1.55; margin:0; padding-left:20px;"></ul>
+      </div>
+
+      <div style="margin-bottom:14px;">
+        <div style="font-size:.7rem; color:var(--green); margin-bottom:4px; font-weight:700;">QUÉ HACER DISTINTO LA PRÓXIMA</div>
+        <ul id="perdida-distinto" style="font-size:.85rem; color:var(--text); line-height:1.55; margin:0; padding-left:20px;"></ul>
+      </div>
+
+      <div id="perdida-recuperacion-box" style="display:none; background:rgba(74,222,128,0.06); border:1px dashed rgba(74,222,128,0.3); border-radius:8px; padding:12px; margin-top:12px;">
+        <div style="font-size:.72rem; font-weight:800; color:var(--green); text-transform:uppercase; letter-spacing:.6px; margin-bottom:6px;"><i class="fa-solid fa-arrows-rotate"></i> Recuperable en 30-60 días</div>
+        <pre id="perdida-mensaje-rec" style="white-space:pre-wrap; margin:0; padding:8px 10px; background:rgba(0,0,0,0.25); border-radius:6px; font-family:inherit; font-size:.85rem; color:var(--text);">—</pre>
+        <button onclick="copiarMensajeRecuperacion()" style="margin-top:8px; background:rgba(74,222,128,0.15); color:var(--green); border:1px solid rgba(74,222,128,0.3); padding:6px 12px; border-radius:6px; font-size:.78rem; font-weight:700; cursor:pointer;"><i class="fa-regular fa-copy"></i> Copiar mensaje de re-enganche</button>
       </div>
     </div>
   </div>
@@ -3312,17 +3455,17 @@ function renderProspectos() {
     return;
   }
 
-  const estadoLabel = { sin_contactar:'Sin contactar', contactado:'Contactado', propuesta_enviada:'Propuesta enviada', respondio:'Respondió' };
-  const estadoColor = { sin_contactar:'var(--red)', contactado:'var(--amber)', propuesta_enviada:'var(--primary)', respondio:'var(--green)' };
+  const estadoLabel = { sin_contactar:'Sin contactar', contactado:'Contactado', propuesta_enviada:'Propuesta enviada', respondio:'Respondió', perdido:'Perdido' };
+  const estadoColor = { sin_contactar:'var(--red)', contactado:'var(--amber)', propuesta_enviada:'var(--primary)', respondio:'var(--green)', perdido:'#71717a' };
 
   contenedor.innerHTML = lista.map(p=>`
-    <div id="prosp-card-${p.id}" style="border-bottom:1px solid var(--border);padding:16px 8px;display:grid;gap:10px;">
+    <div id="prosp-card-${p.id}" style="border-bottom:1px solid var(--border);padding:16px 8px;display:grid;gap:10px; ${p.estado==='perdido'?'opacity:0.62;':''}">
       <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap;">
         <div style="flex:1;min-width:0;">
           <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
-            <span style="font-weight:700;font-size:.95rem;">${p.nombre}</span>
+            <span style="font-weight:700;font-size:.95rem; ${p.estado==='perdido'?'text-decoration:line-through;':''}">${p.nombre}</span>
             ${p.interesante?'<span title="Buen prospecto" style="font-size:1rem;">🔥</span>':''}
-            <span style="font-size:.72rem;font-weight:700;padding:2px 9px;border-radius:50px;background:rgba(0,0,0,0.3);border:1px solid ${estadoColor[p.estado]};color:${estadoColor[p.estado]};">${estadoLabel[p.estado]}</span>
+            <span style="font-size:.72rem;font-weight:700;padding:2px 9px;border-radius:50px;background:rgba(0,0,0,0.3);border:1px solid ${estadoColor[p.estado]||'var(--border)'};color:${estadoColor[p.estado]||'var(--text-muted)'};">${estadoLabel[p.estado]||p.estado}</span>
           </div>
           ${p.contacto?`<div style="font-size:.8rem;color:var(--text-muted);margin-top:3px;"><i class="fa-solid fa-phone" style="font-size:.7rem;"></i> ${p.contacto}</div>`:''}
           ${p.plan_interes?`<div style="font-size:.8rem;color:var(--text-muted);"><i class="fa-solid fa-tag" style="font-size:.7rem;"></i> ${p.plan_interes}</div>`:''}
@@ -3335,10 +3478,13 @@ function renderProspectos() {
           ${p.estado==='sin_contactar'?`<button onclick="accionProspecto(${p.id},'contactar')" style="background:var(--primary);color:white;border:none;border-radius:8px;padding:7px 13px;font-size:.78rem;font-weight:700;cursor:pointer;white-space:nowrap;"><i class="fa-solid fa-paper-plane"></i> Contacté</button>`:''}
           ${p.estado==='contactado'?`<button onclick="accionProspecto(${p.id},'propuesta_enviada')" style="background:rgba(59,130,246,0.15);color:var(--primary);border:1px solid rgba(59,130,246,0.35);border-radius:8px;padding:7px 13px;font-size:.78rem;font-weight:700;cursor:pointer;white-space:nowrap;"><i class="fa-solid fa-file-invoice"></i> Envié la propuesta</button>`:''}
           ${p.estado==='contactado'||p.estado==='propuesta_enviada'?`<button onclick="accionProspecto(${p.id},'respondio')" style="background:rgba(74,222,128,0.15);color:var(--green);border:1px solid var(--green-border);border-radius:8px;padding:7px 13px;font-size:.78rem;font-weight:700;cursor:pointer;white-space:nowrap;"><i class="fa-solid fa-reply"></i> Respondió</button>`:''}
-          ${p.estado==='sin_contactar'?'':`<button onclick="accionProspecto(${p.id},'seguimiento')" style="background:rgba(245,158,11,0.12);color:var(--amber);border:1px solid rgba(245,158,11,0.3);border-radius:8px;padding:7px 13px;font-size:.78rem;font-weight:700;cursor:pointer;white-space:nowrap;"><i class="fa-solid fa-rotate-right"></i> Seguimiento</button>`}
-          <button onclick="toggleInteresante(${p.id},${p.interesante})" title="${p.interesante?'Quitar flag':'Marcar como interesante'}" style="background:${p.interesante?'rgba(245,158,11,0.15)':'rgba(255,255,255,0.04)'};color:${p.interesante?'var(--amber)':'var(--text-dim)'};border:1px solid ${p.interesante?'rgba(245,158,11,0.3)':'var(--border)'};border-radius:8px;padding:7px 10px;font-size:.82rem;cursor:pointer;">🔥</button>
-          <button onclick="abrirPerfilado(${p.id},'${(p.nombre||'').replace(/'/g,"\\'")}')" title="Perfilar con IA" style="background:rgba(192,132,252,0.12);color:#c084fc;border:1px solid rgba(192,132,252,0.3);border-radius:8px;padding:7px 12px;font-size:.78rem;font-weight:700;cursor:pointer;white-space:nowrap;"><i class="fa-solid fa-brain"></i> Perfilar IA</button>
-          <button onclick="togglePiloto(${p.id},${p.piloto_automatico?true:false})" title="${p.piloto_automatico?'Detener piloto automático':'Activar piloto automático (emails de seguimiento)'}" style="background:${p.piloto_automatico?'rgba(74,222,128,0.15)':'rgba(255,255,255,0.04)'};color:${p.piloto_automatico?'var(--green)':'var(--text-dim)'};border:1px solid ${p.piloto_automatico?'var(--green-border)':'var(--border)'};border-radius:8px;padding:7px 10px;font-size:.82rem;cursor:pointer;">🤖</button>
+          ${p.estado!=='sin_contactar'&&p.estado!=='perdido'?`<button onclick="accionProspecto(${p.id},'seguimiento')" style="background:rgba(245,158,11,0.12);color:var(--amber);border:1px solid rgba(245,158,11,0.3);border-radius:8px;padding:7px 13px;font-size:.78rem;font-weight:700;cursor:pointer;white-space:nowrap;"><i class="fa-solid fa-rotate-right"></i> Seguimiento</button>`:''}
+          ${p.estado!=='perdido'?`<button onclick="toggleInteresante(${p.id},${p.interesante})" title="${p.interesante?'Quitar flag':'Marcar como interesante'}" style="background:${p.interesante?'rgba(245,158,11,0.15)':'rgba(255,255,255,0.04)'};color:${p.interesante?'var(--amber)':'var(--text-dim)'};border:1px solid ${p.interesante?'rgba(245,158,11,0.3)':'var(--border)'};border-radius:8px;padding:7px 10px;font-size:.82rem;cursor:pointer;">🔥</button>`:''}
+          ${p.estado!=='perdido'?`<button onclick="abrirPerfilado(${p.id},'${(p.nombre||'').replace(/'/g,"\\'")}')" title="Perfilar con IA" style="background:rgba(192,132,252,0.12);color:#c084fc;border:1px solid rgba(192,132,252,0.3);border-radius:8px;padding:7px 12px;font-size:.78rem;font-weight:700;cursor:pointer;white-space:nowrap;"><i class="fa-solid fa-brain"></i> Perfilar IA</button>`:''}
+          ${p.estado!=='perdido'?`<button onclick="abrirAsistenteIA('followup', ${p.id}, '${(p.nombre||'').replace(/'/g,"\\'")}')" title="Generar mensaje de follow-up con IA" style="background:rgba(192,132,252,0.12);color:#c084fc;border:1px solid rgba(192,132,252,0.3);border-radius:8px;padding:7px 12px;font-size:.78rem;font-weight:700;cursor:pointer;white-space:nowrap;"><i class="fa-solid fa-paper-plane"></i> Follow-up IA</button>`:''}
+          ${p.estado!=='perdido'?`<button onclick="abrirAsistenteIA('objecion', ${p.id}, '${(p.nombre||'').replace(/'/g,"\\'")}')" title="Te dijo una objeción y no sabés cómo responder" style="background:rgba(245,158,11,0.12);color:var(--amber);border:1px solid rgba(245,158,11,0.3);border-radius:8px;padding:7px 12px;font-size:.78rem;font-weight:700;cursor:pointer;white-space:nowrap;"><i class="fa-solid fa-shield-halved"></i> Objeción IA</button>`:''}
+          ${p.estado!=='perdido'?`<button onclick="togglePiloto(${p.id},${p.piloto_automatico?true:false})" title="${p.piloto_automatico?'Detener piloto automático':'Activar piloto automático (emails de seguimiento)'}" style="background:${p.piloto_automatico?'rgba(74,222,128,0.15)':'rgba(255,255,255,0.04)'};color:${p.piloto_automatico?'var(--green)':'var(--text-dim)'};border:1px solid ${p.piloto_automatico?'var(--green-border)':'var(--border)'};border-radius:8px;padding:7px 10px;font-size:.82rem;cursor:pointer;">🤖</button>`:''}
+          ${p.estado!=='perdido'?`<button onclick="abrirMarcarPerdido(${p.id},'${(p.nombre||'').replace(/'/g,"\\'")}')" title="Marcar como perdido y obtener análisis IA" style="background:rgba(113,113,122,0.12);color:#a1a1aa;border:1px solid rgba(113,113,122,0.3);border-radius:8px;padding:7px 12px;font-size:.78rem;font-weight:700;cursor:pointer;white-space:nowrap;"><i class="fa-solid fa-circle-xmark"></i> Perdido</button>`:`<button onclick="reanalizarPerdida(${p.id},'${(p.nombre||'').replace(/'/g,"\\'")}')" title="Re-analizar este prospecto perdido con IA" style="background:rgba(192,132,252,0.12);color:#c084fc;border:1px solid rgba(192,132,252,0.3);border-radius:8px;padding:7px 12px;font-size:.78rem;font-weight:700;cursor:pointer;white-space:nowrap;"><i class="fa-solid fa-magnifying-glass"></i> Re-analizar IA</button>`}
         </div>
       </div>
       ${p.score_ia && p.score_ia > 0 ? `
@@ -3350,8 +3496,9 @@ function renderProspectos() {
         ${p.pitch_sugerido ? `<details style="margin-top:6px;"><summary style="cursor:pointer; color:var(--text-muted); font-size:.78rem;">Ver pitch sugerido</summary><pre style="white-space:pre-wrap; margin-top:8px; padding:10px; background:rgba(0,0,0,0.3); border-radius:6px; font-family:inherit; font-size:.8rem; color:var(--text);">${p.pitch_sugerido}</pre></details>` : ''}
       </div>
       ` : ''}
+      <div id="perdida-analisis-${p.id}" style="display:none;"></div>
       <div style="display:flex;align-items:center;gap:8px;">
-        <input type="text" id="nota-input-${p.id}" value="${p.nota||''}" placeholder="Agregar nota... (ej: pidió demo, evalúa con su socio)"
+        <input type="text" id="nota-input-${p.id}" value="${(p.nota||'').replace(/"/g,'&quot;')}" placeholder="Agregar nota... (ej: pidió demo, evalúa con su socio)"
           style="flex:1;background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:8px;padding:7px 12px;color:var(--text);font-size:.82rem;font-family:'Inter',sans-serif;outline:none;">
         <button onclick="guardarNota(${p.id})" style="background:rgba(255,255,255,0.06);color:var(--text-muted);border:1px solid var(--border);border-radius:8px;padding:7px 12px;font-size:.78rem;font-weight:600;cursor:pointer;white-space:nowrap;">Guardar</button>
         <span id="nota-ok-${p.id}" style="font-size:.75rem;color:var(--green);display:none;"><i class="fa-solid fa-check"></i></span>
@@ -3790,20 +3937,61 @@ async function cargarSiguienteAccion() {
     const a = data.siguiente_accion;
     cont.style.display = 'block';
     if(bannerC2) bannerC2.style.display = 'none';
+
+    // Badge IA cuando la descripción/mensaje vino de Groq
+    const badgeIA = (a.fuente === 'ia')
+      ? `<span style="margin-left:8px;font-size:.65rem;font-weight:800;background:linear-gradient(135deg,#a855f7,#6366f1);color:#fff;padding:2px 7px;border-radius:50px;letter-spacing:.5px;">✨ IA</span>`
+      : '';
+
+    // Bloque mensaje listo para copiar (solo cuando lo generó la IA)
+    let mensajeBlock = '';
+    if (a.mensaje_sugerido) {
+      const msgEsc = escapeHtml(a.mensaje_sugerido);
+      mensajeBlock = `
+        <div style="margin-top:12px;padding:12px;background:rgba(168,85,247,0.06);border:1px dashed rgba(168,85,247,0.35);border-radius:10px;">
+          <div style="font-size:.7rem;font-weight:800;color:#a855f7;text-transform:uppercase;letter-spacing:.6px;margin-bottom:6px;">
+            <i class="fa-solid fa-wand-magic-sparkles"></i> Mensaje sugerido — listo para copiar
+          </div>
+          <div style="white-space:pre-wrap;font-size:.86rem;line-height:1.5;color:var(--text);margin-bottom:8px;" id="nba-msg-text">${msgEsc}</div>
+          <button onclick="copiarMensajeNBA()" style="background:rgba(168,85,247,0.15);color:#a855f7;border:1px solid rgba(168,85,247,0.35);border-radius:8px;padding:6px 12px;font-size:.78rem;font-weight:700;cursor:pointer;">
+            <i class="fa-regular fa-copy"></i> Copiar mensaje
+          </button>
+        </div>
+      `;
+    }
+
     cont.innerHTML = `
       <div class="nba-card ${a.color}">
         <div class="nba-icon">${a.icono}</div>
         <div class="nba-body">
-          <div class="nba-label"><i class="fa-solid fa-bolt"></i> Siguiente mejor acción</div>
-          <div class="nba-title">${a.titulo}</div>
-          <div class="nba-desc">${a.descripcion}</div>
+          <div class="nba-label"><i class="fa-solid fa-bolt"></i> Siguiente mejor acción ${badgeIA}</div>
+          <div class="nba-title">${escapeHtml(a.titulo || '')}</div>
+          <div class="nba-desc">${escapeHtml(a.descripcion || '')}</div>
+          ${mensajeBlock}
           <button class="nba-btn ${a.color}" onclick="cambiarTabDesdeNBA('${a.tab}')">
-            <i class="fa-solid fa-arrow-right"></i> ${a.boton}
+            <i class="fa-solid fa-arrow-right"></i> ${escapeHtml(a.boton || 'Ver')}
           </button>
         </div>
       </div>
     `;
   } catch(e) { console.warn('Error cargando siguiente acción', e); }
+}
+
+function copiarMensajeNBA() {
+  const el = document.getElementById('nba-msg-text');
+  if (!el) return;
+  const txt = el.textContent || '';
+  navigator.clipboard.writeText(txt).then(() => {
+    if (typeof showToast === 'function') showToast('Mensaje copiado', 'success');
+    else alert('Mensaje copiado al portapapeles.');
+  }).catch(() => {
+    // Fallback para navegadores antiguos
+    const ta = document.createElement('textarea');
+    ta.value = txt; document.body.appendChild(ta); ta.select();
+    try { document.execCommand('copy'); } catch(_) {}
+    document.body.removeChild(ta);
+    if (typeof showToast === 'function') showToast('Mensaje copiado', 'success');
+  });
 }
 
 function cambiarTabDesdeNBA(tab) {
@@ -4534,22 +4722,52 @@ async function ejecutarPerfilado() {
   const urgencia = document.getElementById('perf-urgencia').value;
   if (!rubro) { alert('Seleccioná un rubro.'); return; }
 
-  // ── Modo BOLSA: perfilado local + persistencia en localStorage ──
+  // ── Modo BOLSA: pasa por el backend (Groq IA) con fallback local ──
   if (_perfModo === 'bolsa' && _perfBolsaCtx) {
     const empresa = _perfBolsaCtx.empresa || 'la empresa';
-    const data = _perfilarLeadBolsaLocal(empresa, rubro, tamano, urgencia);
+
+    // Mostramos un loading suave mientras Groq responde
+    const elScore = document.getElementById('perf-score');
+    const elPlan  = document.getElementById('perf-plan');
+    const elTick  = document.getElementById('perf-ticket');
+    const elPitch = document.getElementById('perf-pitch');
+    const elRes   = document.getElementById('perf-resultado');
+    elScore.textContent = '...';
+    elPlan.textContent  = 'Analizando con IA…';
+    elTick.textContent  = '';
+    elPitch.textContent = 'Generando pitch personalizado para ' + empresa + '…';
+    elRes.style.display = 'block';
+
+    let data = null;
+    try {
+      const res = await apiFetch(
+        `${API}/bolsa/${id}/perfilar-ia?rubro=${encodeURIComponent(rubro)}&tamano=${tamano}&urgencia=${urgencia}`,
+        { method: 'POST' }
+      );
+      if (res.ok) {
+        data = await res.json();
+      }
+    } catch (_) { /* sigue al fallback */ }
+
+    // Si el backend no respondió → usamos el cálculo local de siempre
+    if (!data) {
+      data = _perfilarLeadBolsaLocal(empresa, rubro, tamano, urgencia);
+      data.modo = 'fallback-local';
+    }
+
     _bolsaPerfiladoSet(id, {
       score: data.score,
       plan_recomendado: data.plan_recomendado,
       pitch_sugerido: data.pitch_sugerido,
       tamano, urgencia, rubro,
       perfilado_en: new Date().toISOString(),
+      modo: data.modo || 'fallback-local',
     });
-    document.getElementById('perf-score').textContent = data.score;
-    document.getElementById('perf-plan').textContent = data.plan_recomendado;
-    document.getElementById('perf-ticket').textContent = `Ticket estimado: USD ${data.ticket_esperado.toLocaleString('es-AR')}`;
-    document.getElementById('perf-pitch').textContent = data.pitch_sugerido;
-    document.getElementById('perf-resultado').style.display = 'block';
+    elScore.textContent = data.score;
+    elPlan.textContent  = data.plan_recomendado + (data.modo === 'ia' ? '  •  IA' : '');
+    elTick.textContent  = `Ticket estimado: USD ${Number(data.ticket_esperado).toLocaleString('es-AR')}`;
+    elPitch.textContent = data.pitch_sugerido;
+    elRes.style.display = 'block';
     setTimeout(() => cargarBolsa(), 800);
     return;
   }
@@ -4575,6 +4793,207 @@ function copiarPitch() {
   navigator.clipboard.writeText(pitch).then(()=> {
     mostrarToast('Pitch copiado al portapapeles', 'green');
   });
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// ASISTENTE IA — Follow-up + Objeciones (modal único reutilizable)
+// ═══════════════════════════════════════════════════════════════════════════
+
+function abrirAsistenteIA(modo, prospId, prospNombre) {
+  document.getElementById('ai-prosp-id').value = prospId;
+  document.getElementById('ai-modo').value = modo;
+  document.getElementById('ai-resultado').style.display = 'none';
+  document.getElementById('ai-extra').style.display = 'none';
+
+  const titulo = document.getElementById('ai-modal-titulo');
+  const sub    = document.getElementById('ai-modal-sub');
+  const formFu = document.getElementById('ai-form-followup');
+  const formObj= document.getElementById('ai-form-objecion');
+  const btnLab = document.getElementById('ai-btn-label');
+
+  formFu.style.display  = (modo === 'followup') ? 'block' : 'none';
+  formObj.style.display = (modo === 'objecion') ? 'block' : 'none';
+
+  if (modo === 'followup') {
+    titulo.textContent = 'Follow-up para ' + prospNombre;
+    sub.innerHTML = 'Generamos un mensaje listo para mandar por WhatsApp o email — adaptado al contexto de <strong>' + escapeHtml(prospNombre) + '</strong>.';
+    btnLab.textContent = 'Generar mensaje';
+  } else if (modo === 'objecion') {
+    titulo.textContent = 'Responder objeción de ' + prospNombre;
+    sub.innerHTML = 'Pegá lo que te dijo el prospecto y te paso una respuesta concreta.';
+    btnLab.textContent = 'Generar respuesta';
+    document.getElementById('ai-objecion').value = '';
+  }
+
+  document.getElementById('modal-asistente-ia').classList.add('open');
+}
+
+function cerrarAsistenteIA() {
+  document.getElementById('modal-asistente-ia').classList.remove('open');
+}
+
+function aiRellenarObjecion(texto) {
+  document.getElementById('ai-objecion').value = texto;
+}
+
+async function ejecutarAsistenteIA() {
+  const modo = document.getElementById('ai-modo').value;
+  const id   = document.getElementById('ai-prosp-id').value;
+  if (!id) return;
+
+  const btn   = document.getElementById('ai-btn-generar');
+  const out   = document.getElementById('ai-output');
+  const meta  = document.getElementById('ai-meta');
+  const extra = document.getElementById('ai-extra');
+  const resBlock = document.getElementById('ai-resultado');
+
+  // UI loading
+  btn.disabled = true;
+  btn.style.opacity = '0.7';
+  resBlock.style.display = 'block';
+  meta.textContent = 'Generando con IA...';
+  out.textContent = '';
+  extra.style.display = 'none';
+
+  try {
+    let url = '';
+    if (modo === 'followup') {
+      const tono = document.getElementById('ai-tono').value || 'directo';
+      url = `${API}/prospectos/${id}/followup-ia?tono=${encodeURIComponent(tono)}`;
+    } else if (modo === 'objecion') {
+      const obj = (document.getElementById('ai-objecion').value || '').trim();
+      if (obj.length < 3) {
+        meta.textContent = 'Falta texto';
+        out.textContent = 'Escribí lo que te dijo el prospecto en el campo de arriba.';
+        btn.disabled = false; btn.style.opacity = '1';
+        return;
+      }
+      url = `${API}/prospectos/${id}/objecion-ia?objecion=${encodeURIComponent(obj)}`;
+    } else {
+      btn.disabled = false; btn.style.opacity = '1';
+      return;
+    }
+
+    const res = await apiFetch(url, { method: 'POST' });
+    if (!res.ok) {
+      const d = await res.json().catch(()=>({}));
+      meta.textContent = 'Error';
+      out.textContent = d.detail || 'No se pudo generar. Probá de nuevo en un momento.';
+      btn.disabled = false; btn.style.opacity = '1';
+      return;
+    }
+    const data = await res.json();
+
+    const fuenteLabel = (data.modo === 'ia') ? '✨ IA' : '📋 Plantilla';
+    if (modo === 'followup') {
+      meta.textContent = `Follow-up • ${fuenteLabel}` + (data.dias_sin_responder != null ? ` • ${data.dias_sin_responder} días sin respuesta` : '');
+      out.textContent = data.mensaje || '';
+      if (data.estrategia) {
+        extra.style.display = 'block';
+        extra.innerHTML = '<strong style="color:#c084fc;">Estrategia:</strong> ' + escapeHtml(data.estrategia);
+      }
+    } else if (modo === 'objecion') {
+      meta.textContent = `Respuesta a objeción • ${fuenteLabel}`;
+      out.textContent = data.respuesta || '';
+      const partes = [];
+      if (data.explicacion)        partes.push('<strong style="color:#c084fc;">Por qué funciona:</strong> ' + escapeHtml(data.explicacion));
+      if (data.siguiente_pregunta) partes.push('<strong style="color:#c084fc;">Pregunta de seguimiento:</strong> ' + escapeHtml(data.siguiente_pregunta));
+      if (partes.length) {
+        extra.style.display = 'block';
+        extra.innerHTML = partes.join('<br><br>');
+      }
+    }
+  } catch(e) {
+    meta.textContent = 'Error de conexión';
+    out.textContent = 'Revisá tu conexión y probá de nuevo.';
+  } finally {
+    btn.disabled = false; btn.style.opacity = '1';
+  }
+}
+
+function copiarOutputIA() {
+  const txt = document.getElementById('ai-output').textContent || '';
+  if (!txt) return;
+  navigator.clipboard.writeText(txt).then(() => {
+    mostrarToast('Copiado al portapapeles', 'green');
+  }).catch(() => {
+    const ta = document.createElement('textarea');
+    ta.value = txt; document.body.appendChild(ta); ta.select();
+    try { document.execCommand('copy'); } catch(_) {}
+    document.body.removeChild(ta);
+    mostrarToast('Copiado al portapapeles', 'green');
+  });
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// ASISTENTE COMUNIDAD — Generar post con IA
+// ═══════════════════════════════════════════════════════════════════════════
+
+function abrirAsistenteComunidad() {
+  document.getElementById('aic-resultado').style.display = 'none';
+  // Pre-rellenar con datos parciales si el usuario ya escribió algo
+  const titMan = (document.getElementById('post-titulo').value || '').trim();
+  const cuerpoMan = (document.getElementById('post-cuerpo').value || '').trim();
+  const elDatos = document.getElementById('aic-datos');
+  if (!elDatos.value) {
+    if (titMan || cuerpoMan) {
+      elDatos.value = (titMan ? titMan + '. ' : '') + cuerpoMan;
+    }
+  }
+  document.getElementById('modal-asistente-comunidad').classList.add('open');
+}
+
+async function ejecutarAsistenteComunidad() {
+  const tipo = document.getElementById('post-tipo').value || 'tip';
+  const datos = (document.getElementById('aic-datos').value || '').trim();
+  if (datos.length < 5) {
+    alert('Escribí al menos unas palabras con los datos clave para que la IA pueda redactar el post.');
+    return;
+  }
+
+  const btn   = document.getElementById('aic-btn-generar');
+  const meta  = document.getElementById('aic-meta');
+  const elTit = document.getElementById('aic-titulo');
+  const elCue = document.getElementById('aic-cuerpo');
+  const resBlock = document.getElementById('aic-resultado');
+
+  btn.disabled = true; btn.style.opacity = '0.7';
+  resBlock.style.display = 'block';
+  meta.textContent = 'Generando post con IA...';
+  elTit.textContent = '...';
+  elCue.textContent = '...';
+
+  try {
+    const url = `${API}/comunidad/asistente-ia?tipo=${encodeURIComponent(tipo)}&datos=${encodeURIComponent(datos)}`;
+    const res = await apiFetch(url, { method: 'POST' });
+    if (!res.ok) {
+      const d = await res.json().catch(()=>({}));
+      meta.textContent = 'Error';
+      elTit.textContent = '—';
+      elCue.textContent = d.detail || 'No se pudo generar. Probá de nuevo en un momento.';
+      return;
+    }
+    const data = await res.json();
+    const fuenteLabel = (data.modo === 'ia') ? '✨ IA' : '📋 Plantilla';
+    meta.textContent = `Post tipo "${tipo}" • ${fuenteLabel}`;
+    elTit.textContent = data.titulo || '';
+    elCue.textContent = data.cuerpo || '';
+  } catch(e) {
+    meta.textContent = 'Error de conexión';
+    elCue.textContent = 'Revisá tu conexión y probá de nuevo.';
+  } finally {
+    btn.disabled = false; btn.style.opacity = '1';
+  }
+}
+
+function usarPostGenerado() {
+  const tit = document.getElementById('aic-titulo').textContent || '';
+  const cue = document.getElementById('aic-cuerpo').textContent || '';
+  if (!tit && !cue) return;
+  document.getElementById('post-titulo').value = tit;
+  document.getElementById('post-cuerpo').value = cue;
+  document.getElementById('modal-asistente-comunidad').classList.remove('open');
+  mostrarToast('Post cargado en el editor — revisá y publicá', 'green');
 }
 
 // ─── MARKETPLACE DE LEADS PREMIUM ────────────────────────────────────
