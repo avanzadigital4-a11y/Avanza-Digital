@@ -353,12 +353,89 @@ class AcademiaModulo(Base):
     creado_en = Column(DateTime, default=func.now())
 
 
+# ─── SOLICITUD DE COMPRA DE CRÉDITOS (v1.7) ──────────────────────────────────
+class SolicitudCompraCreditos(Base):
+    """Solicitud de compra de un paquete de créditos por transferencia bancaria.
+
+    Flujo manual v1: el aliado elige un paquete, ve los datos bancarios + un
+    código de referencia único, transfiere por su cuenta y avisa por WhatsApp.
+    El admin verifica el monto contra `precio_ars` y confirma la solicitud, lo
+    que dispara `_ajustar_creditos()` con motivo='compra_paquete'.
+
+    Estados:
+        pendiente   → recién creada, esperando pago + confirmación admin
+        confirmada  → admin verificó la transferencia y acreditó los créditos
+        rechazada   → admin marcó como inválida (con motivo en notas_admin)
+        expirada    → pasaron 48hs sin confirmación, no se acreditó nada
+
+    Idempotencia: la confirmación verifica que el estado siga 'pendiente' antes
+    de acreditar. Doble click en "Confirmar" no acredita el doble.
+    """
+    __tablename__ = "solicitudes_compra_creditos"
+
+    id = Column(Integer, primary_key=True, index=True)
+    aliado_id = Column(Integer, ForeignKey("aliados.id"), index=True, nullable=False)
+
+    # --- IDENTIFICACIÓN DEL PAQUETE (snapshot al crear) ---
+    paquete_id = Column(String, nullable=False)       # 'impulso' | 'acelerador' | 'despegue'
+    creditos   = Column(Integer, nullable=False)      # denormalizado: cantidad del paquete
+
+    # --- PRECIO CONGELADO AL MOMENTO DE GENERAR LA SOLICITUD ---
+    precio_usd       = Column(Float, nullable=False)  # precio del paquete en USD
+    tipo_cambio_blue = Column(Float, nullable=False)  # cotización blue de dolarapi
+    precio_ars       = Column(Float, nullable=False)  # = precio_usd × tipo_cambio, redondeado al alza
+
+    # --- IDENTIFICACIÓN PARA CONCILIACIÓN ---
+    codigo_referencia = Column(String, unique=True, index=True, nullable=False)  # ej: 'AVZ-A4F2'
+    comprobante_url   = Column(Text, nullable=True)   # URL/path del comprobante subido (opcional)
+
+    # --- ESTADO Y TIMESTAMPS ---
+    estado        = Column(String, default="pendiente", index=True)   # ver docstring
+    notas_admin   = Column(Text, nullable=True)       # motivo de rechazo o comentario interno
+    creado_en     = Column(DateTime, default=func.now())
+    expires_at    = Column(DateTime, nullable=False)  # creado_en + 48hs
+    confirmado_en = Column(DateTime, nullable=True)   # cuándo el admin confirmó/rechazó/expiró
+
+    aliado = relationship("Aliado")
+
+
 # ─── CONSTANTES DE NEGOCIO ───────────────────────────────────────────────────
 PLANES = {
     "Plan Base":         1050.0,
     "Plan Pro":          2900.0,
     "Plan Industrial":   4900.0,
     "Estrategico 360":   7500.0,
+}
+
+# Paquetes de créditos para recargar saldo en el marketplace de leads.
+# Anclados en USD; el precio ARS se calcula al cambio del día con dolarapi
+# blue al momento de generar la solicitud (ver SolicitudCompraCreditos).
+# La clave del dict es el `paquete_id` que viaja por API.
+PAQUETES_CREDITOS = {
+    "impulso": {
+        "nombre":       "Impulso",
+        "creditos":     100,
+        "precio_usd":   10.0,
+        "descripcion":  "Para arrancar a explorar la bolsa de leads.",
+        "destacado":    False,
+        "orden":        1,
+    },
+    "acelerador": {
+        "nombre":       "Acelerador",
+        "creditos":     300,
+        "precio_usd":   25.0,
+        "descripcion":  "El más elegido. 17% de descuento sobre Impulso.",
+        "destacado":    True,    # se marca como recomendado en el UI
+        "orden":        2,
+    },
+    "despegue": {
+        "nombre":       "Despegue",
+        "creditos":     1000,
+        "precio_usd":   70.0,
+        "descripcion":  "Para aliados activos. 30% de descuento sobre Impulso.",
+        "destacado":    False,
+        "orden":        3,
+    },
 }
 
 NIVELES = {

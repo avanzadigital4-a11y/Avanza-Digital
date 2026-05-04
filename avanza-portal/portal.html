@@ -2322,6 +2322,154 @@
   </div>
 </div>
 
+<!-- ════════════════════════════════════════════════════════════════════════
+     MODAL COMPRA DE CRÉDITOS (v1.7)
+     Dos vistas: paso 1 (elegir paquete) y paso 2 (instrucciones de transferencia).
+     ════════════════════════════════════════════════════════════════════════ -->
+<div class="modal-overlay" id="modal-comprar-creditos">
+  <div class="onboarding-box" style="max-width:680px; max-height:92vh; overflow-y:auto; padding:0;">
+
+    <!-- Header común -->
+    <div style="background:linear-gradient(135deg,rgba(250,204,21,0.12),rgba(250,204,21,0.04)); border-bottom:1px solid var(--border); padding:18px 24px; display:flex; justify-content:space-between; align-items:center;">
+      <h3 style="font-size:1.05rem; font-weight:800; margin:0;">
+        <i class="fa-solid fa-coins" style="color:var(--amber);"></i>
+        <span id="creditos-modal-titulo">Comprar créditos</span>
+      </h3>
+      <button onclick="cerrarModalCreditos()" style="background:transparent; border:none; color:var(--text-muted); font-size:1.5rem; cursor:pointer; padding:0; line-height:1;">&times;</button>
+    </div>
+
+    <!-- ── VISTA 1: ELEGIR PAQUETE ─────────────────────────────────────── -->
+    <div id="creditos-vista-paquetes" style="padding:24px;">
+      <p style="color:var(--text-muted); font-size:.88rem; margin:0 0 18px; line-height:1.5;">
+        Los créditos se usan para comprar leads premium. <strong style="color:var(--text);">No vencen</strong> y son acumulables.
+        Cobramos por <strong style="color:var(--text);">transferencia bancaria</strong>: elegí un paquete y te damos los datos.
+      </p>
+
+      <div id="creditos-paquetes-loading" style="text-align:center; padding:32px; color:var(--text-dim);">
+        <i class="fa-solid fa-spinner fa-spin" style="font-size:1.4rem;"></i>
+        <div style="margin-top:8px; font-size:.85rem;">Cargando paquetes...</div>
+      </div>
+
+      <div id="creditos-paquetes-grid" style="display:none; gap:12px; flex-direction:column;"></div>
+
+      <div style="margin-top:18px; padding:12px 14px; background:rgba(255,255,255,0.03); border:1px solid var(--border); border-radius:8px; font-size:.78rem; color:var(--text-muted); line-height:1.55;">
+        <i class="fa-solid fa-circle-info" style="color:#60a5fa;"></i>
+        El precio en pesos se calcula al cambio del dólar blue del momento y queda fijo por 48hs después de generar la solicitud.
+      </div>
+    </div>
+
+    <!-- ── VISTA 2: INSTRUCCIONES DE TRANSFERENCIA ─────────────────────── -->
+    <div id="creditos-vista-instrucciones" style="display:none; padding:24px;">
+
+      <!-- Banner del paquete -->
+      <div style="background:rgba(250,204,21,0.08); border:1px solid rgba(250,204,21,0.25); border-radius:10px; padding:14px 18px; margin-bottom:18px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;">
+        <div>
+          <div style="font-size:.72rem; color:var(--text-muted); text-transform:uppercase; letter-spacing:.5px; font-weight:700;">Estás comprando</div>
+          <div style="font-size:1.05rem; font-weight:800; margin-top:2px;"><span id="cred-pkg-nombre">—</span> · <span id="cred-pkg-creditos" style="color:var(--amber);">— créditos</span></div>
+        </div>
+        <div style="text-align:right;">
+          <div style="font-size:.72rem; color:var(--text-muted); text-transform:uppercase; letter-spacing:.5px; font-weight:700;">Total a transferir</div>
+          <div style="font-size:1.4rem; font-weight:900; color:var(--amber); margin-top:2px;">ARS <span id="cred-pkg-ars">—</span></div>
+        </div>
+      </div>
+
+      <!-- Datos bancarios -->
+      <div style="background:#0a0a0a; border:1px solid var(--border); border-radius:10px; padding:16px; margin-bottom:18px;">
+        <div style="font-size:.75rem; color:var(--text-muted); font-weight:800; text-transform:uppercase; letter-spacing:.5px; margin-bottom:12px;">
+          <i class="fa-solid fa-building-columns"></i> Datos para transferir
+        </div>
+
+        <div style="display:flex; flex-direction:column; gap:10px;">
+          <div class="cred-dato-row" style="display:flex; justify-content:space-between; align-items:center; gap:8px; padding:10px 12px; background:rgba(255,255,255,0.02); border-radius:8px;">
+            <div style="flex:1; min-width:0;">
+              <div style="font-size:.7rem; color:var(--text-dim); margin-bottom:2px;">Titular</div>
+              <div id="cred-titular" style="font-size:.92rem; font-weight:700; word-break:break-word;">—</div>
+            </div>
+          </div>
+
+          <div class="cred-dato-row" style="display:flex; justify-content:space-between; align-items:center; gap:8px; padding:10px 12px; background:rgba(255,255,255,0.02); border-radius:8px;">
+            <div style="flex:1; min-width:0;">
+              <div style="font-size:.7rem; color:var(--text-dim); margin-bottom:2px;">Banco</div>
+              <div id="cred-banco" style="font-size:.92rem; font-weight:700;">—</div>
+            </div>
+          </div>
+
+          <div class="cred-dato-row" style="display:flex; justify-content:space-between; align-items:center; gap:8px; padding:10px 12px; background:rgba(255,255,255,0.02); border-radius:8px;">
+            <div style="flex:1; min-width:0;">
+              <div style="font-size:.7rem; color:var(--text-dim); margin-bottom:2px;">Alias</div>
+              <div id="cred-alias" style="font-size:.95rem; font-weight:800; color:var(--green); font-family:'Courier New',monospace;">—</div>
+            </div>
+            <button onclick="copiarCredDato('cred-alias', this)" style="background:rgba(74,222,128,0.1); color:var(--green); border:1px solid rgba(74,222,128,0.3); padding:7px 12px; border-radius:6px; font-size:.78rem; font-weight:700; cursor:pointer; flex-shrink:0;">
+              <i class="fa-solid fa-copy"></i> Copiar
+            </button>
+          </div>
+
+          <div class="cred-dato-row" style="display:flex; justify-content:space-between; align-items:center; gap:8px; padding:10px 12px; background:rgba(255,255,255,0.02); border-radius:8px;">
+            <div style="flex:1; min-width:0;">
+              <div style="font-size:.7rem; color:var(--text-dim); margin-bottom:2px;">CBU</div>
+              <div id="cred-cbu" style="font-size:.85rem; font-weight:700; font-family:'Courier New',monospace; word-break:break-all;">—</div>
+            </div>
+            <button onclick="copiarCredDato('cred-cbu', this)" style="background:rgba(74,222,128,0.1); color:var(--green); border:1px solid rgba(74,222,128,0.3); padding:7px 12px; border-radius:6px; font-size:.78rem; font-weight:700; cursor:pointer; flex-shrink:0;">
+              <i class="fa-solid fa-copy"></i> Copiar
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Código de referencia (CRÍTICO) -->
+      <div style="background:linear-gradient(135deg,rgba(250,204,21,0.12),rgba(250,204,21,0.04)); border:2px solid var(--amber); border-radius:10px; padding:16px; margin-bottom:18px;">
+        <div style="font-size:.78rem; color:var(--amber); font-weight:800; text-transform:uppercase; letter-spacing:.5px; margin-bottom:8px; display:flex; align-items:center; gap:6px;">
+          <i class="fa-solid fa-circle-exclamation"></i> Importante: poné este código en el concepto
+        </div>
+        <div style="display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap;">
+          <div id="cred-ref" style="font-size:1.5rem; font-weight:900; color:var(--text); font-family:'Courier New',monospace; letter-spacing:2px;">—</div>
+          <button onclick="copiarCredDato('cred-ref', this)" style="background:var(--amber); color:#000; border:none; padding:9px 16px; border-radius:6px; font-size:.82rem; font-weight:800; cursor:pointer;">
+            <i class="fa-solid fa-copy"></i> Copiar código
+          </button>
+        </div>
+        <div style="font-size:.75rem; color:var(--text-muted); margin-top:8px; line-height:1.5;">
+          Sin este código no podemos identificar tu transferencia. Si te olvidás, avisanos por WhatsApp con el comprobante.
+        </div>
+      </div>
+
+      <!-- Vencimiento -->
+      <div style="font-size:.78rem; color:var(--text-muted); text-align:center; margin-bottom:18px;">
+        <i class="fa-regular fa-clock"></i> Esta solicitud vence el <strong id="cred-vencimiento" style="color:var(--text);">—</strong>
+      </div>
+
+      <!-- Comprobante (opcional) -->
+      <div style="background:rgba(59,130,246,0.05); border:1px solid rgba(59,130,246,0.2); border-radius:10px; padding:14px; margin-bottom:18px;">
+        <div style="font-size:.78rem; font-weight:700; color:#60a5fa; margin-bottom:8px;">
+          <i class="fa-solid fa-receipt"></i> Comprobante (opcional)
+        </div>
+        <div style="font-size:.78rem; color:var(--text-muted); margin-bottom:8px; line-height:1.5;">
+          Si querés, pegá el link al comprobante (Drive, Google Photos, Imgur). O mandalo directo por WhatsApp.
+        </div>
+        <div style="display:flex; gap:8px;">
+          <input type="url" id="cred-comprobante-url" placeholder="https://..." style="flex:1; background:#111; border:1px solid var(--border); color:white; padding:8px 10px; border-radius:6px; font-size:.85rem;">
+          <button onclick="enviarComprobante()" style="background:rgba(59,130,246,0.15); color:#60a5fa; border:1px solid rgba(59,130,246,0.3); padding:8px 14px; border-radius:6px; font-size:.82rem; font-weight:700; cursor:pointer;">Guardar</button>
+        </div>
+      </div>
+
+      <!-- Botones de acción -->
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <a id="cred-whatsapp-btn" href="#" target="_blank" rel="noopener" style="flex:1; min-width:200px; background:#25D366; color:#fff; padding:13px; border-radius:8px; font-size:.92rem; font-weight:800; cursor:pointer; text-align:center; text-decoration:none; display:flex; align-items:center; justify-content:center; gap:8px;">
+          <i class="fa-brands fa-whatsapp" style="font-size:1.2rem;"></i> Ya transferí, avisar
+        </a>
+        <button onclick="cerrarModalCreditos()" style="background:rgba(255,255,255,0.06); color:var(--text-muted); border:1px solid var(--border); padding:13px 20px; border-radius:8px; font-size:.85rem; font-weight:700; cursor:pointer;">
+          Cerrar
+        </button>
+      </div>
+
+      <!-- Política -->
+      <div style="margin-top:16px; padding:10px 12px; background:rgba(0,0,0,0.25); border-radius:6px; font-size:.72rem; color:var(--text-dim); line-height:1.55; text-align:center;">
+        Confirmamos en menos de 24hs hábiles. Recibís un email cuando los créditos se acrediten.<br>
+        Los créditos no vencen y no son reembolsables (salvo error técnico).
+      </div>
+    </div>
+  </div>
+</div>
+
 <div id="tab-bolsa" class="tab-panel">
   <div style="background:rgba(59,130,246,0.08); border:1px solid rgba(59,130,246,0.2); border-radius:var(--radius); padding:20px; margin-bottom:24px; display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:16px;">
     <div>
@@ -2340,7 +2488,12 @@
     <div class="table-wrap" style="margin-bottom:0; background:linear-gradient(135deg,rgba(250,204,21,0.04),transparent); border-color:rgba(250,204,21,0.2);">
       <div class="table-head" style="border-bottom-color:rgba(250,204,21,0.15);">
         <h3><i class="fa-solid fa-gem" style="color:var(--amber);"></i> Leads Premium (Pagos) <span style="font-size:.7rem;font-weight:700;color:var(--amber);background:rgba(250,204,21,0.12);padding:3px 8px;border-radius:4px;margin-left:6px;">EXCLUSIVO</span></h3>
-        <div style="font-size:.8rem; color:var(--text-muted);">Saldo: <strong id="mkt-saldo" style="color:var(--amber);">— créditos</strong></div>
+        <div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
+          <div style="font-size:.8rem; color:var(--text-muted);">Saldo: <strong id="mkt-saldo" style="color:var(--amber);">— créditos</strong></div>
+          <button onclick="abrirModalComprarCreditos()" style="background:var(--amber); color:#000; border:none; padding:7px 14px; border-radius:6px; font-size:.78rem; font-weight:800; cursor:pointer; display:flex; align-items:center; gap:5px;">
+            <i class="fa-solid fa-plus"></i> Comprar créditos
+          </button>
+        </div>
       </div>
       <div style="padding:14px 20px; font-size:.82rem; color:var(--text-muted); border-bottom:1px solid var(--border);">
         Leads pre-calificados con más data (ya pidieron presupuesto, budget confirmado, etc). Se pagan con créditos. <strong>Mayor tasa de cierre.</strong>
@@ -5057,9 +5210,10 @@ async function cargarMarketplace() {
         <td style="font-size:.8rem; color:var(--text-muted); max-width:240px;">${l.notas || '—'}</td>
         <td><strong style="color:var(--amber);">${l.costo_creditos} cr.</strong></td>
         <td>
-          <button onclick="comprarLead(${l.id},${l.costo_creditos})" ${puedePagar?'':'disabled'} style="background:${puedePagar?'var(--amber)':'rgba(255,255,255,0.06)'}; color:${puedePagar?'#000':'var(--text-dim)'}; border:none; border-radius:6px; padding:7px 14px; font-size:.78rem; font-weight:800; cursor:${puedePagar?'pointer':'not-allowed'};">
-            ${puedePagar ? 'Comprar' : 'Sin saldo'}
-          </button>
+          ${puedePagar
+            ? `<button onclick="comprarLead(${l.id},${l.costo_creditos})" style="background:var(--amber); color:#000; border:none; border-radius:6px; padding:7px 14px; font-size:.78rem; font-weight:800; cursor:pointer;">Comprar</button>`
+            : `<button onclick="abrirModalComprarCreditos()" style="background:rgba(250,204,21,0.12); color:var(--amber); border:1px solid rgba(250,204,21,0.3); border-radius:6px; padding:7px 14px; font-size:.78rem; font-weight:800; cursor:pointer;" title="Te faltan ${(l.costo_creditos || 0) - data.saldo_creditos} créditos"><i class="fa-solid fa-plus"></i> Cargar saldo</button>`
+          }
         </td>
       </tr>`;
     }).join('');
@@ -5076,6 +5230,158 @@ async function comprarLead(id, costo) {
     await cargarMarketplace();
     await cargarBolsa();
     await cargarCreditos();
+  } catch(e) { alert('Error de conexión.'); }
+}
+
+// ─── COMPRA DE CRÉDITOS POR TRANSFERENCIA (v1.7) ─────────────────────
+let _ultimaSolicitudCreditos = null;  // guarda la última solicitud activa
+
+async function abrirModalComprarCreditos() {
+  if (!aliado) return;
+  // Reset a vista 1
+  document.getElementById('creditos-vista-paquetes').style.display = 'block';
+  document.getElementById('creditos-vista-instrucciones').style.display = 'none';
+  document.getElementById('creditos-modal-titulo').textContent = 'Comprar créditos';
+  document.getElementById('creditos-paquetes-loading').style.display = 'block';
+  document.getElementById('creditos-paquetes-grid').style.display = 'none';
+  document.getElementById('modal-comprar-creditos').classList.add('open');
+
+  try {
+    const res = await apiFetch(`${API}/paquetes-creditos`);
+    const data = await res.json();
+    if (!res.ok) { alert(data.detail || 'No se pudieron cargar los paquetes'); return; }
+
+    const grid = document.getElementById('creditos-paquetes-grid');
+    grid.innerHTML = data.paquetes.map(p => {
+      const ahorroStr = p.id === 'impulso' ? '' :
+        `<span style="color:var(--green); font-size:.72rem; font-weight:800; background:rgba(74,222,128,0.1); padding:2px 7px; border-radius:4px; margin-left:6px;">−${Math.round((1 - p.usd_por_credito / 0.10) * -100 * -1)}%</span>`;
+      const destacadoBorder = p.destacado ? 'border:2px solid var(--amber);' : 'border:1px solid var(--border);';
+      const destacadoBadge = p.destacado
+        ? `<div style="position:absolute; top:-10px; right:14px; background:var(--amber); color:#000; padding:2px 10px; border-radius:50px; font-size:.7rem; font-weight:900; letter-spacing:.5px;">EL MÁS ELEGIDO</div>`
+        : '';
+      return `
+        <div style="position:relative; ${destacadoBorder} border-radius:12px; padding:18px; cursor:pointer; transition:all .2s; background:rgba(255,255,255,0.02);"
+             onclick="seleccionarPaquete('${p.id}')"
+             onmouseenter="this.style.background='rgba(250,204,21,0.06)'"
+             onmouseleave="this.style.background='rgba(255,255,255,0.02)'">
+          ${destacadoBadge}
+          <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:12px; flex-wrap:wrap;">
+            <div style="flex:1; min-width:160px;">
+              <div style="font-size:1.1rem; font-weight:800; color:var(--text);">${p.nombre}${ahorroStr}</div>
+              <div style="font-size:.85rem; color:var(--text-muted); margin-top:4px;">${p.descripcion}</div>
+              <div style="font-size:1.4rem; font-weight:900; color:var(--amber); margin-top:10px;">${p.creditos.toLocaleString('es-AR')} <span style="font-size:.8rem; font-weight:700; color:var(--text-muted);">créditos</span></div>
+            </div>
+            <div style="text-align:right;">
+              <div style="font-size:.7rem; color:var(--text-dim); text-transform:uppercase; font-weight:700;">Precio</div>
+              <div style="font-size:1.2rem; font-weight:900; color:var(--text);">ARS ${p.precio_ars.toLocaleString('es-AR')}</div>
+              <div style="font-size:.78rem; color:var(--text-muted);">USD ${p.precio_usd}</div>
+            </div>
+          </div>
+        </div>
+      `;
+    }).join('');
+    document.getElementById('creditos-paquetes-loading').style.display = 'none';
+    grid.style.display = 'flex';
+  } catch(e) {
+    console.error('paquetes:', e);
+    alert('Error de conexión.');
+  }
+}
+
+function cerrarModalCreditos() {
+  document.getElementById('modal-comprar-creditos').classList.remove('open');
+}
+
+async function seleccionarPaquete(paqueteId) {
+  if (!aliado) return;
+  // Mostrar feedback de loading sin romper UI
+  document.getElementById('creditos-paquetes-loading').style.display = 'block';
+  document.getElementById('creditos-paquetes-grid').style.display = 'none';
+
+  try {
+    const res = await apiFetch(`${API}/aliados/${aliado.codigo}/solicitar-creditos`, {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({paquete_id: paqueteId}),
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      alert(data.detail || 'No se pudo generar la solicitud');
+      // Volver a la vista de paquetes
+      document.getElementById('creditos-paquetes-loading').style.display = 'none';
+      document.getElementById('creditos-paquetes-grid').style.display = 'flex';
+      return;
+    }
+    _ultimaSolicitudCreditos = data.solicitud;
+    mostrarInstruccionesTransferencia(data);
+  } catch(e) {
+    alert('Error de conexión.');
+    document.getElementById('creditos-paquetes-loading').style.display = 'none';
+    document.getElementById('creditos-paquetes-grid').style.display = 'flex';
+  }
+}
+
+function mostrarInstruccionesTransferencia(data) {
+  const s = data.solicitud;
+  const db = data.datos_bancarios;
+  const inst = data.instrucciones;
+
+  document.getElementById('creditos-modal-titulo').textContent = `Solicitud ${s.codigo_referencia}`;
+  document.getElementById('cred-pkg-nombre').textContent = s.paquete_nombre;
+  document.getElementById('cred-pkg-creditos').textContent = `${s.creditos.toLocaleString('es-AR')} créditos`;
+  document.getElementById('cred-pkg-ars').textContent = s.precio_ars.toLocaleString('es-AR');
+  document.getElementById('cred-titular').textContent = db.titular;
+  document.getElementById('cred-banco').textContent = db.banco;
+  document.getElementById('cred-alias').textContent = db.alias;
+  document.getElementById('cred-cbu').textContent = db.cbu;
+  document.getElementById('cred-ref').textContent = s.codigo_referencia;
+  document.getElementById('cred-whatsapp-btn').href = db.whatsapp_url;
+  document.getElementById('cred-comprobante-url').value = '';
+
+  // Formatear fecha de vencimiento
+  try {
+    const exp = new Date(s.expires_at);
+    document.getElementById('cred-vencimiento').textContent =
+      exp.toLocaleDateString('es-AR', {day:'2-digit', month:'2-digit', year:'numeric'}) + ' ' +
+      exp.toLocaleTimeString('es-AR', {hour:'2-digit', minute:'2-digit'}) + 'hs';
+  } catch(e) {
+    document.getElementById('cred-vencimiento').textContent = 'en 48hs';
+  }
+
+  document.getElementById('creditos-vista-paquetes').style.display = 'none';
+  document.getElementById('creditos-vista-instrucciones').style.display = 'block';
+}
+
+function copiarCredDato(elementId, btn) {
+  const texto = document.getElementById(elementId).textContent.trim();
+  navigator.clipboard.writeText(texto).then(() => {
+    const labelOriginal = btn.innerHTML;
+    btn.innerHTML = '<i class="fa-solid fa-check"></i> Copiado';
+    setTimeout(() => { btn.innerHTML = labelOriginal; }, 1500);
+  }).catch(() => {
+    // Fallback para navegadores antiguos
+    const ta = document.createElement('textarea');
+    ta.value = texto; document.body.appendChild(ta);
+    ta.select(); document.execCommand('copy'); document.body.removeChild(ta);
+    btn.innerHTML = '<i class="fa-solid fa-check"></i> Copiado';
+    setTimeout(() => { btn.innerHTML = '<i class="fa-solid fa-copy"></i> Copiar'; }, 1500);
+  });
+}
+
+async function enviarComprobante() {
+  if (!_ultimaSolicitudCreditos) return;
+  const url = document.getElementById('cred-comprobante-url').value.trim();
+  if (!url) { alert('Pegá la URL del comprobante.'); return; }
+  if (!url.startsWith('http')) { alert('La URL tiene que empezar con http:// o https://'); return; }
+  try {
+    const res = await apiFetch(`${API}/aliados/${aliado.codigo}/solicitudes/${_ultimaSolicitudCreditos.id}/comprobante`, {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({comprobante_url: url}),
+    });
+    const data = await res.json();
+    if (!res.ok) { alert(data.detail || 'Error'); return; }
+    mostrarToast('✅ Comprobante guardado. Lo revisamos pronto.', 'green');
   } catch(e) { alert('Error de conexión.'); }
 }
 

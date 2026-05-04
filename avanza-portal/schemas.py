@@ -191,3 +191,22 @@ class AcademiaModuloIn(_Base):
 class AjusteCreditosIn(_Base):
     delta: int
     motivo: str
+
+
+# ─── COMPRA DE PAQUETES DE CRÉDITOS (v1.7) ───────────────────────────────────
+class SolicitarCreditosIn(_Base):
+    """El aliado elige qué paquete quiere comprar.
+    `paquete_id` debe coincidir con una clave de PAQUETES_CREDITOS."""
+    paquete_id: str = Field(..., min_length=1, max_length=40)
+
+
+class RegistrarComprobanteIn(_Base):
+    """El aliado pega la URL de su comprobante (Drive, Imgur, foto en
+    Google Photos, etc.). Para v1 no soportamos upload directo de archivos —
+    si prefiere mandar la foto, usa el botón de WhatsApp."""
+    comprobante_url: str = Field(..., min_length=8, max_length=2000)
+
+
+class RechazarSolicitudIn(_Base):
+    """Admin marca la solicitud como rechazada con un motivo visible al aliado."""
+    motivo: str = Field(..., min_length=3, max_length=500)

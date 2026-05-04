@@ -349,6 +349,7 @@ tr:hover td { background:rgba(255,255,255,0.02); }
       <button class="tab-btn" onclick="cambiarTab('bolsa',this)"><i class="fa-solid fa-bullhorn"></i> Bolsa de Leads</button>
       <button class="tab-btn" onclick="cambiarTab('comisiones',this)"><i class="fa-solid fa-percent"></i> Comisiones <span id="badge-comis" style="display:none;background:var(--red);color:white;font-size:.65rem;font-weight:800;padding:2px 7px;border-radius:50px;margin-left:2px;">0</span></button>
       <button class="tab-btn" onclick="cambiarTab('pagos',this)"><i class="fa-solid fa-credit-card"></i> Pagos</button>
+      <button class="tab-btn" onclick="cambiarTab('solicitudes',this)"><i class="fa-solid fa-coins"></i> Compra de créditos <span id="badge-sol" style="display:none;background:var(--amber);color:#000;font-size:.65rem;font-weight:800;padding:2px 7px;border-radius:50px;margin-left:2px;">0</span></button>
       <button class="tab-btn" onclick="cambiarTab('academia',this)"><i class="fa-solid fa-graduation-cap"></i> Academia</button>
       <button class="tab-btn" onclick="cambiarTab('nuevo-aliado',this)"><i class="fa-solid fa-user-plus"></i> Nuevo aliado</button>
     </div>
@@ -917,6 +918,83 @@ tr:hover td { background:rgba(255,255,255,0.02); }
       </div>
     </div>
 
+    <!-- ════════════════════════════════════════════════════════════════
+         TAB: COMPRA DE CRÉDITOS (v1.7) — Solicitudes manuales por transferencia
+         ════════════════════════════════════════════════════════════════ -->
+    <div id="tab-solicitudes" class="tab-panel">
+      <div class="table-wrap" style="margin-bottom:0; background:linear-gradient(135deg,rgba(245,158,11,0.04),transparent); border-color:rgba(245,158,11,0.2);">
+        <div class="table-head" style="border-bottom-color:rgba(245,158,11,0.15);">
+          <h3>
+            <i class="fa-solid fa-coins" style="color:var(--amber);"></i>
+            Solicitudes de compra de créditos
+          </h3>
+          <div style="display:flex; gap:8px; flex-wrap:wrap;">
+            <button class="tab-btn active" onclick="filtrarSolicitudes('pendiente',this)" id="fsol-pend">
+              <i class="fa-solid fa-clock"></i> Pendientes <span id="cnt-sol-pend" style="background:var(--amber); color:#000; font-size:.7rem; font-weight:800; padding:1px 7px; border-radius:50px; margin-left:4px;">0</span>
+            </button>
+            <button class="tab-btn" onclick="filtrarSolicitudes('confirmada',this)" id="fsol-conf"><i class="fa-solid fa-check"></i> Confirmadas</button>
+            <button class="tab-btn" onclick="filtrarSolicitudes('rechazada',this)" id="fsol-rech"><i class="fa-solid fa-xmark"></i> Rechazadas</button>
+            <button class="tab-btn" onclick="filtrarSolicitudes('expirada',this)" id="fsol-exp"><i class="fa-regular fa-clock"></i> Expiradas</button>
+            <button class="tab-btn" onclick="filtrarSolicitudes('all',this)" id="fsol-all"><i class="fa-solid fa-list"></i> Todas</button>
+          </div>
+        </div>
+
+        <!-- Mensaje de instrucciones rápidas -->
+        <div id="solicitudes-instrucciones" style="padding:14px 20px; font-size:.82rem; color:var(--text-muted); border-bottom:1px solid var(--border); line-height:1.55;">
+          <i class="fa-solid fa-circle-info" style="color:#60a5fa;"></i>
+          Cuando llega una transferencia, buscá el código de referencia (<code style="background:rgba(255,255,255,0.06); padding:2px 6px; border-radius:4px; color:var(--amber);">AVZ-XXXX</code>) en el concepto. Verificá que el monto coincida con <strong>ARS</strong>, después tocá <strong style="color:var(--green);">Confirmar</strong>. Si no coincide, <strong style="color:var(--red);">Rechazar</strong> con motivo.
+        </div>
+
+        <!-- Tabla -->
+        <div style="overflow-x:auto;">
+          <table>
+            <thead>
+              <tr>
+                <th style="width:90px;">Código</th>
+                <th>Aliado</th>
+                <th>Paquete</th>
+                <th style="width:120px;">Monto ARS</th>
+                <th style="width:80px;">USD</th>
+                <th style="width:140px;">Creada</th>
+                <th style="width:90px;">Comprob.</th>
+                <th style="width:120px;">Estado</th>
+                <th style="width:160px;">Acciones</th>
+              </tr>
+            </thead>
+            <tbody id="tabla-solicitudes">
+              <tr><td colspan="9" style="text-align:center;padding:30px;color:var(--text-dim);">Cargando solicitudes...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Modal de rechazo (con motivo obligatorio) -->
+      <div class="modal-overlay" id="modal-rechazo-solicitud" style="position:fixed; inset:0; background:rgba(0,0,0,0.85); z-index:9999; display:none; align-items:center; justify-content:center; padding:20px;">
+        <div style="background:#0d0d0d; border:1px solid rgba(239,68,68,0.3); border-radius:12px; padding:24px; max-width:480px; width:100%;">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+            <h3 style="font-size:1.05rem; font-weight:800;">
+              <i class="fa-solid fa-circle-xmark" style="color:var(--red);"></i>
+              Rechazar solicitud
+            </h3>
+            <button onclick="cerrarModalRechazo()" style="background:transparent; border:none; color:var(--text-muted); font-size:1.4rem; cursor:pointer;">&times;</button>
+          </div>
+          <p style="color:var(--text-muted); font-size:.85rem; margin-bottom:14px;">
+            Solicitud <strong id="rech-codigo" style="color:var(--text); font-family:monospace;">—</strong> de <strong id="rech-aliado" style="color:var(--text);">—</strong>.
+          </p>
+          <label style="display:block; font-size:.78rem; font-weight:700; margin-bottom:6px; color:var(--text-muted);">Motivo del rechazo (visible al aliado)</label>
+          <textarea id="rech-motivo" rows="3" placeholder="Ej: 'El monto transferido no coincide con el paquete' / 'No se identifica el código de referencia' / 'Transferencia no recibida'" style="width:100%; background:#111; border:1px solid var(--border); color:white; padding:10px; border-radius:8px; font-family:inherit; resize:vertical; margin-bottom:14px;"></textarea>
+          <div style="display:flex; gap:10px;">
+            <button onclick="confirmarRechazo()" id="btn-confirm-rech" style="flex:1; background:var(--red); color:white; border:none; padding:11px; border-radius:8px; font-weight:800; cursor:pointer;">
+              <i class="fa-solid fa-circle-xmark"></i> Rechazar
+            </button>
+            <button onclick="cerrarModalRechazo()" style="background:rgba(255,255,255,0.06); color:var(--text-muted); border:1px solid var(--border); padding:11px 20px; border-radius:8px; font-weight:700; cursor:pointer;">
+              Cancelar
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <div id="tab-nuevo-aliado" class="tab-panel">
       <div style="max-width:640px;">
         <div class="table-wrap" style="padding:32px;">
@@ -1247,7 +1325,7 @@ async function cargarTodo() {
   await cargarAliados(); 
   
   // 2. LUEGO cargamos el resto (que ahora sí pueden usar la lista de 'todosAliados')
-  await Promise.all([cargarReferidos(), cargarVentas(), cargarSuspendidos(), cargarSaludPrograma()]);
+  await Promise.all([cargarReferidos(), cargarVentas(), cargarSuspendidos(), cargarSaludPrograma(), cargarContadorSolicitudes()]);
   
   // 3. Finalmente renderizamos la interfaz
   renderDashboard();
@@ -1946,6 +2024,7 @@ function cambiarTab(tab, btn) {
   if(tab==='bolsa')       cargarAdminBolsa();
   if(tab==='comisiones')  cargarAdminComisiones();
   if(tab==='pagos')       cargarAdminPagos();
+  if(tab==='solicitudes') cargarSolicitudesCreditos();
   if(tab==='academia')    cargarAdminAcademia();
 }
 
@@ -2986,6 +3065,209 @@ function escapeHtml(s) {
   return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 }
 function escapeAttr(s) { return escapeHtml(s).replace(/"/g, '&quot;'); }
+
+
+// ════════════════════════════════════════════════════════════════════════
+// SOLICITUDES DE COMPRA DE CRÉDITOS (v1.7)
+// ════════════════════════════════════════════════════════════════════════
+let _solicitudesFiltroEstado = 'pendiente';
+let _solicitudesCache = [];
+let _rechazoSolId = null;
+
+// Liviano: solo trae el contador para mostrar el badge en el tab.
+// Se llama en cargarTodo() para que el aliado vea el badge sin entrar al tab.
+async function cargarContadorSolicitudes() {
+  try {
+    const res = await apiFetch(`${API}/admin/solicitudes-creditos?estado=pendiente&limit=1`);
+    if (!res.ok) return;
+    const data = await res.json();
+    const cnt = data.pendientes_total || 0;
+    const badge = document.getElementById('badge-sol');
+    if (cnt > 0) { badge.textContent = cnt; badge.style.display = 'inline'; }
+    else badge.style.display = 'none';
+    const cntPend = document.getElementById('cnt-sol-pend');
+    if (cntPend) cntPend.textContent = cnt;
+  } catch(e) { /* silencioso */ }
+}
+
+async function cargarSolicitudesCreditos() {
+  try {
+    const res = await apiFetch(`${API}/admin/solicitudes-creditos?estado=${_solicitudesFiltroEstado}&limit=100`);
+    if (!res.ok) {
+      mostrarToast('Error cargando solicitudes', 'red');
+      return;
+    }
+    const data = await res.json();
+    _solicitudesCache = data.solicitudes;
+
+    // Actualizar contador y badge del tab
+    const cnt = data.pendientes_total || 0;
+    document.getElementById('cnt-sol-pend').textContent = cnt;
+    const badge = document.getElementById('badge-sol');
+    if (cnt > 0) { badge.textContent = cnt; badge.style.display = 'inline'; }
+    else badge.style.display = 'none';
+
+    renderSolicitudes();
+  } catch(e) {
+    console.error('solicitudes:', e);
+    mostrarToast('Error de conexión', 'red');
+  }
+}
+
+function filtrarSolicitudes(estado, btn) {
+  _solicitudesFiltroEstado = estado;
+  // Actualizar pills activos (solo dentro del tab solicitudes)
+  document.querySelectorAll('#tab-solicitudes .tab-btn').forEach(b => b.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+  cargarSolicitudesCreditos();
+}
+
+function renderSolicitudes() {
+  const tbody = document.getElementById('tabla-solicitudes');
+  if (!_solicitudesCache.length) {
+    const msgs = {
+      pendiente: 'No hay solicitudes pendientes. ¡Bien ahí!',
+      confirmada: 'Todavía no confirmaste ninguna solicitud.',
+      rechazada: 'No hay solicitudes rechazadas.',
+      expirada: 'No hay solicitudes expiradas.',
+      all: 'No hay solicitudes registradas todavía.',
+    };
+    tbody.innerHTML = `<tr><td colspan="9" style="text-align:center;padding:30px;color:var(--text-dim);">${msgs[_solicitudesFiltroEstado] || msgs.all}</td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = _solicitudesCache.map(s => {
+    const estadoBadge = renderEstadoBadge(s.estado);
+    const aliadoNombre = s.aliado ? escapeHtml(s.aliado.nombre) : '—';
+    const aliadoCod    = s.aliado ? escapeHtml(s.aliado.codigo) : '—';
+    const aliadoEmail  = s.aliado ? escapeHtml(s.aliado.email || '') : '';
+    const fechaCreada = s.creado_en ? formatearFechaCorta(s.creado_en) : '—';
+    const comprobBtn = s.comprobante_url
+      ? `<a href="${escapeAttr(s.comprobante_url)}" target="_blank" rel="noopener" style="background:rgba(74,222,128,0.12); color:var(--green); border:1px solid rgba(74,222,128,0.3); padding:5px 10px; border-radius:5px; font-size:.74rem; font-weight:700; text-decoration:none;"><i class="fa-solid fa-receipt"></i> Ver</a>`
+      : `<span style="color:var(--text-dim); font-size:.74rem;">—</span>`;
+
+    let acciones = '';
+    if (s.estado === 'pendiente') {
+      acciones = `
+        <div style="display:flex; gap:6px;">
+          <button onclick="confirmarSolicitud(${s.id})" style="background:var(--green); color:#000; border:none; padding:6px 12px; border-radius:5px; font-size:.74rem; font-weight:800; cursor:pointer;" title="Acreditar créditos al aliado">
+            <i class="fa-solid fa-check"></i> Confirmar
+          </button>
+          <button onclick="abrirModalRechazo(${s.id})" style="background:rgba(239,68,68,0.12); color:var(--red); border:1px solid rgba(239,68,68,0.3); padding:6px 12px; border-radius:5px; font-size:.74rem; font-weight:800; cursor:pointer;" title="Rechazar con motivo">
+            <i class="fa-solid fa-xmark"></i> Rechazar
+          </button>
+        </div>
+      `;
+    } else if (s.estado === 'rechazada' && s.notas_admin) {
+      acciones = `<span style="font-size:.74rem; color:var(--text-dim); font-style:italic;" title="${escapeAttr(s.notas_admin)}">${escapeHtml((s.notas_admin || '').substring(0, 30))}${(s.notas_admin||'').length > 30 ? '…' : ''}</span>`;
+    } else if (s.estado === 'confirmada' && s.confirmado_en) {
+      acciones = `<span style="font-size:.72rem; color:var(--text-dim);">Confirmada<br>${formatearFechaCorta(s.confirmado_en)}</span>`;
+    } else {
+      acciones = `<span style="color:var(--text-dim); font-size:.74rem;">—</span>`;
+    }
+
+    return `<tr>
+      <td><code style="background:rgba(245,158,11,0.1); color:var(--amber); padding:3px 7px; border-radius:4px; font-size:.78rem; font-weight:700;">${escapeHtml(s.codigo_referencia)}</code></td>
+      <td>
+        <div><strong>${aliadoNombre}</strong></div>
+        <div style="font-size:.72rem; color:var(--text-muted);">${aliadoCod}${aliadoEmail ? ' · ' + aliadoEmail : ''}</div>
+      </td>
+      <td>
+        <div><strong>${escapeHtml(s.paquete_nombre)}</strong></div>
+        <div style="font-size:.72rem; color:var(--amber);">${s.creditos.toLocaleString('es-AR')} créditos</div>
+      </td>
+      <td><strong style="color:var(--text); font-size:.95rem;">${s.precio_ars.toLocaleString('es-AR')}</strong></td>
+      <td><span style="color:var(--text-muted); font-size:.85rem;">${s.precio_usd}</span></td>
+      <td style="font-size:.78rem; color:var(--text-muted);">${fechaCreada}</td>
+      <td>${comprobBtn}</td>
+      <td>${estadoBadge}</td>
+      <td>${acciones}</td>
+    </tr>`;
+  }).join('');
+}
+
+function renderEstadoBadge(estado) {
+  const badges = {
+    pendiente:  '<span style="background:rgba(245,158,11,0.15); color:var(--amber); padding:3px 9px; border-radius:50px; font-size:.7rem; font-weight:800;"><i class="fa-solid fa-clock"></i> Pendiente</span>',
+    confirmada: '<span style="background:rgba(74,222,128,0.15); color:var(--green); padding:3px 9px; border-radius:50px; font-size:.7rem; font-weight:800;"><i class="fa-solid fa-check"></i> Confirmada</span>',
+    rechazada:  '<span style="background:rgba(239,68,68,0.15); color:var(--red); padding:3px 9px; border-radius:50px; font-size:.7rem; font-weight:800;"><i class="fa-solid fa-xmark"></i> Rechazada</span>',
+    expirada:   '<span style="background:rgba(161,161,170,0.15); color:var(--text-muted); padding:3px 9px; border-radius:50px; font-size:.7rem; font-weight:800;"><i class="fa-regular fa-clock"></i> Expirada</span>',
+  };
+  return badges[estado] || estado;
+}
+
+function formatearFechaCorta(iso) {
+  try {
+    const d = new Date(iso);
+    return d.toLocaleDateString('es-AR', {day:'2-digit', month:'2-digit'}) + ' ' +
+           d.toLocaleTimeString('es-AR', {hour:'2-digit', minute:'2-digit'}) + 'hs';
+  } catch(e) { return iso; }
+}
+
+async function confirmarSolicitud(solId) {
+  const sol = _solicitudesCache.find(x => x.id === solId);
+  if (!sol) return;
+
+  confirmarAccion(
+    `¿Confirmar solicitud ${sol.codigo_referencia}?`,
+    `Vas a acreditar <strong style="color:var(--amber);">${sol.creditos.toLocaleString('es-AR')} créditos</strong> a <strong>${sol.aliado.nombre}</strong> por una transferencia de <strong>ARS ${sol.precio_ars.toLocaleString('es-AR')}</strong>.<br><br>Confirmá que verificaste la transferencia en Naranja X.`,
+    'fa-check', 'green',
+    async () => {
+      try {
+        const r = await apiFetch(`${API}/admin/solicitudes-creditos/${solId}/confirmar`, {method: 'POST'});
+        const data = await r.json();
+        if (!r.ok) { mostrarToast(data.detail || 'Error al confirmar', 'red'); return; }
+        mostrarToast(`✅ ${data.mensaje}`, 'green');
+        await cargarSolicitudesCreditos();
+      } catch(e) { mostrarToast('Error de conexión', 'red'); }
+    }
+  );
+}
+
+function abrirModalRechazo(solId) {
+  const sol = _solicitudesCache.find(x => x.id === solId);
+  if (!sol) return;
+  _rechazoSolId = solId;
+  document.getElementById('rech-codigo').textContent = sol.codigo_referencia;
+  document.getElementById('rech-aliado').textContent = sol.aliado ? sol.aliado.nombre : '—';
+  document.getElementById('rech-motivo').value = '';
+  document.getElementById('modal-rechazo-solicitud').style.display = 'flex';
+  setTimeout(() => document.getElementById('rech-motivo').focus(), 100);
+}
+
+function cerrarModalRechazo() {
+  document.getElementById('modal-rechazo-solicitud').style.display = 'none';
+  _rechazoSolId = null;
+}
+
+async function confirmarRechazo() {
+  if (!_rechazoSolId) return;
+  const motivo = document.getElementById('rech-motivo').value.trim();
+  if (motivo.length < 3) {
+    mostrarToast('El motivo es obligatorio (mínimo 3 caracteres)', 'red');
+    return;
+  }
+  const btn = document.getElementById('btn-confirm-rech');
+  btn.disabled = true;
+  btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Rechazando...';
+  try {
+    const r = await apiFetch(`${API}/admin/solicitudes-creditos/${_rechazoSolId}/rechazar`, {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({motivo}),
+    });
+    const data = await r.json();
+    if (!r.ok) { mostrarToast(data.detail || 'Error al rechazar', 'red'); return; }
+    mostrarToast('Solicitud rechazada. Se notificó al aliado.', 'green');
+    cerrarModalRechazo();
+    await cargarSolicitudesCreditos();
+  } catch(e) {
+    mostrarToast('Error de conexión', 'red');
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = '<i class="fa-solid fa-circle-xmark"></i> Rechazar';
+  }
+}
 
 </script>
 </body>
