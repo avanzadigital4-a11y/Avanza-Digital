@@ -1824,17 +1824,22 @@ async def _crear_link_mp(a: Aliado, plan: str, nombre_cliente: str, db: Session)
         "notification_url": f"{BACKEND_PUBLIC_URL}/webhooks/mercadopago",
     }
 
-    async with httpx.AsyncClient() as client:
-        resp = await client.post(
-            "https://api.mercadopago.com/checkout/preferences",
-            json=preference_data,
-            headers={"Authorization": f"Bearer {MP_ACCESS_TOKEN}",
-                     "Content-Type": "application/json"},
-            timeout=15.0,
-        )
-        if resp.status_code not in (200, 201):
-            raise HTTPException(502, f"Error MercadoPago: {resp.text[:200]}")
-        pref = resp.json()
+    try:
+        async with httpx.AsyncClient(timeout=15.0) as client:
+            resp = await client.post(
+                "https://api.mercadopago.com/checkout/preferences",
+                json=preference_data,
+                headers={"Authorization": f"Bearer {MP_ACCESS_TOKEN}",
+                         "Content-Type": "application/json"},
+            )
+            if resp.status_code not in (200, 201):
+                raise HTTPException(502, f"Error MercadoPago: {resp.text[:200]}")
+            pref = resp.json()
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"[MP ERROR] Error de red al crear preferencia: {e}")
+        raise HTTPException(502, f"No se pudo conectar con MercadoPago. Intentá de nuevo en unos segundos.")
 
     link = LinkPago(
         aliado_id    = a.id,
@@ -4715,11 +4720,18 @@ a.cta{{display:inline-block;padding:12px 20px;background:#3b82f6;color:#fff!impo
     btn.textContent = 'Procesando...'; btn.disabled = true;
     try {{
       const res = await fetch(`/checkout/crear?plan=${{encodeURIComponent(_plan)}}&ref_code=${{_ref}}&nombre_cliente=${{encodeURIComponent(nombre)}}`, {{method:'POST'}});
-      const data = await res.json();
-      if (data.checkout_url) window.location.href = data.checkout_url;
-      else alert('Error al generar el link de pago. Intentá de nuevo.');
+      let data;
+      try {{ data = await res.json(); }} catch(_) {{ data = {{}}; }}
+      if (!res.ok) {{
+        const msg = data.detail || 'Error al generar el link de pago. Intentá de nuevo.';
+        alert(msg);
+      }} else if (data.checkout_url) {{
+        window.location.href = data.checkout_url;
+      }} else {{
+        alert('Error al generar el link de pago. Intentá de nuevo.');
+      }}
     }} catch(e) {{
-      alert('Error de conexión. Intentá de nuevo.');
+      alert('Error de conexión. Revisá tu conexión e intentá de nuevo.');
     }} finally {{
       btn.textContent = 'Continuar →'; btn.disabled = false;
     }}
