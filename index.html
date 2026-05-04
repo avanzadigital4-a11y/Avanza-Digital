@@ -1,12 +1,6 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
-new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
-j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
-'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
-})(window,document,'script','dataLayer','GTM-P499M76P');</script>
-
     <script type="application/ld+json">
     [
       {
@@ -144,9 +138,16 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
     <!-- URL canónica: le dice a Google cuál es la versión oficial de esta página -->
     <link rel="canonical" href="https://avanzadigital.digital/">
 
+    <!-- Preconexiones a dominios externos críticos -->
+    <link rel="preconnect" href="https://images.unsplash.com">
+    <link rel="preconnect" href="https://randomuser.me">
+    <link rel="dns-prefetch" href="//js.hs-scripts.com">
+
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <!-- Fuentes: precarga sin bloquear render -->
+    <link rel="preload" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'">
+    <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap"></noscript>
 
     <!-- Font Awesome con carga diferida para no bloquear el render en mobile -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" media="print" onload="this.media='all'">
@@ -357,6 +358,9 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
     </style>
 </head>
 <body>
+    <!-- Google Tag Manager (noscript) -->
+    <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-P499M76P" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+    <!-- End Google Tag Manager (noscript) -->
     <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-P499M76P"
 height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 
@@ -1209,7 +1213,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                     </div>
                     <p class="quote">"Tenía una web vieja que nadie visitaba. Con el nuevo enfoque industrial, la imagen de la empresa cambió radicalmente. Ahora los presupuestos llegan mejor filtrados."</p>
                     <div class="author">
-                        <img src="https://randomuser.me/api/portraits/men/32.jpg" class="avatar-img" alt="Foto cliente">
+                        <img src="https://randomuser.me/api/portraits/men/32.jpg" class="avatar-img" alt="Foto cliente" loading="lazy" width="48" height="48">
                         <div class="info"><h4>Ing. Marcelo Ruiz</h4><span>Gerente en Metalúrgica Ruiz</span></div>
                     </div>
                 </div>
@@ -1220,7 +1224,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                     </div>
                     <p class="quote">"El catálogo técnico digital nos salvó la vida. Antes enviábamos PDFs pesados por mail. Ahora el cliente entra, busca el repuesto y pide cotización. Simple y rápido."</p>
                     <div class="author">
-                        <img src="https://randomuser.me/api/portraits/women/44.jpg" class="avatar-img" alt="Foto cliente">
+                        <img src="https://randomuser.me/api/portraits/women/44.jpg" class="avatar-img" alt="Foto cliente" loading="lazy" width="48" height="48">
                         <div class="info"><h4>Clara Méndez</h4><span>Ventas en Distribuidora Industrial</span></div>
                     </div>
                 </div>
@@ -1231,7 +1235,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                     </div>
                     <p class="quote">"Lo mejor es no tener que descapitalizarnos pagando millones por una web. La suscripción mensual nos permite tener soporte técnico continuo como si tuviéramos un departamento de IT."</p>
                     <div class="author">
-                        <img src="https://randomuser.me/api/portraits/men/85.jpg" class="avatar-img" alt="Foto cliente">
+                        <img src="https://randomuser.me/api/portraits/men/85.jpg" class="avatar-img" alt="Foto cliente" loading="lazy" width="48" height="48">
                         <div class="info"><h4>Jorge Torres</h4><span>CEO Servicios Polar</span></div>
                     </div>
                 </div>
@@ -1584,7 +1588,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
             }
         }
     </script>
-    <script src="script.js"></script>
+    <script src="script.js" defer></script>
     <script type="text/javascript" id="hs-script-loader" async defer src="//js.hs-scripts.com/51067454.js"></script>
 <script>
 function heroAudit(){
@@ -1698,5 +1702,16 @@ document.querySelectorAll('#nav-links a').forEach(a => {
     });
 });
 </script>
+    <!-- Google Tag Manager: cargado post-load para no bloquear FID -->
+    <script>
+    window.addEventListener('load', function() {
+        (function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+        new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+        j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+        'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+        })(window,document,'script','dataLayer','GTM-P499M76P');
+    });
+    </script>
+    <!-- End Google Tag Manager -->
 </body>
 </html>
