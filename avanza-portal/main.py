@@ -1702,6 +1702,7 @@ def _aliado_row(a):
         "cbu_alias": getattr(a, "cbu_alias", None),
         "terminos_aceptados": bool(getattr(a, "terminos_aceptados", False)),
         "terminos_aceptados_en": a.terminos_aceptados_en.strftime("%d/%m/%Y %H:%M") if getattr(a, "terminos_aceptados_en", None) else None,
+        "tipo_aliado": getattr(a, "tipo_aliado", "canal1") or "canal1",
     }
 
 def _aliado_detalle(a, incluir_token: bool = False):

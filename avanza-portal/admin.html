@@ -494,6 +494,12 @@ tr:hover td { background:rgba(255,255,255,0.02); }
               <option value="PREMIUM">PREMIUM</option>
               <option value="ELITE">ELITE</option>
             </select>
+            <select id="filtro-canal" onchange="filtrarAliados()"
+              style="background:rgba(255,255,255,0.05);border:1px solid var(--border);border-radius:var(--radius-sm);padding:8px 12px;color:var(--text);font-size:.82rem;font-family:'Inter',sans-serif;outline:none;">
+              <option value="">Todos los canales</option>
+              <option value="canal1">Canal 1</option>
+              <option value="canal2">Canal 2</option>
+            </select>
             <button class="btn-primary" onclick="cambiarTab('nuevo-aliado')"><i class="fa-solid fa-user-plus"></i> Nuevo aliado</button>
           </div>
         </div>
@@ -501,7 +507,7 @@ tr:hover td { background:rgba(255,255,255,0.02); }
           <table>
             <thead><tr>
               <th>ID</th><th>Nombre</th><th>Email / WhatsApp</th>
-              <th>Nivel</th><th>Comisión %</th><th>Ventas 6m</th><th>Ganado (USD)</th>
+              <th>Canal</th><th>Nivel</th><th>Comisión %</th><th>Ventas 6m</th><th>Ganado (USD)</th>
               <th>Visitas</th><th>Último Acceso</th>
               <th>Estado</th><th>Acciones</th>
             </tr></thead>
@@ -1578,6 +1584,11 @@ function renderAliados(lista) {
         <div style="font-size:.82rem;">${a.email||'—'}</div>
         <div style="font-size:.78rem;color:var(--text-dim);">${a.whatsapp||'—'}</div>
       </td>
+      <td style="text-align:center;">
+        ${(a.tipo_aliado||'canal1')==='canal2'
+          ? '<span style="background:rgba(74,222,128,0.12);border:1px solid rgba(74,222,128,0.3);color:#4ade80;font-size:.68rem;font-weight:800;padding:3px 8px;border-radius:20px;">C2</span>'
+          : '<span style="background:rgba(251,191,36,0.12);border:1px solid rgba(251,191,36,0.3);color:#fbbf24;font-size:.68rem;font-weight:800;padding:3px 8px;border-radius:20px;">C1</span>'}
+      </td>
       <td>
         <span class="nivel-pill nivel-${a.nivel}">${a.nivel}</span>
         <button title="Cambiar nivel/comisión" class="btn-outline" style="padding:4px 8px;font-size:.72rem;margin-left:6px;" onclick="abrirEditarComision('${a.codigo}','${a.nombre}','${a.nivel}')"><i class="fa-solid fa-pen"></i></button>
@@ -1611,6 +1622,8 @@ function filtrarAliados() {
   let data = todosAliados;
   if (q) data = data.filter(a=>(a.nombre||'').toLowerCase().includes(q)||(a.email||'').toLowerCase().includes(q));
   if (nivel) data = data.filter(a=>a.nivel===nivel);
+  const canal = document.getElementById('filtro-canal').value;
+  if (canal) data = data.filter(a=>(a.tipo_aliado||'canal1')===canal);
   renderAliados(data);
 }
 
