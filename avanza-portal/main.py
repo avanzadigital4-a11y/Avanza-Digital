@@ -872,7 +872,7 @@ def crear_admin_inicial(
 
 
 @app.post("/admin/login")
-@limiter.limit("5/minute")
+@limiter.limit("10/minute")
 def login_admin(request: Request, 
     body: schemas.AdminLoginIn | None = Body(default=None),
     username: str = "", password: str = "",
@@ -1018,6 +1018,12 @@ def crear_aliado(body: schemas.CrearAliadoIn | None = Body(default=None),
 
 
 # ─── ALIADOS — RUTAS CON {codigo} ────────────────────────────────────────────
+
+@app.get("/aliados/me")
+def aliado_me(aliado: Aliado = Depends(current_aliado_required), db: Session = Depends(get_db)):
+    """Devuelve los datos del aliado autenticado via JWT. Usado para auto-login."""
+    return _aliado_detalle(aliado)
+
 
 @app.get("/aliados/{codigo}")
 def ver_aliado(codigo: str, db: Session = Depends(get_db), _owner=Depends(verify_ownership_dep)):

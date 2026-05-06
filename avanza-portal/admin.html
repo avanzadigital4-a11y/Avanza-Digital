@@ -1268,7 +1268,17 @@ async function loginAdmin() {
         cargarTodo();
         return;
       }
-    } catch {}
+      // Mostrar mensaje específico según el error
+      if (res.status === 429) {
+        err.innerHTML = '<i class="fa-solid fa-clock"></i> &nbsp;Demasiados intentos. Esperá 1 minuto e intentá de nuevo.';
+      } else if (res.status === 401) {
+        err.innerHTML = '<i class="fa-solid fa-circle-exclamation"></i> &nbsp;Credenciales incorrectas';
+      } else {
+        err.innerHTML = '<i class="fa-solid fa-circle-exclamation"></i> &nbsp;Error al iniciar sesión. Intentá de nuevo.';
+      }
+    } catch {
+      err.innerHTML = '<i class="fa-solid fa-circle-exclamation"></i> &nbsp;Error de conexión. Verificá tu red.';
+    }
     err.style.display = 'block';
     return;
   }
