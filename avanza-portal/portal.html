@@ -5305,13 +5305,28 @@ async function cargarMarketplace() {
       tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; padding:24px; color:var(--text-dim);">No hay leads premium disponibles en este momento.</td></tr>`;
       return;
     }
-    tbody.innerHTML = data.leads.map(l => {
-      const tierBadge = l.tier === 'premium'
-        ? `<span style="background:rgba(250,204,21,0.15); color:var(--amber); padding:3px 8px; border-radius:4px; font-size:.7rem; font-weight:800;">💎 PREMIUM</span>`
-        : `<span style="background:rgba(59,130,246,0.15); color:#60a5fa; padding:3px 8px; border-radius:4px; font-size:.7rem; font-weight:800;">⭐ CALIFICADO</span>`;
-      const puedePagar = data.saldo_creditos >= (l.costo_creditos || 0);
-      return `<tr>
-        <td><strong>${l.empresa}</strong> ${tierBadge}</td>
+
+    // Filtro de país dinámico
+    const paisesUnicos = [...new Set(data.leads.map(l => l.pais || 'AR'))];
+    let filtroMktPais = '';
+
+    function renderMkt() {
+      const filtrados = filtroMktPais
+        ? data.leads.filter(l => (l.pais || 'AR') === filtroMktPais)
+        : data.leads;
+
+      if (!filtrados.length) {
+        tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; padding:24px; color:var(--text-dim);">No hay leads para ese país en este momento.</td></tr>`;
+        return;
+      }
+      tbody.innerHTML = filtrados.map(l => {
+        const pi = paisInfo(l.pais || 'AR');
+        const tierBadge = l.tier === 'premium'
+          ? `<span style="background:rgba(250,204,21,0.15); color:var(--amber); padding:3px 8px; border-radius:4px; font-size:.7rem; font-weight:800;">💎 PREMIUM</span>`
+          : `<span style="background:rgba(59,130,246,0.15); color:#60a5fa; padding:3px 8px; border-radius:4px; font-size:.7rem; font-weight:800;">⭐ CALIFICADO</span>`;
+        const puedePagar = data.saldo_creditos >= (l.costo_creditos || 0);
+        return `<tr>
+        <td><strong>${l.empresa}</strong> ${tierBadge} <span title="${pi.nombre}" style="font-size:.9rem;">${pi.bandera}</span></td>
         <td>${l.rubro}</td>
         <td><div style="display:flex; align-items:center; gap:6px;"><div style="width:40px; height:6px; background:rgba(255,255,255,0.1); border-radius:3px; overflow:hidden;"><div style="width:${l.score_calidad}%; height:100%; background:var(--green);"></div></div><span style="font-size:.75rem; color:var(--text-muted);">${l.score_calidad}</span></div></td>
         <td style="font-size:.8rem; color:var(--text-muted); max-width:240px;">${l.notas || '—'}</td>
@@ -5323,7 +5338,43 @@ async function cargarMarketplace() {
           }
         </td>
       </tr>`;
-    }).join('');
+      }).join('');
+    }
+
+    // Renderizar botones de filtro solo si hay más de un país
+    const mktFiltroExist = document.getElementById('mkt-filtro-paises');
+    if (mktFiltroExist) mktFiltroExist.remove();
+    if (paisesUnicos.length > 1) {
+      const fc = document.createElement('div');
+      fc.id = 'mkt-filtro-paises';
+      fc.style.cssText = 'display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;';
+      const allBtn = document.createElement('button');
+      allBtn.textContent = '🌎 Todos';
+      allBtn.style.cssText = 'padding:6px 14px;border-radius:20px;border:1px solid var(--border);background:var(--amber);color:#000;font-size:.8rem;cursor:pointer;font-weight:700;';
+      allBtn.onclick = () => {
+        filtroMktPais = '';
+        [...fc.querySelectorAll('button')].forEach(b => { b.style.background='transparent'; b.style.color='var(--text-muted)'; });
+        allBtn.style.background = 'var(--amber)'; allBtn.style.color = '#000';
+        renderMkt();
+      };
+      fc.appendChild(allBtn);
+      paisesUnicos.forEach(p => {
+        const pi = paisInfo(p);
+        const btn = document.createElement('button');
+        btn.textContent = `${pi.bandera} ${pi.nombre}`;
+        btn.style.cssText = 'padding:6px 14px;border-radius:20px;border:1px solid var(--border);background:transparent;color:var(--text-muted);font-size:.8rem;cursor:pointer;';
+        btn.onclick = () => {
+          filtroMktPais = p;
+          [...fc.querySelectorAll('button')].forEach(b => { b.style.background='transparent'; b.style.color='var(--text-muted)'; });
+          btn.style.background = 'var(--amber)'; btn.style.color = '#000';
+          renderMkt();
+        };
+        fc.appendChild(btn);
+      });
+      tbody.closest('table').before(fc);
+    }
+
+    renderMkt();
   } catch(e) { console.error('marketplace:', e); }
 }
 

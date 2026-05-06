@@ -2963,7 +2963,10 @@ def ver_bolsa_aliado(codigo: str, pais: str = "", db: Session = Depends(get_db),
         raise HTTPException(403, "La bolsa de leads no está disponible para aliados Canal 2.")
     _aplicar_caducidad_bolsa(db) # Limpiamos antes de mostrar
     
-    q_disponibles = db.query(LeadBolsa).filter(LeadBolsa.estado == "disponible")
+    q_disponibles = db.query(LeadBolsa).filter(
+        LeadBolsa.estado == "disponible",
+        LeadBolsa.tier == "basico"
+    )
     if pais:
         q_disponibles = q_disponibles.filter(LeadBolsa.pais == pais.upper())
     disponibles = q_disponibles.all()
