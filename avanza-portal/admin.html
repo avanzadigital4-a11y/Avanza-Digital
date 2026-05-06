@@ -2253,6 +2253,10 @@ function parsearCSVMasivo(texto) {
   for (const fila of filas) {
     const cols = fila.split(sep).map(c => c.trim().replace(/^["']|["']$/g, ''));
     if (cols.length < 5) continue;
+    // Si falta observacion (15 cols en lugar de 16), insertarla vacía en pos 12
+    if (cols.length === 15 && !['basico','calificado','premium'].includes((cols[13]||'').toLowerCase())) {
+      cols.splice(12, 0, '');
+    }
     const [empresa, rubro, nombre_contacto, ciudad, pais, telefono, whatsapp,
            email, web, instagram, tiene_web_raw, tiene_redes_raw,
            observacion, tier_raw, costo_raw, score_raw] = cols;
