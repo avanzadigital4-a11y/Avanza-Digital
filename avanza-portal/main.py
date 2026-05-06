@@ -553,7 +553,11 @@ def job_notificaciones_inactividad():
                 continue
 
             ultimo = getattr(a, "ultimo_login", None)
-            # Si nunca entró, usamos fecha de creación como referencia
+            # Fallback: si nunca entró, usamos fecha de creación como referencia.
+            # Así un aliado que se registró pero nunca accedió también recibe
+            # los avisos de inactividad a los 20 y 30 días.
+            if not ultimo:
+                ultimo = getattr(a, "creado_en", None)
             if not ultimo:
                 continue
 
@@ -734,6 +738,8 @@ RUTAS_ADMIN = {
     ("GET",    "/admin/solicitudes-creditos"),
     ("POST",   "/admin/solicitudes-creditos/{sol_id}/confirmar"),
     ("POST",   "/admin/solicitudes-creditos/{sol_id}/rechazar"),
+    # v1.7 — trigger manual del job de inactividad
+    ("POST",   "/admin/notificar-inactivos"),
 }
 
 def _es_ruta_admin(method: str, path: str) -> bool:
@@ -1054,6 +1060,10 @@ def login_aliado(request: Request,
     try:
         a.ultimo_login = datetime.now()
         a.cantidad_logins = (getattr(a, 'cantidad_logins', 0) or 0) + 1
+        # Resetear flags de inactividad: si el aliado vuelve a quedar inactivo
+        # en el futuro, el ciclo de 20d/30d arranca limpio desde este login.
+        a.notif_inact_20d_en = None
+        a.notif_inact_30d_en = None
         db.commit()
     except Exception as e:
         db.rollback()

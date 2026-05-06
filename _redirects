@@ -1,2 +1,3 @@
-/p/*    https://avanza-digital.onrender.com/p/:splat    301
-/api/*  https://avanza-digital.onrender.com/api/:splat  301
+/p/*     https://avanza-digital.onrender.com/p/:splat     301
+/api/*   https://avanza-digital.onrender.com/api/:splat   301
+/admin/* https://avanza-digital.onrender.com/admin/:splat 200

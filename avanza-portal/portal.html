@@ -1283,7 +1283,10 @@
             <div style="font-size:.95rem;font-weight:800;margin-bottom:4px;">Guión por Rubro</div>
             <div style="font-size:.8rem;color:var(--text-muted);line-height:1.5;">El pitch exacto y el caso de éxito para cada industria. Leé solo la página del rubro de tu próximo cliente antes de hablar.</div>
           </div>
-          <button onclick="cambiarTab('selector-rubro', document.querySelector('.tab-canal2[onclick*=selector-rubro]'))" class="btn-primary" style="background:linear-gradient(135deg,#4ade80,#22c55e);color:#000;display:inline-flex;align-items:center;gap:6px;font-size:.82rem;padding:10px 16px;border-radius:8px;width:fit-content;">
+          <a href="#" onclick="descargarPDF('https://drive.google.com/uc?export=download&id=171PGzSjcdVREo0OeprFJLt4hj_qz3JMg','Guion_Ventas_Por_Rubro_v2.pdf');return false;" class="btn-primary" style="display:inline-flex;align-items:center;gap:6px;font-size:.82rem;padding:10px 16px;text-decoration:none;border-radius:8px;width:fit-content;">
+            <i class="fa-solid fa-download"></i> Descargar PDF
+          </a>
+          <button onclick="cambiarTab('selector-rubro', document.querySelector('.tab-canal2[onclick*=selector-rubro]'))" style="background:transparent;border:1px solid rgba(74,222,128,0.4);color:#4ade80;display:inline-flex;align-items:center;gap:6px;font-size:.82rem;padding:10px 16px;border-radius:8px;width:fit-content;cursor:pointer;">
             <i class="fa-solid fa-crosshairs"></i> Ir al Selector de Rubro
           </button>
         </div>
@@ -2680,13 +2683,21 @@ const API = 'https://avanza-digital.onrender.com';
 // Antes el portal mandaba password y codigo por query string (quedaban en logs).
 // Ahora todo va por body JSON + JWT en header.
 function _getToken() {
-  return sessionStorage.getItem('avanza_token') || (window.aliado && window.aliado.token) || '';
+  try {
+    const raw = localStorage.getItem('avanza_session');
+    if (!raw) return (window.aliado && window.aliado.token) || '';
+    const { token, expiry } = JSON.parse(raw);
+    if (Date.now() > expiry) { localStorage.removeItem('avanza_session'); return ''; }
+    return token || '';
+  } catch { return ''; }
 }
 function _setToken(t) {
-  if (t) sessionStorage.setItem('avanza_token', t);
+  if (!t) return;
+  const expiry = Date.now() + 30 * 24 * 60 * 60 * 1000;
+  localStorage.setItem('avanza_session', JSON.stringify({ token: t, expiry }));
 }
 function _clearToken() {
-  sessionStorage.removeItem('avanza_token');
+  localStorage.removeItem('avanza_session');
 }
 
 async function apiFetch(url, opts = {}) {
@@ -3158,11 +3169,29 @@ function seleccionarCanal(canal) {
 
 function cerrarSesion() { 
   aliado = null;
+  _clearToken();
   document.getElementById('portal-screen').style.display = 'none';
   document.getElementById('login-screen').style.display = 'flex';
   document.getElementById('login-codigo').value = '';
   document.getElementById('login-pass').value = '';
   document.getElementById('float-support').style.display = 'none';
+}
+
+async function intentarAutoLogin() {
+  const token = _getToken();
+  if (!token) return false;
+  try {
+    const res = await fetch(API + '/aliados/me', {
+      headers: { 'Authorization': 'Bearer ' + token }
+    });
+    if (!res.ok) { _clearToken(); return false; }
+    aliado = await res.json();
+    aliado.token = token;
+    document.getElementById('login-screen').style.display = 'none';
+    document.getElementById('portal-screen').style.display = 'block';
+    cargarTodo();
+    return true;
+  } catch { _clearToken(); return false; }
 }
 
 async function cargarTodo() {
@@ -5488,6 +5517,9 @@ document.addEventListener('DOMContentLoaded', () => {
   if (typeof aplicarCanalDesdeURL === 'function') {
     aplicarCanalDesdeURL();
   }
+
+  // Auto-login con sesión guardada (30 días)
+  intentarAutoLogin();
 });
 
 // ═══════════════════════════════════════════════════════════════════════
