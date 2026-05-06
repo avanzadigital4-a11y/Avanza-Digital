@@ -116,6 +116,8 @@ for col_sql in [
     # v1.7 — Notificaciones de inactividad
     "ALTER TABLE aliados ADD COLUMN notif_inact_20d_en TIMESTAMP",
     "ALTER TABLE aliados ADD COLUMN notif_inact_30d_en TIMESTAMP",
+    # v1.8 — País de lead (multi-país)
+    "ALTER TABLE bolsa_leads ADD COLUMN pais VARCHAR DEFAULT 'AR'",
 ]:
     _aplicar_migracion(col_sql)
 
@@ -2954,14 +2956,17 @@ def eliminar_lead_bolsa(id: int, db: Session = Depends(get_db)):
 # ─── BOLSA DE LEADS (PORTAL ALIADO) ──────────────────────────────────────────
 
 @app.get("/aliados/{codigo}/bolsa")
-def ver_bolsa_aliado(codigo: str, db: Session = Depends(get_db), _owner=Depends(verify_ownership_dep)):
+def ver_bolsa_aliado(codigo: str, pais: str = "", db: Session = Depends(get_db), _owner=Depends(verify_ownership_dep)):
     """Muestra los leads disponibles y los que este aliado ya reclamó."""
     a = _get_aliado(codigo, db)
     if (getattr(a, "tipo_aliado", "canal1") or "canal1") == "canal2":
         raise HTTPException(403, "La bolsa de leads no está disponible para aliados Canal 2.")
     _aplicar_caducidad_bolsa(db) # Limpiamos antes de mostrar
     
-    disponibles = db.query(LeadBolsa).filter(LeadBolsa.estado == "disponible").all()
+    q_disponibles = db.query(LeadBolsa).filter(LeadBolsa.estado == "disponible")
+    if pais:
+        q_disponibles = q_disponibles.filter(LeadBolsa.pais == pais.upper())
+    disponibles = q_disponibles.all()
     mis_reclamos = db.query(LeadBolsa).filter(LeadBolsa.aliado_id == a.id).order_by(LeadBolsa.fecha_reclamo.desc()).all()
     
     reclamos_formateados = []
@@ -2986,7 +2991,7 @@ def ver_bolsa_aliado(codigo: str, db: Session = Depends(get_db), _owner=Depends(
         "disponibles": [
             {
                 "id": l.id, "empresa": l.empresa, "rubro": l.rubro,
-                "ciudad": l.ciudad, "nombre_contacto": l.nombre_contacto,
+                "ciudad": l.ciudad, "pais": l.pais or "AR", "nombre_contacto": l.nombre_contacto,
                 "tier": l.tier, "score_calidad": l.score_calidad,
                 "costo_creditos": l.costo_creditos
             }
@@ -4013,6 +4018,7 @@ def admin_ajustar_creditos(codigo: str,
 
 @app.get("/bolsa/marketplace")
 def ver_marketplace(codigo_aliado: str = "",
+                    pais: str = "",
                     aliado: Aliado = Depends(current_aliado_required),
                     db: Session = Depends(get_db)):
     """Lista los leads calificados/premium disponibles con su costo en créditos.
@@ -4023,10 +4029,13 @@ def ver_marketplace(codigo_aliado: str = "",
     if (getattr(a, "tipo_aliado", "canal1") or "canal1") == "canal2":
         raise HTTPException(403, "El marketplace de leads no está disponible para aliados Canal 2.")
     _aplicar_caducidad_bolsa(db)
-    leads = db.query(LeadBolsa).filter(
+    q = db.query(LeadBolsa).filter(
         LeadBolsa.estado == "disponible",
         LeadBolsa.tier.in_(["calificado", "premium"])
-    ).order_by(LeadBolsa.costo_creditos.desc(), LeadBolsa.fecha_carga.desc()).all()
+    )
+    if pais:
+        q = q.filter(LeadBolsa.pais == pais.upper())
+    leads = q.order_by(LeadBolsa.costo_creditos.desc(), LeadBolsa.fecha_carga.desc()).all()
 
     return {
         "saldo_creditos": a.creditos or 0,
@@ -4035,6 +4044,7 @@ def ver_marketplace(codigo_aliado: str = "",
                 "id": l.id,
                 "empresa": l.empresa,
                 "rubro": l.rubro,
+                "pais": l.pais or "AR",
                 "tier": l.tier,
                 "costo_creditos": l.costo_creditos or 0,
                 "score_calidad": l.score_calidad or 50,
@@ -4094,6 +4104,7 @@ class LeadBolsaCreateAdv(BaseModel):
     rubro: str
     nombre_contacto: str = ""
     ciudad: str = ""
+    pais: str = "AR"
     telefono: str
     whatsapp: str = ""
     email: str = ""
@@ -4118,6 +4129,7 @@ def cargar_lead_bolsa_v2(lead: LeadBolsaCreateAdv, db: Session = Depends(get_db)
         empresa=lead.empresa, rubro=lead.rubro,
         nombre_contacto=lead.nombre_contacto or None,
         ciudad=lead.ciudad or None,
+        pais=lead.pais or "AR",
         telefono=lead.telefono,
         whatsapp=lead.whatsapp or None,
         email=lead.email or None,
@@ -4549,6 +4561,7 @@ def cargar_leads_bulk(payload: LeadBolsaBulkPayload, db: Session = Depends(get_d
             empresa=lead.empresa, rubro=lead.rubro,
             nombre_contacto=lead.nombre_contacto or None,
             ciudad=lead.ciudad or None,
+            pais=lead.pais or "AR",
             telefono=lead.telefono,
             whatsapp=lead.whatsapp or None,
             email=lead.email or None,

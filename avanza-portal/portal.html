@@ -2678,6 +2678,34 @@
 <script>
 const API = 'https://avanza-digital.onrender.com';
 
+// ─── PAÍSES (multi-país) ─────────────────────────────────────────────────────
+const PAISES_INFO = {
+  AR: { bandera: "🇦🇷", nombre: "Argentina" },
+  CR: { bandera: "🇨🇷", nombre: "Costa Rica" },
+  MX: { bandera: "🇲🇽", nombre: "México" },
+  CO: { bandera: "🇨🇴", nombre: "Colombia" },
+  US: { bandera: "🇺🇸", nombre: "Estados Unidos" },
+  CL: { bandera: "🇨🇱", nombre: "Chile" },
+  UY: { bandera: "🇺🇾", nombre: "Uruguay" },
+  PE: { bandera: "🇵🇪", nombre: "Perú" },
+  EC: { bandera: "🇪🇨", nombre: "Ecuador" },
+  BO: { bandera: "🇧🇴", nombre: "Bolivia" },
+  PY: { bandera: "🇵🇾", nombre: "Paraguay" },
+  VE: { bandera: "🇻🇪", nombre: "Venezuela" },
+  BR: { bandera: "🇧🇷", nombre: "Brasil" },
+  ES: { bandera: "🇪🇸", nombre: "España" },
+  PA: { bandera: "🇵🇦", nombre: "Panamá" },
+  GT: { bandera: "🇬🇹", nombre: "Guatemala" },
+  HN: { bandera: "🇭🇳", nombre: "Honduras" },
+  SV: { bandera: "🇸🇻", nombre: "El Salvador" },
+  NI: { bandera: "🇳🇮", nombre: "Nicaragua" },
+  DO: { bandera: "🇩🇴", nombre: "Rep. Dominicana" },
+  CU: { bandera: "🇨🇺", nombre: "Cuba" },
+};
+function paisInfo(codigo) {
+  return PAISES_INFO[codigo] || { bandera: "🌎", nombre: codigo || "AR" };
+}
+
 // ─── AUTH HELPERS (JWT) ─────────────────────────────────────────────────────
 // Token JWT firmado por el backend (HS256) — viaja en Authorization: Bearer.
 // Antes el portal mandaba password y codigo por query string (quedaban en logs).
@@ -3972,12 +4000,25 @@ async function cargarBolsa() {
     if(!data.disponibles.length) {
       tbodyDisp.innerHTML = '<div style="text-align:center;padding:24px;color:var(--text-dim);grid-column:1/-1;"><p>No hay leads disponibles en este momento. Volvé más tarde.</p></div>';
     } else {
-      tbodyDisp.innerHTML = data.disponibles.map(l => {
-        const btnReclamar = limitAlcanzado
-          ? `<button disabled style="width:100%;padding:9px;font-size:.82rem;opacity:.45;cursor:not-allowed;background:var(--border);color:var(--text-dim);border:none;border-radius:8px;"><i class="fa-solid fa-lock"></i> Límite alcanzado</button>`
-          : `<button class="btn-primary" style="width:100%;padding:9px;font-size:.82rem;" onclick="reclamarLead(${l.id})"><i class="fa-solid fa-hand-sparkles"></i> Reclamar Lead</button>`;
-        return `<div style="background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:16px;">
-          <div style="font-size:1rem;font-weight:800;color:var(--text);margin-bottom:4px;">${l.empresa}</div>
+      // Extraer países únicos
+      const paisesUnicos = [...new Set(data.disponibles.map(l => l.pais || 'AR'))];
+      let filtroActivoPais = '';
+
+      function renderDisponibles() {
+        const filtrados = filtroActivoPais
+          ? data.disponibles.filter(l => (l.pais || 'AR') === filtroActivoPais)
+          : data.disponibles;
+
+        tbodyDisp.innerHTML = filtrados.map(l => {
+          const pi = paisInfo(l.pais || 'AR');
+          const btnReclamar = limitAlcanzado
+            ? `<button disabled style="width:100%;padding:9px;font-size:.82rem;opacity:.45;cursor:not-allowed;background:var(--border);color:var(--text-dim);border:none;border-radius:8px;"><i class="fa-solid fa-lock"></i> Límite alcanzado</button>`
+            : `<button class="btn-primary" style="width:100%;padding:9px;font-size:.82rem;" onclick="reclamarLead(${l.id})"><i class="fa-solid fa-hand-sparkles"></i> Reclamar Lead</button>`;
+          return `<div style="background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:16px;">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:4px;">
+            <div style="font-size:1rem;font-weight:800;color:var(--text);">${l.empresa}</div>
+            <span title="${pi.nombre}" style="font-size:1.2rem;line-height:1;">${pi.bandera}</span>
+          </div>
           ${l.ciudad ? `<div style="font-size:.75rem;color:var(--text-dim);margin-bottom:10px;"><i class="fa-solid fa-location-dot"></i> ${l.ciudad}</div>` : '<div style="margin-bottom:10px;"></div>'}
           ${fila('🏭','Rubro', l.rubro)}
           <div style="display:flex;align-items:center;gap:6px;margin-bottom:12px;margin-top:2px;">
@@ -3986,7 +4027,44 @@ async function cargarBolsa() {
           </div>
           ${btnReclamar}
         </div>`;
-      }).join('');
+        }).join('');
+      }
+
+      // Renderizar botones de filtro solo si hay más de un país
+      const filtroContainer = document.getElementById('bolsa-filtro-paises');
+      if(filtroContainer) filtroContainer.remove();
+      if(paisesUnicos.length > 1) {
+        const fc = document.createElement('div');
+        fc.id = 'bolsa-filtro-paises';
+        fc.style.cssText = 'display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;padding:0 16px;';
+        const allBtn = document.createElement('button');
+        allBtn.textContent = '🌎 Todos';
+        allBtn.style.cssText = 'padding:6px 14px;border-radius:20px;border:1px solid var(--border);background:var(--primary);color:#fff;font-size:.8rem;cursor:pointer;font-weight:700;';
+        allBtn.onclick = () => {
+          filtroActivoPais = '';
+          [...fc.querySelectorAll('button')].forEach(b => b.style.background = 'transparent');
+          [...fc.querySelectorAll('button')].forEach(b => b.style.color = 'var(--text-muted)');
+          allBtn.style.background = 'var(--primary)'; allBtn.style.color = '#fff';
+          renderDisponibles();
+        };
+        fc.appendChild(allBtn);
+        paisesUnicos.forEach(p => {
+          const pi = paisInfo(p);
+          const btn = document.createElement('button');
+          btn.textContent = `${pi.bandera} ${pi.nombre}`;
+          btn.style.cssText = 'padding:6px 14px;border-radius:20px;border:1px solid var(--border);background:transparent;color:var(--text-muted);font-size:.8rem;cursor:pointer;';
+          btn.onclick = () => {
+            filtroActivoPais = p;
+            [...fc.querySelectorAll('button')].forEach(b => { b.style.background='transparent'; b.style.color='var(--text-muted)'; });
+            btn.style.background = 'var(--primary)'; btn.style.color = '#fff';
+            renderDisponibles();
+          };
+          fc.appendChild(btn);
+        });
+        tbodyDisp.before(fc);
+      }
+
+      renderDisponibles();
     }
 
     // Banner de límite alcanzado

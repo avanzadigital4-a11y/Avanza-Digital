@@ -210,6 +210,7 @@ class LeadBolsa(Base):
     rubro = Column(String, nullable=False)
     nombre_contacto = Column(String, nullable=True)
     ciudad = Column(String, nullable=True)
+    pais = Column(String, default="AR", index=True)
     telefono = Column(String, nullable=False)
     whatsapp = Column(String, nullable=True)
     email = Column(String, nullable=True)

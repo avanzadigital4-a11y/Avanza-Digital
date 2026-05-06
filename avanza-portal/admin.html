@@ -733,14 +733,15 @@ tr:hover td { background:rgba(255,255,255,0.02); }
         <div style="background:rgba(255,255,255,0.03);border:1px dashed var(--border);border-radius:8px;padding:14px;font-size:.78rem;color:var(--text-muted);margin-bottom:18px;line-height:1.9;">
           <strong style="color:var(--text); display:block; margin-bottom:6px;">📋 Columnas requeridas (separadas por punto y coma):</strong>
           <code style="background:rgba(0,0,0,0.4);padding:6px 10px;border-radius:6px;display:block;font-size:.77rem;color:#93c5fd;margin-bottom:8px;">
-            empresa ; rubro ; nombre_contacto ; ciudad ; telefono ; whatsapp ; email ; web ; instagram ; tiene_web ; tiene_redes ; observacion ; tier ; costo_creditos ; score_calidad
+            empresa ; rubro ; nombre_contacto ; ciudad ; pais ; telefono ; whatsapp ; email ; web ; instagram ; tiene_web ; tiene_redes ; observacion ; tier ; costo_creditos ; score_calidad
           </code>
           <span style="color:var(--amber);">⚠️ tier</span> solo acepta: <code>basico</code> | <code>calificado</code> | <code>premium</code><br>
           <span style="color:var(--amber);">⚠️ costo_creditos</span>: 0 para básico · 10 para calificado · 20 para premium<br>
           <span style="color:var(--amber);">⚠️ score_calidad</span>: número entre 0 y 100 — La primera fila (encabezado) se ignora automáticamente.<br>
           <span style="color:var(--amber);">⚠️ tiene_web / tiene_redes</span>: poner <code>1</code> si tiene, <code>0</code> si no tiene<br>
           <span style="color:var(--amber);">⚠️ web / instagram</span>: URL o usuario (@empresa), dejar vacío si no se tiene<br>
-          <span style="color:var(--amber);">⚠️ observacion</span>: nota corta del prospectador, dejar vacío si no hay
+          <span style="color:var(--amber);">⚠️ observacion</span>: nota corta del prospectador, dejar vacío si no hay<br>
+          <span style="color:var(--amber);">⚠️ pais</span>: código ISO del país (<code>AR</code>, <code>CR</code>, <code>MX</code>, <code>CO</code>, <code>US</code>, <code>CL</code>, <code>UY</code>). Default <code>AR</code> si se deja vacío
         </div>
 
         <!-- Zona de drop / selector de archivo -->
@@ -778,6 +779,7 @@ tr:hover td { background:rgba(255,255,255,0.02); }
                   <th style="padding:9px 10px;text-align:left;border-bottom:1px solid var(--border);white-space:nowrap;">Rubro</th>
                   <th style="padding:9px 10px;text-align:left;border-bottom:1px solid var(--border);white-space:nowrap;">Contacto</th>
                   <th style="padding:9px 10px;text-align:left;border-bottom:1px solid var(--border);white-space:nowrap;">Ciudad</th>
+                  <th style="padding:9px 10px;text-align:left;border-bottom:1px solid var(--border);white-space:nowrap;">País</th>
                   <th style="padding:9px 10px;text-align:left;border-bottom:1px solid var(--border);white-space:nowrap;">Teléfono</th>
                   <th style="padding:9px 10px;text-align:left;border-bottom:1px solid var(--border);white-space:nowrap;">Web</th>
                   <th style="padding:9px 10px;text-align:left;border-bottom:1px solid var(--border);white-space:nowrap;">Tier</th>
@@ -2251,7 +2253,7 @@ function parsearCSVMasivo(texto) {
   for (const fila of filas) {
     const cols = fila.split(sep).map(c => c.trim().replace(/^["']|["']$/g, ''));
     if (cols.length < 5) continue;
-    const [empresa, rubro, nombre_contacto, ciudad, telefono, whatsapp,
+    const [empresa, rubro, nombre_contacto, ciudad, pais, telefono, whatsapp,
            email, web, instagram, tiene_web_raw, tiene_redes_raw,
            observacion, tier_raw, costo_raw, score_raw] = cols;
     if (!empresa || !rubro || !telefono) continue;
@@ -2260,6 +2262,7 @@ function parsearCSVMasivo(texto) {
     const costo_creditos = parseInt(costo_raw || '0') || 0;
     const score_calidad  = Math.min(100, Math.max(0, parseInt(score_raw || '50') || 50));
     leads.push({ empresa, rubro, nombre_contacto: nombre_contacto||'', ciudad: ciudad||'',
+      pais: (pais||'AR').toUpperCase() || 'AR',
       telefono, whatsapp: whatsapp||telefono, email: email||'', tier,
       costo_creditos, score_calidad, notas_calificacion: '',
       web: web||'',
@@ -2317,6 +2320,7 @@ function procesarCSVTexto(texto, nombre) {
       <td style="padding:7px 10px;color:var(--text-muted);">${l.rubro}</td>
       <td style="padding:7px 10px;color:var(--text-muted);">${l.nombre_contacto||'—'}</td>
       <td style="padding:7px 10px;color:var(--text-muted);">${l.ciudad||'—'}</td>
+      <td style="padding:7px 10px;color:var(--text-muted);font-size:.85rem;">${l.pais||'AR'}</td>
       <td style="padding:7px 10px;">${l.telefono}</td>
       <td style="padding:7px 10px;color:var(--text-muted);font-size:.75rem;">
         ${l.web ? `<a href="${l.web.startsWith('http') ? l.web : 'https://'+l.web}" target="_blank" style="color:var(--primary);">web</a>` : l.tiene_web ? '🌐' : '—'}
