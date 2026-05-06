@@ -58,6 +58,10 @@ class Aliado(Base):
     terminos_aceptados = Column(Boolean, default=False)
     terminos_aceptados_en = Column(DateTime, nullable=True)
 
+    # --- NOTIFICACIONES DE INACTIVIDAD ---
+    notif_inact_20d_en = Column(DateTime, nullable=True)
+    notif_inact_30d_en = Column(DateTime, nullable=True)
+
     ventas = relationship("Venta", back_populates="aliado")
     referidos = relationship("Referido", back_populates="aliado")
     prospectos = relationship("Prospecto", back_populates="aliado")

@@ -113,6 +113,9 @@ for col_sql in [
     "ALTER TABLE bolsa_leads ADD COLUMN tiene_web BOOLEAN DEFAULT FALSE",
     "ALTER TABLE bolsa_leads ADD COLUMN tiene_redes BOOLEAN DEFAULT FALSE",
     "ALTER TABLE bolsa_leads ADD COLUMN observacion TEXT",
+    # v1.7 — Notificaciones de inactividad
+    "ALTER TABLE aliados ADD COLUMN notif_inact_20d_en TIMESTAMP",
+    "ALTER TABLE aliados ADD COLUMN notif_inact_30d_en TIMESTAMP",
 ]:
     _aplicar_migracion(col_sql)
 
@@ -522,6 +525,116 @@ def job_expirar_links_pago():
 
 scheduler.add_job(job_liberar_leads_48h, "interval", minutes=30)
 scheduler.add_job(job_expirar_links_pago, "interval", hours=1)
+
+
+# ─── SCHEDULER: NOTIFICACIONES DE INACTIVIDAD ────────────────────────────────
+def job_notificaciones_inactividad():
+    """Corre 1x/día. Envía emails escalonados a aliados inactivos:
+       - Día 20: recordatorio amigable ("te extrañamos").
+       - Día 30: advertencia de cuenta en riesgo.
+       Usa columnas notif_inact_20d_en / notif_inact_30d_en para no spamear.
+    """
+    from database import SessionLocal
+    db = SessionLocal()
+    try:
+        ahora = datetime.now()
+        corte_20d = ahora - timedelta(days=20)
+        corte_30d = ahora - timedelta(days=30)
+        # Ventana de re-envío: no mandar de nuevo hasta 25 días después
+        no_repetir_antes = ahora - timedelta(days=25)
+
+        aliados = db.query(Aliado).filter(Aliado.activo == True).all()
+
+        enviados_20d = 0
+        enviados_30d = 0
+
+        for a in aliados:
+            if not a.email:
+                continue
+
+            ultimo = getattr(a, "ultimo_login", None)
+            # Si nunca entró, usamos fecha de creación como referencia
+            if not ultimo:
+                continue
+
+            dias_inactivo = (ahora - ultimo).days
+
+            # ── AVISO 30 DÍAS: cuenta en riesgo ──────────────────────────────
+            if dias_inactivo >= 30:
+                notif_30d = getattr(a, "notif_inact_30d_en", None)
+                # Evitar reenvío hasta 25 días después del último aviso
+                if notif_30d and notif_30d > no_repetir_antes:
+                    continue
+                nombre_corto = a.nombre.split()[0] if a.nombre else "Aliado"
+                html = f"""
+                <div style="font-family:Inter,sans-serif;background:#050505;color:#e2e8f0;padding:40px;max-width:600px;margin:0 auto;border-radius:12px;border:1px solid #1e1e1e;">
+                  <div style="margin-bottom:24px;">
+                    <span style="background:#7f1d1d;color:#fca5a5;font-size:.75rem;font-weight:700;padding:4px 10px;border-radius:99px;letter-spacing:.5px;text-transform:uppercase;">⚠️ Cuenta en riesgo</span>
+                  </div>
+                  <h2 style="margin:0 0 12px;font-size:1.4rem;color:#f87171;">Hace {dias_inactivo} días que no entrás al portal</h2>
+                  <p style="color:#a1a1aa;line-height:1.6;">Hola <strong style="color:#fff;">{nombre_corto}</strong>, notamos que tu cuenta en Avanza Digital lleva más de un mes sin actividad.</p>
+                  <div style="background:#111;border:1px solid #2a2a2a;border-radius:8px;padding:20px;margin:20px 0;">
+                    <p style="margin:0 0 8px;font-weight:600;color:#f87171;">¿Qué puede pasar si no ingresás?</p>
+                    <ul style="margin:0;padding-left:18px;color:#a1a1aa;line-height:1.8;">
+                      <li>Los leads que tengas reclamados pueden liberarse automáticamente</li>
+                      <li>Tu cuenta puede marcarse como inactiva y dejar de recibir nuevos leads</li>
+                      <li>Podrías perder tu posición en la red de aliados</li>
+                    </ul>
+                  </div>
+                  <p style="color:#a1a1aa;">Si estás pasando por un momento difícil o necesitás ayuda, respondé este email y te ayudamos.</p>
+                  <a href="{PORTAL_URL}/portal.html" style="display:inline-block;padding:14px 28px;background:#f97316;color:#000;border-radius:8px;text-decoration:none;font-weight:800;font-size:1rem;margin-top:8px;">Reactivar mi cuenta →</a>
+                  <p style="margin-top:28px;font-size:.75rem;color:#3f3f46;">Avanza Digital · Partner Network · Para darte de baja respondé este email con "baja".</p>
+                </div>
+                """
+                enviar_email(a.email, f"⚠️ {nombre_corto}, tu cuenta en Avanza lleva {dias_inactivo} días inactiva", html)
+                try:
+                    a.notif_inact_30d_en = ahora
+                except Exception:
+                    pass
+                db.commit()
+                enviados_30d += 1
+
+            # ── RECORDATORIO 20 DÍAS: amigable ───────────────────────────────
+            elif dias_inactivo >= 20:
+                notif_20d = getattr(a, "notif_inact_20d_en", None)
+                if notif_20d and notif_20d > no_repetir_antes:
+                    continue
+                nombre_corto = a.nombre.split()[0] if a.nombre else "Aliado"
+                html = f"""
+                <div style="font-family:Inter,sans-serif;background:#050505;color:#e2e8f0;padding:40px;max-width:600px;margin:0 auto;border-radius:12px;border:1px solid #1e1e1e;">
+                  <div style="margin-bottom:24px;">
+                    <span style="background:#1c1917;color:#fdba74;font-size:.75rem;font-weight:700;padding:4px 10px;border-radius:99px;letter-spacing:.5px;text-transform:uppercase;">👋 Te extrañamos</span>
+                  </div>
+                  <h2 style="margin:0 0 12px;font-size:1.4rem;color:#fb923c;">¡{nombre_corto}, hace rato que no aparecés!</h2>
+                  <p style="color:#a1a1aa;line-height:1.6;">Notamos que llevás <strong style="color:#fb923c;">{dias_inactivo} días</strong> sin ingresar al portal de Avanza Digital.</p>
+                  <div style="background:#111;border:1px solid #2a2a2a;border-radius:8px;padding:20px;margin:20px 0;">
+                    <p style="margin:0 0 12px;font-weight:600;color:#fff;">Mientras estuviste ausente…</p>
+                    <ul style="margin:0;padding-left:18px;color:#a1a1aa;line-height:1.8;">
+                      <li>Nuevos leads están disponibles en la bolsa</li>
+                      <li>Tus prospectos necesitan seguimiento</li>
+                      <li>Puede haber comisiones pendientes de revisar</li>
+                    </ul>
+                  </div>
+                  <a href="{PORTAL_URL}/portal.html" style="display:inline-block;padding:14px 28px;background:#3b82f6;color:#fff;border-radius:8px;text-decoration:none;font-weight:800;font-size:1rem;margin-top:8px;">Volver al portal →</a>
+                  <p style="margin-top:28px;font-size:.75rem;color:#3f3f46;">Avanza Digital · Partner Network · ¿Preguntas? Respondé este email.</p>
+                </div>
+                """
+                enviar_email(a.email, f"👋 {nombre_corto}, ¿todo bien? Hace {dias_inactivo} días que no entrás", html)
+                try:
+                    a.notif_inact_20d_en = ahora
+                except Exception:
+                    pass
+                db.commit()
+                enviados_20d += 1
+
+        print(f"[INACTIVIDAD] Notificaciones enviadas — 20d: {enviados_20d}, 30d: {enviados_30d}")
+    except Exception as e:
+        print(f"[INACTIVIDAD ERROR] {e}")
+    finally:
+        db.close()
+
+
+scheduler.add_job(job_notificaciones_inactividad, "interval", hours=24)
 scheduler.start()
 
 
@@ -980,6 +1093,13 @@ def aliados_inactivos(dias: int = 30, db: Session = Depends(get_db)):
             })
     resultado.sort(key=lambda x: x["dias_inactivo"] or 9999, reverse=True)
     return {"filtro_dias": dias, "total": len(resultado), "aliados": resultado}
+
+
+@app.post("/admin/notificar-inactivos")
+def notificar_inactivos_manual(background_tasks: BackgroundTasks):
+    """Dispara manualmente el job de notificaciones de inactividad (para pruebas desde admin)."""
+    background_tasks.add_task(job_notificaciones_inactividad)
+    return {"ok": True, "mensaje": "Job de inactividad lanzado en background. Revisá los logs."}
 
 
 @app.get("/aliados")
