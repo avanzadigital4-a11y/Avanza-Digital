@@ -196,8 +196,10 @@ class AjusteCreditosIn(_Base):
 # ─── COMPRA DE PAQUETES DE CRÉDITOS (v1.7) ───────────────────────────────────
 class SolicitarCreditosIn(_Base):
     """El aliado elige qué paquete quiere comprar.
-    `paquete_id` debe coincidir con una clave de PAQUETES_CREDITOS."""
+    `paquete_id` debe coincidir con una clave de PAQUETES_CREDITOS.
+    `moneda` define el medio de pago: 'ars' (transferencia local) o 'usd' (PayPal/Wise/USDT)."""
     paquete_id: str = Field(..., min_length=1, max_length=40)
+    moneda: str = Field(default="ars", pattern="^(ars|usd)$")
 
 
 class RegistrarComprobanteIn(_Base):

@@ -385,10 +385,15 @@ class SolicitudCompraCreditos(Base):
     paquete_id = Column(String, nullable=False)       # 'impulso' | 'acelerador' | 'despegue'
     creditos   = Column(Integer, nullable=False)      # denormalizado: cantidad del paquete
 
+    # --- MONEDA DE PAGO ---
+    # 'ars' = transferencia bancaria local (CBU/alias). Para aliados de Argentina.
+    # 'usd' = pago en dólares (PayPal/Wise/USDT/banco USD). Para aliados internacionales.
+    moneda = Column(String, default="ars", nullable=False, index=True)
+
     # --- PRECIO CONGELADO AL MOMENTO DE GENERAR LA SOLICITUD ---
     precio_usd       = Column(Float, nullable=False)  # precio del paquete en USD
-    tipo_cambio_blue = Column(Float, nullable=False)  # cotización blue de dolarapi
-    precio_ars       = Column(Float, nullable=False)  # = precio_usd × tipo_cambio, redondeado al alza
+    tipo_cambio_blue = Column(Float, nullable=False)  # cotización blue de dolarapi (1.0 si moneda='usd')
+    precio_ars       = Column(Float, nullable=False)  # = precio_usd × tipo_cambio (igual a precio_usd si moneda='usd')
 
     # --- IDENTIFICACIÓN PARA CONCILIACIÓN ---
     codigo_referencia = Column(String, unique=True, index=True, nullable=False)  # ej: 'AVZ-A4F2'

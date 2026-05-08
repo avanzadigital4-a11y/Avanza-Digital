@@ -118,6 +118,8 @@ for col_sql in [
     "ALTER TABLE aliados ADD COLUMN notif_inact_30d_en TIMESTAMP",
     # v1.8 — País de lead (multi-país)
     "ALTER TABLE bolsa_leads ADD COLUMN pais VARCHAR DEFAULT 'AR'",
+    # v1.9 — Compra de créditos en USD (aliados internacionales)
+    "ALTER TABLE solicitudes_compra_creditos ADD COLUMN moneda VARCHAR DEFAULT 'ars'",
 ]:
     _aplicar_migracion(col_sql)
 
@@ -178,6 +180,20 @@ DATOS_BANCARIOS = {
 # Vigencia de la solicitud de compra (horas). Pasado este tiempo, el cron la
 # marca como 'expirada' y el aliado debe generar otra al cambio del momento.
 SOLICITUD_CREDITOS_EXPIRACION_HS = int(os.environ.get("SOLICITUD_CREDITOS_EXPIRACION_HS", "48"))
+
+
+# ─── DATOS DE PAGO EN USD PARA ALIADOS INTERNACIONALES (v1.9) ────────────────
+# Para aliados de otros países que no pueden transferir en pesos.
+# Configurable por env vars para no tocar código si cambia el método.
+# El método puede ser PayPal, Wise, USDT (TRC20/ERC20), banco USD, etc.
+# La verificación sigue siendo manual (admin confirma cuando llega el pago).
+DATOS_USD = {
+    "metodo":         os.environ.get("USD_METODO",       "PayPal"),
+    "destinatario":   os.environ.get("USD_DESTINATARIO", "avanzadigital4@gmail.com"),
+    "etiqueta_dest":  os.environ.get("USD_ETIQUETA",     "Email PayPal"),
+    "red":            os.environ.get("USD_RED",          ""),  # ej: "TRC20" para USDT
+    "notas":          os.environ.get("USD_NOTAS",        "Enviá el monto exacto en USD. Recibís los créditos cuando confirmamos el pago (24hs hábiles)."),
+}
 
 
 def enviar_email(destinatario: str, asunto: str, cuerpo_html: str):
@@ -924,10 +940,10 @@ def auto_registro(request: Request,
     )
     db.add(a); db.commit(); db.refresh(a)
 
-    # 30 créditos de bienvenida — para que el aliado pueda explorar el
+    # 100 créditos de bienvenida — para que el aliado pueda explorar el
     # marketplace desde el primer día. Sin esto, ve "0 créditos" y la
     # función parece rota. Es señal de bienvenida, no costo real.
-    _ajustar_creditos(db, a, 30, "bienvenida", "registro")
+    _ajustar_creditos(db, a, 100, "bienvenida", "registro")
     db.commit()
 
     # Email de bienvenida — EN SEGUNDO PLANO (no bloquea la respuesta)
@@ -945,7 +961,7 @@ def auto_registro(request: Request,
           </div>
           <p style="color:#a1a1aa;margin-bottom:8px;">Tu comisión arranca en <strong style="color:#fff;">10% (BASIC)</strong> y sube automáticamente con cada venta.</p>
           <div style="background:rgba(168,85,247,0.08);border:1px solid rgba(168,85,247,0.25);border-radius:8px;padding:14px 18px;margin-bottom:24px;">
-            <p style="margin:0;color:#c084fc;font-weight:700;font-size:.95rem;">🎁 Te regalamos 30 créditos de bienvenida</p>
+            <p style="margin:0;color:#c084fc;font-weight:700;font-size:.95rem;">🎁 Te regalamos 100 créditos de bienvenida</p>
             <p style="margin:6px 0 0;color:#a1a1aa;font-size:.82rem;">Usalos en el Marketplace de Leads del portal para reservar contactos pre-calificados.</p>
           </div>
           <p style="color:#a1a1aa;margin-bottom:28px;">Tu link de referido: <a href="https://avanzadigital.digital/alianzas?ref={a.ref_code}" style="color:#3b82f6;">/alianzas?ref={a.ref_code}</a></p>
@@ -4213,6 +4229,7 @@ def _solicitud_a_dict(s: SolicitudCompraCreditos, incluir_aliado: bool = False) 
         "paquete_id":        s.paquete_id,
         "paquete_nombre":    paquete.get("nombre", s.paquete_id.title()),
         "creditos":          s.creditos,
+        "moneda":            getattr(s, "moneda", "ars") or "ars",
         "precio_usd":        s.precio_usd,
         "precio_ars":        s.precio_ars,
         "tipo_cambio_blue":  s.tipo_cambio_blue,
@@ -4263,12 +4280,21 @@ async def solicitar_creditos(codigo: str,
                               db: Session = Depends(get_db),
                               _owner=Depends(verify_ownership_dep)):
     """El aliado genera una solicitud de compra. Se congela el cambio blue,
-    se calcula precio_ars y se devuelve toda la info para que transfiera."""
+    se calcula precio_ars y se devuelve toda la info para que transfiera.
+
+    Soporta dos monedas (v1.9):
+      - 'ars': transferencia bancaria en pesos (cambio blue del momento, vigente 48hs).
+      - 'usd': pago en dólares (PayPal/Wise/USDT/banco USD). Sin conversión.
+    """
     a = _get_aliado(codigo, db)
 
     paquete = PAQUETES_CREDITOS.get(body.paquete_id)
     if not paquete:
         raise HTTPException(400, f"Paquete '{body.paquete_id}' no existe.")
+
+    moneda = (body.moneda or "ars").lower()
+    if moneda not in ("ars", "usd"):
+        raise HTTPException(400, "Moneda inválida. Usar 'ars' o 'usd'.")
 
     # Anti-spam: si tiene >3 solicitudes pendientes, bloquear hasta que las resuelva.
     pendientes = db.query(SolicitudCompraCreditos).filter(
@@ -4280,9 +4306,15 @@ async def solicitar_creditos(codigo: str,
                                   "Esperá a que se confirmen o expiren antes de generar otra.")
 
     # Congelar precio en el momento de generar
-    tipo_cambio = await obtener_tipo_de_cambio()
     precio_usd  = paquete["precio_usd"]
-    precio_ars  = _redondear_ars_arriba(precio_usd * tipo_cambio)
+    if moneda == "ars":
+        tipo_cambio = await obtener_tipo_de_cambio()
+        precio_ars  = _redondear_ars_arriba(precio_usd * tipo_cambio)
+    else:
+        # USD: no hay conversión. Guardamos placeholders coherentes para no romper
+        # vistas históricas que asumen ARS (precio_ars y tipo_cambio_blue son NOT NULL).
+        tipo_cambio = 1.0
+        precio_ars  = precio_usd  # mismo número, distinta moneda según el campo `moneda`
     expires_at  = datetime.now() + timedelta(hours=SOLICITUD_CREDITOS_EXPIRACION_HS)
     codigo_ref  = _generar_codigo_referencia(db)
 
@@ -4290,6 +4322,7 @@ async def solicitar_creditos(codigo: str,
         aliado_id         = a.id,
         paquete_id        = body.paquete_id,
         creditos          = paquete["creditos"],
+        moneda            = moneda,
         precio_usd        = precio_usd,
         tipo_cambio_blue  = tipo_cambio,
         precio_ars        = precio_ars,
@@ -4298,6 +4331,14 @@ async def solicitar_creditos(codigo: str,
         expires_at        = expires_at,
     )
     db.add(sol); db.commit(); db.refresh(sol)
+
+    # Texto del monto para emails y mensajes (depende de la moneda elegida)
+    if moneda == "ars":
+        monto_str = f"ARS {precio_ars:,.0f}"
+        detalle_admin = f"<strong>ARS {precio_ars:,.0f}</strong> (USD {precio_usd:.0f} × ${tipo_cambio:.0f})"
+    else:
+        monto_str = f"USD {precio_usd:.2f}"
+        detalle_admin = f"<strong>USD {precio_usd:.2f}</strong> · vía {DATOS_USD['metodo']}"
 
     # Notificar al admin que hay una nueva solicitud por revisar
     try:
@@ -4309,41 +4350,75 @@ async def solicitar_creditos(codigo: str,
               <p><strong>{a.nombre}</strong> ({a.codigo}) generó una solicitud:</p>
               <ul style="line-height:1.8;">
                 <li>Paquete: <strong>{paquete['nombre']}</strong> — {paquete['creditos']} créditos</li>
-                <li>Monto a transferir: <strong>ARS {precio_ars:,.0f}</strong> (USD {precio_usd:.0f} × ${tipo_cambio:.0f})</li>
+                <li>Moneda: <strong>{moneda.upper()}</strong></li>
+                <li>Monto a recibir: {detalle_admin}</li>
                 <li>Código de referencia: <code style="background:#1e293b;padding:2px 6px;border-radius:4px;">{codigo_ref}</code></li>
                 <li>Vence: {expires_at.strftime('%d/%m/%Y %H:%M')}hs</li>
               </ul>
-              <p style="color:#a1a1aa;font-size:.85rem;">Cuando llegue la transferencia, verificá el monto y confirmá desde el panel admin.</p>
+              <p style="color:#a1a1aa;font-size:.85rem;">Cuando llegue el pago, verificá el monto y confirmá desde el panel admin.</p>
             </div>
             """
-            enviar_email(admin_email, f"💰 Solicitud {codigo_ref}: {a.nombre} quiere comprar {paquete['nombre']}", html_admin)
+            enviar_email(admin_email, f"💰 Solicitud {codigo_ref} ({moneda.upper()}): {a.nombre} quiere comprar {paquete['nombre']}", html_admin)
     except Exception as e:
         print(f"[SOLICITUD CREDITOS] Email admin falló: {e}")
 
     # Construir mensaje pre-armado de WhatsApp (URL-encoded)
     from urllib.parse import quote as _urlquote
-    wa_msg = (f"Hola! Soy {a.nombre} (código {a.codigo}). "
-              f"Acabo de transferir ARS {precio_ars:,.0f} para comprar el paquete {paquete['nombre']}. "
-              f"Código de referencia: {codigo_ref}")
+    if moneda == "ars":
+        wa_msg = (f"Hola! Soy {a.nombre} (código {a.codigo}). "
+                  f"Acabo de transferir ARS {precio_ars:,.0f} para comprar el paquete {paquete['nombre']}. "
+                  f"Código de referencia: {codigo_ref}")
+    else:
+        wa_msg = (f"Hola! Soy {a.nombre} (código {a.codigo}). "
+                  f"Acabo de pagar USD {precio_usd:.2f} vía {DATOS_USD['metodo']} "
+                  f"para comprar el paquete {paquete['nombre']}. "
+                  f"Código de referencia: {codigo_ref}")
     wa_url = f"https://wa.me/{DATOS_BANCARIOS['whatsapp_link']}?text={_urlquote(wa_msg)}"
 
-    return {
-        "solicitud":     _solicitud_a_dict(sol),
-        "datos_bancarios": {
-            "titular":          DATOS_BANCARIOS["titular"],
+    # Datos de pago según moneda
+    if moneda == "ars":
+        datos_pago = {
+            "tipo":              "transferencia_ars",
+            "titular":           DATOS_BANCARIOS["titular"],
             "banco":             DATOS_BANCARIOS["banco"],
             "alias":             DATOS_BANCARIOS["alias"],
             "cbu":               DATOS_BANCARIOS["cbu"],
             "whatsapp_display":  DATOS_BANCARIOS["whatsapp_display"],
             "whatsapp_url":      wa_url,
-        },
-        "instrucciones": {
+        }
+        instrucciones = {
             "monto_a_transferir":   f"ARS {precio_ars:,.0f}",
             "concepto_obligatorio": codigo_ref,
             "vence_en":             expires_at.isoformat(),
             "aviso":                "Confirmamos en menos de 24hs hábiles. Recibís email cuando se acrediten los créditos.",
             "politica":             "Los créditos no vencen y no son reembolsables (excepto error técnico).",
-        },
+        }
+    else:
+        datos_pago = {
+            "tipo":              "pago_usd",
+            "metodo":            DATOS_USD["metodo"],
+            "destinatario":      DATOS_USD["destinatario"],
+            "etiqueta_dest":     DATOS_USD["etiqueta_dest"],
+            "red":               DATOS_USD["red"],
+            "notas":             DATOS_USD["notas"],
+            "titular":           DATOS_BANCARIOS["titular"],
+            "whatsapp_display":  DATOS_BANCARIOS["whatsapp_display"],
+            "whatsapp_url":      wa_url,
+        }
+        instrucciones = {
+            "monto_a_transferir":   f"USD {precio_usd:.2f}",
+            "concepto_obligatorio": codigo_ref,
+            "vence_en":             expires_at.isoformat(),
+            "aviso":                "Confirmamos en menos de 24hs hábiles tras recibir el pago. Recibís email cuando se acrediten los créditos.",
+            "politica":             "Los créditos no vencen y no son reembolsables (excepto error técnico).",
+        }
+
+    return {
+        "solicitud":       _solicitud_a_dict(sol),
+        # Mantenemos `datos_bancarios` por compatibilidad cuando moneda='ars'
+        "datos_bancarios": datos_pago if moneda == "ars" else None,
+        "datos_pago":      datos_pago,
+        "instrucciones":   instrucciones,
     }
 
 

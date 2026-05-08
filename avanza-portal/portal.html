@@ -1093,6 +1093,24 @@
         </button>
       </div>
 
+      <!-- BANNER KIT DE VENTAS PDF — CANAL 1 -->
+      <div id="d-canal1-kit-banner" class="d-canal1-only" style="display:none;position:relative;background:linear-gradient(135deg,rgba(249,115,22,0.10),rgba(249,115,22,0.03));border:1px solid rgba(249,115,22,0.3);border-radius:var(--radius);padding:20px 24px;margin-bottom:20px;">
+        <button onclick="cerrarBannerKitVentas()" aria-label="Cerrar" style="position:absolute;top:10px;right:12px;background:transparent;border:none;color:var(--text-dim);cursor:pointer;font-size:1rem;padding:4px 8px;line-height:1;" onmouseover="this.style.color='#fff'" onmouseout="this.style.color='var(--text-dim)'">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:8px;flex-wrap:wrap;">
+          <i class="fa-solid fa-box-open" style="color:#f97316;font-size:1.1rem;"></i>
+          <span style="font-size:.95rem;font-weight:800;">Tu kit de ventas en PDF te espera 📦</span>
+          <span style="background:rgba(249,115,22,0.2);color:#f97316;font-size:.65rem;font-weight:800;padding:2px 8px;border-radius:50px;letter-spacing:1px;">MÓDULO 8</span>
+        </div>
+        <p style="font-size:.83rem;color:var(--text-muted);margin-bottom:14px;line-height:1.5;padding-right:24px;">
+          En el <strong style="color:#f97316;">Módulo 8 de la Academia</strong> tenés todos los PDF descargables: Brochure Comercial, Guión de Ventas, Guión por Rubro y Partner Intro. Listos para mandar a tu cliente.
+        </p>
+        <button onclick="irAModulo8KitVentas()" style="background:#f97316;color:#000;border:none;padding:9px 18px;border-radius:8px;font-size:.82rem;font-weight:800;cursor:pointer;display:inline-flex;align-items:center;gap:6px;">
+          <i class="fa-solid fa-download"></i> Ir al Módulo 8 — Descargar kit
+        </button>
+      </div>
+
       <div class="motive-banner d-canal1-only" id="motive-banner" style="display:none;">
         <div class="motive-icon" id="motive-icon">🚀</div>
         <div class="motive-text" id="motive-text">Cargando tu estado...</div>
@@ -2343,10 +2361,22 @@
 
     <!-- ── VISTA 1: ELEGIR PAQUETE ─────────────────────────────────────── -->
     <div id="creditos-vista-paquetes" style="padding:24px;">
-      <p style="color:var(--text-muted); font-size:.88rem; margin:0 0 18px; line-height:1.5;">
+      <p style="color:var(--text-muted); font-size:.88rem; margin:0 0 14px; line-height:1.5;">
         Los créditos se usan para comprar leads premium. <strong style="color:var(--text);">No vencen</strong> y son acumulables.
-        Cobramos por <strong style="color:var(--text);">transferencia bancaria</strong>: elegí un paquete y te damos los datos.
+        Elegí cómo querés pagar y un paquete.
       </p>
+
+      <!-- Toggle ARS / USD -->
+      <div style="display:flex; gap:8px; margin-bottom:18px; background:rgba(255,255,255,0.03); border:1px solid var(--border); border-radius:10px; padding:4px;">
+        <button id="cred-tab-ars" type="button" onclick="cambiarMonedaCreditos('ars')"
+                style="flex:1; background:var(--amber); color:#000; border:none; padding:10px 12px; border-radius:7px; font-size:.85rem; font-weight:800; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:6px;">
+          <i class="fa-solid fa-building-columns"></i> Pagar en pesos (ARS)
+        </button>
+        <button id="cred-tab-usd" type="button" onclick="cambiarMonedaCreditos('usd')"
+                style="flex:1; background:transparent; color:var(--text-muted); border:none; padding:10px 12px; border-radius:7px; font-size:.85rem; font-weight:700; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:6px;">
+          <i class="fa-solid fa-dollar-sign"></i> Pagar en dólares (USD)
+        </button>
+      </div>
 
       <div id="creditos-paquetes-loading" style="text-align:center; padding:32px; color:var(--text-dim);">
         <i class="fa-solid fa-spinner fa-spin" style="font-size:1.4rem;"></i>
@@ -2355,9 +2385,13 @@
 
       <div id="creditos-paquetes-grid" style="display:none; gap:12px; flex-direction:column;"></div>
 
-      <div style="margin-top:18px; padding:12px 14px; background:rgba(255,255,255,0.03); border:1px solid var(--border); border-radius:8px; font-size:.78rem; color:var(--text-muted); line-height:1.55;">
+      <div id="cred-info-ars" style="margin-top:18px; padding:12px 14px; background:rgba(255,255,255,0.03); border:1px solid var(--border); border-radius:8px; font-size:.78rem; color:var(--text-muted); line-height:1.55;">
         <i class="fa-solid fa-circle-info" style="color:#60a5fa;"></i>
         El precio en pesos se calcula al cambio del dólar blue del momento y queda fijo por 48hs después de generar la solicitud.
+      </div>
+      <div id="cred-info-usd" style="display:none; margin-top:18px; padding:12px 14px; background:rgba(74,222,128,0.06); border:1px solid rgba(74,222,128,0.2); border-radius:8px; font-size:.78rem; color:var(--text-muted); line-height:1.55;">
+        <i class="fa-solid fa-globe" style="color:#4ade80;"></i>
+        Para aliados de fuera de Argentina. Precio fijo en USD, sin conversión. Te damos los datos de pago al elegir el paquete.
       </div>
     </div>
 
@@ -2371,13 +2405,13 @@
           <div style="font-size:1.05rem; font-weight:800; margin-top:2px;"><span id="cred-pkg-nombre">—</span> · <span id="cred-pkg-creditos" style="color:var(--amber);">— créditos</span></div>
         </div>
         <div style="text-align:right;">
-          <div style="font-size:.72rem; color:var(--text-muted); text-transform:uppercase; letter-spacing:.5px; font-weight:700;">Total a transferir</div>
-          <div style="font-size:1.4rem; font-weight:900; color:var(--amber); margin-top:2px;">ARS <span id="cred-pkg-ars">—</span></div>
+          <div style="font-size:.72rem; color:var(--text-muted); text-transform:uppercase; letter-spacing:.5px; font-weight:700;">Total a pagar</div>
+          <div style="font-size:1.4rem; font-weight:900; color:var(--amber); margin-top:2px;"><span id="cred-pkg-moneda">ARS</span> <span id="cred-pkg-monto">—</span></div>
         </div>
       </div>
 
-      <!-- Datos bancarios -->
-      <div style="background:#0a0a0a; border:1px solid var(--border); border-radius:10px; padding:16px; margin-bottom:18px;">
+      <!-- Datos bancarios (ARS) -->
+      <div id="cred-bloque-ars" style="background:#0a0a0a; border:1px solid var(--border); border-radius:10px; padding:16px; margin-bottom:18px;">
         <div style="font-size:.75rem; color:var(--text-muted); font-weight:800; text-transform:uppercase; letter-spacing:.5px; margin-bottom:12px;">
           <i class="fa-solid fa-building-columns"></i> Datos para transferir
         </div>
@@ -2417,6 +2451,48 @@
             </button>
           </div>
         </div>
+      </div>
+
+      <!-- Datos pago USD (alternativo) -->
+      <div id="cred-bloque-usd" style="display:none; background:#0a0a0a; border:1px solid rgba(74,222,128,0.25); border-radius:10px; padding:16px; margin-bottom:18px;">
+        <div style="font-size:.75rem; color:var(--text-muted); font-weight:800; text-transform:uppercase; letter-spacing:.5px; margin-bottom:12px;">
+          <i class="fa-solid fa-dollar-sign" style="color:#4ade80;"></i> Datos para pagar en USD
+        </div>
+
+        <div style="display:flex; flex-direction:column; gap:10px;">
+          <div class="cred-dato-row" style="display:flex; justify-content:space-between; align-items:center; gap:8px; padding:10px 12px; background:rgba(255,255,255,0.02); border-radius:8px;">
+            <div style="flex:1; min-width:0;">
+              <div style="font-size:.7rem; color:var(--text-dim); margin-bottom:2px;">Método de pago</div>
+              <div id="cred-usd-metodo" style="font-size:.95rem; font-weight:800; color:#4ade80;">—</div>
+            </div>
+          </div>
+
+          <div class="cred-dato-row" style="display:flex; justify-content:space-between; align-items:center; gap:8px; padding:10px 12px; background:rgba(255,255,255,0.02); border-radius:8px;">
+            <div style="flex:1; min-width:0;">
+              <div id="cred-usd-etiqueta" style="font-size:.7rem; color:var(--text-dim); margin-bottom:2px;">Destinatario</div>
+              <div id="cred-usd-destinatario" style="font-size:.95rem; font-weight:800; color:var(--text); font-family:'Courier New',monospace; word-break:break-all;">—</div>
+            </div>
+            <button onclick="copiarCredDato('cred-usd-destinatario', this)" style="background:rgba(74,222,128,0.1); color:var(--green); border:1px solid rgba(74,222,128,0.3); padding:7px 12px; border-radius:6px; font-size:.78rem; font-weight:700; cursor:pointer; flex-shrink:0;">
+              <i class="fa-solid fa-copy"></i> Copiar
+            </button>
+          </div>
+
+          <div id="cred-usd-red-row" class="cred-dato-row" style="display:none; justify-content:space-between; align-items:center; gap:8px; padding:10px 12px; background:rgba(255,255,255,0.02); border-radius:8px;">
+            <div style="flex:1; min-width:0;">
+              <div style="font-size:.7rem; color:var(--text-dim); margin-bottom:2px;">Red / Network</div>
+              <div id="cred-usd-red" style="font-size:.92rem; font-weight:700; color:var(--amber);">—</div>
+            </div>
+          </div>
+
+          <div class="cred-dato-row" style="display:flex; justify-content:space-between; align-items:center; gap:8px; padding:10px 12px; background:rgba(255,255,255,0.02); border-radius:8px;">
+            <div style="flex:1; min-width:0;">
+              <div style="font-size:.7rem; color:var(--text-dim); margin-bottom:2px;">A nombre de</div>
+              <div id="cred-usd-titular" style="font-size:.92rem; font-weight:700;">—</div>
+            </div>
+          </div>
+        </div>
+
+        <p id="cred-usd-notas" style="font-size:.78rem; color:var(--text-muted); margin:12px 0 0; line-height:1.55; padding:10px 12px; background:rgba(74,222,128,0.04); border:1px solid rgba(74,222,128,0.15); border-radius:6px;">—</p>
       </div>
 
       <!-- Código de referencia (CRÍTICO) -->
@@ -3178,6 +3254,35 @@ function configurarCanal() {
     if (tabKitVentas) {
       cambiarTab('kit-ventas', tabKitVentas);
     }
+  }
+
+  // Para Canal 1: mostrar banner del kit PDF (Módulo 8) si no fue cerrado
+  if (!esCanal2) {
+    const dismissKey = `kit_banner_dismiss_${aliado.codigo}`;
+    const banner = document.getElementById('d-canal1-kit-banner');
+    if (banner) {
+      banner.style.display = localStorage.getItem(dismissKey) ? 'none' : 'block';
+    }
+  }
+}
+
+// ── BANNER KIT VENTAS: cerrar (recordado en localStorage) ────────────────────
+function cerrarBannerKitVentas() {
+  const banner = document.getElementById('d-canal1-kit-banner');
+  if (banner) banner.style.display = 'none';
+  if (aliado && aliado.codigo) {
+    localStorage.setItem(`kit_banner_dismiss_${aliado.codigo}`, '1');
+  }
+}
+
+// ── BANNER KIT VENTAS: ir directo al Módulo 8 de la Academia ─────────────────
+function irAModulo8KitVentas() {
+  const tabAcademia = document.querySelector('.tab-canal1[onclick*="academia"]');
+  if (tabAcademia) {
+    cambiarTab('academia', tabAcademia);
+    setTimeout(() => {
+      if (typeof abrirModulo === 'function') abrirModulo(8);
+    }, 200);
   }
 }
 
@@ -5393,6 +5498,8 @@ async function comprarLead(id, costo) {
 
 // ─── COMPRA DE CRÉDITOS POR TRANSFERENCIA (v1.7) ─────────────────────
 let _ultimaSolicitudCreditos = null;  // guarda la última solicitud activa
+let _monedaCreditos = 'ars';          // 'ars' | 'usd' — moneda elegida en el toggle
+let _paquetesCreditosCache = null;    // último resultado de /paquetes-creditos
 
 async function abrirModalComprarCreditos() {
   if (!aliado) return;
@@ -5408,42 +5515,87 @@ async function abrirModalComprarCreditos() {
     const res = await apiFetch(`${API}/paquetes-creditos`);
     const data = await res.json();
     if (!res.ok) { alert(data.detail || 'No se pudieron cargar los paquetes'); return; }
-
-    const grid = document.getElementById('creditos-paquetes-grid');
-    grid.innerHTML = data.paquetes.map(p => {
-      const ahorroStr = p.id === 'impulso' ? '' :
-        `<span style="color:var(--green); font-size:.72rem; font-weight:800; background:rgba(74,222,128,0.1); padding:2px 7px; border-radius:4px; margin-left:6px;">−${Math.round((1 - p.usd_por_credito / 0.10) * -100 * -1)}%</span>`;
-      const destacadoBorder = p.destacado ? 'border:2px solid var(--amber);' : 'border:1px solid var(--border);';
-      const destacadoBadge = p.destacado
-        ? `<div style="position:absolute; top:-10px; right:14px; background:var(--amber); color:#000; padding:2px 10px; border-radius:50px; font-size:.7rem; font-weight:900; letter-spacing:.5px;">EL MÁS ELEGIDO</div>`
-        : '';
-      return `
-        <div style="position:relative; ${destacadoBorder} border-radius:12px; padding:18px; cursor:pointer; transition:all .2s; background:rgba(255,255,255,0.02);"
-             onclick="seleccionarPaquete('${p.id}')"
-             onmouseenter="this.style.background='rgba(250,204,21,0.06)'"
-             onmouseleave="this.style.background='rgba(255,255,255,0.02)'">
-          ${destacadoBadge}
-          <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:12px; flex-wrap:wrap;">
-            <div style="flex:1; min-width:160px;">
-              <div style="font-size:1.1rem; font-weight:800; color:var(--text);">${p.nombre}${ahorroStr}</div>
-              <div style="font-size:.85rem; color:var(--text-muted); margin-top:4px;">${p.descripcion}</div>
-              <div style="font-size:1.4rem; font-weight:900; color:var(--amber); margin-top:10px;">${p.creditos.toLocaleString('es-AR')} <span style="font-size:.8rem; font-weight:700; color:var(--text-muted);">créditos</span></div>
-            </div>
-            <div style="text-align:right;">
-              <div style="font-size:.7rem; color:var(--text-dim); text-transform:uppercase; font-weight:700;">Precio</div>
-              <div style="font-size:1.2rem; font-weight:900; color:var(--text);">ARS ${p.precio_ars.toLocaleString('es-AR')}</div>
-              <div style="font-size:.78rem; color:var(--text-muted);">USD ${p.precio_usd}</div>
-            </div>
-          </div>
-        </div>
-      `;
-    }).join('');
-    document.getElementById('creditos-paquetes-loading').style.display = 'none';
-    grid.style.display = 'flex';
+    _paquetesCreditosCache = data;
+    renderPaquetesCreditos();
   } catch(e) {
     console.error('paquetes:', e);
     alert('Error de conexión.');
   }
+}
+
+function cambiarMonedaCreditos(moneda) {
+  _monedaCreditos = (moneda === 'usd') ? 'usd' : 'ars';
+
+  // Estilos del toggle
+  const tabArs = document.getElementById('cred-tab-ars');
+  const tabUsd = document.getElementById('cred-tab-usd');
+  const esArs = (_monedaCreditos === 'ars');
+  if (tabArs) {
+    tabArs.style.background = esArs ? 'var(--amber)' : 'transparent';
+    tabArs.style.color      = esArs ? '#000' : 'var(--text-muted)';
+    tabArs.style.fontWeight = esArs ? '800' : '700';
+  }
+  if (tabUsd) {
+    tabUsd.style.background = !esArs ? '#4ade80' : 'transparent';
+    tabUsd.style.color      = !esArs ? '#000' : 'var(--text-muted)';
+    tabUsd.style.fontWeight = !esArs ? '800' : '700';
+  }
+
+  // Texto informativo
+  const infoArs = document.getElementById('cred-info-ars');
+  const infoUsd = document.getElementById('cred-info-usd');
+  if (infoArs) infoArs.style.display = esArs ? 'block' : 'none';
+  if (infoUsd) infoUsd.style.display = esArs ? 'none' : 'block';
+
+  // Re-render con la moneda elegida
+  if (_paquetesCreditosCache) renderPaquetesCreditos();
+}
+
+function renderPaquetesCreditos() {
+  const data = _paquetesCreditosCache;
+  if (!data) return;
+  const esUsd = (_monedaCreditos === 'usd');
+
+  const grid = document.getElementById('creditos-paquetes-grid');
+  grid.innerHTML = data.paquetes.map(p => {
+    const ahorroStr = p.id === 'impulso' ? '' :
+      `<span style="color:var(--green); font-size:.72rem; font-weight:800; background:rgba(74,222,128,0.1); padding:2px 7px; border-radius:4px; margin-left:6px;">−${Math.round((1 - p.usd_por_credito / 0.10) * -100 * -1)}%</span>`;
+    const destacadoBorder = p.destacado ? 'border:2px solid var(--amber);' : 'border:1px solid var(--border);';
+    const destacadoBadge = p.destacado
+      ? `<div style="position:absolute; top:-10px; right:14px; background:var(--amber); color:#000; padding:2px 10px; border-radius:50px; font-size:.7rem; font-weight:900; letter-spacing:.5px;">EL MÁS ELEGIDO</div>`
+      : '';
+
+    // Precio principal según moneda elegida
+    const precioPrincipal = esUsd
+      ? `USD ${p.precio_usd.toFixed(2)}`
+      : `ARS ${p.precio_ars.toLocaleString('es-AR')}`;
+    const precioSecundario = esUsd
+      ? `≈ ARS ${p.precio_ars.toLocaleString('es-AR')} (orientativo)`
+      : `USD ${p.precio_usd}`;
+
+    return `
+      <div style="position:relative; ${destacadoBorder} border-radius:12px; padding:18px; cursor:pointer; transition:all .2s; background:rgba(255,255,255,0.02);"
+           onclick="seleccionarPaquete('${p.id}')"
+           onmouseenter="this.style.background='rgba(250,204,21,0.06)'"
+           onmouseleave="this.style.background='rgba(255,255,255,0.02)'">
+        ${destacadoBadge}
+        <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:12px; flex-wrap:wrap;">
+          <div style="flex:1; min-width:160px;">
+            <div style="font-size:1.1rem; font-weight:800; color:var(--text);">${p.nombre}${ahorroStr}</div>
+            <div style="font-size:.85rem; color:var(--text-muted); margin-top:4px;">${p.descripcion}</div>
+            <div style="font-size:1.4rem; font-weight:900; color:var(--amber); margin-top:10px;">${p.creditos.toLocaleString('es-AR')} <span style="font-size:.8rem; font-weight:700; color:var(--text-muted);">créditos</span></div>
+          </div>
+          <div style="text-align:right;">
+            <div style="font-size:.7rem; color:var(--text-dim); text-transform:uppercase; font-weight:700;">Precio</div>
+            <div style="font-size:1.2rem; font-weight:900; color:var(--text);">${precioPrincipal}</div>
+            <div style="font-size:.78rem; color:var(--text-muted);">${precioSecundario}</div>
+          </div>
+        </div>
+      </div>
+    `;
+  }).join('');
+  document.getElementById('creditos-paquetes-loading').style.display = 'none';
+  grid.style.display = 'flex';
 }
 
 function cerrarModalCreditos() {
@@ -5460,7 +5612,7 @@ async function seleccionarPaquete(paqueteId) {
     const res = await apiFetch(`${API}/aliados/${aliado.codigo}/solicitar-creditos`, {
       method: 'POST',
       headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({paquete_id: paqueteId}),
+      body: JSON.stringify({paquete_id: paqueteId, moneda: _monedaCreditos}),
     });
     const data = await res.json();
     if (!res.ok) {
@@ -5481,19 +5633,46 @@ async function seleccionarPaquete(paqueteId) {
 
 function mostrarInstruccionesTransferencia(data) {
   const s = data.solicitud;
-  const db = data.datos_bancarios;
+  const dp = data.datos_pago || data.datos_bancarios || {};
   const inst = data.instrucciones;
+  const esUsd = (s.moneda === 'usd');
 
   document.getElementById('creditos-modal-titulo').textContent = `Solicitud ${s.codigo_referencia}`;
   document.getElementById('cred-pkg-nombre').textContent = s.paquete_nombre;
   document.getElementById('cred-pkg-creditos').textContent = `${s.creditos.toLocaleString('es-AR')} créditos`;
-  document.getElementById('cred-pkg-ars').textContent = s.precio_ars.toLocaleString('es-AR');
-  document.getElementById('cred-titular').textContent = db.titular;
-  document.getElementById('cred-banco').textContent = db.banco;
-  document.getElementById('cred-alias').textContent = db.alias;
-  document.getElementById('cred-cbu').textContent = db.cbu;
+
+  // Banner de monto: cambia ARS/USD según moneda
+  document.getElementById('cred-pkg-moneda').textContent = esUsd ? 'USD' : 'ARS';
+  document.getElementById('cred-pkg-monto').textContent = esUsd
+    ? s.precio_usd.toFixed(2)
+    : s.precio_ars.toLocaleString('es-AR');
+
+  // Mostrar/ocultar bloques según moneda
+  document.getElementById('cred-bloque-ars').style.display = esUsd ? 'none' : 'block';
+  document.getElementById('cred-bloque-usd').style.display = esUsd ? 'block' : 'none';
+
+  if (esUsd) {
+    document.getElementById('cred-usd-metodo').textContent       = dp.metodo || '—';
+    document.getElementById('cred-usd-destinatario').textContent = dp.destinatario || '—';
+    document.getElementById('cred-usd-etiqueta').textContent     = dp.etiqueta_dest || 'Destinatario';
+    document.getElementById('cred-usd-titular').textContent      = dp.titular || '—';
+    document.getElementById('cred-usd-notas').textContent        = dp.notas || '';
+    const redRow = document.getElementById('cred-usd-red-row');
+    if (dp.red && dp.red.trim()) {
+      document.getElementById('cred-usd-red').textContent = dp.red;
+      redRow.style.display = 'flex';
+    } else {
+      redRow.style.display = 'none';
+    }
+  } else {
+    document.getElementById('cred-titular').textContent = dp.titular || '—';
+    document.getElementById('cred-banco').textContent   = dp.banco   || '—';
+    document.getElementById('cred-alias').textContent   = dp.alias   || '—';
+    document.getElementById('cred-cbu').textContent     = dp.cbu     || '—';
+  }
+
   document.getElementById('cred-ref').textContent = s.codigo_referencia;
-  document.getElementById('cred-whatsapp-btn').href = db.whatsapp_url;
+  document.getElementById('cred-whatsapp-btn').href = dp.whatsapp_url || '#';
   document.getElementById('cred-comprobante-url').value = '';
 
   // Formatear fecha de vencimiento
