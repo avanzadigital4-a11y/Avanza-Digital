@@ -5373,3 +5373,11 @@ def academia_del_aliado(codigo: str, db: Session = Depends(get_db), _owner=Depen
         "total_modulos": len(mods),
         "modulos": [_modulo_row(m) for m in mods],
     }
+
+
+# ─── FIX TEMPORAL: corregir pais EU → US ─────────────────────────────────────
+@app.post("/admin/fix-pais-eu")
+def fix_pais_eu(db: Session = Depends(get_db)):
+    resultado = db.execute(text("UPDATE bolsa_leads SET pais = 'US' WHERE pais = 'EU'"))
+    db.commit()
+    return {"actualizados": resultado.rowcount}
