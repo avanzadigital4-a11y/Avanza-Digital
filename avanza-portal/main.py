@@ -4885,6 +4885,10 @@ def portal_publico_aliado(ref_code: str, db: Session = Depends(get_db)):
 
     paypal_activo = bool(PAYPAL_CLIENT_ID and PAYPAL_CLIENT_SECRET)
 
+    _btn_usd_activo = '<button class="moneda-btn paypal" id="opt-usd" onclick="seleccionarMoneda(\'usd\')"><div class="icon">💵</div><div class="label">Dólares USD</div><div class="sublabel">PayPal</div></button>'
+    _btn_usd_inactivo = '<button class="moneda-btn" style="opacity:.35;cursor:not-allowed;" disabled><div class="icon">💵</div><div class="label">USD no disponible</div><div class="sublabel">Próximamente</div></button>'
+    _btn_usd = _btn_usd_activo if paypal_activo else _btn_usd_inactivo
+
     html = f"""<!DOCTYPE html>
 <html lang="es"><head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
@@ -4972,7 +4976,7 @@ input[type=text]:focus{{outline:none;border-color:#3b82f6;}}
           <div class="label">Pesos ARS</div>
           <div class="sublabel">MercadoPago</div>
         </button>
-        {'<button class="moneda-btn paypal" id="opt-usd" onclick="seleccionarMoneda(\'usd\')"><div class="icon">💵</div><div class="label">Dólares USD</div><div class="sublabel">PayPal</div></button>' if paypal_activo else '<button class="moneda-btn" style="opacity:.35;cursor:not-allowed;" disabled><div class="icon">💵</div><div class="label">USD no disponible</div><div class="sublabel">Próximamente</div></button>'}
+        {_btn_usd}
       </div>
       <div id="moneda-info" style="background:rgba(59,130,246,0.08);border:1px solid rgba(59,130,246,0.2);
           border-radius:8px;padding:10px 14px;font-size:.82rem;color:#93c5fd;margin-bottom:14px;">
