@@ -4883,12 +4883,15 @@ def portal_publico_aliado(ref_code: str, db: Session = Depends(get_db)):
         </div>
         """
 
+    paypal_activo = bool(PAYPAL_CLIENT_ID and PAYPAL_CLIENT_SECRET)
+
     html = f"""<!DOCTYPE html>
 <html lang="es"><head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>{titular} · Avanza Digital</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
 <style>
+*{{box-sizing:border-box;}}
 body{{margin:0;font-family:Inter,sans-serif;background:#050505;color:#e2e8f0;}}
 .wrap{{max-width:640px;margin:0 auto;padding:48px 24px;}}
 .hero{{text-align:center;margin-bottom:40px;}}
@@ -4900,6 +4903,34 @@ body{{margin:0;font-family:Inter,sans-serif;background:#050505;color:#e2e8f0;}}
 .footer{{margin-top:48px;text-align:center;color:#71717a;font-size:0.78rem;}}
 a.cta{{display:inline-block;padding:12px 20px;background:#3b82f6;color:#fff!important;
        border-radius:8px;text-decoration:none;font-weight:700;}}
+/* Modal */
+#modal-overlay{{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:100;
+  align-items:center;justify-content:center;padding:16px;}}
+.modal-box{{background:#111;border:1px solid #2a2a2a;border-radius:16px;padding:28px;
+  width:100%;max-width:420px;}}
+/* Pasos */
+.step{{display:none;}}
+.step.active{{display:block;}}
+/* Selector de moneda */
+.moneda-options{{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:16px 0;}}
+.moneda-btn{{padding:16px 12px;border-radius:10px;border:2px solid #2a2a2a;background:#1a1a1a;
+  color:#e2e8f0;cursor:pointer;text-align:center;transition:all .2s;font-family:Inter,sans-serif;}}
+.moneda-btn:hover{{border-color:#3b82f6;background:rgba(59,130,246,0.08);}}
+.moneda-btn.selected{{border-color:#3b82f6;background:rgba(59,130,246,0.12);}}
+.moneda-btn .icon{{font-size:1.6rem;margin-bottom:6px;}}
+.moneda-btn .label{{font-weight:800;font-size:.9rem;}}
+.moneda-btn .sublabel{{font-size:.72rem;color:#a1a1aa;margin-top:2px;}}
+.moneda-btn.paypal .icon{{color:#009cde;}}
+.moneda-btn.ars .icon{{color:#6ee7b7;}}
+/* Botones accion */
+.btn-cancel{{flex:1;padding:12px;border-radius:8px;border:1px solid #444;background:transparent;
+  color:#aaa;cursor:pointer;font-size:.95rem;font-family:Inter,sans-serif;}}
+.btn-primary{{flex:1;padding:12px;border-radius:8px;border:none;background:#3b82f6;
+  color:#fff;cursor:pointer;font-weight:700;font-size:.95rem;font-family:Inter,sans-serif;}}
+.btn-primary:disabled{{opacity:.6;cursor:not-allowed;}}
+input[type=text]{{width:100%;padding:12px;border-radius:8px;border:1px solid #444;
+  background:#1a1a1a;color:#fff;font-size:1rem;font-family:Inter,sans-serif;}}
+input[type=text]:focus{{outline:none;border-color:#3b82f6;}}
 </style></head><body>
 <div class="wrap">
   <div class="hero">
@@ -4910,58 +4941,136 @@ a.cta{{display:inline-block;padding:12px 20px;background:#3b82f6;color:#fff!impo
   <h2 style="font-size:1.2rem;font-weight:800;margin-bottom:16px;">Planes disponibles</h2>
   {planes_html}
   <div class="footer">
-    <p>Al contratar desde este link, tu pago queda atribuido automáticamente a {titular}.</p>
+    <p>Al contratar desde este link, tu pago queda atribuido automáticamente a <strong style="color:#e2e8f0;">{titular}</strong>.</p>
     <p style="margin-top:8px;"><a href="https://avanzadigital.digital" style="color:#3b82f6;">avanzadigital.digital</a></p>
   </div>
 </div>
 
-<!-- Modal nombre -->
-<div id="modal-overlay" onclick="cerrarModal()" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:100;align-items:center;justify-content:center;">
-  <div onclick="event.stopPropagation()" style="background:#111;border:1px solid #333;border-radius:16px;padding:32px;width:90%;max-width:400px;">
-    <h3 style="margin:0 0 8px;font-size:1.2rem;">¿Cuál es tu nombre?</h3>
-    <p style="color:#a1a1aa;font-size:0.88rem;margin:0 0 20px;">Lo usamos para personalizar tu proceso de compra.</p>
-    <input id="modal-nombre" type="text" placeholder="Tu nombre completo"
-      style="width:100%;box-sizing:border-box;padding:12px;border-radius:8px;border:1px solid #444;background:#1a1a1a;color:#fff;font-size:1rem;margin-bottom:16px;"
-      onkeydown="if(event.key==='Enter') confirmarContratacion()">
-    <div style="display:flex;gap:12px;">
-      <button onclick="cerrarModal()" style="flex:1;padding:12px;border-radius:8px;border:1px solid #444;background:transparent;color:#aaa;cursor:pointer;font-size:0.95rem;">Cancelar</button>
-      <button onclick="confirmarContratacion()" style="flex:1;padding:12px;border-radius:8px;border:none;background:#3b82f6;color:#fff;cursor:pointer;font-weight:700;font-size:0.95rem;">Continuar →</button>
+<!-- Modal con 2 pasos -->
+<div id="modal-overlay" onclick="onOverlayClick(event)" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:100;align-items:center;justify-content:center;padding:16px;">
+  <div class="modal-box" onclick="event.stopPropagation()">
+
+    <!-- PASO 1: nombre -->
+    <div id="step-nombre" class="step active">
+      <h3 style="margin:0 0 6px;font-size:1.15rem;font-weight:800;">¿Cuál es tu nombre?</h3>
+      <p style="color:#a1a1aa;font-size:.87rem;margin:0 0 18px;">Lo usamos para personalizar tu proceso de compra.</p>
+      <input id="modal-nombre" type="text" placeholder="Tu nombre completo"
+        onkeydown="if(event.key==='Enter') irAPaso2()">
+      <div style="display:flex;gap:10px;margin-top:14px;">
+        <button class="btn-cancel" onclick="cerrarModal()">Cancelar</button>
+        <button class="btn-primary" onclick="irAPaso2()">Siguiente →</button>
+      </div>
     </div>
+
+    <!-- PASO 2: moneda -->
+    <div id="step-moneda" class="step">
+      <h3 style="margin:0 0 6px;font-size:1.15rem;font-weight:800;">¿Cómo querés pagar?</h3>
+      <p style="color:#a1a1aa;font-size:.87rem;margin:0 0 4px;">Elegí tu moneda y método de pago.</p>
+      <div class="moneda-options">
+        <button class="moneda-btn ars selected" id="opt-ars" onclick="seleccionarMoneda('ars')">
+          <div class="icon">🏦</div>
+          <div class="label">Pesos ARS</div>
+          <div class="sublabel">MercadoPago</div>
+        </button>
+        {'<button class="moneda-btn paypal" id="opt-usd" onclick="seleccionarMoneda(\'usd\')"><div class="icon">💵</div><div class="label">Dólares USD</div><div class="sublabel">PayPal</div></button>' if paypal_activo else '<button class="moneda-btn" style="opacity:.35;cursor:not-allowed;" disabled><div class="icon">💵</div><div class="label">USD no disponible</div><div class="sublabel">Próximamente</div></button>'}
+      </div>
+      <div id="moneda-info" style="background:rgba(59,130,246,0.08);border:1px solid rgba(59,130,246,0.2);
+          border-radius:8px;padding:10px 14px;font-size:.82rem;color:#93c5fd;margin-bottom:14px;">
+        🏦 Pagarás en <strong>pesos argentinos</strong> a través de <strong>MercadoPago</strong>.
+      </div>
+      <div style="display:flex;gap:10px;">
+        <button class="btn-cancel" onclick="volverAPaso1()">← Volver</button>
+        <button class="btn-primary" id="btn-pagar" onclick="confirmarContratacion()">Ir a pagar →</button>
+      </div>
+    </div>
+
+    <!-- PASO 3: procesando -->
+    <div id="step-procesando" class="step" style="text-align:center;padding:12px 0;">
+      <div style="font-size:2rem;margin-bottom:12px;">⏳</div>
+      <p style="font-weight:700;font-size:1rem;margin:0 0 6px;">Generando tu link de pago…</p>
+      <p style="color:#a1a1aa;font-size:.85rem;margin:0;">Serás redirigido en segundos.</p>
+    </div>
+
   </div>
 </div>
 
 <script>
-  let _plan = '', _ref = '';
+  let _plan = '', _ref = '', _moneda = 'ars';
+
   function abrirModal(plan, ref) {{
-    _plan = plan; _ref = ref;
+    _plan = plan; _ref = ref; _moneda = 'ars';
+    mostrarPaso('step-nombre');
     document.getElementById('modal-overlay').style.display = 'flex';
-    setTimeout(() => document.getElementById('modal-nombre').focus(), 50);
+    setTimeout(() => document.getElementById('modal-nombre').focus(), 60);
   }}
   function cerrarModal() {{
     document.getElementById('modal-overlay').style.display = 'none';
     document.getElementById('modal-nombre').value = '';
+    document.getElementById('modal-nombre').style.borderColor = '#444';
+  }}
+  function onOverlayClick(e) {{
+    if (e.target === document.getElementById('modal-overlay')) cerrarModal();
+  }}
+  function mostrarPaso(id) {{
+    ['step-nombre','step-moneda','step-procesando'].forEach(s => {{
+      document.getElementById(s).classList.remove('active');
+    }});
+    document.getElementById(id).classList.add('active');
+  }}
+  function irAPaso2() {{
+    const nombre = document.getElementById('modal-nombre').value.trim();
+    if (!nombre) {{
+      document.getElementById('modal-nombre').style.borderColor = '#ef4444';
+      document.getElementById('modal-nombre').focus();
+      return;
+    }}
+    document.getElementById('modal-nombre').style.borderColor = '#444';
+    mostrarPaso('step-moneda');
+  }}
+  function volverAPaso1() {{
+    mostrarPaso('step-nombre');
+    setTimeout(() => document.getElementById('modal-nombre').focus(), 60);
+  }}
+  function seleccionarMoneda(m) {{
+    _moneda = m;
+    document.getElementById('opt-ars').classList.toggle('selected', m === 'ars');
+    const optUsd = document.getElementById('opt-usd');
+    if (optUsd) optUsd.classList.toggle('selected', m === 'usd');
+    const info = document.getElementById('moneda-info');
+    if (m === 'ars') {{
+      info.style.background = 'rgba(59,130,246,0.08)';
+      info.style.borderColor = 'rgba(59,130,246,0.2)';
+      info.style.color = '#93c5fd';
+      info.innerHTML = '🏦 Pagarás en <strong>pesos argentinos</strong> a través de <strong>MercadoPago</strong>.';
+    }} else {{
+      info.style.background = 'rgba(0,156,222,0.08)';
+      info.style.borderColor = 'rgba(0,156,222,0.25)';
+      info.style.color = '#7dd3fc';
+      info.innerHTML = '💵 Pagarás en <strong>dólares USD</strong> a través de <strong>PayPal</strong>. Ideal para pagos internacionales.';
+    }}
   }}
   async function confirmarContratacion() {{
     const nombre = document.getElementById('modal-nombre').value.trim();
-    if (!nombre) {{ document.getElementById('modal-nombre').style.borderColor='#ef4444'; return; }}
-    const btn = event.target;
-    btn.textContent = 'Procesando...'; btn.disabled = true;
+    if (!nombre) {{ volverAPaso1(); return; }}
+    mostrarPaso('step-procesando');
     try {{
-      const res = await fetch(`/checkout/crear?plan=${{encodeURIComponent(_plan)}}&ref_code=${{_ref}}&nombre_cliente=${{encodeURIComponent(nombre)}}`, {{method:'POST'}});
+      const url = `/checkout/crear?plan=${{encodeURIComponent(_plan)}}&ref_code=${{_ref}}&nombre_cliente=${{encodeURIComponent(nombre)}}&moneda=${{_moneda}}`;
+      const res = await fetch(url, {{method:'POST'}});
       let data;
       try {{ data = await res.json(); }} catch(_) {{ data = {{}}; }}
       if (!res.ok) {{
         const msg = data.detail || 'Error al generar el link de pago. Intentá de nuevo.';
         alert(msg);
+        mostrarPaso('step-moneda');
       }} else if (data.checkout_url) {{
         window.location.href = data.checkout_url;
       }} else {{
         alert('Error al generar el link de pago. Intentá de nuevo.');
+        mostrarPaso('step-moneda');
       }}
     }} catch(e) {{
       alert('Error de conexión. Revisá tu conexión e intentá de nuevo.');
-    }} finally {{
-      btn.textContent = 'Continuar →'; btn.disabled = false;
+      mostrarPaso('step-moneda');
     }}
   }}
 </script>
