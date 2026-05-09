@@ -125,6 +125,9 @@ for col_sql in [
     "ALTER TABLE aliados ADD COLUMN onboarding_email_d1_en TIMESTAMP",
     "ALTER TABLE aliados ADD COLUMN onboarding_email_d3_en TIMESTAMP",
     "ALTER TABLE aliados ADD COLUMN onboarding_email_d7_en TIMESTAMP",
+    # Marca si el aliado ya personalizó su slug una vez. Si está NULL,
+    # significa que el ref_code es autogenerado y todavía puede reclamarlo.
+    "ALTER TABLE aliados ADD COLUMN username_personalizado_en TIMESTAMP",
 ]:
     _aplicar_migracion(col_sql)
 
@@ -1084,9 +1087,106 @@ async def verificar_auth_admin(request: Request, call_next):
 def hash_password(p): return pwd_context.hash(p)
 def verify_password(plain, hashed): return pwd_context.verify(plain, hashed)
 
-def generar_ref_code(nombre):
-    base = nombre.split()[0].lower()[:6]
+
+# ─── USERNAMES / SLUGS DE ALIADOS ────────────────────────────────────────────
+# El ref_code de cada aliado se usa en URLs públicas:
+#   - https://avanzadigital.digital/p/{ref_code}   (landing personal)
+#   - https://avanzadigital.digital/alianzas?ref={ref_code}  (link de referido)
+# Cuando el aliado elige su propio username (ej: "gonzaloasesor"),
+# ese valor se guarda directamente en ref_code.
+
+# Reservadas: nombres de rutas, áreas reservadas y términos sensibles.
+# Bloqueamos también palabras tipo "admin"/"avanza" para evitar suplantación.
+# NOTA: evitamos bloquear nombres comunes ("ivan", "juan", "maria") porque
+# muchos aliados se llaman así. Solo bloqueamos identificadores que
+# realmente impersonan a la marca o rompen el routing.
+USERNAMES_RESERVADOS = frozenset({
+    # rutas / áreas del sitio
+    "admin", "api", "auth", "blog", "p", "alianzas", "aliados",
+    "alianzas-canal1", "alianzas-canal2", "comenzar", "contratar",
+    "cotizador", "demos", "descargas", "gracias", "gracias-aliado",
+    "guia", "industrias", "leads-pymes", "logistica", "marketing",
+    "marketing-rosario", "marketing-santa-fe", "metalurgica",
+    "oil-gas", "automotriz", "agro", "clinica", "energia", "calidad",
+    "tecnico", "auditoria-digital", "auditoria", "automatizar-ventas-pymes",
+    "pago-unico-vs-alquiler-mensual", "politica", "portal", "recursos",
+    "servicios", "sitemap", "robots", "favicon", "terminos", "terminos-aliados",
+    "casos", "casos-exito", "checkout", "pago", "pagos", "checkout-success",
+    "checkout-failure", "error", "404", "500", "register", "login", "signup",
+    "logout", "webhook", "webhooks",
+    # nombres comerciales propios — NO bloqueamos "ivan" solo, ese es nombre común
+    "avanza", "avanzadigital", "avanza-digital", "ivanaranguren", "ivangalarza",
+    "owner", "ceo", "fundador", "founder", "soporte",
+    "support", "ayuda", "contacto", "contact",
+    # genéricos peligrosos
+    "test", "demo", "null", "undefined", "none", "void", "true", "false",
+    "root", "system", "user", "users", "guest", "anonymous",
+})
+
+# Patrón de username permitido: 3-30 chars, lowercase, alfanumérico + guion.
+# No puede empezar/terminar con guion ni tener guiones consecutivos.
+import re
+_USERNAME_RE = re.compile(r"^[a-z0-9](?:[a-z0-9]|-(?!-))*[a-z0-9]$")
+
+
+def normalizar_username(u: str | None) -> str:
+    """Normaliza el input antes de validar: trim, lowercase, sin acentos básicos."""
+    if not u:
+        return ""
+    u = u.strip().lower()
+    # Reemplazos básicos de acentos comunes en hispanos
+    repl = {"á": "a", "é": "e", "í": "i", "ó": "o", "ú": "u", "ñ": "n", " ": "-"}
+    for k, v in repl.items():
+        u = u.replace(k, v)
+    return u
+
+
+def validar_username(u: str) -> tuple[bool, str]:
+    """Valida un username candidato. Retorna (ok, mensaje_error)."""
+    if not u:
+        return False, "El username es obligatorio."
+    if len(u) < 3:
+        return False, "Mínimo 3 caracteres."
+    if len(u) > 30:
+        return False, "Máximo 30 caracteres."
+    if not _USERNAME_RE.match(u):
+        return False, "Solo letras, números y guiones. No puede empezar/terminar con guion."
+    if u in USERNAMES_RESERVADOS:
+        return False, "Este nombre está reservado por el sistema."
+    return True, ""
+
+
+def username_disponible(db: Session, username: str, excluir_aliado_id: int | None = None) -> bool:
+    """Chequea unicidad del username contra la columna ref_code (case-insensitive).
+    Si `excluir_aliado_id` viene, ignora a ese aliado (caso de cambio de username)."""
+    q = db.query(Aliado).filter(Aliado.ref_code == username)
+    if excluir_aliado_id is not None:
+        q = q.filter(Aliado.id != excluir_aliado_id)
+    return q.first() is None
+
+
+def generar_ref_code(nombre, db=None, username: str | None = None):
+    """Genera el ref_code del aliado.
+
+    - Si `username` viene y pasa validación + está disponible, se usa tal cual.
+    - Si no, se autogenera con el algoritmo legacy (nombre[:6] + 4 dígitos).
+    - El parámetro `db` es opcional pero necesario para chequear unicidad
+      cuando el username viene; si no viene db, el caller debe haber
+      validado disponibilidad antes.
+    """
+    if username:
+        u = normalizar_username(username)
+        ok, _ = validar_username(u)
+        if ok and (db is None or username_disponible(db, u)):
+            return u
+    # Fallback: autogenerar
+    base = nombre.split()[0].lower()[:6] if nombre else "ali"
+    # Limpiar acentos del base
+    base = normalizar_username(base) or "ali"
+    # Garantizar que el base sea solo alfanumérico (sin guiones por seguridad)
+    base = "".join(c for c in base if c.isalnum()) or "ali"
     return f"{base}{''.join(random.choices(string.digits, k=4))}"
+
 
 def generar_codigo_aliado(db):
     # Buscamos el último aliado creado ordenando por ID de forma descendente
@@ -1138,6 +1238,69 @@ def ver_contrato():
 
 # ─── AUTO-REGISTRO PÚBLICO CON EFECTO RED ────────────────────────────────────
 
+# ─── USERNAME / SLUG ENDPOINTS ───────────────────────────────────────────────
+
+@app.get("/aliados/check-username/{username}")
+@limiter.limit("30/minute")
+def check_username_disponible(request: Request, username: str, db: Session = Depends(get_db)):
+    """Endpoint público para chequear disponibilidad mientras el usuario tipea
+    en el form de registro. Retorna formato uniforme para el frontend.
+
+    Rate-limited (30/min por IP) para evitar abuso/scraping de usernames.
+    """
+    u = normalizar_username(username)
+    ok, msg = validar_username(u)
+    if not ok:
+        return {"disponible": False, "valid": False, "razon": msg, "username": u}
+    if not username_disponible(db, u):
+        return {"disponible": False, "valid": True, "razon": "Ya está en uso.", "username": u}
+    return {"disponible": True, "valid": True, "razon": "", "username": u}
+
+
+@app.post("/aliados/me/cambiar-username")
+def cambiar_username_aliado_actual(
+    body: schemas.CambiarUsernameIn,
+    db: Session = Depends(get_db),
+    aliado: Aliado = Depends(current_aliado_required),
+):
+    """Permite a un aliado existente reclamar/cambiar su slug UNA SOLA VEZ.
+
+    El ref_code viejo deja de funcionar, pero los registros históricos
+    (sponsors, ventas, etc.) se conservan vía sponsor_id (no via ref_code).
+    Si el aliado ya cambió su username una vez, debe contactar al admin.
+    """
+    if getattr(aliado, "username_personalizado_en", None):
+        raise HTTPException(
+            400,
+            "Ya personalizaste tu link una vez. Si necesitás cambiarlo de nuevo, "
+            "escribinos a soporte y lo coordinamos manualmente."
+        )
+
+    u = normalizar_username(body.username)
+    ok, msg = validar_username(u)
+    if not ok:
+        raise HTTPException(400, f"Username inválido: {msg}")
+
+    if not username_disponible(db, u, excluir_aliado_id=aliado.id):
+        raise HTTPException(400, "Ese username ya está en uso. Probá con otro.")
+
+    ref_code_viejo = aliado.ref_code
+    aliado.ref_code = u
+    aliado.username_personalizado_en = datetime.now()
+    db.commit(); db.refresh(aliado)
+
+    print(f"[USERNAME] {aliado.codigo}: {ref_code_viejo} → {u}")
+
+    return {
+        "ok": True,
+        "ref_code_anterior": ref_code_viejo,
+        "ref_code_nuevo": aliado.ref_code,
+        "link_ref": f"https://avanzadigital.digital/alianzas?ref={aliado.ref_code}",
+        "link_perfil": f"{PORTAL_URL}/p/{aliado.ref_code}",
+        "mensaje": "¡Listo! Tu link personalizado quedó activo.",
+    }
+
+
 @app.post("/registrarse")
 @limiter.limit("5/minute")
 def auto_registro(request: Request, 
@@ -1151,6 +1314,7 @@ def auto_registro(request: Request,
     ref_sponsor: str = "",
     tipo_aliado: str = "canal1",
     acepto_terminos: bool = False,
+    username: str = "",
     db: Session = Depends(get_db)
 ):
     """Registro self-serve público con sistema de Sub-Aliados.
@@ -1167,6 +1331,7 @@ def auto_registro(request: Request,
         ref_sponsor = body.ref_sponsor
         tipo_aliado = body.tipo_aliado
         acepto_terminos = body.acepto_terminos
+        username = body.username or ""
     else:
         print("[REGISTRO] ⚠️  Recibido por query string — actualizar cliente a body JSON.")
 
@@ -1178,6 +1343,21 @@ def auto_registro(request: Request,
         raise HTTPException(400, "Debés aceptar los términos y condiciones del programa de aliados para continuar.")
     if db.query(Aliado).filter(Aliado.email == email).first():
         raise HTTPException(400, "Ya existe un aliado registrado con ese email.")
+
+    # ─── USERNAME / SLUG ─────────────────────────────────────────────────────
+    # Si el aliado eligió uno, validamos formato + unicidad.
+    # Si no, se autogenera (mantiene compatibilidad con clientes legacy).
+    username_normalizado = normalizar_username(username) if username else ""
+    username_personalizado = False
+    if username_normalizado:
+        ok, msg = validar_username(username_normalizado)
+        if not ok:
+            raise HTTPException(400, f"Username inválido: {msg}")
+        if not username_disponible(db, username_normalizado):
+            raise HTTPException(400, "Ese username ya está en uso. Probá con otro.")
+        username_personalizado = True
+
+    ref_code_final = generar_ref_code(nombre, db=db, username=username_normalizado or None)
 
     # Buscar Sponsor si vino por invitación
     sponsor_id_db = None
@@ -1195,13 +1375,20 @@ def auto_registro(request: Request,
         ciudad       = ciudad,
         perfil       = perfil,
         fecha_firma  = datetime.now().strftime("%d/%m/%Y"),
-        ref_code     = generar_ref_code(nombre),
+        ref_code     = ref_code_final,
         password_hash= hash_password(password),
         sponsor_id   = sponsor_id_db,
         tipo_aliado  = tipo_aliado if tipo_aliado in ("canal1", "canal2") else "canal1",
         terminos_aceptados = True,
         terminos_aceptados_en = datetime.now(),
     )
+    # Si el aliado personalizó su slug, marcamos para impedir cambios futuros.
+    if username_personalizado:
+        try:
+            a.username_personalizado_en = datetime.now()
+        except Exception:
+            # Si la columna no existe todavía (migración no corrió), seguimos.
+            pass
     db.add(a); db.commit(); db.refresh(a)
 
     # 100 créditos de bienvenida — para que el aliado pueda explorar el
@@ -2157,6 +2344,9 @@ def _aliado_detalle(a, incluir_token: bool = False):
         "ref_code": a.ref_code,
         "link_ref":    f"https://avanzadigital.digital/alianzas?ref={a.ref_code}",
         "link_perfil": f"{PORTAL_URL}/p/{a.ref_code}",
+        # Flag para el frontend: si es False, el aliado todavía puede
+        # personalizar su slug una vez (botón "Personalizá tu link" visible).
+        "username_personalizado": bool(getattr(a, "username_personalizado_en", None)),
         "portal_publico_activo": bool(getattr(a, "portal_publico_activo", True)),
         "tipo_aliado": getattr(a, "tipo_aliado", "canal1") or "canal1",
         "cbu_alias": getattr(a, "cbu_alias", None),

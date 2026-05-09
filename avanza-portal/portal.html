@@ -938,6 +938,17 @@
         <label><i class="fa-brands fa-whatsapp"></i> &nbsp;WhatsApp (con código de área) *</label>
         <input type="text" id="reg-whatsapp" placeholder="+54 9 342 000 0000">
       </div>
+      <div class="field" style="background:rgba(74,222,128,0.04);border:1px solid rgba(74,222,128,0.15);border-radius:10px;padding:14px 16px;">
+        <label style="color:#4ade80;"><i class="fa-solid fa-link"></i> &nbsp;Tu username personalizado <span style="color:var(--text-muted);font-weight:400;font-size:.75rem;">(opcional pero recomendado)</span></label>
+        <input type="text" id="reg-username" placeholder="ejemplo: juangarcia o juan-garcia" autocomplete="off" maxlength="30" style="font-family:monospace;" oninput="onUsernameInput()">
+        <div style="font-size:.75rem;margin-top:10px;color:var(--text-muted);font-family:'JetBrains Mono', monospace;line-height:1.5;word-break:break-all;">
+          <i class="fa-solid fa-globe" style="color:#71717a;margin-right:6px;"></i>Tu link será:<br>
+          <span style="color:#71717a;">avanzadigital.digital/p/</span><span id="reg-username-preview" style="color:#4ade80;font-weight:700;">tu-username</span>
+        </div>
+        <div id="reg-username-feedback" style="font-size:.75rem;margin-top:8px;min-height:18px;color:var(--text-muted);display:flex;align-items:center;gap:6px;">
+          <span>3-30 caracteres. Letras, números y guiones. Lo elegís una sola vez.</span>
+        </div>
+      </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
         <div class="field">
           <label><i class="fa-solid fa-location-dot"></i> &nbsp;Ciudad / Provincia</label>
@@ -1169,6 +1180,21 @@
           <div class="ref-url" id="d-reflink">Cargando...</div>
         </div>
         <button class="btn-copy" onclick="copiarLink()"><i class="fa-solid fa-copy"></i> Copiar</button>
+      </div>
+
+      <!-- PERSONALIZAR USERNAME (visible solo si username_personalizado === false) -->
+      <div id="personalizar-username-card" style="display:none; background:rgba(74,222,128,0.05); border:1px solid rgba(74,222,128,0.25); border-radius:10px; padding:14px 18px; margin-bottom:16px; display:flex; align-items:center; gap:14px; flex-wrap:wrap;">
+        <div style="flex:1; min-width:240px;">
+          <div style="font-size:.78rem; font-weight:800; color:#4ade80; text-transform:uppercase; letter-spacing:1px; margin-bottom:4px;">
+            <i class="fa-solid fa-wand-magic-sparkles"></i> Tu link tiene nombre genérico
+          </div>
+          <div style="font-size:.85rem; color:var(--text-muted); line-height:1.5;">
+            Personalizá tu URL una vez para algo memorable como <code style="background:rgba(255,255,255,0.06); padding:2px 6px; border-radius:4px;">tunombre</code> o <code style="background:rgba(255,255,255,0.06); padding:2px 6px; border-radius:4px;">tu-marca</code>. Convierte mejor en WhatsApp y LinkedIn.
+          </div>
+        </div>
+        <button onclick="abrirPersonalizarUsername()" style="background:#4ade80; color:black; border:none; padding:10px 18px; border-radius:8px; font-weight:800; cursor:pointer; font-size:.85rem; white-space:nowrap;">
+          <i class="fa-solid fa-pen-to-square"></i> Personalizá tu link
+        </button>
       </div>
 
       <div class="ref-card" id="perfil-publico-card" style="background:rgba(59,130,246,0.06); border:1px solid rgba(59,130,246,0.25); display:none;">
@@ -2216,6 +2242,46 @@
 </div>
 
 <!-- ════════════════════════════════════════════════════════════════════════
+     MODAL PERSONALIZAR USERNAME (slug del aliado)
+     Permite cambiar el ref_code una sola vez por aliado.
+     ════════════════════════════════════════════════════════════════════════ -->
+<div class="modal-overlay" id="modal-personalizar-username">
+  <div class="onboarding-box" style="max-width:520px; max-height:90vh; overflow-y:auto; padding:24px;">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
+      <h3 style="font-size:1.1rem; font-weight:800;"><i class="fa-solid fa-link" style="color:#4ade80;"></i> Personalizá tu link</h3>
+      <button onclick="document.getElementById('modal-personalizar-username').classList.remove('open')" style="background:transparent; border:none; color:var(--text-muted); font-size:1.4rem; cursor:pointer;">&times;</button>
+    </div>
+
+    <p style="color:var(--text-muted); font-size:0.85rem; margin-bottom:18px; line-height:1.5;">
+      Elegí un username corto y memorable. Es la URL que vas a compartir en WhatsApp, LinkedIn y tarjetas. Lo cambiás <strong style="color:#fbbf24;">una sola vez</strong> — después queda fijo.
+    </p>
+
+    <div class="field" style="margin-bottom:14px;">
+      <label style="display:block; font-size:.8rem; font-weight:700; margin-bottom:8px; color:var(--text-muted);">Tu nuevo username</label>
+      <input type="text" id="perso-username" placeholder="ejemplo: juangarcia" autocomplete="off" maxlength="30"
+        style="width:100%; background:#111; border:1px solid var(--border); color:white; padding:12px; border-radius:8px; font-family:'JetBrains Mono', monospace; font-size:.95rem;"
+        oninput="onPersoUsernameInput()">
+      <div style="font-size:.75rem; margin-top:10px; color:var(--text-muted); font-family:'JetBrains Mono', monospace; line-height:1.5; word-break:break-all;">
+        <i class="fa-solid fa-globe" style="color:#71717a; margin-right:6px;"></i>Tu link va a ser:<br>
+        <span style="color:#71717a;">avanzadigital.digital/p/</span><span id="perso-username-preview" style="color:#4ade80; font-weight:700;">tu-username</span>
+      </div>
+      <div id="perso-username-feedback" style="font-size:.78rem; margin-top:10px; min-height:20px; color:var(--text-muted); display:flex; align-items:center; gap:6px;">
+        <span>3-30 caracteres. Letras, números y guiones.</span>
+      </div>
+    </div>
+
+    <div style="background:rgba(251,191,36,0.06); border:1px solid rgba(251,191,36,0.2); border-radius:8px; padding:12px 14px; margin-bottom:18px; font-size:.78rem; color:#fbbf24; line-height:1.5;">
+      <i class="fa-solid fa-triangle-exclamation"></i> <strong>Importante:</strong> tu link viejo deja de funcionar al cambiarlo. Avisá a los prospectos que ya recibieron tu link anterior.
+    </div>
+
+    <button onclick="confirmarPersonalizarUsername()" id="btn-perso-confirmar"
+      style="width:100%; background:#4ade80; color:black; border:none; padding:14px; border-radius:8px; font-weight:800; cursor:pointer; font-size:.95rem;">
+      <i class="fa-solid fa-check"></i> Confirmar y personalizar
+    </button>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════════════════════
      MODAL ASISTENTE IA — Follow-up + Objeciones (reutilizable)
      ════════════════════════════════════════════════════════════════════════ -->
 <div class="modal-overlay" id="modal-asistente-ia">
@@ -3004,10 +3070,270 @@ function cambiarCanalRegistro() {
   window.location.href = '../alianzas.html';
 }
 
+
+// ─── USERNAME / SLUG ─────────────────────────────────────────────────────────
+// Live-preview + chequeo de disponibilidad mientras el usuario tipea.
+// Debounce de 400ms para no martillar el endpoint.
+let _usernameCheckTimer = null;
+let _usernameUltimo = '';
+
+function _normalizarUsername(u) {
+  if (!u) return '';
+  return u.toLowerCase().trim()
+    .replace(/[áä]/g, 'a').replace(/[éë]/g, 'e').replace(/[íï]/g, 'i')
+    .replace(/[óö]/g, 'o').replace(/[úü]/g, 'u').replace(/ñ/g, 'n')
+    .replace(/\s+/g, '-')
+    .replace(/[^a-z0-9-]/g, '')
+    .replace(/-+/g, '-')
+    .slice(0, 30);
+}
+
+function _setUsernameFeedback(estado, mensaje) {
+  // estado: 'idle' | 'loading' | 'ok' | 'warn' | 'error'
+  const fb = document.getElementById('reg-username-feedback');
+  if (!fb) return;
+  const colores = {
+    idle:    { c: 'var(--text-muted)', i: '' },
+    loading: { c: 'var(--text-muted)', i: '<i class="fa-solid fa-spinner fa-spin"></i>' },
+    ok:      { c: '#4ade80',           i: '<i class="fa-solid fa-circle-check"></i>' },
+    warn:    { c: '#fbbf24',           i: '<i class="fa-solid fa-triangle-exclamation"></i>' },
+    error:   { c: '#ef4444',           i: '<i class="fa-solid fa-circle-xmark"></i>' },
+  };
+  const cfg = colores[estado] || colores.idle;
+  fb.style.color = cfg.c;
+  fb.innerHTML = `${cfg.i} <span>${mensaje}</span>`;
+}
+
+function onUsernameInput() {
+  const input   = document.getElementById('reg-username');
+  const preview = document.getElementById('reg-username-preview');
+  if (!input || !preview) return;
+
+  // Auto-normalizar lo que tipea el usuario (sin mover el caret bruscamente)
+  const original = input.value;
+  const limpio = _normalizarUsername(original);
+  if (limpio !== original) {
+    const caret = input.selectionStart;
+    input.value = limpio;
+    // Restaurar caret aproximadamente
+    try { input.setSelectionRange(caret, caret); } catch(e) {}
+  }
+
+  // Update preview
+  preview.textContent = limpio || 'tu-username';
+  preview.style.color = limpio ? '#4ade80' : '#71717a';
+
+  // Reset feedback si está vacío
+  if (!limpio) {
+    _setUsernameFeedback('idle', 'Dejalo vacío y se autogenera. Pero un username elegido por vos rinde más.');
+    if (_usernameCheckTimer) clearTimeout(_usernameCheckTimer);
+    return;
+  }
+
+  // Validación local rápida antes de pegarle al servidor
+  if (limpio.length < 3) {
+    _setUsernameFeedback('warn', `Mínimo 3 caracteres (llevás ${limpio.length}).`);
+    return;
+  }
+  if (/^-|-$/.test(limpio)) {
+    _setUsernameFeedback('error', 'No puede empezar ni terminar con guion.');
+    return;
+  }
+
+  // Debounce + check al servidor
+  _setUsernameFeedback('loading', 'Chequeando disponibilidad...');
+  if (_usernameCheckTimer) clearTimeout(_usernameCheckTimer);
+  _usernameCheckTimer = setTimeout(() => _checkUsernameDisponible(limpio), 400);
+}
+
+async function _checkUsernameDisponible(username) {
+  if (username === _usernameUltimo) return;
+  _usernameUltimo = username;
+  try {
+    const res = await fetch(`${API}/aliados/check-username/${encodeURIComponent(username)}`);
+    const data = await res.json();
+    // Si el usuario ya tipeó algo distinto mientras esperábamos, abortamos
+    if (document.getElementById('reg-username').value !== username) return;
+    if (!data.valid) {
+      _setUsernameFeedback('error', data.razon || 'Username inválido.');
+    } else if (!data.disponible) {
+      _setUsernameFeedback('warn', 'Ese username ya está en uso. Probá con otro.');
+    } else {
+      _setUsernameFeedback('ok', '¡Disponible! Va a ser tuyo.');
+    }
+  } catch(e) {
+    _setUsernameFeedback('idle', 'No pude verificar. Lo chequeamos al registrarte.');
+  }
+}
+
+
+// ─── PERSONALIZAR USERNAME DESDE EL PANEL ────────────────────────────────────
+// Usado por aliados que ya tienen cuenta y quieren reclamar un slug bonito
+// (ref_code autogenerado → username elegido). Una sola vez por aliado.
+let _persoCheckTimer = null;
+let _persoUltimo = '';
+let _persoEstaDisponible = false;
+
+function abrirPersonalizarUsername() {
+  // Reset state
+  const input = document.getElementById('perso-username');
+  const preview = document.getElementById('perso-username-preview');
+  const fb = document.getElementById('perso-username-feedback');
+  if (input) input.value = '';
+  if (preview) { preview.textContent = 'tu-username'; preview.style.color = '#71717a'; }
+  if (fb) {
+    fb.style.color = 'var(--text-muted)';
+    fb.innerHTML = '<span>3-30 caracteres. Letras, números y guiones.</span>';
+  }
+  _persoUltimo = '';
+  _persoEstaDisponible = false;
+  document.getElementById('modal-personalizar-username').classList.add('open');
+  setTimeout(() => { if (input) input.focus(); }, 150);
+}
+
+function _setPersoFeedback(estado, mensaje) {
+  const fb = document.getElementById('perso-username-feedback');
+  if (!fb) return;
+  const colores = {
+    idle:    { c: 'var(--text-muted)', i: '' },
+    loading: { c: 'var(--text-muted)', i: '<i class="fa-solid fa-spinner fa-spin"></i>' },
+    ok:      { c: '#4ade80',           i: '<i class="fa-solid fa-circle-check"></i>' },
+    warn:    { c: '#fbbf24',           i: '<i class="fa-solid fa-triangle-exclamation"></i>' },
+    error:   { c: '#ef4444',           i: '<i class="fa-solid fa-circle-xmark"></i>' },
+  };
+  const cfg = colores[estado] || colores.idle;
+  fb.style.color = cfg.c;
+  fb.innerHTML = `${cfg.i} <span>${mensaje}</span>`;
+}
+
+function onPersoUsernameInput() {
+  const input   = document.getElementById('perso-username');
+  const preview = document.getElementById('perso-username-preview');
+  if (!input || !preview) return;
+
+  const original = input.value;
+  const limpio = _normalizarUsername(original);
+  if (limpio !== original) {
+    const caret = input.selectionStart;
+    input.value = limpio;
+    try { input.setSelectionRange(caret, caret); } catch(e) {}
+  }
+
+  preview.textContent = limpio || 'tu-username';
+  preview.style.color = limpio ? '#4ade80' : '#71717a';
+
+  _persoEstaDisponible = false;
+
+  if (!limpio) {
+    _setPersoFeedback('idle', '3-30 caracteres. Letras, números y guiones.');
+    if (_persoCheckTimer) clearTimeout(_persoCheckTimer);
+    return;
+  }
+  if (limpio.length < 3) {
+    _setPersoFeedback('warn', `Mínimo 3 caracteres (llevás ${limpio.length}).`);
+    return;
+  }
+  if (/^-|-$/.test(limpio)) {
+    _setPersoFeedback('error', 'No puede empezar ni terminar con guion.');
+    return;
+  }
+  // Si es el mismo que el actual del aliado, no chequeamos
+  if (aliado && aliado.ref_code === limpio) {
+    _setPersoFeedback('warn', 'Ese ya es tu username actual.');
+    return;
+  }
+
+  _setPersoFeedback('loading', 'Chequeando disponibilidad...');
+  if (_persoCheckTimer) clearTimeout(_persoCheckTimer);
+  _persoCheckTimer = setTimeout(async () => {
+    if (limpio === _persoUltimo) return;
+    _persoUltimo = limpio;
+    try {
+      const res = await fetch(`${API}/aliados/check-username/${encodeURIComponent(limpio)}`);
+      const data = await res.json();
+      if (document.getElementById('perso-username').value !== limpio) return;
+      if (!data.valid) {
+        _setPersoFeedback('error', data.razon || 'Username inválido.');
+      } else if (!data.disponible) {
+        _setPersoFeedback('warn', 'Ese username ya está en uso. Probá con otro.');
+      } else {
+        _setPersoFeedback('ok', '¡Disponible! Listo para confirmar.');
+        _persoEstaDisponible = true;
+      }
+    } catch(e) {
+      _setPersoFeedback('idle', 'No pude verificar. Probá de nuevo.');
+    }
+  }, 400);
+}
+
+async function confirmarPersonalizarUsername() {
+  const input = document.getElementById('perso-username');
+  const btn = document.getElementById('btn-perso-confirmar');
+  const username = _normalizarUsername(input ? input.value : '');
+
+  if (!username) {
+    _setPersoFeedback('error', 'Ingresá un username primero.');
+    return;
+  }
+  if (!_persoEstaDisponible) {
+    _setPersoFeedback('warn', 'Esperá a que confirmemos disponibilidad.');
+    return;
+  }
+
+  // Confirmación final del usuario — dado que es one-shot, le damos una
+  // segunda chance de retractarse.
+  if (!confirm(`Vas a personalizar tu link a:\n\navanzadigital.digital/p/${username}\n\nTu link viejo va a dejar de funcionar. Esta acción se puede hacer una sola vez.\n\n¿Confirmás?`)) {
+    return;
+  }
+
+  if (btn) {
+    btn.innerHTML = '<span class="spinner"></span> Aplicando...';
+    btn.disabled = true;
+  }
+
+  try {
+    const res = await apiFetch(`${API}/aliados/me/cambiar-username`, {
+      method: 'POST',
+      body: { username }
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.detail || 'No se pudo cambiar el username.');
+
+    // Actualizar el objeto aliado en memoria
+    if (aliado) {
+      aliado.ref_code = data.ref_code_nuevo;
+      aliado.link_ref = data.link_ref;
+      aliado.link_perfil = data.link_perfil;
+      aliado.username_personalizado = true;
+    }
+
+    // Cerrar modal
+    document.getElementById('modal-personalizar-username').classList.remove('open');
+
+    // Toast de éxito
+    if (typeof mostrarToast === 'function') {
+      mostrarToast(`¡Listo! Tu link ahora es /p/${data.ref_code_nuevo}`, 'green');
+    }
+
+    // Recargar todo el dashboard para que se actualicen los links visibles
+    if (typeof cargarTodo === 'function') {
+      cargarTodo();
+    }
+  } catch(e) {
+    _setPersoFeedback('error', e.message || 'Error al guardar.');
+    if (btn) {
+      btn.innerHTML = '<i class="fa-solid fa-check"></i> Confirmar y personalizar';
+      btn.disabled = false;
+    }
+  }
+}
+
+
 async function registrarse() {
   const nombre   = document.getElementById('reg-nombre').value.trim();
   const email    = document.getElementById('reg-email').value.trim();
   const whatsapp = document.getElementById('reg-whatsapp').value.trim();
+  const username = _normalizarUsername(document.getElementById('reg-username').value || '');
   const ciudad   = document.getElementById('reg-ciudad').value.trim();
   const dni      = document.getElementById('reg-dni').value.trim();
   const perfil   = document.getElementById('reg-perfil').value;
@@ -3048,7 +3374,8 @@ async function registrarse() {
       method: 'POST',
       signal: controller.signal,
       body: { nombre, email, whatsapp, ciudad, dni, perfil, password: pass,
-              ref_sponsor: refSponsor, tipo_aliado: tipoAliado, acepto_terminos: true }
+              ref_sponsor: refSponsor, tipo_aliado: tipoAliado, acepto_terminos: true,
+              username: username || null }
     });
     clearTimeout(timeoutId);
     const data = await res.json();
@@ -3435,6 +3762,13 @@ function renderDashboard() {
   
   document.getElementById('d-reflink').textContent = linkGeneral;
   document.getElementById('d-auditlink').textContent = linkAuditoria;
+
+  // Card de "Personalizá tu link": visible solo si todavía no personalizó.
+  // Una vez que personaliza, queda oculta para siempre.
+  const persoCard = document.getElementById('personalizar-username-card');
+  if (persoCard) {
+    persoCard.style.display = aliado.username_personalizado ? 'none' : 'flex';
+  }
 
   // Página de ventas personal (/p/{ref_code})
   const perfilCard = document.getElementById('perfil-publico-card');

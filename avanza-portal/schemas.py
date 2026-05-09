@@ -28,6 +28,20 @@ class RegistroAliadoIn(_Base):
     ref_sponsor: str = ""
     tipo_aliado: str = "canal1"
     acepto_terminos: bool = False
+    # Slug elegido por el aliado para sus URLs públicas:
+    # https://avanzadigital.digital/p/{username} y ?ref={username}.
+    # Opcional: si no viene, se autogenera con el algoritmo legacy.
+    username: Optional[str] = Field(default=None, min_length=3, max_length=30)
+
+
+class CambiarUsernameIn(_Base):
+    """Permite a un aliado existente reclamar/cambiar su slug.
+
+    Se permite UNA sola vez por aliado para evitar abusos (cambio repetido
+    para impersonar a otros, romper analytics, etc.). El control se hace
+    en main.py contra el flag `username_personalizado_en`.
+    """
+    username: str = Field(..., min_length=3, max_length=30)
 
 
 class LoginAliadoIn(_Base):
