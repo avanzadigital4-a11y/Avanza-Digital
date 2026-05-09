@@ -11,7 +11,8 @@ from typing import Optional
 from models import (
     Aliado, Admin, Venta, Referido, Prospecto, AuditoriaLog, LeadBolsa,
     TransaccionCredito, PostComunidad, ComentarioComunidad, AutomationLog,
-    LinkPago, Comision, AcademiaModulo, SolicitudCompraCreditos,
+    LinkPago, Comision, AcademiaModulo, AliadoModuloCompletado,
+    SolicitudCompraCreditos, ReporteMalContacto,
     PLANES, PAQUETES_CREDITOS, NIVELES, CUOTAS_RECARGO, REPUTACION_BADGES
 )
 import random, string, os, smtplib, httpx, json, hmac as hmac_lib, hashlib, base64, sys
@@ -120,6 +121,10 @@ for col_sql in [
     "ALTER TABLE bolsa_leads ADD COLUMN pais VARCHAR DEFAULT 'AR'",
     # v1.9 — Compra de créditos en USD (aliados internacionales)
     "ALTER TABLE solicitudes_compra_creditos ADD COLUMN moneda VARCHAR DEFAULT 'ars'",
+    # v2.0 — Onboarding por email (secuencia día 1, 3, 7)
+    "ALTER TABLE aliados ADD COLUMN onboarding_email_d1_en TIMESTAMP",
+    "ALTER TABLE aliados ADD COLUMN onboarding_email_d3_en TIMESTAMP",
+    "ALTER TABLE aliados ADD COLUMN onboarding_email_d7_en TIMESTAMP",
 ]:
     _aplicar_migracion(col_sql)
 
@@ -581,13 +586,29 @@ def job_notificaciones_inactividad():
 
             dias_inactivo = (ahora - ultimo).days
 
-            # ── AVISO 30 DÍAS: cuenta en riesgo ──────────────────────────────
+            # ── AVISO 30 DÍAS: cuenta en riesgo + créditos de reactivación ──
             if dias_inactivo >= 30:
                 notif_30d = getattr(a, "notif_inact_30d_en", None)
                 # Evitar reenvío hasta 25 días después del último aviso
                 if notif_30d and notif_30d > no_repetir_antes:
                     continue
                 nombre_corto = a.nombre.split()[0] if a.nombre else "Aliado"
+
+                # Reactivación con créditos: damos 50 créditos para que vuelvan
+                # con ammo. La idempotencia ya está garantizada por la ventana
+                # de 25 días del flag `notif_inact_30d_en`. Si vuelve a iniciar
+                # sesión, el flag se resetea (ver login) y, si vuelve a quedar
+                # inactivo, recibirá créditos otra vez en el próximo ciclo.
+                BONUS_REACTIVACION = 50
+                saldo_previo = a.creditos or 0
+                try:
+                    _ajustar_creditos(db, a, BONUS_REACTIVACION,
+                                      "reactivacion", "inactividad_30d")
+                    saldo_nuevo = a.creditos or 0
+                except Exception as e:
+                    print(f"[REACTIVACIÓN ERROR] {a.codigo}: {e}")
+                    saldo_nuevo = saldo_previo
+
                 html = f"""
                 <div style="font-family:Inter,sans-serif;background:#050505;color:#e2e8f0;padding:40px;max-width:600px;margin:0 auto;border-radius:12px;border:1px solid #1e1e1e;">
                   <div style="margin-bottom:24px;">
@@ -595,6 +616,12 @@ def job_notificaciones_inactividad():
                   </div>
                   <h2 style="margin:0 0 12px;font-size:1.4rem;color:#f87171;">Hace {dias_inactivo} días que no entrás al portal</h2>
                   <p style="color:#a1a1aa;line-height:1.6;">Hola <strong style="color:#fff;">{nombre_corto}</strong>, notamos que tu cuenta en Avanza Digital lleva más de un mes sin actividad.</p>
+
+                  <div style="background:rgba(168,85,247,0.08);border:1px solid rgba(168,85,247,0.25);border-radius:8px;padding:18px;margin:20px 0;">
+                    <p style="margin:0 0 6px;color:#c084fc;font-weight:700;font-size:1rem;">🎁 Te regalamos {BONUS_REACTIVACION} créditos para que vuelvas</p>
+                    <p style="margin:0;color:#a1a1aa;font-size:.9rem;line-height:1.5;">Saldo nuevo: <strong style="color:#fff;">{saldo_nuevo} créditos</strong>. Usalos en el marketplace de leads premium del portal.</p>
+                  </div>
+
                   <div style="background:#111;border:1px solid #2a2a2a;border-radius:8px;padding:20px;margin:20px 0;">
                     <p style="margin:0 0 8px;font-weight:600;color:#f87171;">¿Qué puede pasar si no ingresás?</p>
                     <ul style="margin:0;padding-left:18px;color:#a1a1aa;line-height:1.8;">
@@ -608,7 +635,7 @@ def job_notificaciones_inactividad():
                   <p style="margin-top:28px;font-size:.75rem;color:#3f3f46;">Avanza Digital · Partner Network · Para darte de baja respondé este email con "baja".</p>
                 </div>
                 """
-                enviar_email(a.email, f"⚠️ {nombre_corto}, tu cuenta en Avanza lleva {dias_inactivo} días inactiva", html)
+                enviar_email(a.email, f"🎁 {nombre_corto}, te dejamos {BONUS_REACTIVACION} créditos para que vuelvas", html)
                 try:
                     a.notif_inact_30d_en = ahora
                 except Exception:
@@ -656,7 +683,192 @@ def job_notificaciones_inactividad():
         db.close()
 
 
+# ─── SCHEDULER: ESTIPENDIO MENSUAL ───────────────────────────────────────────
+def job_estipendio_mensual():
+    """Corre 1x/día. Solo ejecuta el día 1 de cada mes.
+       Otorga 20 créditos a cada aliado activo con al menos un login en los
+       últimos 30 días (definición operativa de "aliado activo").
+       Idempotente: usa la referencia 'estipendio:YYYY-MM' como anti-duplicado.
+       Si por alguna razón el cron corre dos veces el mismo día (deploy mid-day,
+       reinicio del scheduler), no acredita dos veces.
+    """
+    from database import SessionLocal
+    db = SessionLocal()
+    try:
+        ahora = datetime.now()
+        # SOLO el día 1 del mes
+        if ahora.day != 1:
+            return
+
+        BONUS_ESTIPENDIO = 20
+        VENTANA_ACTIVIDAD_DIAS = 30
+        ref_mes = f"estipendio:{ahora.year}-{ahora.month:02d}"
+        corte_actividad = ahora - timedelta(days=VENTANA_ACTIVIDAD_DIAS)
+
+        aliados = db.query(Aliado).filter(Aliado.activo == True).all()
+        otorgados = 0
+        ya_recibidos = 0
+        no_activos = 0
+
+        for a in aliados:
+            ultimo = getattr(a, "ultimo_login", None)
+            if not ultimo or ultimo < corte_actividad:
+                no_activos += 1
+                continue
+
+            # Anti-duplicado: ¿ya recibió estipendio de este mes?
+            ya = db.query(TransaccionCredito).filter(
+                TransaccionCredito.aliado_id == a.id,
+                TransaccionCredito.motivo == "estipendio_mensual",
+                TransaccionCredito.referencia == ref_mes,
+            ).first()
+            if ya:
+                ya_recibidos += 1
+                continue
+
+            try:
+                _ajustar_creditos(db, a, BONUS_ESTIPENDIO,
+                                  "estipendio_mensual", ref_mes)
+                otorgados += 1
+            except Exception as e:
+                print(f"[ESTIPENDIO ERROR] {a.codigo}: {e}")
+
+        db.commit()
+        print(f"[ESTIPENDIO {ref_mes}] Otorgados: {otorgados} · Ya recibidos: {ya_recibidos} · No activos: {no_activos}")
+    except Exception as e:
+        print(f"[ESTIPENDIO JOB ERROR] {e}")
+    finally:
+        db.close()
+
+
+# ─── SCHEDULER: SECUENCIA DE ONBOARDING (DÍA 1, 3, 7) ────────────────────────
+def job_onboarding_sequence():
+    """Corre 1x/día. Manda emails educativos a aliados nuevos en su primera
+    semana, escalonados:
+       - Día 1 (24-48hs desde registro): "Probá un lead BÁSICO gratis"
+       - Día 3: "¿Querés ver leads calificados? Te alcanza para 1-2"
+       - Día 7: si NO compró ningún lead premium → "no desperdicies tus créditos"
+
+    Cada email se manda una sola vez por aliado (flags onboarding_email_dN_en).
+    Si la app estuvo caída y un aliado pasó del día 1 al día 3 sin que se le
+    haya mandado el d1, igual recibe el d1 atrasado (mejor tarde que nunca).
+    """
+    from database import SessionLocal
+    db = SessionLocal()
+    try:
+        ahora = datetime.now()
+        aliados = db.query(Aliado).filter(Aliado.activo == True).all()
+        enviados_d1 = enviados_d3 = enviados_d7 = 0
+
+        for a in aliados:
+            if not a.email or not a.creado_en:
+                continue
+            dias_desde_registro = (ahora - a.creado_en).days
+            # Limitar la ventana: si pasó más de 14 días desde el registro, no
+            # mandamos onboarding atrasado (probablemente el aliado ya entendió
+            # cómo funciona el portal o está perdido por otras razones).
+            if dias_desde_registro > 14:
+                continue
+
+            nombre_corto = a.nombre.split()[0] if a.nombre else "Aliado"
+
+            # ── DÍA 1 ───────────────────────────────────────────────────────
+            if dias_desde_registro >= 1 and not getattr(a, "onboarding_email_d1_en", None):
+                html = f"""
+                <div style="font-family:Inter,sans-serif;background:#050505;color:#e2e8f0;padding:40px;max-width:600px;margin:0 auto;border-radius:12px;border:1px solid #1e1e1e;">
+                  <span style="background:#1e3a8a;color:#93c5fd;font-size:.75rem;font-weight:700;padding:4px 10px;border-radius:99px;letter-spacing:.5px;text-transform:uppercase;">Día 1 · Tu primer lead</span>
+                  <h2 style="margin:18px 0 12px;font-size:1.4rem;color:#fff;">¡Bienvenido al portal, {nombre_corto}!</h2>
+                  <p style="color:#a1a1aa;line-height:1.6;">Lo más importante para arrancar: <strong style="color:#fff;">no necesitás gastar tus créditos todavía</strong>.</p>
+                  <div style="background:#0f1d12;border:1px solid #14532d;border-radius:8px;padding:18px;margin:20px 0;">
+                    <p style="margin:0 0 6px;color:#86efac;font-weight:700;">🎁 Empezá con un lead BÁSICO gratis</p>
+                    <p style="margin:0;color:#a1a1aa;line-height:1.5;">Los leads básicos no consumen créditos. Son ideales para que practiques el guión de venta sin gastar nada. Andá a la "Bolsa de Leads" y filtrá por tier "Básico".</p>
+                  </div>
+                  <p style="color:#a1a1aa;line-height:1.6;font-size:.92rem;">Tus 100 créditos de bienvenida son para los leads <strong style="color:#fff;">calificados</strong> y <strong style="color:#fff;">premium</strong> — esos los abrimos en el próximo email cuando ya hayas probado uno básico.</p>
+                  <a href="{PORTAL_URL}/portal.html#bolsa" style="display:inline-block;padding:14px 28px;background:#3b82f6;color:#fff;border-radius:8px;text-decoration:none;font-weight:800;font-size:1rem;margin-top:12px;">Ver leads básicos →</a>
+                </div>
+                """
+                try:
+                    enviar_email(a.email, f"🎯 {nombre_corto}, así arrancás (sin gastar tus créditos)", html)
+                    a.onboarding_email_d1_en = ahora
+                    db.commit()
+                    enviados_d1 += 1
+                except Exception as e:
+                    print(f"[ONBOARDING D1 ERROR] {a.codigo}: {e}")
+
+            # ── DÍA 3 ───────────────────────────────────────────────────────
+            if dias_desde_registro >= 3 and not getattr(a, "onboarding_email_d3_en", None):
+                saldo = a.creditos or 0
+                html = f"""
+                <div style="font-family:Inter,sans-serif;background:#050505;color:#e2e8f0;padding:40px;max-width:600px;margin:0 auto;border-radius:12px;border:1px solid #1e1e1e;">
+                  <span style="background:#3b0764;color:#c084fc;font-size:.75rem;font-weight:700;padding:4px 10px;border-radius:99px;letter-spacing:.5px;text-transform:uppercase;">Día 3 · Leads calificados</span>
+                  <h2 style="margin:18px 0 12px;font-size:1.4rem;color:#fff;">Listo, ahora sí: leads calificados</h2>
+                  <p style="color:#a1a1aa;line-height:1.6;">Tenés <strong style="color:#c084fc;">{saldo} créditos</strong> en tu saldo. Te alcanzan para 1-2 leads del tier "Calificado", que son contactos pre-filtrados por nosotros.</p>
+                  <div style="background:#1a0a2e;border:1px solid #3b0764;border-radius:8px;padding:18px;margin:20px 0;">
+                    <p style="margin:0 0 8px;color:#c084fc;font-weight:700;">Cómo elegir bien tu primer calificado:</p>
+                    <ul style="margin:0;padding-left:18px;color:#a1a1aa;line-height:1.7;font-size:.92rem;">
+                      <li>Mirá el <strong style="color:#fff;">rubro</strong>: elegí uno donde te sientas cómodo armando una propuesta</li>
+                      <li>Mirá el <strong style="color:#fff;">score de calidad</strong>: arriba de 70 es seguro</li>
+                      <li>Mirá si <strong style="color:#fff;">tiene web/redes</strong>: te da contexto para personalizar el pitch</li>
+                    </ul>
+                  </div>
+                  <p style="color:#a1a1aa;line-height:1.5;font-size:.9rem;">Tip: si el contacto que comprás resulta inválido, podés reportarlo dentro de las 72hs y te devolvemos los créditos.</p>
+                  <a href="{PORTAL_URL}/portal.html#bolsa" style="display:inline-block;padding:14px 28px;background:#a855f7;color:#fff;border-radius:8px;text-decoration:none;font-weight:800;font-size:1rem;margin-top:12px;">Ver leads calificados →</a>
+                </div>
+                """
+                try:
+                    enviar_email(a.email, f"⭐ {nombre_corto}, hora de probar un lead calificado", html)
+                    a.onboarding_email_d3_en = ahora
+                    db.commit()
+                    enviados_d3 += 1
+                except Exception as e:
+                    print(f"[ONBOARDING D3 ERROR] {a.codigo}: {e}")
+
+            # ── DÍA 7 ───────────────────────────────────────────────────────
+            # Solo si NO compró ningún lead premium todavía (gastó 0 créditos en compra_lead).
+            if dias_desde_registro >= 7 and not getattr(a, "onboarding_email_d7_en", None):
+                gasto_premium = db.query(TransaccionCredito).filter(
+                    TransaccionCredito.aliado_id == a.id,
+                    TransaccionCredito.motivo == "compra_lead",
+                ).count()
+                if gasto_premium == 0:
+                    saldo = a.creditos or 0
+                    html = f"""
+                    <div style="font-family:Inter,sans-serif;background:#050505;color:#e2e8f0;padding:40px;max-width:600px;margin:0 auto;border-radius:12px;border:1px solid #1e1e1e;">
+                      <span style="background:#1c1917;color:#fdba74;font-size:.75rem;font-weight:700;padding:4px 10px;border-radius:99px;letter-spacing:.5px;text-transform:uppercase;">Día 7 · No los desperdicies</span>
+                      <h2 style="margin:18px 0 12px;font-size:1.4rem;color:#fff;">{nombre_corto}, todavía tenés tus créditos sin usar</h2>
+                      <p style="color:#a1a1aa;line-height:1.6;">Pasó una semana y tu saldo de <strong style="color:#fb923c;">{saldo} créditos</strong> sigue intacto. Eso es plata digital esperando por vos.</p>
+                      <div style="background:#1a1a1a;border:1px solid #2a2a2a;border-radius:8px;padding:18px;margin:20px 0;">
+                        <p style="margin:0 0 8px;color:#fff;font-weight:700;">¿Qué te frena?</p>
+                        <p style="margin:0;color:#a1a1aa;line-height:1.6;font-size:.92rem;">Si no encontrás leads que te cierren por rubro/zona, respondé este email y te ayudamos. Si lo que falta es práctica, en la Academia hay guiones probados.</p>
+                      </div>
+                      <p style="color:#a1a1aa;line-height:1.5;font-size:.9rem;">Recordá: 1 lead premium cerrado paga 10x el costo en créditos. Es el riesgo más asimétrico del programa.</p>
+                      <a href="{PORTAL_URL}/portal.html#bolsa" style="display:inline-block;padding:14px 28px;background:#f97316;color:#000;border-radius:8px;text-decoration:none;font-weight:800;font-size:1rem;margin-top:12px;">Ver leads premium →</a>
+                    </div>
+                    """
+                    try:
+                        enviar_email(a.email, f"⏳ {nombre_corto}, tus {saldo} créditos siguen sin usar", html)
+                        a.onboarding_email_d7_en = ahora
+                        db.commit()
+                        enviados_d7 += 1
+                    except Exception as e:
+                        print(f"[ONBOARDING D7 ERROR] {a.codigo}: {e}")
+                else:
+                    # Ya compró premium, no hace falta el email de d7. Marcamos
+                    # el flag para no chequear en cada corrida.
+                    a.onboarding_email_d7_en = ahora
+                    db.commit()
+
+        if (enviados_d1 + enviados_d3 + enviados_d7) > 0:
+            print(f"[ONBOARDING] Enviados — D1: {enviados_d1} · D3: {enviados_d3} · D7: {enviados_d7}")
+    except Exception as e:
+        print(f"[ONBOARDING JOB ERROR] {e}")
+    finally:
+        db.close()
+
+
 scheduler.add_job(job_notificaciones_inactividad, "interval", hours=24)
+scheduler.add_job(job_estipendio_mensual, "interval", hours=24)
+scheduler.add_job(job_onboarding_sequence, "interval", hours=24)
 scheduler.start()
 
 
@@ -758,6 +970,13 @@ RUTAS_ADMIN = {
     ("POST",   "/admin/solicitudes-creditos/{sol_id}/rechazar"),
     # v1.7 — trigger manual del job de inactividad
     ("POST",   "/admin/notificar-inactivos"),
+    # v2.0 — reportes de mal contacto (devolución de créditos)
+    ("GET",    "/admin/reportes-mal-contacto"),
+    ("POST",   "/admin/reportes-mal-contacto/{id}/aprobar"),
+    ("POST",   "/admin/reportes-mal-contacto/{id}/rechazar"),
+    # v2.0 — métricas de cohorte de fuga
+    ("GET",    "/admin/cohorte-fuga"),
+    ("GET",    "/admin/uso-creditos"),
 }
 
 def _es_ruta_admin(method: str, path: str) -> bool:
@@ -1452,13 +1671,21 @@ def registrar_venta(body: schemas.RegistrarVentaIn | None = Body(default=None),
     if plan not in PLANES: raise HTTPException(400, "Plan inválido.")
     valor = PLANES[plan]
     comision_usd = round(valor * a.comision_pct, 2)
-    
+
+    # Detectar si es la primera venta confirmada del aliado ANTES de agregar
+    # la nueva, así no contamos a `v` a sí mismo.
+    es_primera_venta = db.query(Venta).filter(
+        Venta.aliado_id == a.id,
+        Venta.confirmada == True,
+    ).count() == 0
+
     # 1. Registrar Venta del Aliado que cerró
     v = Venta(aliado_id=a.id, referido_id=referido_id, nombre_cliente=nombre_cliente,
               plan=plan, valor_usd=valor, comision_pct=a.comision_pct,
               comision_usd=comision_usd, confirmada=True, pagada=False,
               fecha_venta=datetime.now(), modalidad_pago=modalidad_pago, notas=notas)
     db.add(v)
+    db.flush()  # asignar v.id para usarlo en la referencia del bonus
 
     # 2. EFECTO RED: Si tiene Sponsor, le damos un 5% pasivo al Sponsor
     if getattr(a, "sponsor", None):
@@ -1481,10 +1708,24 @@ def registrar_venta(body: schemas.RegistrarVentaIn | None = Body(default=None),
     if referido_id:
         ref = db.query(Referido).filter(Referido.id == referido_id).first()
         if ref: ref.convertido = True
+
+    # 3. BONUS PRIMERA VENTA — créditos al aliado y al sponsor (si tiene).
+    # Refuerza el loop "cerré → tengo más ammo para volver a cerrar".
+    bonus_info = None
+    if es_primera_venta:
+        bonus_info = _aplicar_bonus_primera_venta(db, a, v.id)
     
     a.nivel = a.nivel_calculado
     db.commit()
-    return {"mensaje": "Venta registrada.", "aliado": a.nombre, "nivel_nuevo": a.nivel_calculado, "valor_usd": valor, "comision_usd": comision_usd}
+    return {
+        "mensaje": "Venta registrada.",
+        "aliado": a.nombre,
+        "nivel_nuevo": a.nivel_calculado,
+        "valor_usd": valor,
+        "comision_usd": comision_usd,
+        "primera_venta": es_primera_venta,
+        "bonus_creditos": bonus_info,
+    }
 
 
 @app.post("/ventas/{id}/pagar")
@@ -2194,12 +2435,19 @@ def _procesar_pago_confirmado(db: Session,
     fecha_venta = datetime.now()
     modalidad = "MercadoPago" if processor == "mercadopago" else "PayPal"
 
+    # Detectar primera venta ANTES de crear la nueva (para no contarla a sí misma).
+    es_primera_venta_aliado = db.query(Venta).filter(
+        Venta.aliado_id == a.id,
+        Venta.confirmada == True,
+    ).count() == 0
+
     # --- Registrar venta ---
     v = Venta(aliado_id=a.id, nombre_cliente=nombre_cliente, plan=plan,
               valor_usd=valor_usd, comision_pct=comision_pct, comision_usd=comision_usd,
               confirmada=True, pagada=False, fecha_venta=fecha_venta,
               modalidad_pago=modalidad, notas=f"Pago automático {modalidad} {pid_token}")
     db.add(v)
+    db.flush()  # asignar v.id para la referencia del bonus
 
     # --- Registrar comisión (spec §9, §10: siempre sobre USD base) ---
     c = Comision(
@@ -2251,6 +2499,12 @@ def _procesar_pago_confirmado(db: Session,
             prospecto.estado = "pagado"
     except Exception as e:
         print(f"[PROCESAR PAGO] No pude actualizar prospecto: {e}")
+
+    # BONUS PRIMERA VENTA — créditos al aliado y al sponsor (si tiene).
+    # Se calcula antes del commit para que vaya en la misma transacción.
+    bonus_info = None
+    if es_primera_venta_aliado:
+        bonus_info = _aplicar_bonus_primera_venta(db, a, v.id)
 
     a.nivel = a.nivel_calculado
     db.commit()
@@ -2306,7 +2560,9 @@ def _procesar_pago_confirmado(db: Session,
     enviar_email(a.email, asunto_email, cuerpo_email)
 
     return {"status": "ok", "venta_registrada": True, "comision_id": c.id,
-            "comision_usd": comision_usd, "aliado": a.codigo}
+            "comision_usd": comision_usd, "aliado": a.codigo,
+            "primera_venta": es_primera_venta_aliado,
+            "bonus_creditos": bonus_info}
 
 
 # ─── WEBHOOK MERCADO PAGO (con verificación HMAC — spec §19) ─────────────────
@@ -3010,9 +3266,17 @@ def ver_bolsa_aliado(codigo: str, pais: str = "", db: Session = Depends(get_db),
         "disponibles": [
             {
                 "id": l.id, "empresa": l.empresa, "rubro": l.rubro,
-                "ciudad": l.ciudad, "pais": l.pais or "AR", "nombre_contacto": l.nombre_contacto,
-                "tier": l.tier, "score_calidad": l.score_calidad,
-                "costo_creditos": l.costo_creditos
+                "ciudad": l.ciudad or "", "pais": l.pais or "AR",
+                "tier": l.tier,
+                "score_calidad": l.score_calidad,
+                "costo_creditos": l.costo_creditos,
+                # Teasers — mismos que en /bolsa/marketplace para que el front
+                # use UN SOLO componente de tarjeta. Nunca exponer URLs/contacto.
+                "tiene_web":         bool(l.tiene_web),
+                "tiene_redes":       bool(l.tiene_redes),
+                "tiene_contacto":    bool(l.nombre_contacto),
+                "tiene_observacion": bool((l.observacion or "").strip()),
+                "observacion":       l.observacion or "",
             }
             for l in disponibles
         ],
@@ -4005,6 +4269,47 @@ def _ajustar_creditos(db: Session, aliado: Aliado, delta: int, motivo: str, ref:
     db.add(t)
 
 
+# Bonus por cierre de la primera venta confirmada del aliado.
+# Cierra el loop psicológico "vendí → tengo más ammo para volver a vender".
+# Se aplica UNA SOLA VEZ por aliado: la idempotencia se garantiza con el check
+# de `ventas_previas == 0` que cada caller hace antes de invocar este helper.
+BONUS_PRIMERA_VENTA          = 200   # créditos al aliado que cerró
+BONUS_SPONSOR_PRIMERA_VENTA  = 100   # créditos al sponsor (si existe)
+
+
+def _aplicar_bonus_primera_venta(db: Session, aliado: Aliado, venta_id: int) -> dict:
+    """Otorga el bonus de primera venta al aliado y, si tiene sponsor, también
+    al sponsor. Devuelve un dict con detalle para que el endpoint llamador lo
+    incluya en la respuesta JSON (útil para que el front muestre un toast).
+
+    NO chequea si es realmente la primera venta — eso es responsabilidad del
+    caller (porque ya tiene la query de ventas previas hecha por otros motivos).
+    Llamar a este helper solo cuando se confirmó que ventas_previas == 0.
+    """
+    resultado = {
+        "aliado_bonus":       BONUS_PRIMERA_VENTA,
+        "aliado_saldo_nuevo": None,
+        "sponsor_bonus":      0,
+        "sponsor_codigo":     None,
+    }
+
+    # 1) Bonus al aliado que cerró
+    _ajustar_creditos(db, aliado, BONUS_PRIMERA_VENTA,
+                      "primera_venta", f"venta:{venta_id}")
+    resultado["aliado_saldo_nuevo"] = (aliado.creditos or 0)
+
+    # 2) Bonus al sponsor (si existe)
+    sponsor = getattr(aliado, "sponsor", None)
+    if sponsor is not None:
+        _ajustar_creditos(db, sponsor, BONUS_SPONSOR_PRIMERA_VENTA,
+                          "referido_primera_venta",
+                          f"aliado:{aliado.id}:venta:{venta_id}")
+        resultado["sponsor_bonus"]  = BONUS_SPONSOR_PRIMERA_VENTA
+        resultado["sponsor_codigo"] = sponsor.codigo
+
+    return resultado
+
+
 @app.get("/aliados/{codigo}/creditos")
 def ver_creditos(codigo: str, db: Session = Depends(get_db), _owner=Depends(verify_ownership_dep)):
     a = _get_aliado(codigo, db)
@@ -4063,11 +4368,24 @@ def ver_marketplace(codigo_aliado: str = "",
                 "id": l.id,
                 "empresa": l.empresa,
                 "rubro": l.rubro,
+                "ciudad": l.ciudad or "",
                 "pais": l.pais or "AR",
                 "tier": l.tier,
                 "costo_creditos": l.costo_creditos or 0,
                 "score_calidad": l.score_calidad or 50,
+                # Notas internas del admin que califica — texto público para el aliado
+                # va por `observacion`. Mantenemos `notas` por compatibilidad con
+                # el front viejo, pero el front nuevo debería leer `observacion`.
                 "notas": l.notas_calificacion or "",
+                "observacion": l.observacion or "",
+                # ── TEASERS DE PRESENCIA DIGITAL Y ENRIQUECIMIENTO ─────────────
+                # Booleans que el front muestra como pills "✓ Web", "✓ Redes",
+                # etc. NUNCA exponer las URLs ni el nombre del contacto antes
+                # de la compra — eso se desbloquea solo en /bolsa/{id}/comprar.
+                "tiene_web":         bool(l.tiene_web),
+                "tiene_redes":       bool(l.tiene_redes),
+                "tiene_contacto":    bool(l.nombre_contacto),
+                "tiene_observacion": bool((l.observacion or "").strip()),
             }
             for l in leads
         ]
@@ -4076,6 +4394,7 @@ def ver_marketplace(codigo_aliado: str = "",
 
 @app.post("/bolsa/{id}/comprar")
 def comprar_lead(id: int,
+                 background_tasks: BackgroundTasks,
                  codigo_aliado: str = "",  # legacy
                  aliado: Aliado = Depends(current_aliado_required),
                  db: Session = Depends(get_db)):
@@ -4094,7 +4413,30 @@ def comprar_lead(id: int,
 
     costo = lead.costo_creditos or 0
     if (a.creditos or 0) < costo:
-        raise HTTPException(400, f"Saldo insuficiente. Necesitás {costo} créditos, tenés {a.creditos or 0}.")
+        # Error estructurado — el front lo agarra y lo muestra como modal con CTA,
+        # no como toast rojo. La idea: convertir el "no podés" en una oferta clara.
+        saldo_actual = a.creditos or 0
+        raise HTTPException(400, detail={
+            "code": "saldo_insuficiente",
+            "mensaje": f"Te faltan {costo - saldo_actual} créditos para este lead.",
+            "necesitas": costo,
+            "tenes": saldo_actual,
+            "faltan": costo - saldo_actual,
+            "alternativas": [
+                {
+                    "tipo": "leads_basicos",
+                    "label": "Ver leads básicos gratis",
+                    "descripcion": "Los leads del tier básico no consumen créditos.",
+                    "accion": "ir_a_bolsa_basicos",
+                },
+                {
+                    "tipo": "recargar",
+                    "label": "Recargar desde USD 10",
+                    "descripcion": "Paquete Impulso: 100 créditos por USD 10.",
+                    "accion": "abrir_modal_recarga",
+                },
+            ],
+        })
 
     reclamos_activos = db.query(LeadBolsa).filter(
         LeadBolsa.aliado_id == a.id, LeadBolsa.estado == "reclamado"
@@ -4108,13 +4450,462 @@ def comprar_lead(id: int,
     _ajustar_creditos(db, a, -costo, "compra_lead", f"lead:{lead.id}")
     db.commit()
 
+    # --- AVISO SALDO BAJO (no bloquea la respuesta) ─────────────────────────
+    # Mensaje de "rampa de salida": no espantar, recordar que los leads
+    # `basico` siguen siendo gratis y el portal sigue 100% utilizable.
+    UMBRAL_SALDO_BAJO = 30
+    aviso_saldo_bajo = (a.creditos or 0) < UMBRAL_SALDO_BAJO
+
+    if aviso_saldo_bajo and a.email:
+        nombre_corto = a.nombre.split()[0] if a.nombre else "Aliado"
+        saldo_actual = a.creditos or 0
+        html_aviso = f"""
+        <div style="font-family:Inter,sans-serif;background:#050505;color:#e2e8f0;padding:40px;max-width:600px;margin:0 auto;border-radius:12px;border:1px solid #1e1e1e;">
+          <span style="background:#1c1917;color:#fdba74;font-size:.75rem;font-weight:700;padding:4px 10px;border-radius:99px;letter-spacing:.5px;text-transform:uppercase;">💡 Heads up</span>
+          <h2 style="margin:18px 0 12px;font-size:1.4rem;color:#fb923c;">Te quedan {saldo_actual} créditos, {nombre_corto}</h2>
+          <p style="color:#a1a1aa;line-height:1.6;">Bien por reservar otro lead — pero queremos avisarte antes de que te encuentres con saldo en cero.</p>
+          <div style="background:#0f1d12;border:1px solid #14532d;border-radius:8px;padding:18px;margin:20px 0;">
+            <p style="margin:0 0 6px;font-weight:700;color:#86efac;">✅ Lo que NO cambia:</p>
+            <p style="margin:0;color:#a1a1aa;line-height:1.6;">Los <strong style="color:#fff;">leads básicos siguen siendo 100% gratis</strong>. Los créditos solo se usan para acceder al tier calificado y premium del marketplace.</p>
+          </div>
+          <div style="background:#111;border:1px solid #2a2a2a;border-radius:8px;padding:18px;margin:20px 0;">
+            <p style="margin:0 0 8px;font-weight:600;color:#fff;">Si querés seguir con leads premium:</p>
+            <p style="margin:0;color:#a1a1aa;line-height:1.6;font-size:.92rem;">El paquete más chico (Impulso) son 100 créditos por USD 10 — 1-2 leads premium que se pagan solos con la primera comisión que cierres.</p>
+          </div>
+          <a href="{PORTAL_URL}/portal.html" style="display:inline-block;padding:14px 28px;background:#f97316;color:#000;border-radius:8px;text-decoration:none;font-weight:800;font-size:1rem;margin-top:8px;">Ir al portal →</a>
+          <p style="margin-top:28px;font-size:.75rem;color:#3f3f46;">Este aviso lo enviamos cuando tu saldo baja de {UMBRAL_SALDO_BAJO}. Avanza Digital · Partner Network.</p>
+        </div>
+        """
+        background_tasks.add_task(
+            enviar_email,
+            a.email,
+            f"💡 Te quedan {saldo_actual} créditos — pero el portal sigue activo",
+            html_aviso,
+        )
+
     return {
         "mensaje": f"¡Lead premium comprado! Te descontamos {costo} créditos.",
         "saldo_restante": a.creditos,
+        "aviso_saldo_bajo": aviso_saldo_bajo,
+        "umbral_saldo_bajo": UMBRAL_SALDO_BAJO,
         "lead": {
             "id": lead.id, "empresa": lead.empresa, "rubro": lead.rubro,
             "telefono": lead.telefono, "email": lead.email,
         }
+    }
+
+
+# ─── REPORTE DE MAL CONTACTO (devolución de créditos) ────────────────────────
+# Si un aliado compra un lead premium y resulta que el contacto es inválido,
+# puede reportarlo dentro de las 72hs. El admin valida y, si aprueba, devuelve
+# 100% de los créditos. Esto mantiene la confianza en el marketplace: cada
+# lead "malo" sin remediación es un argumento contra recargar.
+
+REPORTE_MAL_CONTACTO_VENTANA_HS = 72
+MOTIVOS_MAL_CONTACTO = (
+    "no_atiende",        # llamado/whatsapp sin respuesta tras varios intentos
+    "numero_invalido",   # el teléfono no existe / da error de operador
+    "empresa_cerrada",   # cerró el negocio / quebró
+    "datos_incorrectos", # rubro o info no coincide con la realidad
+    "otro",              # texto libre obligatorio en `detalle`
+)
+
+
+class ReportarMalContactoIn(BaseModel):
+    motivo: str
+    detalle: Optional[str] = None
+
+
+@app.post("/bolsa/{id}/reportar-mal-contacto")
+def reportar_mal_contacto(id: int,
+                          body: ReportarMalContactoIn,
+                          aliado: Aliado = Depends(current_aliado_required),
+                          db: Session = Depends(get_db)):
+    """El aliado dueño del lead reporta que el contacto era inválido.
+    Solo se acepta dentro de las 72hs posteriores a la compra (lead.fecha_reclamo).
+    No devuelve créditos automáticamente — queda en estado 'pendiente' para
+    que el admin revise."""
+    a = aliado
+
+    # Validar motivo
+    if body.motivo not in MOTIVOS_MAL_CONTACTO:
+        raise HTTPException(400, {
+            "code": "motivo_invalido",
+            "mensaje": f"Motivo debe ser uno de: {list(MOTIVOS_MAL_CONTACTO)}",
+            "motivos_validos": list(MOTIVOS_MAL_CONTACTO),
+        })
+    if body.motivo == "otro" and not (body.detalle or "").strip():
+        raise HTTPException(400, {
+            "code": "detalle_requerido",
+            "mensaje": "Si elegís 'otro' como motivo, contanos el detalle.",
+        })
+
+    # Validar que el lead exista y sea del aliado
+    lead = db.query(LeadBolsa).filter(LeadBolsa.id == id).first()
+    if not lead:
+        raise HTTPException(404, "Lead no encontrado.")
+    if lead.aliado_id != a.id:
+        raise HTTPException(403, "Este lead no es tuyo.")
+    if (lead.tier or "basico") == "basico":
+        raise HTTPException(400, "Los leads básicos son gratis — no hay créditos que devolver.")
+
+    # Validar ventana de 72hs desde la compra
+    if not lead.fecha_reclamo:
+        raise HTTPException(400, "El lead no tiene fecha de reclamo registrada.")
+    horas_desde_compra = (datetime.now() - lead.fecha_reclamo).total_seconds() / 3600
+    if horas_desde_compra > REPORTE_MAL_CONTACTO_VENTANA_HS:
+        raise HTTPException(400, {
+            "code": "ventana_expirada",
+            "mensaje": f"Solo podés reportar dentro de las {REPORTE_MAL_CONTACTO_VENTANA_HS}hs desde la compra. Pasaron {int(horas_desde_compra)}hs.",
+            "horas_pasadas": int(horas_desde_compra),
+            "ventana_hs": REPORTE_MAL_CONTACTO_VENTANA_HS,
+        })
+
+    # Idempotencia: un lead solo se puede reportar una vez (sin importar estado)
+    existente = db.query(ReporteMalContacto).filter(
+        ReporteMalContacto.aliado_id == a.id,
+        ReporteMalContacto.lead_id == lead.id,
+    ).first()
+    if existente:
+        raise HTTPException(400, {
+            "code": "ya_reportado",
+            "mensaje": f"Ya reportaste este lead. Estado actual: {existente.estado}.",
+            "reporte_id": existente.id,
+            "estado": existente.estado,
+        })
+
+    # Crear el reporte
+    r = ReporteMalContacto(
+        aliado_id = a.id,
+        lead_id   = lead.id,
+        motivo    = body.motivo,
+        detalle   = (body.detalle or "").strip() or None,
+        estado    = "pendiente",
+    )
+    db.add(r)
+    db.commit()
+    db.refresh(r)
+
+    # Notificar al admin (no bloquea la respuesta — es un log para Gmail del admin)
+    try:
+        admin_email = EMAIL_FROM or "avanzadigital4@gmail.com"
+        enviar_email(
+            admin_email,
+            f"[REPORTE MAL CONTACTO] {a.codigo} — Lead #{lead.id} ({lead.empresa})",
+            f"""<div style="font-family:sans-serif;background:#0a0a0a;color:#fff;padding:24px;max-width:560px;">
+              <h3 style="color:#fbbf24;">Reporte pendiente de revisión</h3>
+              <p><strong>Aliado:</strong> {a.nombre} ({a.codigo}) — {a.email}</p>
+              <p><strong>Lead:</strong> #{lead.id} — {lead.empresa} ({lead.rubro})</p>
+              <p><strong>Costo del lead:</strong> {lead.costo_creditos} créditos</p>
+              <p><strong>Motivo:</strong> {r.motivo}</p>
+              {f"<p><strong>Detalle:</strong> {r.detalle}</p>" if r.detalle else ""}
+              <p style="font-size:.85rem;color:#a1a1aa;">Revisar en: /admin/reportes-mal-contacto</p>
+            </div>"""
+        )
+    except Exception as e:
+        print(f"[REPORTE MAL CONTACTO] Email admin falló: {e}")
+
+    return {
+        "mensaje": "Reporte enviado. Te avisamos por email cuando lo revisemos.",
+        "reporte_id": r.id,
+        "estado": r.estado,
+        "creditos_a_devolver_si_aprobado": lead.costo_creditos or 0,
+    }
+
+
+@app.get("/aliados/{codigo}/reportes-mal-contacto")
+def listar_reportes_aliado(codigo: str,
+                            db: Session = Depends(get_db),
+                            _owner=Depends(verify_ownership_dep)):
+    """Lista los reportes que hizo este aliado (para mostrar en el portal)."""
+    a = _get_aliado(codigo, db)
+    reportes = db.query(ReporteMalContacto).filter(
+        ReporteMalContacto.aliado_id == a.id
+    ).order_by(ReporteMalContacto.creado_en.desc()).limit(50).all()
+    return [
+        {
+            "id": r.id,
+            "lead_id": r.lead_id,
+            "motivo": r.motivo,
+            "detalle": r.detalle,
+            "estado": r.estado,
+            "creditos_devueltos": r.creditos_devueltos,
+            "creado_en": r.creado_en.isoformat() if r.creado_en else None,
+            "resuelto_en": r.resuelto_en.isoformat() if r.resuelto_en else None,
+        }
+        for r in reportes
+    ]
+
+
+@app.get("/admin/reportes-mal-contacto")
+def admin_listar_reportes(estado: str = "pendiente",
+                          db: Session = Depends(get_db)):
+    """Admin lista reportes (default solo pendientes). Estados válidos:
+    pendiente, aprobado, rechazado, todos."""
+    q = db.query(ReporteMalContacto)
+    if estado != "todos":
+        if estado not in ("pendiente", "aprobado", "rechazado"):
+            raise HTTPException(400, "Estado inválido.")
+        q = q.filter(ReporteMalContacto.estado == estado)
+    reportes = q.order_by(ReporteMalContacto.creado_en.desc()).limit(200).all()
+
+    out = []
+    for r in reportes:
+        lead = db.query(LeadBolsa).filter(LeadBolsa.id == r.lead_id).first()
+        aliado = db.query(Aliado).filter(Aliado.id == r.aliado_id).first()
+        out.append({
+            "id": r.id,
+            "estado": r.estado,
+            "motivo": r.motivo,
+            "detalle": r.detalle,
+            "creditos_devueltos": r.creditos_devueltos,
+            "creado_en": r.creado_en.isoformat() if r.creado_en else None,
+            "resuelto_en": r.resuelto_en.isoformat() if r.resuelto_en else None,
+            "resuelto_por": r.resuelto_por,
+            "notas_admin": r.notas_admin,
+            "aliado": {
+                "id": aliado.id if aliado else None,
+                "codigo": aliado.codigo if aliado else None,
+                "nombre": aliado.nombre if aliado else None,
+                "email": aliado.email if aliado else None,
+            },
+            "lead": {
+                "id": lead.id if lead else None,
+                "empresa": lead.empresa if lead else None,
+                "rubro": lead.rubro if lead else None,
+                "telefono": lead.telefono if lead else None,
+                "costo_creditos": lead.costo_creditos if lead else None,
+                "tier": lead.tier if lead else None,
+            } if lead else None,
+        })
+    return out
+
+
+class ResolverReporteIn(BaseModel):
+    notas_admin: Optional[str] = None
+    admin_username: Optional[str] = None  # opcional, queda como auditoría
+
+
+@app.post("/admin/reportes-mal-contacto/{id}/aprobar")
+def admin_aprobar_reporte(id: int,
+                          body: ResolverReporteIn | None = Body(default=None),
+                          db: Session = Depends(get_db)):
+    """Aprueba un reporte: devuelve 100% de los créditos al aliado y libera
+    el lead (lo manda a 'descartado' para que no vuelva al pool ni cuente
+    como un reclamo activo)."""
+    r = db.query(ReporteMalContacto).filter(ReporteMalContacto.id == id).first()
+    if not r:
+        raise HTTPException(404, "Reporte no encontrado.")
+    if r.estado != "pendiente":
+        raise HTTPException(400, f"Reporte ya estaba en estado '{r.estado}'.")
+
+    aliado = db.query(Aliado).filter(Aliado.id == r.aliado_id).first()
+    lead = db.query(LeadBolsa).filter(LeadBolsa.id == r.lead_id).first()
+    if not aliado or not lead:
+        raise HTTPException(500, "Aliado o lead asociado no existe.")
+
+    creditos_a_devolver = lead.costo_creditos or 0
+
+    # Devolver créditos
+    _ajustar_creditos(
+        db, aliado, creditos_a_devolver,
+        "devolucion_lead_invalido", f"reporte:{r.id}:lead:{lead.id}"
+    )
+
+    # Marcar el lead como descartado (sale del flujo del aliado)
+    lead.estado = "descartado"
+    lead.resultado = f"Reportado mal contacto (motivo: {r.motivo})"
+
+    # Marcar el reporte como aprobado
+    r.estado = "aprobado"
+    r.creditos_devueltos = creditos_a_devolver
+    r.resuelto_en = datetime.now()
+    r.notas_admin = (body.notas_admin if body else None) or "Aprobado."
+    r.resuelto_por = (body.admin_username if body else None) or "admin"
+
+    db.commit()
+
+    # Notificar al aliado
+    try:
+        if aliado.email:
+            enviar_email(
+                aliado.email,
+                f"✅ Reporte aprobado: te devolvimos {creditos_a_devolver} créditos",
+                f"""<div style="font-family:Inter,sans-serif;background:#050505;color:#e2e8f0;padding:32px;max-width:560px;margin:0 auto;border-radius:12px;border:1px solid #1e1e1e;">
+                  <h2 style="color:#4ade80;margin:0 0 12px;">¡Te devolvimos los créditos!</h2>
+                  <p style="color:#a1a1aa;line-height:1.6;">Revisamos tu reporte sobre el lead <strong style="color:#fff;">{lead.empresa}</strong> y le dimos la razón. Acabamos de devolver <strong style="color:#4ade80;">{creditos_a_devolver} créditos</strong> a tu saldo.</p>
+                  <div style="background:#0f1d12;border:1px solid #14532d;border-radius:8px;padding:14px;margin:18px 0;">
+                    <p style="margin:0;color:#86efac;font-weight:700;">Saldo nuevo: {aliado.creditos or 0} créditos</p>
+                  </div>
+                  <p style="color:#a1a1aa;font-size:.9rem;">Gracias por reportarlo — nos ayuda a mejorar la calidad de los leads premium.</p>
+                  <a href="{PORTAL_URL}/portal.html" style="display:inline-block;margin-top:8px;padding:12px 24px;background:#3b82f6;color:#fff;border-radius:8px;text-decoration:none;font-weight:700;">Ver mi portal →</a>
+                </div>"""
+            )
+    except Exception as e:
+        print(f"[REPORTE APROBADO] Email aliado falló: {e}")
+
+    return {
+        "mensaje": "Reporte aprobado y créditos devueltos.",
+        "reporte_id": r.id,
+        "creditos_devueltos": creditos_a_devolver,
+        "saldo_aliado": aliado.creditos or 0,
+    }
+
+
+@app.post("/admin/reportes-mal-contacto/{id}/rechazar")
+def admin_rechazar_reporte(id: int,
+                            body: ResolverReporteIn | None = Body(default=None),
+                            db: Session = Depends(get_db)):
+    """Rechaza un reporte: NO devuelve créditos, deja registro auditable."""
+    r = db.query(ReporteMalContacto).filter(ReporteMalContacto.id == id).first()
+    if not r:
+        raise HTTPException(404, "Reporte no encontrado.")
+    if r.estado != "pendiente":
+        raise HTTPException(400, f"Reporte ya estaba en estado '{r.estado}'.")
+
+    r.estado = "rechazado"
+    r.resuelto_en = datetime.now()
+    r.notas_admin = (body.notas_admin if body else None) or "Rechazado por admin."
+    r.resuelto_por = (body.admin_username if body else None) or "admin"
+    db.commit()
+
+    # Notificar al aliado con el motivo del rechazo
+    try:
+        aliado = db.query(Aliado).filter(Aliado.id == r.aliado_id).first()
+        lead = db.query(LeadBolsa).filter(LeadBolsa.id == r.lead_id).first()
+        if aliado and aliado.email:
+            empresa = lead.empresa if lead else f"#{r.lead_id}"
+            enviar_email(
+                aliado.email,
+                f"Reporte revisado: {empresa}",
+                f"""<div style="font-family:Inter,sans-serif;background:#050505;color:#e2e8f0;padding:32px;max-width:560px;margin:0 auto;border-radius:12px;border:1px solid #1e1e1e;">
+                  <h2 style="color:#fbbf24;margin:0 0 12px;">Revisamos tu reporte</h2>
+                  <p style="color:#a1a1aa;line-height:1.6;">Sobre el lead <strong style="color:#fff;">{empresa}</strong>: después de revisar, decidimos no aprobar la devolución.</p>
+                  <div style="background:#1a1a1a;border:1px solid #2a2a2a;border-radius:8px;padding:14px;margin:18px 0;">
+                    <p style="margin:0 0 6px;color:#a1a1aa;font-size:.85rem;text-transform:uppercase;">Nota del admin:</p>
+                    <p style="margin:0;color:#fff;">{r.notas_admin}</p>
+                  </div>
+                  <p style="color:#a1a1aa;font-size:.9rem;">Si te parece que hubo un error, respondé este email y lo revisamos juntos.</p>
+                </div>"""
+            )
+    except Exception as e:
+        print(f"[REPORTE RECHAZADO] Email aliado falló: {e}")
+
+    return {
+        "mensaje": "Reporte rechazado.",
+        "reporte_id": r.id,
+        "estado": r.estado,
+    }
+
+
+# ─── MÉTRICAS DE COHORTE Y USO DE CRÉDITOS ───────────────────────────────────
+# Endpoints solo-admin para detectar la cohorte de fuga (aliados que gastaron
+# créditos sin cerrar venta) y para auditar el uso general del sistema.
+
+@app.get("/admin/cohorte-fuga")
+def admin_cohorte_fuga(umbral_gasto: int = 80,
+                        db: Session = Depends(get_db)):
+    """Devuelve los aliados que gastaron al menos `umbral_gasto` créditos
+    en el marketplace y tienen 0 ventas confirmadas.
+    Esta es la cohorte clave para detectar fuga: si son pocos (2-3 de 37),
+    el problema es individual y conviene contactarlos uno por uno. Si son
+    muchos, el problema es sistémico — calidad de leads, matching, o
+    capacitación insuficiente — y meterles más créditos no va a arreglarlo.
+    """
+    aliados = db.query(Aliado).filter(Aliado.activo == True).all()
+    cohorte = []
+    for a in aliados:
+        # Total de créditos GASTADOS (sumar deltas negativos en compra_lead)
+        gastados = db.query(TransaccionCredito).filter(
+            TransaccionCredito.aliado_id == a.id,
+            TransaccionCredito.motivo == "compra_lead",
+        ).all()
+        total_gastado = sum(-t.delta for t in gastados if t.delta < 0)
+
+        # Ventas confirmadas
+        ventas_confirmadas = db.query(Venta).filter(
+            Venta.aliado_id == a.id,
+            Venta.confirmada == True,
+        ).count()
+
+        if total_gastado >= umbral_gasto and ventas_confirmadas == 0:
+            cohorte.append({
+                "codigo": a.codigo,
+                "nombre": a.nombre,
+                "email": a.email,
+                "whatsapp": a.whatsapp,
+                "creditos_actuales": a.creditos or 0,
+                "creditos_gastados": total_gastado,
+                "leads_premium_comprados": len(gastados),
+                "creado_en": a.creado_en.isoformat() if a.creado_en else None,
+                "ultimo_login": a.ultimo_login.isoformat() if getattr(a, "ultimo_login", None) else None,
+                "dias_desde_registro": (datetime.now() - a.creado_en).days if a.creado_en else None,
+            })
+
+    cohorte.sort(key=lambda x: x["creditos_gastados"], reverse=True)
+    return {
+        "umbral_gasto":       umbral_gasto,
+        "total_en_cohorte":   len(cohorte),
+        "total_aliados":      len(aliados),
+        "porcentaje_fuga":    round(100 * len(cohorte) / len(aliados), 1) if aliados else 0,
+        "interpretacion":     (
+            "Cohorte chica → problema individual, contactá uno por uno." if len(cohorte) <= 3
+            else "Cohorte grande → problema sistémico (calidad de leads o capacitación). Más créditos no arreglan."
+        ),
+        "aliados": cohorte,
+    }
+
+
+@app.get("/admin/uso-creditos")
+def admin_uso_creditos(db: Session = Depends(get_db)):
+    """Reporte completo del uso de créditos por aliado. Útil para auditar el
+    sistema: quién acumuló saldo sin gastar, quién cerró ventas, quién está
+    activo en el marketplace, etc."""
+    aliados = db.query(Aliado).order_by(Aliado.codigo).all()
+    filas = []
+    total_otorgados = 0
+    total_gastados = 0
+
+    for a in aliados:
+        txs = db.query(TransaccionCredito).filter(
+            TransaccionCredito.aliado_id == a.id
+        ).all()
+        otorgados = sum(t.delta for t in txs if t.delta > 0)
+        gastados  = sum(-t.delta for t in txs if t.delta < 0)
+        ventas_confirmadas = db.query(Venta).filter(
+            Venta.aliado_id == a.id,
+            Venta.confirmada == True,
+        ).count()
+
+        # Desglose por motivo (solo créditos OTORGADOS, no descuentos)
+        por_motivo = {}
+        for t in txs:
+            if t.delta <= 0:
+                continue
+            por_motivo[t.motivo] = por_motivo.get(t.motivo, 0) + t.delta
+
+        total_otorgados += otorgados
+        total_gastados  += gastados
+
+        filas.append({
+            "codigo":             a.codigo,
+            "nombre":             a.nombre,
+            "creditos_actuales":  a.creditos or 0,
+            "total_otorgados":    otorgados,
+            "total_gastados":     gastados,
+            "ventas_confirmadas": ventas_confirmadas,
+            "ratio_gasto_venta":  round(gastados / max(ventas_confirmadas, 1), 1),
+            "por_motivo":         por_motivo,
+            "activo":             bool(a.activo),
+            "ultimo_login":       a.ultimo_login.isoformat() if getattr(a, "ultimo_login", None) else None,
+        })
+
+    return {
+        "total_aliados":     len(aliados),
+        "total_otorgados":   total_otorgados,
+        "total_gastados":    total_gastados,
+        "saldo_circulante":  sum(f["creditos_actuales"] for f in filas),
+        "aliados":           filas,
     }
 
 
@@ -5550,14 +6341,80 @@ except Exception as _e:
 # ruta complementaria que devuelve específicamente los módulos de la Academia.
 @app.get("/aliados/{codigo}/academia")
 def academia_del_aliado(codigo: str, db: Session = Depends(get_db), _owner=Depends(verify_ownership_dep)):
-    """Devuelve los módulos de la Academia para el aliado, en orden.
-    (En esta primera versión no trackeamos completitud por aliado; si en el
-    futuro se agrega, mantener la misma forma de respuesta.)"""
-    a = _get_aliado(codigo, db)  # Solo para validar que el código existe
+    """Devuelve los módulos de la Academia para el aliado, en orden, con flag
+    de completitud y resumen de progreso."""
+    a = _get_aliado(codigo, db)
     mods = db.query(AcademiaModulo).filter(AcademiaModulo.activo == True)\
         .order_by(AcademiaModulo.orden).all()
+    completados_ids = {
+        c.modulo_id for c in db.query(AliadoModuloCompletado).filter(
+            AliadoModuloCompletado.aliado_id == a.id
+        ).all()
+    }
+    completados = sum(1 for m in mods if m.id in completados_ids)
     return {
         "aliado": a.codigo,
         "total_modulos": len(mods),
-        "modulos": [_modulo_row(m) for m in mods],
+        "modulos_completados": completados,
+        "porcentaje": round(100 * completados / len(mods)) if mods else 0,
+        "creditos_por_modulo": BONUS_MODULO_COMPLETADO,
+        "modulos": [
+            _modulo_row(m, completado=(m.id in completados_ids))
+            for m in mods
+        ],
+    }
+
+
+# Bonus por completar un módulo de Academia. Bajo a propósito: el incentivo
+# real es que el aliado se forme antes de quemar créditos en leads premium.
+BONUS_MODULO_COMPLETADO = 10
+
+
+@app.post("/aliados/{codigo}/academia/{modulo_id}/completar")
+def completar_modulo_academia(codigo: str, modulo_id: int,
+                               db: Session = Depends(get_db),
+                               _owner=Depends(verify_ownership_dep)):
+    """Marca un módulo de la Academia como completado por el aliado y otorga
+    el bonus de créditos correspondiente. Idempotente: si ya estaba completado,
+    no duplica créditos.
+    """
+    a = _get_aliado(codigo, db)
+    mod = db.query(AcademiaModulo).filter(
+        AcademiaModulo.id == modulo_id,
+        AcademiaModulo.activo == True,
+    ).first()
+    if not mod:
+        raise HTTPException(404, "Módulo no encontrado o inactivo.")
+
+    # Idempotencia: si ya estaba completado, devolvemos OK sin re-acreditar.
+    existente = db.query(AliadoModuloCompletado).filter(
+        AliadoModuloCompletado.aliado_id == a.id,
+        AliadoModuloCompletado.modulo_id == mod.id,
+    ).first()
+    if existente:
+        return {
+            "mensaje":          "Este módulo ya estaba completado.",
+            "ya_completado":    True,
+            "creditos_ganados": 0,
+            "saldo":            a.creditos or 0,
+            "modulo": {"id": mod.id, "titulo": mod.titulo},
+        }
+
+    # Primera vez completándolo: registrar + acreditar
+    completado = AliadoModuloCompletado(
+        aliado_id          = a.id,
+        modulo_id          = mod.id,
+        creditos_otorgados = BONUS_MODULO_COMPLETADO,
+    )
+    db.add(completado)
+    _ajustar_creditos(db, a, BONUS_MODULO_COMPLETADO,
+                      "modulo_completado", f"modulo:{mod.id}")
+    db.commit()
+
+    return {
+        "mensaje":          f"¡Completaste '{mod.titulo}'! Te sumamos {BONUS_MODULO_COMPLETADO} créditos.",
+        "ya_completado":    False,
+        "creditos_ganados": BONUS_MODULO_COMPLETADO,
+        "saldo":            a.creditos or 0,
+        "modulo": {"id": mod.id, "titulo": mod.titulo},
     }

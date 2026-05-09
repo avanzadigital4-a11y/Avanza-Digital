@@ -251,6 +251,41 @@ class TransaccionCredito(Base):
     aliado = relationship("Aliado")
 
 
+class ReporteMalContacto(Base):
+    """Reporte de un aliado indicando que un lead premium que compró tenía
+    información de contacto inválida (teléfono inexistente, email rebotando,
+    empresa cerrada, etc.). El admin valida y, si aprueba, se devuelven los
+    créditos al saldo del aliado.
+
+    Estados:
+        pendiente   → recién creado, esperando revisión del admin
+        aprobado    → admin validó, créditos devueltos vía _ajustar_creditos()
+        rechazado   → admin descartó el reporte (con motivo en notas_admin)
+
+    Reglas de negocio:
+        - Solo se puede reportar dentro de las 72hs posteriores a la compra
+        - Solo un reporte por (aliado_id, lead_id): unicidad lógica chequeada
+          en el endpoint, no por constraint DB (para mantener historial limpio
+          si se rechaza y se vuelve a reportar — pero v1 no lo permite)
+    """
+    __tablename__ = "reportes_mal_contacto"
+
+    id = Column(Integer, primary_key=True, index=True)
+    aliado_id = Column(Integer, ForeignKey("aliados.id"), index=True, nullable=False)
+    lead_id = Column(Integer, ForeignKey("bolsa_leads.id"), index=True, nullable=False)
+    motivo = Column(String, nullable=False)         # 'no_atiende' | 'numero_invalido' | 'empresa_cerrada' | 'datos_incorrectos' | 'otro'
+    detalle = Column(Text, nullable=True)            # texto libre del aliado
+    estado = Column(String, default="pendiente")     # pendiente | aprobado | rechazado
+    creditos_devueltos = Column(Integer, default=0)  # se llena al aprobar
+    creado_en = Column(DateTime, default=func.now())
+    resuelto_en = Column(DateTime, nullable=True)
+    resuelto_por = Column(String, nullable=True)     # username del admin que resolvió
+    notas_admin = Column(Text, nullable=True)        # justificación de la decisión
+
+    aliado = relationship("Aliado")
+    lead = relationship("LeadBolsa")
+
+
 # ─── COMUNIDAD ───────────────────────────────────────────────────────────────
 class PostComunidad(Base):
     __tablename__ = "comunidad_posts"
@@ -356,6 +391,25 @@ class AcademiaModulo(Base):
     duracion_minutos = Column(Integer, nullable=True)
     activo = Column(Boolean, default=True)
     creado_en = Column(DateTime, default=func.now())
+
+
+class AliadoModuloCompletado(Base):
+    """Tracking de módulos de la Academia completados por aliado.
+    Idempotente por par (aliado_id, modulo_id) — un módulo se completa una sola
+    vez y otorga créditos una sola vez. El campo `creditos_otorgados` queda como
+    auditoría histórica (si en el futuro cambia el monto del bonus, los registros
+    viejos conservan lo que ya cobraron).
+    """
+    __tablename__ = "aliado_modulo_completado"
+
+    id = Column(Integer, primary_key=True, index=True)
+    aliado_id = Column(Integer, ForeignKey("aliados.id"), index=True, nullable=False)
+    modulo_id = Column(Integer, ForeignKey("academia_modulos.id"), index=True, nullable=False)
+    completado_en = Column(DateTime, default=func.now())
+    creditos_otorgados = Column(Integer, default=0)
+
+    aliado = relationship("Aliado")
+    modulo = relationship("AcademiaModulo")
 
 
 # ─── SOLICITUD DE COMPRA DE CRÉDITOS (v1.7) ──────────────────────────────────

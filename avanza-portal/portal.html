@@ -2566,7 +2566,7 @@
     <!-- MARKETPLACE DE LEADS PREMIUM (v1.3) -->
     <div class="table-wrap" style="margin-bottom:0; background:linear-gradient(135deg,rgba(250,204,21,0.04),transparent); border-color:rgba(250,204,21,0.2);">
       <div class="table-head" style="border-bottom-color:rgba(250,204,21,0.15);">
-        <h3><i class="fa-solid fa-gem" style="color:var(--amber);"></i> Leads Premium (Pagos) <span style="font-size:.7rem;font-weight:700;color:var(--amber);background:rgba(250,204,21,0.12);padding:3px 8px;border-radius:4px;margin-left:6px;">EXCLUSIVO</span></h3>
+        <h3><i class="fa-solid fa-gem" style="color:var(--amber);"></i> Leads Premium &amp; Calificados <span style="font-size:.7rem;font-weight:700;color:var(--amber);background:rgba(250,204,21,0.12);padding:3px 8px;border-radius:4px;margin-left:6px;">EXCLUSIVO</span></h3>
         <div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
           <div style="font-size:.8rem; color:var(--text-muted);">Saldo: <strong id="mkt-saldo" style="color:var(--amber);">— créditos</strong></div>
           <button onclick="abrirModalComprarCreditos()" style="background:var(--amber); color:#000; border:none; padding:7px 14px; border-radius:6px; font-size:.78rem; font-weight:800; cursor:pointer; display:flex; align-items:center; gap:5px;">
@@ -2575,17 +2575,10 @@
         </div>
       </div>
       <div style="padding:14px 20px; font-size:.82rem; color:var(--text-muted); border-bottom:1px solid var(--border);">
-        Leads pre-calificados con más data (ya pidieron presupuesto, budget confirmado, etc). Se pagan con créditos. <strong>Mayor tasa de cierre.</strong>
+        Leads pre-calificados con más data (presencia digital verificada, contacto identificado, pitch sugerido por IA). Se pagan con créditos. <strong>Mayor tasa de cierre.</strong>
       </div>
-      <div style="overflow-x:auto;">
-        <table>
-          <thead><tr>
-            <th>Empresa</th><th>Rubro</th><th>Calificación</th><th>Notas</th><th>Costo</th><th>Acción</th>
-          </tr></thead>
-          <tbody id="tabla-marketplace">
-            <tr><td colspan="6" style="text-align:center;padding:20px;color:var(--text-dim);">Cargando...</td></tr>
-          </tbody>
-        </table>
+      <div id="grid-marketplace" style="padding:16px;display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px;">
+        <div style="text-align:center;padding:24px;color:var(--text-dim);grid-column:1/-1;">Cargando...</div>
       </div>
     </div>
 
@@ -4115,23 +4108,10 @@ async function cargarBolsa() {
           : data.disponibles;
 
         tbodyDisp.innerHTML = filtrados.map(l => {
-          const pi = paisInfo(l.pais || 'AR');
-          const btnReclamar = limitAlcanzado
-            ? `<button disabled style="width:100%;padding:9px;font-size:.82rem;opacity:.45;cursor:not-allowed;background:var(--border);color:var(--text-dim);border:none;border-radius:8px;"><i class="fa-solid fa-lock"></i> Límite alcanzado</button>`
-            : `<button class="btn-primary" style="width:100%;padding:9px;font-size:.82rem;" onclick="reclamarLead(${l.id})"><i class="fa-solid fa-hand-sparkles"></i> Reclamar Lead</button>`;
-          return `<div style="background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:16px;">
-          <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:4px;">
-            <div style="font-size:1rem;font-weight:800;color:var(--text);">${l.empresa}</div>
-            <span title="${pi.nombre}" style="font-size:1.2rem;line-height:1;">${pi.bandera}</span>
-          </div>
-          ${l.ciudad ? `<div style="font-size:.75rem;color:var(--text-dim);margin-bottom:10px;"><i class="fa-solid fa-location-dot"></i> ${l.ciudad}</div>` : '<div style="margin-bottom:10px;"></div>'}
-          ${fila('🏭','Rubro', l.rubro)}
-          <div style="display:flex;align-items:center;gap:6px;margin-bottom:12px;margin-top:2px;">
-            <i class="fa-solid fa-lock" style="font-size:.75rem;color:var(--text-dim);"></i>
-            <span style="font-size:.8rem;color:var(--text-dim);font-style:italic;">Contacto visible al reclamar</span>
-          </div>
-          ${btnReclamar}
-        </div>`;
+          const accion = limitAlcanzado
+            ? `<button disabled style="width:100%;padding:10px;font-size:.82rem;opacity:.45;cursor:not-allowed;background:var(--border);color:var(--text-dim);border:none;border-radius:8px;font-weight:700;"><i class="fa-solid fa-lock"></i> Límite alcanzado (3/3)</button>`
+            : `<button class="btn-primary" style="width:100%;padding:10px;font-size:.82rem;font-weight:800;display:flex;align-items:center;justify-content:center;gap:6px;" onclick="reclamarLead(${l.id})"><i class="fa-solid fa-hand-sparkles"></i> Reclamar gratis</button>`;
+          return renderLeadCard(l, { accion, mostrarCosto: false });
         }).join('');
       }
 
@@ -5396,18 +5376,159 @@ function usarPostGenerado() {
   mostrarToast('Post cargado en el editor — revisá y publicá', 'green');
 }
 
+// ─── COMPONENTE COMPARTIDO: TARJETA DE LEAD ──────────────────────────────
+// Renderiza una tarjeta unificada para los 3 tiers (basico/calificado/premium)
+// con la misma estructura base y "skin" diferenciada por nivel. La data
+// sensible (telefono/email/whatsapp/URL del web/handle de IG/nombre del
+// contacto) NUNCA se muestra acá — solo se exponen booleans como teasers.
+//
+// Uso:
+//   renderLeadCard(lead, {
+//     accion: '<button onclick="...">Comprar</button>',  // HTML del CTA
+//     mostrarCosto: true,                                  // false en básicos
+//   })
+//
+// Tarifa de referencia: 1 crédito ≈ USD 0.10 (paquete Impulso 100 cr / USD 10).
+function renderLeadCard(lead, opts = {}) {
+  const tier = (lead.tier || 'basico').toLowerCase();
+  const pi = paisInfo(lead.pais || 'AR');
+  const accion = opts.accion || '';
+  const mostrarCosto = opts.mostrarCosto !== false && tier !== 'basico';
+
+  // Skin por tier — mismo layout, distinto vestido.
+  let skinStyle = '';
+  let skinBadge = '';
+  if (tier === 'premium') {
+    skinStyle = `
+      background: linear-gradient(135deg, rgba(250,204,21,0.07), rgba(250,204,21,0.02) 60%, var(--bg2));
+      border: 1px solid rgba(250,204,21,0.45);
+      box-shadow: 0 0 0 1px rgba(250,204,21,0.08), 0 4px 18px -8px rgba(250,204,21,0.25);
+    `;
+    skinBadge = `<span style="background:linear-gradient(135deg,#fbbf24,#f59e0b);color:#000;font-size:.65rem;font-weight:900;padding:3px 8px;border-radius:4px;letter-spacing:.04em;">💎 PREMIUM</span>`;
+  } else if (tier === 'calificado') {
+    skinStyle = `
+      background: linear-gradient(135deg, rgba(96,165,250,0.06), var(--bg2) 70%);
+      border: 1px solid rgba(96,165,250,0.4);
+    `;
+    skinBadge = `<span style="background:rgba(96,165,250,0.18);color:#93c5fd;font-size:.65rem;font-weight:900;padding:3px 8px;border-radius:4px;letter-spacing:.04em;border:1px solid rgba(96,165,250,0.3);">⭐ CALIFICADO</span>`;
+  } else {
+    skinStyle = `background: var(--bg2); border: 1px solid var(--border);`;
+    skinBadge = `<span style="background:rgba(255,255,255,0.04);color:var(--text-dim);font-size:.65rem;font-weight:700;padding:3px 8px;border-radius:4px;letter-spacing:.04em;border:1px solid var(--border);">BÁSICO</span>`;
+  }
+
+  // ── PILLS DE TEASER (lo que el aliado va a desbloquear con el lead) ──
+  const teaserPill = (label, color, activo) => {
+    const palette = {
+      green:  { bg:'rgba(74,222,128,0.15)',  fg:'#86efac', br:'rgba(74,222,128,0.3)' },
+      blue:   { bg:'rgba(96,165,250,0.15)', fg:'#93c5fd', br:'rgba(96,165,250,0.3)' },
+      purple: { bg:'rgba(168,85,247,0.15)', fg:'#c084fc', br:'rgba(168,85,247,0.3)' },
+    }[color] || { bg:'rgba(255,255,255,0.04)', fg:'var(--text-dim)', br:'var(--border)' };
+    if (!activo) {
+      return `<span style="background:transparent;color:var(--text-dim);border:1px dashed var(--border);padding:2px 8px;border-radius:99px;font-size:.7rem;font-weight:600;opacity:.5;display:inline-flex;align-items:center;gap:4px;">— ${label}</span>`;
+    }
+    return `<span style="background:${palette.bg};color:${palette.fg};border:1px solid ${palette.br};padding:2px 8px;border-radius:99px;font-size:.7rem;font-weight:700;display:inline-flex;align-items:center;gap:4px;">✓ ${label}</span>`;
+  };
+
+  const pillsRow = `
+    <div style="display:flex;flex-wrap:wrap;gap:5px;margin:10px 0 4px;">
+      ${teaserPill('Web',     'blue',   lead.tiene_web)}
+      ${teaserPill('Redes',   'purple', lead.tiene_redes)}
+      ${teaserPill('Contacto','green',  lead.tiene_contacto)}
+    </div>
+  `;
+
+  // ── SCORE DE CALIDAD ─────────────────────────────────────────────────
+  const score = lead.score_calidad || 50;
+  const scoreColor = score >= 85 ? '#4ade80' : (score >= 70 ? '#fbbf24' : '#fb7185');
+  const scoreBlock = `
+    <div style="display:flex;align-items:center;gap:10px;margin-top:8px;">
+      <div style="position:relative;width:46px;height:46px;flex-shrink:0;">
+        <svg viewBox="0 0 36 36" style="width:46px;height:46px;transform:rotate(-90deg);">
+          <circle cx="18" cy="18" r="15.9" fill="none" stroke="rgba(255,255,255,0.08)" stroke-width="3"></circle>
+          <circle cx="18" cy="18" r="15.9" fill="none" stroke="${scoreColor}" stroke-width="3"
+            stroke-dasharray="${score}, 100" stroke-linecap="round"></circle>
+        </svg>
+        <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:.78rem;font-weight:900;color:${scoreColor};">${score}</div>
+      </div>
+      <div style="flex:1;min-width:0;">
+        <div style="font-size:.66rem;text-transform:uppercase;letter-spacing:.06em;color:var(--text-dim);">Calidad</div>
+        <div style="font-size:.78rem;color:var(--text);font-weight:600;">${score >= 85 ? 'Alta' : score >= 70 ? 'Media' : 'Estándar'}</div>
+      </div>
+    </div>
+  `;
+
+  // ── COSTO (con equivalencia USD para anclar el valor real) ──────────
+  let costoBlock = '';
+  if (mostrarCosto) {
+    const usd = ((lead.costo_creditos || 0) * 0.10).toFixed(2);
+    costoBlock = `
+      <div style="display:flex;align-items:baseline;gap:6px;margin:10px 0 8px;">
+        <strong style="color:var(--amber);font-size:1.1rem;font-weight:900;">${lead.costo_creditos} cr.</strong>
+        <span style="font-size:.7rem;color:var(--text-dim);">≈ USD ${usd}</span>
+      </div>
+    `;
+  } else if (tier === 'basico') {
+    costoBlock = `
+      <div style="margin:10px 0 8px;">
+        <span style="background:rgba(74,222,128,0.15);color:#86efac;border:1px solid rgba(74,222,128,0.3);padding:3px 10px;border-radius:99px;font-size:.72rem;font-weight:800;">GRATIS</span>
+      </div>
+    `;
+  }
+
+  // ── OBSERVACIÓN PREVIEW (truncada para no spoilear info clave) ──────
+  const obsPreview = (lead.tiene_observacion && lead.observacion)
+    ? `<div style="margin-top:8px;padding:8px 10px;background:rgba(255,255,255,0.025);border-left:2px solid var(--border);border-radius:4px;font-size:.74rem;color:var(--text-muted);font-style:italic;line-height:1.4;">"${escapeHtml(lead.observacion.slice(0, 110))}${lead.observacion.length > 110 ? '…' : ''}"</div>`
+    : '';
+
+  // ── ARMADO FINAL ────────────────────────────────────────────────────
+  return `
+    <div style="${skinStyle} border-radius:12px; padding:16px; display:flex; flex-direction:column; gap:0; position:relative;">
+      <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:8px; margin-bottom:6px;">
+        <div style="font-size:1rem; font-weight:800; color:var(--text); line-height:1.25; overflow:hidden; text-overflow:ellipsis;">${escapeHtml(lead.empresa || 'Sin nombre')}</div>
+        <div style="display:flex; flex-direction:column; align-items:flex-end; gap:4px; flex-shrink:0;">
+          <span title="${escapeHtml(pi.nombre)}" style="font-size:1.3rem; line-height:1;">${pi.bandera}</span>
+          ${skinBadge}
+        </div>
+      </div>
+      <div style="font-size:.75rem; color:var(--text-dim); margin-bottom:6px;">
+        <i class="fa-solid fa-location-dot"></i>
+        ${escapeHtml(lead.ciudad || '')}${lead.ciudad ? ', ' : ''}${escapeHtml(pi.nombre)}
+      </div>
+      <div style="font-size:.86rem; color:var(--text); font-weight:500; margin-bottom:2px;">
+        <span style="color:var(--text-dim);font-size:.75rem;">🏭</span> ${escapeHtml(lead.rubro || '—')}
+      </div>
+      ${scoreBlock}
+      ${pillsRow}
+      ${obsPreview}
+      ${costoBlock}
+      <div style="margin-top:auto;padding-top:8px;">
+        <div style="display:flex;align-items:center;gap:6px;margin-bottom:8px;font-size:.72rem;color:var(--text-dim);">
+          <i class="fa-solid fa-lock" style="font-size:.7rem;"></i>
+          <span style="font-style:italic;">Contacto y URLs visibles ${tier === 'basico' ? 'al reclamar' : 'al comprar'}</span>
+        </div>
+        ${accion}
+      </div>
+    </div>
+  `;
+}
+
+
 // ─── MARKETPLACE DE LEADS PREMIUM ────────────────────────────────────
 async function cargarMarketplace() {
   if (!aliado) return;
-  const tbody = document.getElementById('tabla-marketplace');
-  if (!tbody) return;
+  const grid = document.getElementById('grid-marketplace');
+  if (!grid) return;
   try {
     const res = await apiFetch(`${API}/bolsa/marketplace?codigo_aliado=${aliado.codigo}`);
     if (!res.ok) return;
     const data = await res.json();
     document.getElementById('mkt-saldo').textContent = `${data.saldo_creditos} créditos`;
     if (!data.leads.length) {
-      tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; padding:24px; color:var(--text-dim);">No hay leads premium disponibles en este momento.</td></tr>`;
+      grid.innerHTML = `<div style="text-align:center; padding:32px; color:var(--text-dim); grid-column:1/-1;">
+        <i class="fa-solid fa-gem" style="font-size:1.5rem;color:var(--text-dim);opacity:.4;"></i>
+        <p style="margin-top:10px;">No hay leads premium disponibles en este momento.</p>
+        <p style="font-size:.8rem;margin-top:4px;">Volvé en unas horas — cargamos leads nuevos a diario.</p>
+      </div>`;
       return;
     }
 
@@ -5421,28 +5542,19 @@ async function cargarMarketplace() {
         : data.leads;
 
       if (!filtrados.length) {
-        tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; padding:24px; color:var(--text-dim);">No hay leads para ese país en este momento.</td></tr>`;
+        grid.innerHTML = `<div style="text-align:center; padding:24px; color:var(--text-dim); grid-column:1/-1;">No hay leads para ese país en este momento.</div>`;
         return;
       }
-      tbody.innerHTML = filtrados.map(l => {
-        const pi = paisInfo(l.pais || 'AR');
-        const tierBadge = l.tier === 'premium'
-          ? `<span style="background:rgba(250,204,21,0.15); color:var(--amber); padding:3px 8px; border-radius:4px; font-size:.7rem; font-weight:800;">💎 PREMIUM</span>`
-          : `<span style="background:rgba(59,130,246,0.15); color:#60a5fa; padding:3px 8px; border-radius:4px; font-size:.7rem; font-weight:800;">⭐ CALIFICADO</span>`;
+      grid.innerHTML = filtrados.map(l => {
         const puedePagar = data.saldo_creditos >= (l.costo_creditos || 0);
-        return `<tr>
-        <td><strong>${l.empresa}</strong> ${tierBadge} <span title="${pi.nombre}" style="font-size:.9rem;">${pi.bandera}</span></td>
-        <td>${l.rubro}</td>
-        <td><div style="display:flex; align-items:center; gap:6px;"><div style="width:40px; height:6px; background:rgba(255,255,255,0.1); border-radius:3px; overflow:hidden;"><div style="width:${l.score_calidad}%; height:100%; background:var(--green);"></div></div><span style="font-size:.75rem; color:var(--text-muted);">${l.score_calidad}</span></div></td>
-        <td style="font-size:.8rem; color:var(--text-muted); max-width:240px;">${l.notas || '—'}</td>
-        <td><strong style="color:var(--amber);">${l.costo_creditos} cr.</strong></td>
-        <td>
-          ${puedePagar
-            ? `<button onclick="comprarLead(${l.id},${l.costo_creditos})" style="background:var(--amber); color:#000; border:none; border-radius:6px; padding:7px 14px; font-size:.78rem; font-weight:800; cursor:pointer;">Comprar</button>`
-            : `<button onclick="abrirModalComprarCreditos()" style="background:rgba(250,204,21,0.12); color:var(--amber); border:1px solid rgba(250,204,21,0.3); border-radius:6px; padding:7px 14px; font-size:.78rem; font-weight:800; cursor:pointer;" title="Te faltan ${(l.costo_creditos || 0) - data.saldo_creditos} créditos"><i class="fa-solid fa-plus"></i> Cargar saldo</button>`
-          }
-        </td>
-      </tr>`;
+        const accion = puedePagar
+          ? `<button onclick="comprarLead(${l.id},${l.costo_creditos})" style="width:100%;background:var(--amber);color:#000;border:none;border-radius:8px;padding:10px;font-size:.82rem;font-weight:800;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;">
+              <i class="fa-solid fa-bolt"></i> Comprar lead
+            </button>`
+          : `<button onclick="abrirModalComprarCreditos()" style="width:100%;background:rgba(250,204,21,0.12);color:var(--amber);border:1px solid rgba(250,204,21,0.35);border-radius:8px;padding:10px;font-size:.82rem;font-weight:800;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;" title="Te faltan ${(l.costo_creditos || 0) - data.saldo_creditos} créditos">
+              <i class="fa-solid fa-plus"></i> Cargar saldo (faltan ${(l.costo_creditos || 0) - data.saldo_creditos})
+            </button>`;
+        return renderLeadCard(l, { accion, mostrarCosto: true });
       }).join('');
     }
 
@@ -5452,7 +5564,7 @@ async function cargarMarketplace() {
     if (paisesUnicos.length > 1) {
       const fc = document.createElement('div');
       fc.id = 'mkt-filtro-paises';
-      fc.style.cssText = 'display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;';
+      fc.style.cssText = 'display:flex;gap:8px;flex-wrap:wrap;margin:0 16px 0;padding:14px 0 6px;';
       const allBtn = document.createElement('button');
       allBtn.textContent = '🌎 Todos';
       allBtn.style.cssText = 'padding:6px 14px;border-radius:20px;border:1px solid var(--border);background:var(--amber);color:#000;font-size:.8rem;cursor:pointer;font-weight:700;';
@@ -5476,7 +5588,7 @@ async function cargarMarketplace() {
         };
         fc.appendChild(btn);
       });
-      tbody.closest('table').before(fc);
+      grid.before(fc);
     }
 
     renderMkt();
@@ -5488,8 +5600,30 @@ async function comprarLead(id, costo) {
   try {
     const res = await apiFetch(`${API}/bolsa/${id}/comprar?codigo_aliado=${aliado.codigo}`, {method:'POST'});
     const data = await res.json();
-    if (!res.ok) { alert(data.detail || 'Error'); return; }
-    mostrarToast(`✅ Lead comprado — saldo: ${data.saldo_restante} créditos`, 'green');
+    if (!res.ok) {
+      // Manejo del error estructurado de "saldo insuficiente" — modal con CTAs.
+      // El backend ahora devuelve detail como objeto, no string.
+      const detail = data.detail;
+      if (detail && typeof detail === 'object' && detail.code === 'saldo_insuficiente') {
+        const ok = confirm(
+          `${detail.mensaje}\n\n` +
+          `Tenés: ${detail.tenes} cr.\n` +
+          `Necesitás: ${detail.necesitas} cr.\n` +
+          `Faltan: ${detail.faltan} cr.\n\n` +
+          `¿Querés cargar saldo ahora? (Cancelar = ver leads gratis en cambio)`
+        );
+        if (ok) abrirModalComprarCreditos();
+        else { /* el aliado ve que la sección de básicos sigue arriba */ }
+        return;
+      }
+      alert(typeof detail === 'string' ? detail : (detail?.mensaje || 'Error'));
+      return;
+    }
+    let toastMsg = `✅ Lead comprado — saldo: ${data.saldo_restante} créditos`;
+    if (data.aviso_saldo_bajo) {
+      toastMsg += ` (te avisamos por email cuando bajaste de ${data.umbral_saldo_bajo})`;
+    }
+    mostrarToast(toastMsg, 'green');
     await cargarMarketplace();
     await cargarBolsa();
     await cargarCreditos();
