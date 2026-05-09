@@ -1630,6 +1630,18 @@
           </div>
         </div>
 
+        <!-- Datos de contacto del cliente — se usan para mandarle el formulario de onboarding después del pago -->
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;">
+          <div class="form-row" style="margin-bottom:0;">
+            <label>Email del responsable del cliente <span style="color:var(--amber);font-size:.75rem;">★ para enviarle el formulario de inicio</span></label>
+            <input type="email" id="cot-cliente-email" placeholder="contacto@empresa.com">
+          </div>
+          <div class="form-row" style="margin-bottom:0;">
+            <label>WhatsApp del responsable <span style="color:var(--text-dim);font-size:.75rem;">(con código de país)</span></label>
+            <input type="text" id="cot-cliente-whatsapp" placeholder="+5491155556666">
+          </div>
+        </div>
+
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;">
           <div class="form-row" style="margin-bottom:0;">
             <label>Plan a ofrecer</label>
@@ -4490,7 +4502,9 @@ async function generarLinkPago(moneda) {
   if(moneda === 'usd' && btnARS) btnARS.disabled = true;
 
   try {
-    const url = `${API}/checkout/crear?plan=${encodeURIComponent(plan)}&ref_code=${aliado.ref_code}&nombre_cliente=${encodeURIComponent(cliente)}&moneda=${moneda}`;
+    const clienteEmail = (document.getElementById('cot-cliente-email')?.value || '').trim();
+    const clienteWA    = (document.getElementById('cot-cliente-whatsapp')?.value || '').trim();
+    const url = `${API}/checkout/crear?plan=${encodeURIComponent(plan)}&ref_code=${aliado.ref_code}&nombre_cliente=${encodeURIComponent(cliente)}&moneda=${moneda}&cliente_email=${encodeURIComponent(clienteEmail)}&cliente_whatsapp=${encodeURIComponent(clienteWA)}`;
     const res  = await fetch(url, { method: 'POST' });
     const data = await res.json();
 

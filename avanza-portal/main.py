@@ -151,9 +151,17 @@ PAYPAL_CLIENT_SECRET = os.environ.get("PAYPAL_CLIENT_SECRET", "")
 PAYPAL_WEBHOOK_ID    = os.environ.get("PAYPAL_WEBHOOK_ID", "")
 PAYPAL_BASE_URL      = os.environ.get("PAYPAL_BASE_URL", "https://api-m.paypal.com")  # sandbox: https://api-m.sandbox.paypal.com
 
-# ─── RESEND (emails transaccionales) ──────────────────────────────────────────
+# ─── RESEND (fallback de emails) ─────────────────────────────────────────────
 RESEND_API_KEY = os.environ.get("RESEND_API_KEY", "")
 RESEND_FROM    = os.environ.get("RESEND_FROM", "Avanza Digital <no-reply@avanzadigital.digital>")
+
+# ─── BREVO (emails transaccionales — proveedor primario) ─────────────────────
+# Free tier: 300 emails/día, 9.000/mes — permanente, sin tarjeta.
+# Variable de entorno: BREVO_API_KEY
+# Remitente: el mismo EMAIL_FROM ya configurado (avanzadigital4@gmail.com o dominio propio)
+BREVO_API_KEY = os.environ.get("BREVO_API_KEY", "")
+BREVO_FROM    = os.environ.get("BREVO_FROM", EMAIL_FROM or "avanzadigital4@gmail.com")
+BREVO_FROM_NAME = os.environ.get("BREVO_FROM_NAME", "Avanza Digital")
 
 # ─── DOLAR API ───────────────────────────────────────────────────────────────
 DOLARAPI_URL = os.environ.get("DOLARAPI_URL", "https://dolarapi.com/v1/dolares/blue")
@@ -202,8 +210,45 @@ DATOS_USD = {
 
 
 def enviar_email(destinatario: str, asunto: str, cuerpo_html: str):
-    """Envía un email. Preferimos Resend si hay API key; si no, SMTP; si nada, solo log."""
-    # --- 1. Resend (preferido) ---
+    """Envía un email con cadena de fallback: Brevo → Resend → SMTP → log.
+
+    Brevo es el proveedor primario (300 emails/día gratis, permanente).
+    Resend queda como respaldo automático si Brevo falla por cualquier razón.
+    SMTP es el último recurso si ambas APIs fallan.
+    """
+    # --- 1. BREVO (primario) ---
+    if BREVO_API_KEY:
+        try:
+            # Parsear "Nombre <email>" o usar directo
+            sender_email = BREVO_FROM
+            sender_name  = BREVO_FROM_NAME
+            if "<" in BREVO_FROM and ">" in BREVO_FROM:
+                parts = BREVO_FROM.split("<")
+                sender_name  = parts[0].strip()
+                sender_email = parts[1].replace(">", "").strip()
+
+            resp = httpx.post(
+                "https://api.brevo.com/v3/smtp/email",
+                headers={
+                    "api-key": BREVO_API_KEY,
+                    "Content-Type": "application/json",
+                },
+                json={
+                    "sender":      {"name": sender_name, "email": sender_email},
+                    "to":          [{"email": destinatario}],
+                    "subject":     asunto,
+                    "htmlContent": cuerpo_html,
+                },
+                timeout=10.0,
+            )
+            if resp.status_code in (200, 201, 202):
+                print(f"[EMAIL Brevo] OK → {destinatario} | {asunto}")
+                return
+            print(f"[EMAIL Brevo ERROR {resp.status_code}] {resp.text[:200]}")
+        except Exception as e:
+            print(f"[EMAIL Brevo EXCEPTION] {e}")
+
+    # --- 2. RESEND (fallback automático) ---
     if RESEND_API_KEY:
         try:
             resp = httpx.post(
@@ -212,16 +257,16 @@ def enviar_email(destinatario: str, asunto: str, cuerpo_html: str):
                          "Content-Type": "application/json"},
                 json={"from": RESEND_FROM, "to": [destinatario],
                       "subject": asunto, "html": cuerpo_html},
-                timeout=10.0
+                timeout=10.0,
             )
             if resp.status_code in (200, 202):
-                print(f"[EMAIL Resend] OK → {destinatario} | {asunto}")
+                print(f"[EMAIL Resend fallback] OK → {destinatario} | {asunto}")
                 return
             print(f"[EMAIL Resend ERROR {resp.status_code}] {resp.text[:200]}")
         except Exception as e:
-            print(f"[EMAIL Resend ERROR] {e}")
+            print(f"[EMAIL Resend EXCEPTION] {e}")
 
-    # --- 2. SMTP (fallback) ---
+    # --- 3. SMTP (último recurso) ---
     if not SMTP_HOST or not SMTP_USER or not SMTP_PASS:
         print(f"[EMAIL - sin transporte] Para: {destinatario} | Asunto: {asunto}")
         return
@@ -235,9 +280,9 @@ def enviar_email(destinatario: str, asunto: str, cuerpo_html: str):
             server.starttls()
             server.login(SMTP_USER, SMTP_PASS)
             server.sendmail(EMAIL_FROM, destinatario, msg.as_string())
-        print(f"[EMAIL SMTP] Enviado a {destinatario}: {asunto}")
+        print(f"[EMAIL SMTP fallback] Enviado a {destinatario}: {asunto}")
     except Exception as e:
-        print(f"[EMAIL ERROR] {e}")
+        print(f"[EMAIL ERROR total] {e}")
 
 
 # ─── DOLAR API: tipo de cambio blue en tiempo real ───────────────────────────
@@ -2339,6 +2384,8 @@ async def _crear_link_paypal(a: Aliado, plan: str, nombre_cliente: str, db: Sess
 async def crear_checkout(request: Request, plan: str,
                          ref_code: str,
                          nombre_cliente: str = "Cliente",
+                         cliente_email: str = "",
+                         cliente_whatsapp: str = "",
                          moneda: str = "ars",
                          db: Session = Depends(get_db)):
     """Crea un link de pago. `moneda` = 'ars' (MP) o 'usd' (PayPal).
@@ -2363,8 +2410,13 @@ async def crear_checkout(request: Request, plan: str,
         if not reciente and nombre_cliente and nombre_cliente != "Cliente":
             p = Prospecto(aliado_id=a.id, nombre=nombre_cliente,
                           plan_interes=plan, estado="propuesta_enviada",
-                          nota=f"Auto-creado al generar link de pago ({moneda.upper()})")
+                          nota=f"Auto-creado al generar link de pago ({moneda.upper()}). Email: {cliente_email or '—'} | WA: {cliente_whatsapp or '—'}")
             db.add(p); db.commit()
+        elif reciente and (cliente_email or cliente_whatsapp):
+            # Actualizar el prospecto existente con datos de contacto si los tenemos
+            if not reciente.nota or "Email:" not in reciente.nota:
+                reciente.nota = (reciente.nota or "") + f" | Email: {cliente_email or '—'} | WA: {cliente_whatsapp or '—'}"
+                db.commit()
     except Exception as e:
         print(f"[CHECKOUT] No pude auto-crear prospecto: {e}")
 
@@ -2383,9 +2435,32 @@ async def crear_checkout(request: Request, plan: str,
         }
 
     if moneda == "ars":
-        return await _crear_link_mp(a, plan, nombre_cliente, db)
+        resultado = await _crear_link_mp(a, plan, nombre_cliente, db)
     else:
-        return await _crear_link_paypal(a, plan, nombre_cliente, db)
+        resultado = await _crear_link_paypal(a, plan, nombre_cliente, db)
+
+    # Guardar email y whatsapp del cliente en el LinkPago para recuperarlos
+    # cuando llegue el webhook de pago confirmado y mandar el Tally correcto.
+    if cliente_email or cliente_whatsapp:
+        try:
+            link_id = resultado.get("link_id")
+            if link_id:
+                lp = db.query(LinkPago).filter(LinkPago.id == link_id).first()
+                if lp:
+                    # Guardamos los datos en external_ref extendido (no-breaking)
+                    # Formato: "ref_code|plan|nombre_cliente|email|whatsapp"
+                    partes = (lp.external_ref or "").split("|")
+                    while len(partes) < 3:
+                        partes.append("")
+                    if len(partes) == 3:
+                        partes.append(cliente_email or "")
+                        partes.append(cliente_whatsapp or "")
+                        lp.external_ref = "|".join(partes)
+                        db.commit()
+        except Exception as e:
+            print(f"[CHECKOUT] No pude guardar email/WA en LinkPago: {e}")
+
+    return resultado
 
 
 @app.get("/checkout/exitoso")
@@ -2558,6 +2633,80 @@ def _procesar_pago_confirmado(db: Session,
         </div>"""
 
     enviar_email(a.email, asunto_email, cuerpo_email)
+
+    # ── EMAIL AL CLIENTE con link del formulario de onboarding (Tally) ────────
+    # Se manda al email del cliente si lo tenemos guardado en el LinkPago.
+    # El link del Tally se elige según el plan que pagó — cada plan tiene su
+    # formulario específico con las preguntas correspondientes.
+    TALLY_POR_PLAN = {
+        "Plan Base":        "https://tally.so/r/EkXy0X",
+        "Plan Pro":         "https://tally.so/r/obyX41",
+        "Plan Industrial":  "https://tally.so/r/J92qxY",
+        "Estrategico 360":  "https://tally.so/r/NpArxb",
+    }
+    tally_url = TALLY_POR_PLAN.get(plan, "")
+
+    # Recuperar email y whatsapp del cliente desde el external_ref del LinkPago
+    cliente_email_onboarding = ""
+    cliente_whatsapp_onboarding = ""
+    if link_pago_id:
+        try:
+            lp_check = db.query(LinkPago).filter(LinkPago.id == link_pago_id).first()
+            if lp_check and lp_check.external_ref:
+                partes = lp_check.external_ref.split("|")
+                if len(partes) >= 4:
+                    cliente_email_onboarding = partes[3]
+                if len(partes) >= 5:
+                    cliente_whatsapp_onboarding = partes[4]
+        except Exception as e:
+            print(f"[ONBOARDING EMAIL] No pude recuperar email del LinkPago: {e}")
+
+    if cliente_email_onboarding and tally_url:
+        nombre_corto_cliente = nombre_cliente.split()[0] if nombre_cliente else "Hola"
+        html_cliente = f"""
+        <div style="font-family:Inter,sans-serif;background:#fff;color:#111;padding:40px;max-width:600px;margin:0 auto;border-radius:12px;">
+          <div style="text-align:center;margin-bottom:32px;">
+            <div style="font-size:2rem;">🎉</div>
+            <h1 style="font-size:1.6rem;font-weight:900;margin:12px 0 6px;">¡Pago confirmado, {nombre_corto_cliente}!</h1>
+            <p style="color:#555;font-size:.95rem;">Tu contratación del <strong>{plan}</strong> fue procesada exitosamente.</p>
+          </div>
+
+          <div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:10px;padding:24px;margin-bottom:24px;">
+            <h2 style="font-size:1.1rem;font-weight:800;margin:0 0 10px;color:#111;">El siguiente paso es tuyo 👇</h2>
+            <p style="color:#444;line-height:1.6;margin:0 0 16px;">Para que podamos empezar a trabajar en tu proyecto, necesitamos que completes este formulario. <strong>Te toma menos de 5 minutos</strong> y es la información que usaremos para construir todo tu ecosistema digital.</p>
+            <a href="{tally_url}" style="display:block;text-align:center;padding:16px 24px;background:#111;color:#fff;border-radius:8px;text-decoration:none;font-weight:800;font-size:1.05rem;">
+              📋 Completar formulario de inicio →
+            </a>
+          </div>
+
+          <div style="background:#fffbeb;border:1px solid #fde68a;border-radius:8px;padding:16px;margin-bottom:24px;">
+            <p style="margin:0;font-size:.88rem;color:#92400e;line-height:1.5;">
+              ⚡ <strong>Importante:</strong> sin este formulario no podemos arrancar. Cuanto antes lo completes, antes tenés tu proyecto funcionando.
+            </p>
+          </div>
+
+          <p style="color:#555;font-size:.88rem;line-height:1.6;">
+            Si tenés alguna pregunta antes de completarlo, respondé este email o escribinos por WhatsApp. Estaremos en contacto dentro de las próximas <strong>24hs hábiles</strong>.
+          </p>
+
+          <div style="border-top:1px solid #e5e7eb;margin-top:24px;padding-top:16px;text-align:center;">
+            <p style="font-size:.78rem;color:#9ca3af;margin:0;">Avanza Digital · {plan} · Tu aliado: {a.nombre}</p>
+            {f'<p style="font-size:.78rem;color:#9ca3af;margin:4px 0;">WhatsApp de contacto: {cliente_whatsapp_onboarding}</p>' if cliente_whatsapp_onboarding else ''}
+          </div>
+        </div>
+        """
+        try:
+            enviar_email(
+                cliente_email_onboarding,
+                f"✅ Pago confirmado — completá el formulario de inicio ({plan})",
+                html_cliente
+            )
+            print(f"[ONBOARDING EMAIL] Enviado a {cliente_email_onboarding} con Tally {plan}")
+        except Exception as e:
+            print(f"[ONBOARDING EMAIL ERROR] {e}")
+    elif not cliente_email_onboarding:
+        # No tenemos el email del cliente — loggeamos para que el admin lo contacte manualmente
+        print(f"[ONBOARDING SIN EMAIL] Venta {v.id} | Cliente: {nombre_cliente} | Plan: {plan} — no hay email del cliente para mandar Tally")
 
     return {"status": "ok", "venta_registrada": True, "comision_id": c.id,
             "comision_usd": comision_usd, "aliado": a.codigo,
@@ -5745,13 +5894,24 @@ input[type=text]:focus{{outline:none;border-color:#3b82f6;}}
 <div id="modal-overlay" onclick="onOverlayClick(event)" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:100;align-items:center;justify-content:center;padding:16px;">
   <div class="modal-box" onclick="event.stopPropagation()">
 
-    <!-- PASO 1: nombre -->
+    <!-- PASO 1: datos de contacto del cliente -->
     <div id="step-nombre" class="step active">
-      <h3 style="margin:0 0 6px;font-size:1.15rem;font-weight:800;">¿Cuál es tu nombre?</h3>
-      <p style="color:#a1a1aa;font-size:.87rem;margin:0 0 18px;">Lo usamos para personalizar tu proceso de compra.</p>
-      <input id="modal-nombre" type="text" placeholder="Tu nombre completo"
+      <h3 style="margin:0 0 6px;font-size:1.15rem;font-weight:800;">Antes de pagar, necesitamos tus datos</h3>
+      <p style="color:#a1a1aa;font-size:.87rem;margin:0 0 18px;">Te enviaremos el formulario de inicio del proyecto al email apenas se confirme el pago.</p>
+
+      <label style="display:block;font-size:.78rem;color:#a1a1aa;margin-bottom:4px;font-weight:700;">Nombre completo *</label>
+      <input id="modal-nombre" type="text" placeholder="Tu nombre completo" style="margin-bottom:12px;"
+        onkeydown="if(event.key==='Enter') document.getElementById('modal-email').focus()">
+
+      <label style="display:block;font-size:.78rem;color:#a1a1aa;margin-bottom:4px;font-weight:700;">Email de contacto *</label>
+      <input id="modal-email" type="text" placeholder="tu@empresa.com" style="margin-bottom:12px;"
+        onkeydown="if(event.key==='Enter') document.getElementById('modal-whatsapp').focus()">
+
+      <label style="display:block;font-size:.78rem;color:#a1a1aa;margin-bottom:4px;font-weight:700;">WhatsApp con código de país *</label>
+      <input id="modal-whatsapp" type="text" placeholder="+5491155556666"
         onkeydown="if(event.key==='Enter') irAPaso2()">
-      <div style="display:flex;gap:10px;margin-top:14px;">
+
+      <div style="display:flex;gap:10px;margin-top:18px;">
         <button class="btn-cancel" onclick="cerrarModal()">Cancelar</button>
         <button class="btn-primary" onclick="irAPaso2()">Siguiente →</button>
       </div>
@@ -5800,8 +5960,10 @@ input[type=text]:focus{{outline:none;border-color:#3b82f6;}}
   }}
   function cerrarModal() {{
     document.getElementById('modal-overlay').style.display = 'none';
-    document.getElementById('modal-nombre').value = '';
-    document.getElementById('modal-nombre').style.borderColor = '#444';
+    ['modal-nombre','modal-email','modal-whatsapp'].forEach(id => {{
+      const el = document.getElementById(id);
+      if (el) {{ el.value = ''; el.style.borderColor = '#444'; }}
+    }});
   }}
   function onOverlayClick(e) {{
     if (e.target === document.getElementById('modal-overlay')) cerrarModal();
@@ -5812,14 +5974,33 @@ input[type=text]:focus{{outline:none;border-color:#3b82f6;}}
     }});
     document.getElementById(id).classList.add('active');
   }}
+  function _marcarError(id) {{
+    const el = document.getElementById(id);
+    el.style.borderColor = '#ef4444';
+    el.focus();
+  }}
+  function _esEmailValido(s) {{
+    return /^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(s);
+  }}
+  function _esWhatsappValido(s) {{
+    // Acepta + y dígitos, mínimo 8 dígitos. Espacios y guiones se eliminan.
+    const limpio = s.replace(/[\\s\\-\\(\\)]/g, '');
+    return /^\\+?[0-9]{{8,15}}$/.test(limpio);
+  }}
   function irAPaso2() {{
-    const nombre = document.getElementById('modal-nombre').value.trim();
-    if (!nombre) {{
-      document.getElementById('modal-nombre').style.borderColor = '#ef4444';
-      document.getElementById('modal-nombre').focus();
-      return;
-    }}
-    document.getElementById('modal-nombre').style.borderColor = '#444';
+    const nombre   = document.getElementById('modal-nombre').value.trim();
+    const email    = document.getElementById('modal-email').value.trim();
+    const whatsapp = document.getElementById('modal-whatsapp').value.trim();
+
+    // Reset bordes
+    ['modal-nombre','modal-email','modal-whatsapp'].forEach(id => {{
+      document.getElementById(id).style.borderColor = '#444';
+    }});
+
+    if (!nombre)              {{ _marcarError('modal-nombre');   return; }}
+    if (!_esEmailValido(email))    {{ _marcarError('modal-email');    return; }}
+    if (!_esWhatsappValido(whatsapp)) {{ _marcarError('modal-whatsapp'); return; }}
+
     mostrarPaso('step-moneda');
   }}
   function volverAPaso1() {{
@@ -5845,11 +6026,13 @@ input[type=text]:focus{{outline:none;border-color:#3b82f6;}}
     }}
   }}
   async function confirmarContratacion() {{
-    const nombre = document.getElementById('modal-nombre').value.trim();
-    if (!nombre) {{ volverAPaso1(); return; }}
+    const nombre   = document.getElementById('modal-nombre').value.trim();
+    const email    = document.getElementById('modal-email').value.trim();
+    const whatsapp = document.getElementById('modal-whatsapp').value.trim();
+    if (!nombre || !email || !whatsapp) {{ volverAPaso1(); return; }}
     mostrarPaso('step-procesando');
     try {{
-      const url = `/checkout/crear?plan=${{encodeURIComponent(_plan)}}&ref_code=${{_ref}}&nombre_cliente=${{encodeURIComponent(nombre)}}&moneda=${{_moneda}}`;
+      const url = `/checkout/crear?plan=${{encodeURIComponent(_plan)}}&ref_code=${{_ref}}&nombre_cliente=${{encodeURIComponent(nombre)}}&moneda=${{_moneda}}&cliente_email=${{encodeURIComponent(email)}}&cliente_whatsapp=${{encodeURIComponent(whatsapp)}}`;
       const res = await fetch(url, {{method:'POST'}});
       let data;
       try {{ data = await res.json(); }} catch(_) {{ data = {{}}; }}
