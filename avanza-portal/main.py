@@ -13,7 +13,9 @@ from models import (
     TransaccionCredito, PostComunidad, ComentarioComunidad, AutomationLog,
     LinkPago, Comision, AcademiaModulo, AliadoModuloCompletado,
     SolicitudCompraCreditos, ReporteMalContacto,
-    PLANES, PAQUETES_CREDITOS, NIVELES, CUOTAS_RECARGO, REPUTACION_BADGES
+    PlanContinuidadActivo,
+    PLANES, PAQUETES_CREDITOS, NIVELES, CUOTAS_RECARGO, REPUTACION_BADGES,
+    PLANES_CONTINUIDAD, COMISION_RECURRENTE_PCT,
 )
 import random, string, os, smtplib, httpx, json, hmac as hmac_lib, hashlib, base64, sys
 from email.mime.text import MIMEText
@@ -914,9 +916,87 @@ def job_onboarding_sequence():
         db.close()
 
 
+# ─── SCHEDULER: COMISIONES RECURRENTES MENSUALES (v1.5) ──────────────────────
+def job_generar_comisiones_recurrentes_mensual():
+    """Corre 1x/día. Solo ejecuta el día 1 de cada mes.
+       Genera la comisión recurrente del mes para cada Plan de Continuidad
+       activo (titular 10% + sponsor 5% si tiene). Idempotente por
+       (aliado_id, nombre_cliente, plan_label, mes, anio): si el aliado ya
+       cobró su comisión de este mes (por ejemplo porque al firmar se generó
+       la del mes en curso), el cron no la duplica.
+       Si por alguna razón el cron corre dos veces el mismo día (deploy
+       mid-day, reinicio del scheduler), no acredita dos veces.
+       Al final manda un resumen al admin para que sepa qué transferir.
+    """
+    from database import SessionLocal
+    db = SessionLocal()
+    try:
+        ahora = datetime.utcnow()
+        # SOLO el día 1 del mes
+        if ahora.day != 1:
+            return
+        resumen = _generar_comisiones_recurrentes_del_mes(db, ahora.month, ahora.year)
+        creadas_titular = resumen.get("creadas_titular", 0)
+        creadas_sponsor = resumen.get("creadas_sponsor", 0)
+        saltadas       = resumen.get("saltadas_por_idempotencia", 0)
+        print(f"[RECURRENTE {ahora.year}-{ahora.month:02d}] "
+              f"Titular: {creadas_titular} · "
+              f"Sponsor: {creadas_sponsor} · "
+              f"Saltadas: {saltadas}")
+
+        # Email resumen al admin (no bloquea — si Gmail falla, igual quedan
+        # las comisiones creadas en BD).
+        try:
+            admin_email = EMAIL_FROM or "avanzadigital4@gmail.com"
+            detalle = resumen.get("detalle") or []
+            total_pagar_titulares = sum(d.get("comision_titular_usd", 0) or 0
+                                        for d in detalle if d.get("creado_titular"))
+            total_pagar_sponsor   = sum(d.get("comision_sponsor_usd", 0) or 0
+                                        for d in detalle if d.get("creado_sponsor"))
+            total_pagar = round(total_pagar_titulares + total_pagar_sponsor, 2)
+            mes_nombre = ahora.strftime("%B %Y").capitalize()
+
+            filas_html = ""
+            for d in detalle:
+                if not (d.get("creado_titular") or d.get("creado_sponsor")):
+                    continue
+                filas_html += (
+                    f"<tr>"
+                    f"<td style='padding:6px 10px;border-bottom:1px solid #1f2937;'>{d.get('aliado_codigo') or '—'}</td>"
+                    f"<td style='padding:6px 10px;border-bottom:1px solid #1f2937;'>{d.get('cliente') or '—'}</td>"
+                    f"<td style='padding:6px 10px;border-bottom:1px solid #1f2937;'>{d.get('plan') or '—'}</td>"
+                    f"<td style='padding:6px 10px;border-bottom:1px solid #1f2937;text-align:right;color:#fbbf24;font-weight:700;'>USD {d.get('comision_titular_usd', 0):,.2f}</td>"
+                    f"<td style='padding:6px 10px;border-bottom:1px solid #1f2937;text-align:right;color:#a3a3a3;'>USD {d.get('comision_sponsor_usd', 0):,.2f}</td>"
+                    f"</tr>"
+                )
+
+            cuerpo = f"""<div style="font-family:sans-serif;background:#0a0a0a;color:#fff;padding:24px;max-width:720px;margin:auto;">
+              <h2 style="color:#fbbf24;margin:0 0 6px;">🔁 Comisiones recurrentes — {mes_nombre}</h2>
+              <p style="margin:4px 0 18px;color:#a3a3a3;font-size:.9rem;">El cron del día 1 ya generó las comisiones de continuidad de este mes.</p>
+              <div style="background:#111;border:1px solid #1f2937;border-radius:8px;padding:18px;margin-bottom:18px;">
+                <div style="display:flex;gap:24px;flex-wrap:wrap;">
+                  <div><div style="font-size:.7rem;color:#a3a3a3;text-transform:uppercase;letter-spacing:1px;">Titulares creadas</div><div style="font-size:1.8rem;font-weight:900;color:#fbbf24;">{creadas_titular}</div></div>
+                  <div><div style="font-size:.7rem;color:#a3a3a3;text-transform:uppercase;letter-spacing:1px;">Sponsor (5% RED)</div><div style="font-size:1.8rem;font-weight:900;color:#a3a3a3;">{creadas_sponsor}</div></div>
+                  <div><div style="font-size:.7rem;color:#a3a3a3;text-transform:uppercase;letter-spacing:1px;">Saltadas (ya existían)</div><div style="font-size:1.8rem;font-weight:900;color:#71717a;">{saltadas}</div></div>
+                  <div><div style="font-size:.7rem;color:#a3a3a3;text-transform:uppercase;letter-spacing:1px;">Total a abonar</div><div style="font-size:1.8rem;font-weight:900;color:#4ade80;">USD {total_pagar:,.2f}</div></div>
+                </div>
+              </div>
+              {("<table style='width:100%;border-collapse:collapse;font-size:.85rem;'><thead><tr style='background:#111;color:#a3a3a3;text-transform:uppercase;font-size:.72rem;letter-spacing:1px;'><th style='padding:8px 10px;text-align:left;'>Aliado</th><th style='padding:8px 10px;text-align:left;'>Cliente</th><th style='padding:8px 10px;text-align:left;'>Plan</th><th style='padding:8px 10px;text-align:right;'>Titular 10%</th><th style='padding:8px 10px;text-align:right;'>Sponsor 5%</th></tr></thead><tbody>" + filas_html + "</tbody></table>") if filas_html else "<p style='color:#71717a;'>No hubo comisiones nuevas este mes (probablemente ya estaban creadas).</p>"}
+              <p style="margin-top:18px;font-size:.8rem;color:#71717a;">Las comisiones quedan en estado <strong>pendiente</strong>. Marcalas como abonadas desde el panel de Comisiones cuando hagas la transferencia.</p>
+            </div>"""
+            enviar_email(admin_email, f"🔁 Comisiones recurrentes generadas — {mes_nombre}", cuerpo)
+        except Exception as e:
+            print(f"[RECURRENTE EMAIL ADMIN] {e}", file=sys.stderr)
+    except Exception as e:
+        print(f"[RECURRENTE JOB ERROR] {e}", file=sys.stderr)
+    finally:
+        db.close()
+
+
 scheduler.add_job(job_notificaciones_inactividad, "interval", hours=24)
 scheduler.add_job(job_estipendio_mensual, "interval", hours=24)
 scheduler.add_job(job_onboarding_sequence, "interval", hours=24)
+scheduler.add_job(job_generar_comisiones_recurrentes_mensual, "interval", hours=24)
 scheduler.start()
 
 
@@ -1398,25 +1478,39 @@ def auto_registro(request: Request,
     db.commit()
 
     # Email de bienvenida — EN SEGUNDO PLANO (no bloquea la respuesta)
+    # IMPORTANTE: este email NO debe mencionar el marketplace de créditos ni
+    # invitar a gastarlos. El email del Día 1 (job_onboarding_sequence) ya cubre
+    # ese ángulo correctamente. Aquí solo confirmamos el registro y damos el
+    # primer paso accionable: reclamar un lead básico gratis.
+    _nombre_corto = a.nombre.split()[0] if a.nombre else "Aliado"
     background_tasks.add_task(
         enviar_email,
         a.email,
-        f"¡Bienvenido al Avanza Partner Network, {a.nombre.split()[0]}!",
+        f"¡Bienvenido al Avanza Partner Network, {_nombre_corto}!",
         f"""
         <div style="font-family:Inter,sans-serif;background:#050505;color:#fff;padding:40px;max-width:600px;margin:0 auto;border-radius:12px;">
           <h1 style="color:#f97316;font-size:1.6rem;margin-bottom:8px;">¡Ya sos Aliado Avanza! 🎉</h1>
           <p style="color:#a1a1aa;margin-bottom:28px;">Tu registro fue confirmado. Guardá estos datos para ingresar al portal.</p>
+
           <div style="background:#111;border:1px solid #222;border-radius:8px;padding:20px;margin-bottom:24px;">
             <p style="margin:0 0 8px;font-size:.85rem;color:#71717a;text-transform:uppercase;letter-spacing:1px;">Tu código de aliado</p>
             <p style="margin:0;font-size:2rem;font-weight:900;color:#f97316;letter-spacing:2px;">{a.codigo}</p>
           </div>
+
           <p style="color:#a1a1aa;margin-bottom:8px;">Tu comisión arranca en <strong style="color:#fff;">10% (BASIC)</strong> y sube automáticamente con cada venta.</p>
-          <div style="background:rgba(168,85,247,0.08);border:1px solid rgba(168,85,247,0.25);border-radius:8px;padding:14px 18px;margin-bottom:24px;">
-            <p style="margin:0;color:#c084fc;font-weight:700;font-size:.95rem;">🎁 Te regalamos 100 créditos de bienvenida</p>
-            <p style="margin:6px 0 0;color:#a1a1aa;font-size:.82rem;">Usalos en el Marketplace de Leads del portal para reservar contactos pre-calificados.</p>
+
+          <div style="background:#0f1d12;border:1px solid #14532d;border-radius:8px;padding:18px;margin:20px 0;">
+            <p style="margin:0 0 6px;color:#86efac;font-weight:700;">✅ Tu primer paso: reclamá un lead básico gratis</p>
+            <p style="margin:0;color:#a1a1aa;line-height:1.6;font-size:.9rem;">
+              En la Bolsa de Leads vas a encontrar contactos disponibles para trabajar — sin gastar nada.
+              Los leads básicos son ideales para practicar el pitch y hacer tu primera venta.
+            </p>
           </div>
-          <p style="color:#a1a1aa;margin-bottom:28px;">Tu link de referido: <a href="https://avanzadigital.digital/alianzas?ref={a.ref_code}" style="color:#3b82f6;">/alianzas?ref={a.ref_code}</a></p>
-          <a href="https://avanza-digital-production.up.railway.app/portal.html" style="display:inline-block;padding:14px 28px;background:#f97316;color:#000;border-radius:8px;text-decoration:none;font-weight:800;font-size:1rem;">Ingresar al portal →</a>
+
+          <p style="color:#a1a1aa;margin-bottom:28px;font-size:.9rem;">Tu link de referido: <a href="https://avanzadigital.digital/alianzas?ref={a.ref_code}" style="color:#3b82f6;">/alianzas?ref={a.ref_code}</a></p>
+
+          <a href="https://avanza-digital-production.up.railway.app/portal.html#bolsa" style="display:inline-block;padding:14px 28px;background:#f97316;color:#000;border-radius:8px;text-decoration:none;font-weight:800;font-size:1rem;">Ver leads disponibles →</a>
+
           <p style="margin-top:32px;font-size:.8rem;color:#71717a;">Avanza Digital · Partner Network · Santa Fe, Argentina</p>
         </div>
         """
@@ -2333,6 +2427,22 @@ def _aliado_row(a):
     }
 
 def _aliado_detalle(a, incluir_token: bool = False):
+    # MRR recurrente del aliado (10% sobre planes de continuidad activos).
+    # Calculado on-the-fly: cantidad de queries baja, no vale la pena cachear.
+    try:
+        from sqlalchemy.orm import object_session
+        sess = object_session(a)
+        if sess is not None:
+            activos_mrr = sess.query(PlanContinuidadActivo).filter(
+                PlanContinuidadActivo.aliado_id == a.id,
+                PlanContinuidadActivo.fecha_baja.is_(None),
+            ).all()
+            mrr_recurrente = round(sum(p.comision_mensual_usd for p in activos_mrr), 2)
+        else:
+            mrr_recurrente = 0.0
+    except Exception:
+        mrr_recurrente = 0.0
+
     out = {
         "codigo": a.codigo, "nombre": a.nombre, "email": a.email,
         "whatsapp": a.whatsapp, "ciudad": a.ciudad, "perfil": a.perfil,
@@ -2341,6 +2451,7 @@ def _aliado_detalle(a, incluir_token: bool = False):
         "ventas_6m": a.ventas_6_meses, "total_ventas": len(a.ventas),
         "total_ganado": round(a.total_ganado, 2),
         "total_pendiente": round(a.total_pendiente, 2),
+        "mrr_recurrente_usd": mrr_recurrente,
         "ref_code": a.ref_code,
         "link_ref":    f"https://avanzadigital.digital/alianzas?ref={a.ref_code}",
         "link_perfil": f"{PORTAL_URL}/p/{a.ref_code}",
@@ -2422,12 +2533,30 @@ def obtener_leaderboard(db: Session = Depends(get_db)):
 LINK_EXPIRATION_HOURS = 48
 
 
+# v1.5 — Helpers unificados para soportar tanto planes one-shot (PLANES) como
+# planes de continuidad mensuales (PLANES_CONTINUIDAD) en el mismo flujo de
+# checkout/webhook.
+def _es_plan_continuidad(plan: str) -> bool:
+    return plan in PLANES_CONTINUIDAD
+
+
+def _precio_de_plan(plan: str) -> float:
+    """Devuelve el precio USD del plan, ya sea one-shot o continuidad.
+    Para continuidad es el precio MENSUAL (lo que paga el cliente cada mes;
+    el primer mes es lo que cobra el checkout)."""
+    if plan in PLANES:
+        return float(PLANES[plan])
+    if plan in PLANES_CONTINUIDAD:
+        return float(PLANES_CONTINUIDAD[plan])
+    raise KeyError(f"Plan desconocido: {plan}")
+
+
 async def _crear_link_mp(a: Aliado, plan: str, nombre_cliente: str, db: Session):
     """Crea una preferencia en MP con precio en ARS usando dolarapi blue del momento."""
     if not MP_ACCESS_TOKEN:
         raise HTTPException(503, "MP_ACCESS_TOKEN no está configurado.")
 
-    valor_usd = PLANES[plan]
+    valor_usd = _precio_de_plan(plan)
     tipo_cambio = await obtener_tipo_de_cambio()
     precio_ars = round(valor_usd * tipo_cambio, 2)
     external_ref = f"{a.ref_code}|{plan}|{nombre_cliente}"
@@ -2504,7 +2633,7 @@ async def _crear_link_mp(a: Aliado, plan: str, nombre_cliente: str, db: Session)
 
 async def _crear_link_paypal(a: Aliado, plan: str, nombre_cliente: str, db: Session):
     """Crea una orden de PayPal en USD para pago directo en dólares."""
-    valor_usd = PLANES[plan]
+    valor_usd = _precio_de_plan(plan)
     external_ref = f"{a.ref_code}|{plan}|{nombre_cliente}"
     expires_at = datetime.now() + timedelta(hours=LINK_EXPIRATION_HOURS)
 
@@ -2583,7 +2712,7 @@ async def crear_checkout(request: Request, plan: str,
     a = db.query(Aliado).filter(Aliado.ref_code == ref_code).first()
     if not a:
         raise HTTPException(404, "Código de referido inválido.")
-    if plan not in PLANES:
+    if plan not in PLANES and plan not in PLANES_CONTINUIDAD:
         raise HTTPException(400, "Plan inválido.")
 
     moneda = (moneda or "ars").lower()
@@ -2670,6 +2799,95 @@ def checkout_exitoso(ref: str = "", plan: str = "", payment_id: str = "", db: Se
 
 
 # ─── HELPER COMÚN: procesar pago confirmado (MP o PayPal) ────────────────────
+def _procesar_pago_continuidad_confirmado(db: Session,
+                                          a: Aliado,
+                                          plan: str,
+                                          nombre_cliente: str,
+                                          processor: str,
+                                          payment_id: str,
+                                          link_pago_id: int = None) -> dict:
+    """Maneja un pago confirmado para un Plan de Continuidad.
+
+    Crea (o reutiliza) un PlanContinuidadActivo para el cliente y dispara la
+    primera comisión del mes en curso (titular 10% + sponsor 5% si tiene),
+    para que el aliado no espere al cron del 1ro a ver su comisión.
+
+    Idempotente vía token [PID:xxx] guardado en `notas` del PlanContinuidadActivo:
+    si llega un segundo webhook con el mismo payment_id, lo detecta y no
+    duplica.
+    """
+    pid_token = f"[PID:{payment_id}]"
+
+    # Idempotencia: ya procesamos este payment_id?
+    existing = db.query(PlanContinuidadActivo).filter(
+        PlanContinuidadActivo.aliado_id == a.id,
+        PlanContinuidadActivo.notas.contains(pid_token),
+    ).first()
+    if existing:
+        return {"status": "already_processed", "plan_continuidad_id": existing.id}
+
+    precio = float(PLANES_CONTINUIDAD[plan])
+    modalidad = "MercadoPago" if processor == "mercadopago" else "PayPal"
+    notas = f"Alta automática vía {modalidad} {pid_token}"
+
+    p = PlanContinuidadActivo(
+        aliado_id=a.id,
+        nombre_cliente=nombre_cliente,
+        plan_continuidad=plan,
+        precio_mensual_usd=precio,
+        comision_pct=COMISION_RECURRENTE_PCT,
+        notas=notas,
+    )
+    db.add(p)
+    db.flush()  # para tener p.id y p.aliado disponibles
+
+    # Primera comisión del mes en curso (titular + sponsor 5% si tiene),
+    # idempotente vía el helper compartido.
+    ahora = datetime.utcnow()
+    creado = _crear_comisiones_recurrentes_para_plan(
+        db, p, ahora.month, ahora.year, ahora,
+    )
+
+    # Marcar LinkPago como pagado
+    if link_pago_id:
+        lp = db.query(LinkPago).filter(LinkPago.id == link_pago_id).first()
+        if lp:
+            lp.estado = "pagado"
+
+    db.commit()
+
+    # Email al aliado — copy adaptado a recurrente
+    try:
+        comision_mensual = p.comision_mensual_usd
+        nombre_corto = a.nombre.split()[0] if a.nombre else "Hola"
+        cuerpo_email = f"""<div style="font-family:sans-serif;background:#050505;color:#fff;padding:32px;max-width:520px;margin:auto;border-radius:12px;">
+          <div style="font-size:.78rem;color:#fbbf24;font-weight:700;letter-spacing:.6px;text-transform:uppercase;margin-bottom:8px;">🔁 Renta recurrente activada</div>
+          <h2 style="color:#fbbf24;margin:0 0 16px 0;">¡{nombre_cliente} contrató {plan}!</h2>
+          <p style="color:#e2e8f0;line-height:1.55;">Hola {nombre_corto}, tu cliente acaba de pagar el primer mes a través de <strong>{modalidad}</strong>. A partir de ahora cobrás todos los meses mientras lo mantenga activo.</p>
+          <div style="background:#111;border:1px solid #fbbf2455;border-radius:8px;padding:16px;margin:20px 0;">
+            <p style="margin:4px 0;"><strong>Plan:</strong> {plan}</p>
+            <p style="margin:4px 0;"><strong>Cliente:</strong> {nombre_cliente}</p>
+            <p style="margin:4px 0;"><strong>Cliente paga:</strong> USD {precio:,.0f}/mes</p>
+            <p style="margin:4px 0;"><strong>Tu comisión:</strong> <span style="color:#fbbf24;font-size:1.3rem;font-weight:900;">USD {comision_mensual:,.0f}/mes</span></p>
+            <p style="margin:4px 0;font-size:.85rem;color:#71717a;">El primer mes ya quedó como comisión pendiente. Cada 1ro del mes siguiente se acumula otra automáticamente.</p>
+          </div>
+          <a href="{PORTAL_URL}/portal.html" style="display:inline-block;margin-top:8px;padding:12px 24px;background:#fbbf24;color:#000;border-radius:8px;text-decoration:none;font-weight:700;">Ver mis comisiones →</a>
+        </div>"""
+        if a.email:
+            enviar_email(a.email, f"🔁 Nueva renta recurrente — {plan}", cuerpo_email)
+    except Exception as e:
+        print(f"[CONTINUIDAD EMAIL] No pude notificar al aliado: {e}")
+
+    return {
+        "status": "ok",
+        "tipo": "continuidad",
+        "plan_continuidad_id": p.id,
+        "comision_mensual_usd": p.comision_mensual_usd,
+        "primera_comision_creada": creado["titular"],
+        "comision_sponsor_creada": creado["sponsor"],
+    }
+
+
 def _procesar_pago_confirmado(db: Session,
                               ref_code: str,
                               plan: str,
@@ -2678,12 +2896,22 @@ def _procesar_pago_confirmado(db: Session,
                               payment_id: str,
                               link_pago_id: int = None) -> dict:
     """Registra venta + comisión + notifica. Idempotente vía payment_id en notas.
-    El token [PID:xxx] es delimitado para evitar que payment_id='42' matchee con '142'."""
-    if plan not in PLANES:
+    El token [PID:xxx] es delimitado para evitar que payment_id='42' matchee con '142'.
+
+    Soporta tanto planes one-shot (PLANES) como planes de continuidad
+    (PLANES_CONTINUIDAD). Para continuidad delega en
+    _procesar_pago_continuidad_confirmado."""
+    if plan not in PLANES and plan not in PLANES_CONTINUIDAD:
         return {"status": "invalid_plan"}
     a = db.query(Aliado).filter(Aliado.ref_code == ref_code).first()
     if not a:
         return {"status": "aliado_not_found"}
+
+    # Rama plan de continuidad
+    if plan in PLANES_CONTINUIDAD:
+        return _procesar_pago_continuidad_confirmado(
+            db, a, plan, nombre_cliente, processor, payment_id, link_pago_id,
+        )
 
     # Idempotencia robusta: buscamos el token delimitado [PID:xxx] en las notas.
     # MP reenvía webhooks habitualmente, así que esto es crítico.
@@ -3246,20 +3474,27 @@ def estado_onboarding(codigo: str, db: Session = Depends(get_db), _owner=Depends
     """Retorna el progreso del checklist de onboarding del aliado."""
     a = _get_aliado(codigo, db)
     es_canal2 = (getattr(a, "tipo_aliado", "canal1") or "canal1") == "canal2"
+
+    # Orden deliberado: el aliado canal1 debe reclamar un lead básico ANTES de
+    # cargar un referido. El lead básico es gratis, de riesgo cero, y da contexto
+    # real sobre cómo funciona el programa antes de comprometer un contacto propio.
     pasos = [
-        {"id": "registro",    "titulo": "Te registraste",           "completado": True},
-        {"id": "referido",    "titulo": "Registraste tu 1er referido",
-         "completado": len(a.referidos) > 0},
-        {"id": "prospecto",   "titulo": "Cargaste un prospecto",
-         "completado": len(a.prospectos) > 0},
+        {"id": "registro", "titulo": "Te registraste", "completado": True},
     ]
     if not es_canal2:
-        pasos.append({"id": "bolsa", "titulo": "Reclamaste un lead de la bolsa",
-                      "completado": db.query(LeadBolsa).filter(LeadBolsa.aliado_id == a.id).first() is not None})
+        pasos.append({
+            "id": "bolsa",
+            "titulo": "Reclamaste un lead de la bolsa",
+            "completado": db.query(LeadBolsa).filter(LeadBolsa.aliado_id == a.id).first() is not None,
+        })
     pasos += [
-        {"id": "primera_venta","titulo": "Cerraste tu primera venta",
+        {"id": "prospecto",     "titulo": "Cargaste un prospecto",
+         "completado": len(a.prospectos) > 0},
+        {"id": "referido",      "titulo": "Registraste tu 1er referido",
+         "completado": len(a.referidos) > 0},
+        {"id": "primera_venta", "titulo": "Cerraste tu primera venta",
          "completado": a.ventas_6_meses > 0},
-        {"id": "red",         "titulo": "Invitaste a tu primer sub-aliado",
+        {"id": "red",           "titulo": "Invitaste a tu primer sub-aliado",
          "completado": len(getattr(a, "sub_aliados", [])) > 0},
     ]
     completados = sum(1 for p in pasos if p["completado"])
@@ -6353,7 +6588,13 @@ def listar_comisiones_por_token(aliado: Aliado = Depends(current_aliado_required
 @app.get("/aliados/{codigo}/comisiones")
 def listar_comisiones_aliado(codigo: str, db: Session = Depends(get_db), _owner=Depends(verify_ownership_dep)):
     """Devuelve todas las comisiones del aliado (pendientes + abonadas)
-    con totales agregados. Es la vista del panel de comisiones del portal."""
+    con totales agregados. Es la vista del panel de comisiones del portal.
+
+    v1.5 — Suma:
+      * mrr_recurrente_usd: USD/mes que está cobrando ahora (10% sobre planes
+        de continuidad activos de sus clientes).
+      * clientes_continuidad_activos: detalle por cliente activo.
+    """
     a = _get_aliado(codigo, db)
     comisiones = db.query(Comision).filter(Comision.aliado_id == a.id)\
         .order_by(Comision.fecha_pago.desc().nullslast() if hasattr(Comision.fecha_pago, "desc") else Comision.id.desc()).all()
@@ -6362,12 +6603,30 @@ def listar_comisiones_aliado(codigo: str, db: Session = Depends(get_db), _owner=
     total_pendiente = round(sum(c.comision_usd for c in comisiones if c.estado == "pendiente"), 2)
     total_abonado   = round(sum(c.comision_usd for c in comisiones if c.estado == "abonada"), 2)
 
+    # MRR recurrente — planes de continuidad activos de este aliado
+    activos = db.query(PlanContinuidadActivo).filter(
+        PlanContinuidadActivo.aliado_id == a.id,
+        PlanContinuidadActivo.fecha_baja.is_(None),
+    ).order_by(PlanContinuidadActivo.fecha_alta.desc()).all()
+
+    mrr = round(sum(p.comision_mensual_usd for p in activos), 2)
+    clientes_continuidad = [{
+        "id": p.id,
+        "cliente": p.nombre_cliente,
+        "plan": p.plan_continuidad,
+        "precio_mensual": round(float(p.precio_mensual_usd), 2),
+        "comision_mensual": p.comision_mensual_usd,
+        "fecha_alta": p.fecha_alta.strftime("%d/%m/%y") if p.fecha_alta else "—",
+    } for p in activos]
+
     return {
         "aliado": a.nombre,
         "codigo": a.codigo,
         "cbu_alias": a.cbu_alias,
         "total_pendiente_usd": total_pendiente,
         "total_abonado_usd":   total_abonado,
+        "mrr_recurrente_usd":  mrr,
+        "clientes_continuidad_activos": clientes_continuidad,
         "comisiones": items,
     }
 
@@ -6459,6 +6718,461 @@ def admin_marcar_comision_abonada(id: int,
     return {"mensaje": "Comisión marcada como abonada.",
             "id": c.id, "estado": c.estado,
             "fecha_abono": c.fecha_abono.isoformat()}
+
+
+# ─── PLANES DE CONTINUIDAD (v1.5) ────────────────────────────────────────────
+# Suscripciones recurrentes mensuales de los clientes. Cada plan activo le
+# genera al aliado correspondiente un 10% de comisión mensual mientras esté
+# vivo. La generación de comisiones mensuales se dispara desde un job (ver
+# `generar_comisiones_recurrentes_del_mes`) — admin puede invocarla manual
+# o vía scheduler.
+
+@app.post("/admin/continuidad/alta")
+def admin_alta_continuidad(payload: dict, db: Session = Depends(get_db),
+                           _admin=Depends(current_admin_required)):
+    """Da de alta un Plan de Continuidad para un cliente, asociado a un aliado.
+
+    payload esperado:
+      - aliado_codigo: str (ej. 'AL-123')
+      - nombre_cliente: str
+      - cliente_email: str (opcional)
+      - plan_continuidad: str (debe estar en PLANES_CONTINUIDAD)
+      - precio_mensual_usd: float (opcional — default = precio del plan)
+      - notas: str (opcional)
+    """
+    codigo = (payload.get("aliado_codigo") or "").strip()
+    nombre = (payload.get("nombre_cliente") or "").strip()
+    plan = (payload.get("plan_continuidad") or "").strip()
+
+    if not codigo or not nombre or not plan:
+        raise HTTPException(400, "Faltan campos obligatorios: aliado_codigo, nombre_cliente, plan_continuidad.")
+    if plan not in PLANES_CONTINUIDAD:
+        raise HTTPException(400, f"Plan inválido. Debe ser uno de: {list(PLANES_CONTINUIDAD.keys())}.")
+
+    a = db.query(Aliado).filter(Aliado.codigo == codigo).first()
+    if not a:
+        raise HTTPException(404, f"Aliado {codigo} no encontrado.")
+
+    precio = float(payload.get("precio_mensual_usd") or PLANES_CONTINUIDAD[plan])
+
+    activo = PlanContinuidadActivo(
+        aliado_id=a.id,
+        nombre_cliente=nombre,
+        cliente_email=(payload.get("cliente_email") or None),
+        plan_continuidad=plan,
+        precio_mensual_usd=precio,
+        comision_pct=COMISION_RECURRENTE_PCT,
+        notas=(payload.get("notas") or None),
+    )
+    db.add(activo)
+    db.commit()
+    db.refresh(activo)
+
+    return {
+        "mensaje": f"Plan {plan} activado para {nombre} bajo {a.nombre} ({a.codigo}).",
+        "id": activo.id,
+        "comision_mensual_usd": activo.comision_mensual_usd,
+    }
+
+
+@app.post("/admin/continuidad/{plan_id}/baja")
+def admin_baja_continuidad(plan_id: int, payload: dict = None,
+                           db: Session = Depends(get_db),
+                           _admin=Depends(current_admin_required)):
+    """Marca un plan de continuidad como dado de baja.
+
+    Esto detiene la generación de comisiones recurrentes para ese cliente
+    en próximos ciclos. Las comisiones ya generadas no se afectan.
+    """
+    p = db.query(PlanContinuidadActivo).filter(PlanContinuidadActivo.id == plan_id).first()
+    if not p:
+        raise HTTPException(404, "Plan de continuidad no encontrado.")
+    if p.fecha_baja is not None:
+        raise HTTPException(400, "Este plan ya está dado de baja.")
+
+    p.fecha_baja = datetime.utcnow()
+    p.motivo_baja = (payload or {}).get("motivo_baja") or None
+    db.commit()
+    return {"mensaje": "Plan dado de baja.", "id": p.id, "fecha_baja": p.fecha_baja.isoformat()}
+
+
+@app.post("/admin/continuidad/{plan_id}/precio")
+def admin_actualizar_precio_continuidad(plan_id: int, payload: dict,
+                                        db: Session = Depends(get_db),
+                                        _admin=Depends(current_admin_required)):
+    """Actualiza el precio mensual de un PlanContinuidadActivo puntual.
+
+    Útil cuando el cliente renegocia o cuando se sube de plan dentro del
+    mismo registro (ej: pasa de Cuidado a Crecimiento sin cambiar el alta).
+    El nuevo precio se aplica desde la PRÓXIMA comisión generada — las
+    comisiones ya creadas en meses anteriores NO se modifican (mantiene
+    trazabilidad del histórico).
+
+    payload:
+      - precio_mensual_usd: float (obligatorio, > 0)
+      - plan_continuidad: str (opcional — si pasa, debe estar en PLANES_CONTINUIDAD)
+      - motivo: str (opcional, queda en notas)
+    """
+    p = db.query(PlanContinuidadActivo).filter(PlanContinuidadActivo.id == plan_id).first()
+    if not p:
+        raise HTTPException(404, "Plan de continuidad no encontrado.")
+    if p.fecha_baja is not None:
+        raise HTTPException(400, "Plan dado de baja — no se puede actualizar precio.")
+
+    nuevo_precio = payload.get("precio_mensual_usd")
+    if nuevo_precio is None:
+        raise HTTPException(400, "Falta precio_mensual_usd.")
+    try:
+        nuevo_precio = float(nuevo_precio)
+    except (TypeError, ValueError):
+        raise HTTPException(400, "precio_mensual_usd debe ser numérico.")
+    if nuevo_precio <= 0:
+        raise HTTPException(400, "precio_mensual_usd debe ser mayor a 0.")
+
+    nuevo_plan = (payload.get("plan_continuidad") or "").strip()
+    if nuevo_plan and nuevo_plan not in PLANES_CONTINUIDAD:
+        raise HTTPException(400, f"Plan inválido. Debe ser uno de: {list(PLANES_CONTINUIDAD.keys())}.")
+
+    precio_anterior = float(p.precio_mensual_usd)
+    plan_anterior = p.plan_continuidad
+    p.precio_mensual_usd = nuevo_precio
+    if nuevo_plan:
+        p.plan_continuidad = nuevo_plan
+
+    # Anexar al histórico (sin pisar las notas existentes)
+    motivo = (payload.get("motivo") or "").strip()
+    sello = datetime.utcnow().strftime("%Y-%m-%d %H:%M UTC")
+    cambio = (f"[{sello}] precio: USD {precio_anterior:,.2f} → USD {nuevo_precio:,.2f}"
+              + (f" · plan: {plan_anterior} → {nuevo_plan}" if nuevo_plan and nuevo_plan != plan_anterior else "")
+              + (f" · motivo: {motivo}" if motivo else ""))
+    p.notas = (p.notas + "\n" + cambio) if p.notas else cambio
+    db.commit()
+    return {
+        "mensaje": "Precio actualizado. Aplica desde la próxima comisión generada.",
+        "id": p.id,
+        "plan": p.plan_continuidad,
+        "precio_mensual_usd": round(nuevo_precio, 2),
+        "comision_mensual_usd": p.comision_mensual_usd,
+    }
+
+
+@app.get("/admin/continuidad")
+def admin_listar_continuidad(activos: bool = True, db: Session = Depends(get_db),
+                             _admin=Depends(current_admin_required)):
+    """Lista todos los planes de continuidad. Por default solo los activos."""
+    q = db.query(PlanContinuidadActivo)
+    if activos:
+        q = q.filter(PlanContinuidadActivo.fecha_baja.is_(None))
+    items = q.order_by(PlanContinuidadActivo.fecha_alta.desc()).all()
+    out = []
+    for p in items:
+        out.append({
+            "id": p.id,
+            "aliado_codigo": p.aliado.codigo if p.aliado else None,
+            "aliado_nombre": p.aliado.nombre if p.aliado else None,
+            "cliente": p.nombre_cliente,
+            "plan": p.plan_continuidad,
+            "precio_mensual_usd": round(float(p.precio_mensual_usd), 2),
+            "comision_mensual_usd": p.comision_mensual_usd,
+            "fecha_alta": p.fecha_alta.strftime("%d/%m/%Y") if p.fecha_alta else "—",
+            "fecha_baja": p.fecha_baja.strftime("%d/%m/%Y") if p.fecha_baja else None,
+            "activo": p.activo,
+        })
+    return {"total": len(out), "items": out}
+
+
+# ─── PLAN DE CONTINUIDAD — ENDPOINTS DEL ALIADO (auto-servicio) ──────────────
+# v1.5 — el aliado puede dar de alta sus propias ventas de Plan de Continuidad
+# desde el portal (sin esperar al admin) y darlas de baja cuando el cliente
+# cancela. El alta dispara automáticamente la primera comisión del mes en curso.
+
+@app.post("/aliado/continuidad/alta")
+def aliado_alta_continuidad(payload: dict,
+                            aliado: Aliado = Depends(current_aliado_required),
+                            db: Session = Depends(get_db)):
+    """El propio aliado da de alta un Plan de Continuidad para un cliente que
+    cerró por fuera del checkout (transferencia directa, efectivo, otro medio).
+
+    payload esperado:
+      - nombre_cliente: str (obligatorio)
+      - plan_continuidad: str (debe estar en PLANES_CONTINUIDAD)
+      - cliente_email: str (opcional)
+      - precio_mensual_usd: float (opcional — default = precio del plan)
+      - notas: str (opcional)
+
+    Crea automáticamente la primera comisión del mes en curso (10% titular +
+    5% sponsor si tiene), igual que el flujo de pago automático. Cada 1ro del
+    mes siguiente el cron acumula otra.
+    """
+    nombre = (payload.get("nombre_cliente") or "").strip()
+    plan = (payload.get("plan_continuidad") or "").strip()
+
+    if not nombre or not plan:
+        raise HTTPException(400, "Faltan campos obligatorios: nombre_cliente, plan_continuidad.")
+    if plan not in PLANES_CONTINUIDAD:
+        raise HTTPException(400, f"Plan inválido. Debe ser uno de: {list(PLANES_CONTINUIDAD.keys())}.")
+
+    precio = float(payload.get("precio_mensual_usd") or PLANES_CONTINUIDAD[plan])
+    if precio <= 0:
+        raise HTTPException(400, "Precio mensual inválido.")
+
+    # Anti-duplicado defensivo: si ya hay un plan activo de este aliado para
+    # este cliente y este plan, devolvemos el existente. Evita altas dobles
+    # por doble-click o reintento.
+    existente = db.query(PlanContinuidadActivo).filter(
+        PlanContinuidadActivo.aliado_id == aliado.id,
+        PlanContinuidadActivo.nombre_cliente == nombre,
+        PlanContinuidadActivo.plan_continuidad == plan,
+        PlanContinuidadActivo.fecha_baja.is_(None),
+    ).first()
+    if existente:
+        return {
+            "status": "already_active",
+            "id": existente.id,
+            "comision_mensual_usd": existente.comision_mensual_usd,
+            "mensaje": f"Ya tenés un {plan} activo para {nombre}.",
+        }
+
+    p = PlanContinuidadActivo(
+        aliado_id=aliado.id,
+        nombre_cliente=nombre,
+        cliente_email=(payload.get("cliente_email") or None),
+        plan_continuidad=plan,
+        precio_mensual_usd=precio,
+        comision_pct=COMISION_RECURRENTE_PCT,
+        notas=(payload.get("notas") or "Alta directa desde portal del aliado"),
+    )
+    db.add(p)
+    db.flush()
+
+    ahora = datetime.utcnow()
+    creado = _crear_comisiones_recurrentes_para_plan(
+        db, p, ahora.month, ahora.year, ahora,
+    )
+    db.commit()
+
+    return {
+        "status": "ok",
+        "id": p.id,
+        "plan": p.plan_continuidad,
+        "cliente": p.nombre_cliente,
+        "precio_mensual_usd": round(precio, 2),
+        "comision_mensual_usd": p.comision_mensual_usd,
+        "primera_comision_creada": creado["titular"],
+        "comision_sponsor_creada": creado["sponsor"],
+        "mensaje": f"{plan} activado para {nombre}. Cobrás USD {p.comision_mensual_usd:,.0f}/mes mientras esté activo.",
+    }
+
+
+@app.get("/aliado/continuidad")
+def aliado_listar_continuidad(incluir_bajas: bool = False,
+                              aliado: Aliado = Depends(current_aliado_required),
+                              db: Session = Depends(get_db)):
+    """Lista los planes de continuidad del aliado autenticado. Por default
+    solo los activos. Si incluir_bajas=true, incluye los dados de baja."""
+    q = db.query(PlanContinuidadActivo).filter(
+        PlanContinuidadActivo.aliado_id == aliado.id,
+    )
+    if not incluir_bajas:
+        q = q.filter(PlanContinuidadActivo.fecha_baja.is_(None))
+    items = q.order_by(PlanContinuidadActivo.fecha_alta.desc()).all()
+    out = []
+    for p in items:
+        out.append({
+            "id": p.id,
+            "cliente": p.nombre_cliente,
+            "cliente_email": p.cliente_email,
+            "plan": p.plan_continuidad,
+            "precio_mensual_usd": round(float(p.precio_mensual_usd), 2),
+            "comision_mensual_usd": p.comision_mensual_usd,
+            "fecha_alta": p.fecha_alta.strftime("%d/%m/%Y") if p.fecha_alta else "—",
+            "fecha_baja": p.fecha_baja.strftime("%d/%m/%Y") if p.fecha_baja else None,
+            "activo": p.activo,
+        })
+    mrr = round(sum(p.comision_mensual_usd for p in items if p.activo), 2)
+    return {"total": len(out), "items": out, "mrr_recurrente_usd": mrr}
+
+
+@app.post("/aliado/continuidad/{plan_id}/baja")
+def aliado_baja_continuidad(plan_id: int,
+                            payload: dict = None,
+                            aliado: Aliado = Depends(current_aliado_required),
+                            db: Session = Depends(get_db)):
+    """El aliado da de baja un plan suyo (cuando su cliente cancela).
+    Detiene la generación de comisiones recurrentes para próximos meses.
+    Las comisiones ya generadas no se afectan (se siguen pudiendo cobrar).
+    """
+    p = db.query(PlanContinuidadActivo).filter(
+        PlanContinuidadActivo.id == plan_id,
+        PlanContinuidadActivo.aliado_id == aliado.id,  # <-- el aliado solo da de baja lo suyo
+    ).first()
+    if not p:
+        raise HTTPException(404, "Plan de continuidad no encontrado o no te pertenece.")
+    if p.fecha_baja is not None:
+        raise HTTPException(400, "Este plan ya está dado de baja.")
+
+    p.fecha_baja = datetime.utcnow()
+    p.motivo_baja = (payload or {}).get("motivo_baja") or "Baja reportada por el aliado"
+    db.commit()
+    return {
+        "status": "ok",
+        "id": p.id,
+        "fecha_baja": p.fecha_baja.isoformat(),
+        "mensaje": f"{p.plan_continuidad} de {p.nombre_cliente} dado de baja. No se generan más comisiones recurrentes a partir del próximo mes.",
+    }
+
+
+# ─── HELPER: generar comisiones recurrentes de un mes ────────────────────────
+# v1.5 — extraído del endpoint admin para que el scheduler y el flujo de alta
+# (primera comisión al firmar) puedan reutilizar la misma lógica de creación
+# idempotente. Toda creación de Comision recurrente en el sistema pasa por acá.
+def _crear_comisiones_recurrentes_para_plan(db: Session,
+                                            p: PlanContinuidadActivo,
+                                            mes: int,
+                                            anio: int,
+                                            fecha_pago: datetime) -> dict:
+    """Crea (si no existen) la comisión recurrente del aliado titular y la del
+    sponsor (5%) para el plan de continuidad `p` en el mes/año dados.
+
+    Idempotente por (aliado_id, nombre_cliente, plan_label, mes, anio).
+
+    Devuelve {'titular': bool, 'sponsor': bool} indicando qué se creó.
+    NO hace commit — el caller decide cuándo commitear.
+    """
+    from sqlalchemy import extract
+    plan_label = f"{p.plan_continuidad} (recurrente)"
+    creado = {"titular": False, "sponsor": False}
+
+    # 1. Comisión del aliado que vendió (10%)
+    ya_titular = db.query(Comision).filter(
+        Comision.aliado_id == p.aliado_id,
+        Comision.nombre_cliente == p.nombre_cliente,
+        Comision.plan == plan_label,
+        extract('month', Comision.fecha_pago) == mes,
+        extract('year',  Comision.fecha_pago) == anio,
+    ).first()
+    if not ya_titular:
+        c = Comision(
+            aliado_id=p.aliado_id,
+            plan=plan_label,
+            monto_plan_usd=float(p.precio_mensual_usd),
+            comision_pct=float(p.comision_pct),
+            comision_usd=p.comision_mensual_usd,
+            nombre_cliente=p.nombre_cliente,
+            estado="pendiente",
+            fecha_pago=fecha_pago,
+        )
+        db.add(c)
+        creado["titular"] = True
+
+    # 2. Comisión pasiva 5% al sponsor (RED) — paralelo al one-shot.
+    # nombre_cliente lleva prefijo "RED:" para distinguirlo, igual que en las
+    # ventas one-shot (ver registrar_venta y _procesar_pago_confirmado).
+    aliado = p.aliado
+    sponsor = getattr(aliado, "sponsor", None) if aliado else None
+    if sponsor:
+        cliente_red = f"RED: {aliado.nombre} ({p.nombre_cliente})"
+        ya_sponsor = db.query(Comision).filter(
+            Comision.aliado_id == sponsor.id,
+            Comision.nombre_cliente == cliente_red,
+            Comision.plan == plan_label,
+            extract('month', Comision.fecha_pago) == mes,
+            extract('year',  Comision.fecha_pago) == anio,
+        ).first()
+        if not ya_sponsor:
+            comision_sponsor_usd = round(float(p.precio_mensual_usd) * 0.05, 2)
+            c_red = Comision(
+                aliado_id=sponsor.id,
+                plan=plan_label,
+                monto_plan_usd=float(p.precio_mensual_usd),
+                comision_pct=0.05,
+                comision_usd=comision_sponsor_usd,
+                nombre_cliente=cliente_red,
+                estado="pendiente",
+                fecha_pago=fecha_pago,
+            )
+            db.add(c_red)
+            creado["sponsor"] = True
+
+    return creado
+
+
+def _generar_comisiones_recurrentes_del_mes(db: Session, mes: int, anio: int) -> dict:
+    """Itera todos los planes de continuidad activos y genera la comisión del
+    mes/año dado para cada uno (titular + sponsor si corresponde).
+    Idempotente. Hace commit antes de devolver.
+    """
+    if not (1 <= mes <= 12):
+        raise ValueError(f"Mes inválido: {mes} (debe ser 1..12)")
+
+    activos = db.query(PlanContinuidadActivo).filter(
+        PlanContinuidadActivo.fecha_baja.is_(None),
+    ).all()
+
+    ahora = datetime.utcnow()
+    fecha_pago = datetime(
+        anio, mes,
+        ahora.day if (mes == ahora.month and anio == ahora.year) else 1,
+    )
+
+    creadas_titular = 0
+    creadas_sponsor = 0
+    saltadas_idempotencia = 0
+    detalle = []
+
+    for p in activos:
+        creado = _crear_comisiones_recurrentes_para_plan(db, p, mes, anio, fecha_pago)
+        if creado["titular"]:
+            creadas_titular += 1
+        else:
+            saltadas_idempotencia += 1
+        if creado["sponsor"]:
+            creadas_sponsor += 1
+        detalle.append({
+            "aliado_codigo": p.aliado.codigo if p.aliado else None,
+            "cliente": p.nombre_cliente,
+            "plan": p.plan_continuidad,
+            "comision_titular_usd": p.comision_mensual_usd,
+            "comision_sponsor_usd": (round(float(p.precio_mensual_usd) * 0.05, 2)
+                                     if (p.aliado and getattr(p.aliado, "sponsor", None))
+                                     else 0.0),
+            "creado_titular": creado["titular"],
+            "creado_sponsor": creado["sponsor"],
+        })
+
+    db.commit()
+    return {
+        "mensaje": f"Generación recurrente {mes:02d}/{anio} OK.",
+        "creadas_titular": creadas_titular,
+        "creadas_sponsor": creadas_sponsor,
+        "saltadas_por_idempotencia": saltadas_idempotencia,
+        "detalle": detalle,
+    }
+
+
+@app.post("/admin/continuidad/generar-comisiones-mes")
+def admin_generar_comisiones_recurrentes(payload: dict = None,
+                                         db: Session = Depends(get_db),
+                                         _admin=Depends(current_admin_required)):
+    """Genera las comisiones del mes para todos los planes de continuidad activos.
+
+    Idempotente por mes: si ya existe una Comision con plan='<plan> (recurrente)'
+    y fecha_pago dentro del mismo mes/año para el mismo aliado y cliente, NO
+    crea otra. Pensado para correrse 1 vez al mes (cron / scheduler / manual).
+
+    Genera además el 5% pasivo al sponsor (si tiene), como en las ventas one-shot.
+
+    Body opcional:
+      - mes: int 1..12 (default = mes actual UTC)
+      - anio: int (default = año actual UTC)
+    """
+    payload = payload or {}
+    ahora = datetime.utcnow()
+    mes  = int(payload.get("mes")  or ahora.month)
+    anio = int(payload.get("anio") or ahora.year)
+    if not (1 <= mes <= 12):
+        raise HTTPException(400, "Mes inválido (debe ser 1..12).")
+    return _generar_comisiones_recurrentes_del_mes(db, mes, anio)
 
 
 # ─── PAGOS (ADMIN) ───────────────────────────────────────────────────────────
@@ -6791,3 +7505,20 @@ def completar_modulo_academia(codigo: str, modulo_id: int,
         "saldo":            a.creditos or 0,
         "modulo": {"id": mod.id, "titulo": mod.titulo},
     }
+
+# ─── RESET DE CONTRASEÑA DE ALIADO (admin) ───────────────────────────────────
+@app.post("/admin/reset-password-aliado")
+def reset_password_aliado(
+    request: Request,
+    email: str = Body(...),
+    nueva_password: str = Body(...),
+    _admin=Depends(current_admin_required),
+    db: Session = Depends(get_db),
+):
+    """Resetea la contraseña de un aliado. Solo accesible por admin."""
+    a = db.query(Aliado).filter(Aliado.email == email).first()
+    if not a:
+        raise HTTPException(404, "Aliado no encontrado.")
+    a.password_hash = hash_password(nueva_password)
+    db.commit()
+    return {"ok": True, "aliado": a.nombre, "email": a.email}
