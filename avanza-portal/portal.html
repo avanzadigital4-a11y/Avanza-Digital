@@ -4914,18 +4914,43 @@ async function cargarBolsa() {
 }
 
 async function reclamarLead(id) {
-  if(!confirm("¿Estás seguro de reclamar este lead? Recuerda que tendrás 48 horas para llamarlo.")) return;
-  
-  try {
-    const res = await apiFetch(`${API}/bolsa/${id}/reclamar?codigo_aliado=${aliado.codigo}`, { method: 'POST' });
-    const data = await res.json();
-    if(res.ok) {
-      mostrarToast('¡Lead reclamado! Tienes 48 horas para contactarlo.', 'green');
-      cargarBolsa(); // Recarga las tablas
-    } else {
-      mostrarToast(data.detail || 'Error al reclamar', 'red');
-    }
-  } catch(e) { mostrarToast('Error de conexión', 'red'); }
+  // Modal de confirmación con aviso claro de las 48hs
+  const overlay = document.createElement('div');
+  overlay.id = 'modal-reclamar';
+  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:9999;display:flex;align-items:center;justify-content:center;';
+  overlay.innerHTML = `
+    <div style="background:#1e293b;border:1px solid rgba(255,255,255,0.1);border-radius:16px;padding:32px;max-width:420px;width:90%;text-align:center;">
+      <div style="font-size:2.2rem;margin-bottom:12px;">⏰</div>
+      <h3 style="margin-bottom:8px;font-size:1.15rem;">¿Reclamar este lead?</h3>
+      <div style="background:rgba(245,158,11,0.1);border:1px solid rgba(245,158,11,0.3);border-radius:10px;padding:16px;margin:16px 0;text-align:left;">
+        <p style="margin:0 0 8px;color:#f59e0b;font-weight:700;font-size:.9rem;">⚠️ Importante antes de reclamar:</p>
+        <ul style="margin:0;padding-left:18px;color:#cbd5e1;font-size:.85rem;line-height:1.8;">
+          <li>El contador de <strong style="color:#f59e0b;">48 horas empieza ahora</strong>, no cuando lo contactes.</li>
+          <li>Si no marcás el lead como <strong>"Contactado"</strong> dentro de ese tiempo, vuelve automáticamente a la bolsa.</li>
+          <li>Reclamá solo cuando estés lista para contactarlo pronto.</li>
+        </ul>
+      </div>
+      <div style="display:flex;gap:10px;margin-top:8px;">
+        <button onclick="document.getElementById('modal-reclamar').remove()" style="flex:1;padding:12px;border-radius:10px;border:1px solid rgba(255,255,255,0.1);background:transparent;color:#94a3b8;font-weight:700;cursor:pointer;">Cancelar</button>
+        <button id="btn-confirmar-reclamo" style="flex:1;padding:12px;border-radius:10px;border:none;background:#f97316;color:#000;font-weight:800;cursor:pointer;">Sí, reclamar ahora</button>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(overlay);
+
+  document.getElementById('btn-confirmar-reclamo').onclick = async () => {
+    document.getElementById('modal-reclamar').remove();
+    try {
+      const res = await apiFetch(`${API}/bolsa/${id}/reclamar?codigo_aliado=${aliado.codigo}`, { method: 'POST' });
+      const data = await res.json();
+      if(res.ok) {
+        mostrarToast('¡Lead reclamado! Tenés 48hs para contactarlo — el contador ya empezó.', 'green');
+        cargarBolsa();
+      } else {
+        mostrarToast(data.detail || 'Error al reclamar', 'red');
+      }
+    } catch(e) { mostrarToast('Error de conexión', 'red'); }
+  };
 }
 
 async function marcarContactadoBolsa(id, empresa) {
