@@ -140,6 +140,7 @@ SMTP_PORT     = int(os.environ.get("SMTP_PORT", "587"))
 SMTP_USER     = os.environ.get("SMTP_USER", "")
 SMTP_PASS     = os.environ.get("SMTP_PASS", "")
 EMAIL_FROM    = os.environ.get("EMAIL_FROM", SMTP_USER)
+ADMIN_EMAIL   = os.environ.get("ADMIN_EMAIL", "avanzadigital4@gmail.com")
 
 # ─── MERCADOPAGO ──────────────────────────────────────────────────────────────
 MP_ACCESS_TOKEN = os.environ.get("MP_ACCESS_TOKEN", "")
@@ -165,7 +166,7 @@ RESEND_FROM    = os.environ.get("RESEND_FROM", "Avanza Digital <no-reply@avanzad
 # Variable de entorno: BREVO_API_KEY
 # Remitente: el mismo EMAIL_FROM ya configurado (avanzadigital4@gmail.com o dominio propio)
 BREVO_API_KEY = os.environ.get("BREVO_API_KEY", "")
-BREVO_FROM    = os.environ.get("BREVO_FROM", EMAIL_FROM or "avanzadigital4@gmail.com")
+BREVO_FROM    = os.environ.get("BREVO_FROM", ADMIN_EMAIL)
 BREVO_FROM_NAME = os.environ.get("BREVO_FROM_NAME", "Avanza Digital")
 
 # ─── DOLAR API ───────────────────────────────────────────────────────────────
@@ -947,7 +948,7 @@ def job_generar_comisiones_recurrentes_mensual():
         # Email resumen al admin (no bloquea — si Gmail falla, igual quedan
         # las comisiones creadas en BD).
         try:
-            admin_email = EMAIL_FROM or "avanzadigital4@gmail.com"
+            admin_email = ADMIN_EMAIL
             detalle = resumen.get("detalle") or []
             total_pagar_titulares = sum(d.get("comision_titular_usd", 0) or 0
                                         for d in detalle if d.get("creado_titular"))
@@ -1519,7 +1520,7 @@ def auto_registro(request: Request,
     # Notificar al admin — EN SEGUNDO PLANO
     background_tasks.add_task(
         enviar_email,
-        EMAIL_FROM or "avanzadigital4@gmail.com",
+        ADMIN_EMAIL,
         f"[NUEVO ALIADO] {a.nombre} — {a.codigo}",
         f"<p>Nuevo aliado auto-registrado:<br><strong>{a.nombre}</strong> — {a.email} — {a.whatsapp}<br>Perfil: {a.perfil or '—'} | Ciudad: {a.ciudad or '—'}<br>Código: {a.codigo} | Ref: {a.ref_code}</p>"
     )
@@ -5162,7 +5163,7 @@ def reportar_mal_contacto(id: int,
 
     # Notificar al admin (no bloquea la respuesta — es un log para Gmail del admin)
     try:
-        admin_email = EMAIL_FROM or "avanzadigital4@gmail.com"
+        admin_email = ADMIN_EMAIL
         enviar_email(
             admin_email,
             f"[REPORTE MAL CONTACTO] {a.codigo} — Lead #{lead.id} ({lead.empresa})",
