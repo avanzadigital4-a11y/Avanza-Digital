@@ -1140,6 +1140,12 @@
           <div class="metric-value amber" id="d-pendiente">—</div>
           <div class="metric-sub">Se paga en 24h del cierre</div>
         </div>
+        <div class="metric-card" style="border-color:rgba(250,204,21,0.25); background:linear-gradient(135deg, rgba(250,204,21,0.04), transparent);">
+          <div class="metric-icon amber"><i class="fa-solid fa-arrows-rotate"></i></div>
+          <div class="metric-label">Renta mensual (MRR)</div>
+          <div class="metric-value amber" id="d-mrr">—</div>
+          <div class="metric-sub">10% de planes de continuidad activos</div>
+        </div>
         <div class="metric-card">
           <div class="metric-icon purple"><i class="fa-solid fa-chart-bar"></i></div>
           <div class="metric-label">Ventas (6 meses)</div>
@@ -1174,10 +1180,43 @@
         </div>
       </div>
 
+      <!-- v1.5: Las 3 fuentes de ingreso del aliado (educativo) -->
+      <div class="bento-box" style="margin-bottom:24px; background:linear-gradient(135deg, rgba(74,222,128,0.04), rgba(250,204,21,0.04)); border-color:rgba(255,255,255,0.08);">
+        <h3 style="font-size:0.95rem;font-weight:700;margin-bottom:14px;"><i class="fa-solid fa-coins" style="color:var(--amber);"></i> &nbsp;Cómo cobrás en Avanza — tus 3 fuentes de ingreso</h3>
+        <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(220px, 1fr)); gap:14px;">
+          <div style="background:rgba(0,0,0,0.35); border:1px solid var(--green-border); border-radius:10px; padding:14px;">
+            <div style="display:flex; align-items:center; gap:8px; margin-bottom:6px;">
+              <i class="fa-solid fa-bolt" style="color:var(--green);"></i>
+              <span style="font-size:.78rem;font-weight:800;color:var(--green);text-transform:uppercase;letter-spacing:1px;">1. Venta directa</span>
+            </div>
+            <div style="font-size:1.4rem;font-weight:900;color:var(--text);line-height:1.1;">10% – 20%</div>
+            <p style="font-size:.76rem;color:var(--text-muted);margin-top:6px;line-height:1.4;">One-time por cada plan de implementación que cierre tu cliente. El % depende de tu nivel.</p>
+          </div>
+          <div style="background:rgba(0,0,0,0.35); border:1px solid rgba(250,204,21,0.3); border-radius:10px; padding:14px;">
+            <div style="display:flex; align-items:center; gap:8px; margin-bottom:6px;">
+              <i class="fa-solid fa-arrows-rotate" style="color:var(--amber);"></i>
+              <span style="font-size:.78rem;font-weight:800;color:var(--amber);text-transform:uppercase;letter-spacing:1px;">2. Recurrente</span>
+            </div>
+            <div style="font-size:1.4rem;font-weight:900;color:var(--text);line-height:1.1;">10% / mes</div>
+            <p style="font-size:.76rem;color:var(--text-muted);margin-top:6px;line-height:1.4;">Mensual mientras tu cliente mantenga su Plan de Continuidad activo. Tu renta crece con cada cliente nuevo.</p>
+          </div>
+          <div style="background:rgba(0,0,0,0.35); border:1px solid rgba(192,132,252,0.25); border-radius:10px; padding:14px;">
+            <div style="display:flex; align-items:center; gap:8px; margin-bottom:6px;">
+              <i class="fa-solid fa-users-rays" style="color:#c084fc;"></i>
+              <span style="font-size:.78rem;font-weight:800;color:#c084fc;text-transform:uppercase;letter-spacing:1px;">3. Pasiva (sub-aliados)</span>
+            </div>
+            <div style="font-size:1.4rem;font-weight:900;color:var(--text);line-height:1.1;">5%</div>
+            <p style="font-size:.76rem;color:var(--text-muted);margin-top:6px;line-height:1.4;">Sobre cada venta que cierre un aliado que sumaste a tu red. Para siempre, sin hacer nada.</p>
+          </div>
+        </div>
+        <p style="font-size:.76rem;color:var(--text-dim);margin-top:14px;line-height:1.5;">Las 3 son acumulables. Un cliente que vendés con plan de implementación + plan de continuidad te da las dos primeras al mismo tiempo. <a href="#" onclick="cambiarTab('comisiones', document.querySelector('.tab-btn[onclick*=comisiones]')); return false;" style="color:var(--amber);font-weight:700;text-decoration:underline;">Ver el detalle en Comisiones →</a></p>
+      </div>
+
       <div class="ref-card">
         <div style="flex:1;">
-          <div class="ref-label"><i class="fa-solid fa-link"></i> &nbsp;Tu link de referido directo</div>
+          <div class="ref-label"><i class="fa-solid fa-users-rays" style="color:var(--amber);"></i> &nbsp;Tu link para sumar aliados a tu red</div>
           <div class="ref-url" id="d-reflink">Cargando...</div>
+          <div style="font-size:.72rem;color:var(--text-dim);margin-top:6px;line-height:1.4;">Mandalo a vendedores, agencias o profesionales que quieran sumarse. Cuando se registren desde acá, cobrás <strong style="color:var(--amber);">5% pasivo</strong> de cada venta que cierren, para siempre. <span style="color:var(--text-muted);">Para mandar a clientes finales que quieran contratar un servicio, usá tu página de ventas personal (abajo).</span></div>
         </div>
         <button class="btn-copy" onclick="copiarLink()"><i class="fa-solid fa-copy"></i> Copiar</button>
       </div>
@@ -1858,27 +1897,55 @@
 
     <div id="tab-comisiones" class="tab-panel">
 
-      <!-- NUEVO v1.4: Total pendiente en grande (spec §16) -->
+      <!-- v1.5: Total pendiente + MRR recurrente + Ya abonado -->
       <div class="bento-box" style="margin-bottom:20px; background:linear-gradient(135deg,rgba(74,222,128,0.08),rgba(59,130,246,0.04)); border:1px solid rgba(74,222,128,0.25);">
-        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:16px;">
+        <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(220px, 1fr)); gap:24px; align-items:start;">
+
+          <!-- Pendiente de cobro (one-time) -->
           <div>
             <div style="font-size:0.72rem; font-weight:700; color:var(--text-dim); text-transform:uppercase; letter-spacing:1.5px; margin-bottom:6px;">
-              <i class="fa-solid fa-sack-dollar" style="color:var(--green);"></i> Total pendiente de cobro
+              <i class="fa-solid fa-sack-dollar" style="color:var(--green);"></i> Pendiente de cobro
             </div>
-            <div style="font-size:2.8rem; font-weight:900; color:var(--green); line-height:1;" id="com-total-pendiente">USD 0</div>
-            <div style="font-size:0.78rem; color:var(--text-muted); margin-top:6px;">Se te abona al CBU/alias registrado — dentro de 24hs del pago del cliente.</div>
+            <div style="font-size:2.4rem; font-weight:900; color:var(--green); line-height:1;" id="com-total-pendiente">USD 0</div>
+            <div style="font-size:0.74rem; color:var(--text-muted); margin-top:6px;">Comisiones one-time + recurrentes acumuladas. Se abonan en CBU/alias.</div>
           </div>
-          <div style="text-align:right;">
-            <div style="font-size:0.72rem; font-weight:700; color:var(--text-dim); text-transform:uppercase; letter-spacing:1.5px; margin-bottom:6px;">Ya abonado</div>
-            <div style="font-size:1.4rem; font-weight:800; color:var(--text);" id="com-total-abonado">USD 0</div>
+
+          <!-- MRR Recurrente -->
+          <div style="border-left:1px solid rgba(255,255,255,0.08); padding-left:24px;">
+            <div style="font-size:0.72rem; font-weight:700; color:var(--text-dim); text-transform:uppercase; letter-spacing:1.5px; margin-bottom:6px;">
+              <i class="fa-solid fa-arrows-rotate" style="color:var(--amber);"></i> Tu MRR (renta mensual)
+            </div>
+            <div style="font-size:2.4rem; font-weight:900; color:var(--amber); line-height:1;" id="com-mrr-actual">USD 0</div>
+            <div style="font-size:0.74rem; color:var(--text-muted); margin-top:6px;" id="com-mrr-detalle">10% de los planes de continuidad activos de tus clientes.</div>
           </div>
+
+          <!-- Ya abonado histórico -->
+          <div style="border-left:1px solid rgba(255,255,255,0.08); padding-left:24px;">
+            <div style="font-size:0.72rem; font-weight:700; color:var(--text-dim); text-transform:uppercase; letter-spacing:1.5px; margin-bottom:6px;">
+              <i class="fa-solid fa-check-double"></i> Ya abonado (histórico)
+            </div>
+            <div style="font-size:2.4rem; font-weight:900; color:var(--text); line-height:1;" id="com-total-abonado">USD 0</div>
+            <div style="font-size:0.74rem; color:var(--text-muted); margin-top:6px;">Total transferido a tu cuenta desde que arrancaste.</div>
+          </div>
+
         </div>
       </div>
 
-      <div class="bento-box" style="margin-bottom:24px;">
-        <h3 style="font-size:0.95rem;font-weight:700;margin-bottom:4px;"><i class="fa-solid fa-calculator" style="color:var(--primary);"></i> &nbsp;Tus comisiones según nivel actual</h3>
-        <p style="font-size:0.82rem;color:var(--text-muted);margin-bottom:0;">Valores para pago único. Comisiones recurrentes: 10% mensual mientras el cliente esté activo.</p>
+      <!-- Comisiones por plan ONE-TIME (existente) -->
+      <div class="bento-box" style="margin-bottom:20px;">
+        <h3 style="font-size:0.95rem;font-weight:700;margin-bottom:4px;"><i class="fa-solid fa-calculator" style="color:var(--primary);"></i> &nbsp;Comisiones one-time según tu nivel actual</h3>
+        <p style="font-size:0.82rem;color:var(--text-muted);margin-bottom:0;">Cada vez que un cliente contrata un plan de implementación, cobrás este monto una vez.</p>
         <div class="planes-grid" id="planes-grid"></div>
+      </div>
+
+      <!-- Comisiones por plan RECURRENTE (nuevo v1.5) -->
+      <div class="bento-box" style="margin-bottom:24px; background:linear-gradient(135deg, rgba(250,204,21,0.04), transparent); border-color:rgba(250,204,21,0.18);">
+        <h3 style="font-size:0.95rem;font-weight:700;margin-bottom:4px;color:var(--amber);"><i class="fa-solid fa-arrows-rotate"></i> &nbsp;Comisiones recurrentes — 10% mensual de por vida</h3>
+        <p style="font-size:0.82rem;color:var(--text-muted);margin-bottom:0;">Cada vez que un cliente tuyo contrata un Plan de Continuidad mensual, cobrás un <strong style="color:var(--amber);">10% todos los meses</strong> mientras el cliente lo mantenga activo. Sin nivel mínimo, sin techo.</p>
+        <div class="planes-grid" id="planes-recurrentes-grid"></div>
+        <div style="margin-top:14px; padding:12px 14px; background:rgba(0,0,0,0.3); border-radius:8px; border:1px dashed rgba(250,204,21,0.2); font-size:0.78rem; color:var(--text-muted); line-height:1.55;">
+          <strong style="color:var(--amber);">¿Cómo se construye tu renta?</strong> Si vendés 5 clientes con Plan Crecimiento (USD 170/mes), tu MRR = USD 85 todos los meses. Si esos 5 evolucionan a Plan Liderazgo (USD 450/mes), tu MRR sube a USD 225/mes — sin volver a vender. Cada nuevo cliente con continuidad acumula sobre lo anterior.
+        </div>
       </div>
 
       <div class="table-wrap">
@@ -1886,7 +1953,62 @@
         <div id="tabla-comisiones"></div>
       </div>
 
-      <!-- NUEVO v1.4: Perfil de cobro (CBU/alias) (spec §11) -->
+      <!-- v1.5: Clientes con plan de continuidad activo -->
+      <div class="bento-box" style="margin-top:24px; border-color:rgba(250,204,21,0.25); background:linear-gradient(135deg, rgba(250,204,21,0.03), transparent);">
+        <h3 style="font-size:0.95rem;font-weight:700;margin-bottom:4px;color:var(--amber);">
+          <i class="fa-solid fa-plus" style="color:var(--amber);"></i>
+          &nbsp;Cargar cliente con Plan de Continuidad
+        </h3>
+        <p style="font-size:0.82rem;color:var(--text-muted);margin-bottom:14px;">
+          Si cerraste una venta de mantenimiento por fuera del checkout (transferencia, efectivo, otro medio), cargala acá.
+          Se activa la renta recurrente y la <strong style="color:var(--amber);">primera comisión del mes en curso</strong> queda lista en tus pendientes al instante.
+        </p>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+          <div>
+            <label style="font-size:.75rem;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;display:block;margin-bottom:6px;">Cliente / Empresa *</label>
+            <input type="text" id="nc-nombre" placeholder="Ej: Metalúrgica San Martín"
+                   style="width:100%;background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px 14px;color:var(--text);font-size:.9rem;font-family:'Inter',sans-serif;outline:none;">
+          </div>
+          <div>
+            <label style="font-size:.75rem;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;display:block;margin-bottom:6px;">Plan de Continuidad *</label>
+            <select id="nc-plan" onchange="actualizarPreviewContinuidad()"
+                    style="width:100%;background:#111;border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px 14px;color:var(--text);font-size:.9rem;font-family:'Inter',sans-serif;outline:none;">
+              <option value="">— Elegí un plan —</option>
+              <option value="Plan Cuidado">Plan Cuidado (USD 80/mes)</option>
+              <option value="Plan Crecimiento">Plan Crecimiento (USD 170/mes)</option>
+              <option value="Plan Escala">Plan Escala (USD 280/mes)</option>
+              <option value="Plan Liderazgo">Plan Liderazgo (USD 450/mes)</option>
+            </select>
+          </div>
+          <div>
+            <label style="font-size:.75rem;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;display:block;margin-bottom:6px;">Email del cliente (opcional)</label>
+            <input type="email" id="nc-email" placeholder="contacto@empresa.com"
+                   style="width:100%;background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px 14px;color:var(--text);font-size:.9rem;font-family:'Inter',sans-serif;outline:none;">
+          </div>
+          <div>
+            <label style="font-size:.75rem;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;display:block;margin-bottom:6px;">Notas (opcional)</label>
+            <input type="text" id="nc-notas" placeholder="Cómo cerró, observaciones..."
+                   style="width:100%;background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px 14px;color:var(--text);font-size:.9rem;font-family:'Inter',sans-serif;outline:none;">
+          </div>
+        </div>
+        <div id="nc-preview" style="margin-top:14px; font-size:0.82rem; color:var(--text-muted); line-height:1.5;">
+          Elegí un plan para ver tu comisión mensual estimada.
+        </div>
+        <div style="margin-top:14px;display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+          <button onclick="cargarNuevoContinuidad()" id="btn-nc-activar"
+                  style="background:var(--amber);color:#000;border:none;border-radius:8px;padding:12px 22px;font-weight:800;cursor:pointer;font-size:.88rem;">
+            <i class="fa-solid fa-arrows-rotate"></i> Activar renta recurrente
+          </button>
+          <span id="nc-estado" style="font-size:0.78rem;color:var(--text-muted);"></span>
+        </div>
+      </div>
+
+      <div class="table-wrap" style="margin-top:24px;">
+        <div class="table-head"><h3><i class="fa-solid fa-users-gear" style="color:var(--amber);"></i> &nbsp;Tus clientes con Plan de Continuidad activo</h3></div>
+        <div id="tabla-recurrentes-activos"></div>
+      </div>
+
+      <!-- v1.4: Perfil de cobro (CBU/alias) (spec §11) -->
       <div class="bento-box" style="margin-top:24px;">
         <h3 style="font-size:0.95rem; font-weight:700; margin-bottom:4px;">
           <i class="fa-solid fa-building-columns" style="color:var(--primary);"></i>
@@ -1982,17 +2104,17 @@
     <div id="tab-red" class="tab-panel">
       <div class="bento-box" style="margin-bottom:24px; background:linear-gradient(135deg, rgba(250,204,21,0.05), transparent); border-color:rgba(250,204,21,0.2);">
         <h3 style="font-size:1.2rem;font-weight:900;margin-bottom:8px;color:var(--amber);"><i class="fa-solid fa-network-wired"></i> Construí tu Agencia Descentralizada</h3>
-        <p style="color:var(--text-muted);font-size:0.9rem;margin-bottom:20px;">Invitá a otros profesionales, agencias o vendedores usando tu Link de Referido. <strong>Ganarás un 5% de comisión pasiva y automática por cada venta que ellos cierren.</strong> Para siempre.</p>
-        
-        <div class="ref-card" style="background:rgba(255,255,255,0.02); border:1px dashed var(--border);">
-          <div style="flex:1;">
-            <div class="ref-label" style="color:var(--amber);"><i class="fa-solid fa-share-nodes"></i> &nbsp;Link de Invitación para Sub-Aliados</div>
-            <div class="ref-url" id="red-invitelink" style="color:var(--text);">Cargando...</div>
+        <p style="color:var(--text-muted);font-size:0.9rem;margin-bottom:20px;">Invitá a otros profesionales, agencias o vendedores a sumarse como aliados bajo tu red. <strong>Ganarás un 5% de comisión pasiva y automática por cada venta que ellos cierren.</strong> Para siempre.</p>
+
+        <div style="background:rgba(250,204,21,0.05); border:1px dashed rgba(250,204,21,0.3); border-radius:10px; padding:16px 18px; margin-bottom:20px; display:flex; align-items:flex-start; gap:14px;">
+          <i class="fa-solid fa-circle-info" style="color:var(--amber);font-size:1.2rem;margin-top:2px;"></i>
+          <div style="flex:1;font-size:.88rem;color:var(--text-muted);line-height:1.5;">
+            <strong style="color:var(--text);">¿Cómo se suma alguien a tu red?</strong><br>
+            Mandale tu link desde el <a href="#" onclick="cambiarTab('dashboard', document.querySelector('.tab-btn[onclick*=dashboard]')); return false;" style="color:var(--amber);font-weight:700;text-decoration:underline;">Dashboard</a> ("Tu link para sumar aliados a tu red"). Cuando esa persona se registre como aliado desde tu link, queda automáticamente bajo tu red y empezás a cobrar el 5% pasivo de todas sus ventas.
           </div>
-          <button class="btn-copy" style="background:var(--amber);color:#000;" onclick="copiarInviteLink()"><i class="fa-solid fa-copy"></i> Copiar y Sumar Equipo</button>
         </div>
 
-        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:16px;margin-top:24px;">
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:16px;">
           <div style="background:rgba(0,0,0,0.4); padding:20px; border-radius:12px; border:1px solid var(--border);">
             <div style="font-size:0.75rem;font-weight:700;color:var(--text-dim);text-transform:uppercase;">Equipo Activo</div>
             <div style="font-size:2rem;font-weight:900;color:var(--text);" id="red-equipo-count">0</div>
@@ -2641,26 +2763,7 @@
 
   <div style="display:grid; grid-template-columns:1fr; gap:24px;">
 
-    <!-- MARKETPLACE DE LEADS PREMIUM (v1.3) -->
-    <div class="table-wrap" style="margin-bottom:0; background:linear-gradient(135deg,rgba(250,204,21,0.04),transparent); border-color:rgba(250,204,21,0.2);">
-      <div class="table-head" style="border-bottom-color:rgba(250,204,21,0.15);">
-        <h3><i class="fa-solid fa-gem" style="color:var(--amber);"></i> Leads Premium &amp; Calificados <span style="font-size:.7rem;font-weight:700;color:var(--amber);background:rgba(250,204,21,0.12);padding:3px 8px;border-radius:4px;margin-left:6px;">EXCLUSIVO</span></h3>
-        <div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
-          <div style="font-size:.8rem; color:var(--text-muted);">Saldo: <strong id="mkt-saldo" style="color:var(--amber);">— créditos</strong></div>
-          <button onclick="abrirModalComprarCreditos()" style="background:var(--amber); color:#000; border:none; padding:7px 14px; border-radius:6px; font-size:.78rem; font-weight:800; cursor:pointer; display:flex; align-items:center; gap:5px;">
-            <i class="fa-solid fa-plus"></i> Comprar créditos
-          </button>
-        </div>
-      </div>
-      <div style="padding:14px 20px; font-size:.82rem; color:var(--text-muted); border-bottom:1px solid var(--border);">
-        Leads pre-calificados con más data (presencia digital verificada, contacto identificado, pitch sugerido por IA). Se pagan con créditos. <strong>Mayor tasa de cierre.</strong>
-      </div>
-      <div id="grid-marketplace" style="padding:16px;display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px;">
-        <div style="text-align:center;padding:24px;color:var(--text-dim);grid-column:1/-1;">Cargando...</div>
-      </div>
-    </div>
-
-    <!-- MIS LEADS RECLAMADOS -->
+    <!-- MIS LEADS RECLAMADOS — siempre visible al tope (info crítica con contador 48hs) -->
     <div class="table-wrap" style="margin-bottom:0;">
       <div class="table-head">
         <h3><i class="fa-solid fa-lock" style="color:var(--amber);"></i> Mis Leads Reclamados</h3>
@@ -2670,14 +2773,139 @@
       </div>
     </div>
 
-    <!-- DISPONIBLES EN LA BOLSA -->
-    <div class="table-wrap" style="margin-bottom:0;">
-      <div class="table-head">
-        <h3><i class="fa-solid fa-unlock" style="color:var(--green);"></i> Disponibles en la Bolsa</h3>
-        <button onclick="cargarBolsa()" style="background:transparent;border:1px solid var(--border);color:var(--text-muted);border-radius:8px;padding:7px 14px;font-size:.8rem;cursor:pointer;"><i class="fa-solid fa-rotate-right"></i> Refrescar</button>
+    <!-- ╔═══════════════════════════════════════════════════════════════╗
+         ║  SELECTOR DE CATEGORÍAS — vista por defecto al entrar a Bolsa  ║
+         ║  3 tarjetas grandes: Premium / Calificados / Básicos GRATIS    ║
+         ╚═══════════════════════════════════════════════════════════════╝ -->
+    <div id="bolsa-vista-selector" style="display:block;">
+      <div style="text-align:center; margin-bottom:20px;">
+        <h3 style="font-size:1.25rem; font-weight:800; color:var(--text); margin-bottom:6px;">¿Qué tipo de leads querés ver?</h3>
+        <p style="font-size:.85rem; color:var(--text-muted);">Elegí una categoría para ver las empresas disponibles.</p>
+        <div style="margin-top:10px; display:inline-flex; align-items:center; gap:10px; background:rgba(0,0,0,0.25); border:1px solid var(--border); border-radius:10px; padding:8px 14px; font-size:.82rem;">
+          <span style="color:var(--text-muted);">Saldo:</span>
+          <strong id="mkt-saldo" style="color:var(--amber);">— créditos</strong>
+          <button onclick="abrirModalComprarCreditos()" style="background:var(--amber); color:#000; border:none; padding:5px 10px; border-radius:6px; font-size:.72rem; font-weight:800; cursor:pointer;">
+            <i class="fa-solid fa-plus"></i> Cargar
+          </button>
+        </div>
       </div>
-      <div id="tabla-bolsa-disponibles" style="padding:16px;display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px;">
-        <div style="text-align:center;padding:24px;color:var(--text-dim);grid-column:1/-1;">Cargando...</div>
+
+      <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(260px, 1fr)); gap:18px;">
+
+        <!-- TARJETA: BÁSICOS GRATIS (primero — es lo que buscan los nuevos) -->
+        <div onclick="mostrarCategoriaBolsa('basico')" class="categoria-card-bolsa"
+             style="background:linear-gradient(135deg, rgba(34,197,94,0.10), rgba(34,197,94,0.02)); border:1.5px solid rgba(34,197,94,0.35); border-radius:16px; padding:24px 20px; cursor:pointer; transition:all .2s; position:relative; overflow:hidden;"
+             onmouseover="this.style.transform='translateY(-3px)'; this.style.borderColor='rgba(34,197,94,0.7)';"
+             onmouseout="this.style.transform='translateY(0)'; this.style.borderColor='rgba(34,197,94,0.35)';">
+          <div style="position:absolute; top:12px; right:12px; background:var(--green); color:#000; font-size:.65rem; font-weight:900; padding:3px 8px; border-radius:4px; letter-spacing:.05em;">100% GRATIS</div>
+          <div style="font-size:2.2rem; margin-bottom:10px;"><i class="fa-solid fa-unlock" style="color:var(--green);"></i></div>
+          <h4 style="font-size:1.1rem; font-weight:800; color:var(--text); margin-bottom:6px;">Leads Básicos</h4>
+          <p style="font-size:.82rem; color:var(--text-muted); line-height:1.5; margin-bottom:14px;">Reclamalos sin gastar créditos. Ideales para arrancar y practicar tu pitch.</p>
+          <div style="display:flex; justify-content:space-between; align-items:center; padding-top:12px; border-top:1px solid rgba(255,255,255,0.06);">
+            <span id="cnt-bolsa-basico" style="font-size:.85rem; color:var(--green); font-weight:700;">— disponibles</span>
+            <span style="color:var(--green); font-size:.85rem; font-weight:700;">Ver gratis →</span>
+          </div>
+        </div>
+
+        <!-- TARJETA: CALIFICADOS -->
+        <div onclick="mostrarCategoriaBolsa('calificado')" class="categoria-card-bolsa"
+             style="background:linear-gradient(135deg, rgba(59,130,246,0.10), rgba(59,130,246,0.02)); border:1.5px solid rgba(59,130,246,0.35); border-radius:16px; padding:24px 20px; cursor:pointer; transition:all .2s; position:relative; overflow:hidden;"
+             onmouseover="this.style.transform='translateY(-3px)'; this.style.borderColor='rgba(59,130,246,0.7)';"
+             onmouseout="this.style.transform='translateY(0)'; this.style.borderColor='rgba(59,130,246,0.35)';">
+          <div style="position:absolute; top:12px; right:12px; background:rgba(59,130,246,0.2); color:#93c5fd; font-size:.65rem; font-weight:900; padding:3px 8px; border-radius:4px; letter-spacing:.05em;">CON CRÉDITOS</div>
+          <div style="font-size:2.2rem; margin-bottom:10px;"><i class="fa-solid fa-medal" style="color:#60a5fa;"></i></div>
+          <h4 style="font-size:1.1rem; font-weight:800; color:var(--text); margin-bottom:6px;">Leads Calificados</h4>
+          <p style="font-size:.82rem; color:var(--text-muted); line-height:1.5; margin-bottom:14px;">Empresas con presencia digital verificada y contacto identificado.</p>
+          <div style="display:flex; justify-content:space-between; align-items:center; padding-top:12px; border-top:1px solid rgba(255,255,255,0.06);">
+            <span id="cnt-bolsa-calificado" style="font-size:.85rem; color:#60a5fa; font-weight:700;">— disponibles</span>
+            <span style="color:#60a5fa; font-size:.85rem; font-weight:700;">Ver leads →</span>
+          </div>
+        </div>
+
+        <!-- TARJETA: PREMIUM -->
+        <div onclick="mostrarCategoriaBolsa('premium')" class="categoria-card-bolsa"
+             style="background:linear-gradient(135deg, rgba(250,204,21,0.10), rgba(250,204,21,0.02)); border:1.5px solid rgba(250,204,21,0.35); border-radius:16px; padding:24px 20px; cursor:pointer; transition:all .2s; position:relative; overflow:hidden;"
+             onmouseover="this.style.transform='translateY(-3px)'; this.style.borderColor='rgba(250,204,21,0.7)';"
+             onmouseout="this.style.transform='translateY(0)'; this.style.borderColor='rgba(250,204,21,0.35)';">
+          <div style="position:absolute; top:12px; right:12px; background:var(--amber); color:#000; font-size:.65rem; font-weight:900; padding:3px 8px; border-radius:4px; letter-spacing:.05em;">EXCLUSIVO</div>
+          <div style="font-size:2.2rem; margin-bottom:10px;"><i class="fa-solid fa-gem" style="color:var(--amber);"></i></div>
+          <h4 style="font-size:1.1rem; font-weight:800; color:var(--text); margin-bottom:6px;">Leads Premium</h4>
+          <p style="font-size:.82rem; color:var(--text-muted); line-height:1.5; margin-bottom:14px;">Lo más jugoso: pitch sugerido por IA, score de calidad alto, mayor tasa de cierre.</p>
+          <div style="display:flex; justify-content:space-between; align-items:center; padding-top:12px; border-top:1px solid rgba(255,255,255,0.06);">
+            <span id="cnt-bolsa-premium" style="font-size:.85rem; color:var(--amber); font-weight:700;">— disponibles</span>
+            <span style="color:var(--amber); font-size:.85rem; font-weight:700;">Ver premium →</span>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ╔═══════════════════════════════════════════════════════════════╗
+         ║  VISTA: BÁSICOS GRATIS                                          ║
+         ╚═══════════════════════════════════════════════════════════════╝ -->
+    <div id="bolsa-vista-basico" style="display:none;">
+      <div class="table-wrap" style="margin-bottom:0; background:linear-gradient(135deg,rgba(34,197,94,0.04),transparent); border-color:rgba(34,197,94,0.2);">
+        <div class="table-head" style="border-bottom-color:rgba(34,197,94,0.15);">
+          <div style="display:flex; align-items:center; gap:12px;">
+            <button onclick="volverASelectorBolsa()" style="background:transparent; border:1px solid var(--border); color:var(--text-muted); border-radius:8px; padding:6px 12px; font-size:.8rem; cursor:pointer;"><i class="fa-solid fa-arrow-left"></i> Categorías</button>
+            <h3 style="margin:0;"><i class="fa-solid fa-unlock" style="color:var(--green);"></i> Leads Básicos <span style="font-size:.7rem;font-weight:800;color:#000;background:var(--green);padding:3px 8px;border-radius:4px;margin-left:6px;">GRATIS</span></h3>
+          </div>
+          <button onclick="cargarBolsa()" style="background:transparent;border:1px solid var(--border);color:var(--text-muted);border-radius:8px;padding:7px 14px;font-size:.8rem;cursor:pointer;"><i class="fa-solid fa-rotate-right"></i> Refrescar</button>
+        </div>
+        <div style="padding:14px 20px; font-size:.82rem; color:var(--text-muted); border-bottom:1px solid var(--border);">
+          Reclamalos <strong style="color:var(--green);">sin gastar créditos</strong>. Tenés 48hs para contactar a cada uno o vuelven a la bolsa.
+        </div>
+        <div id="tabla-bolsa-disponibles" style="padding:16px;display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px;">
+          <div style="text-align:center;padding:24px;color:var(--text-dim);grid-column:1/-1;">Cargando...</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ╔═══════════════════════════════════════════════════════════════╗
+         ║  VISTA: CALIFICADOS (con créditos)                              ║
+         ╚═══════════════════════════════════════════════════════════════╝ -->
+    <div id="bolsa-vista-calificado" style="display:none;">
+      <div class="table-wrap" style="margin-bottom:0; background:linear-gradient(135deg,rgba(59,130,246,0.04),transparent); border-color:rgba(59,130,246,0.2);">
+        <div class="table-head" style="border-bottom-color:rgba(59,130,246,0.15);">
+          <div style="display:flex; align-items:center; gap:12px;">
+            <button onclick="volverASelectorBolsa()" style="background:transparent; border:1px solid var(--border); color:var(--text-muted); border-radius:8px; padding:6px 12px; font-size:.8rem; cursor:pointer;"><i class="fa-solid fa-arrow-left"></i> Categorías</button>
+            <h3 style="margin:0;"><i class="fa-solid fa-medal" style="color:#60a5fa;"></i> Leads Calificados</h3>
+          </div>
+          <div style="display:flex; align-items:center; gap:10px;">
+            <span style="font-size:.78rem; color:var(--text-muted);">Saldo: <strong id="mkt-saldo-cal" style="color:var(--amber);">— cr.</strong></span>
+            <button onclick="abrirModalComprarCreditos()" style="background:var(--amber); color:#000; border:none; padding:6px 12px; border-radius:6px; font-size:.75rem; font-weight:800; cursor:pointer;"><i class="fa-solid fa-plus"></i> Cargar</button>
+          </div>
+        </div>
+        <div style="padding:14px 20px; font-size:.82rem; color:var(--text-muted); border-bottom:1px solid var(--border);">
+          Empresas con presencia digital y contacto verificado. Se pagan con créditos.
+        </div>
+        <div id="grid-calificado" style="padding:16px;display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px;">
+          <div style="text-align:center;padding:24px;color:var(--text-dim);grid-column:1/-1;">Cargando...</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ╔═══════════════════════════════════════════════════════════════╗
+         ║  VISTA: PREMIUM (con créditos, top tier)                        ║
+         ╚═══════════════════════════════════════════════════════════════╝ -->
+    <div id="bolsa-vista-premium" style="display:none;">
+      <div class="table-wrap" style="margin-bottom:0; background:linear-gradient(135deg,rgba(250,204,21,0.04),transparent); border-color:rgba(250,204,21,0.2);">
+        <div class="table-head" style="border-bottom-color:rgba(250,204,21,0.15);">
+          <div style="display:flex; align-items:center; gap:12px;">
+            <button onclick="volverASelectorBolsa()" style="background:transparent; border:1px solid var(--border); color:var(--text-muted); border-radius:8px; padding:6px 12px; font-size:.8rem; cursor:pointer;"><i class="fa-solid fa-arrow-left"></i> Categorías</button>
+            <h3 style="margin:0;"><i class="fa-solid fa-gem" style="color:var(--amber);"></i> Leads Premium <span style="font-size:.7rem;font-weight:700;color:var(--amber);background:rgba(250,204,21,0.12);padding:3px 8px;border-radius:4px;margin-left:6px;">EXCLUSIVO</span></h3>
+          </div>
+          <div style="display:flex; align-items:center; gap:10px;">
+            <span style="font-size:.78rem; color:var(--text-muted);">Saldo: <strong id="mkt-saldo-prem" style="color:var(--amber);">— cr.</strong></span>
+            <button onclick="abrirModalComprarCreditos()" style="background:var(--amber); color:#000; border:none; padding:6px 12px; border-radius:6px; font-size:.75rem; font-weight:800; cursor:pointer;"><i class="fa-solid fa-plus"></i> Cargar</button>
+          </div>
+        </div>
+        <div style="padding:14px 20px; font-size:.82rem; color:var(--text-muted); border-bottom:1px solid var(--border);">
+          Lo más jugoso: pitch sugerido por IA, presencia digital verificada. <strong>Mayor tasa de cierre.</strong>
+        </div>
+        <div id="grid-premium" style="padding:16px;display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px;">
+          <div style="text-align:center;padding:24px;color:var(--text-dim);grid-column:1/-1;">Cargando...</div>
+        </div>
       </div>
     </div>
 
@@ -2908,6 +3136,11 @@ async function apiJSON(url, method = 'GET', body = null) {
 let aliado = null;
 
 const PLANES = { 'Plan Base':1050, 'Plan Pro':2900, 'Plan Industrial':4900, 'Estrategico 360':7500 };
+
+// PLANES DE CONTINUIDAD (mensuales recurrentes) — comisión fija 10% para el aliado
+// mientras el cliente mantenga el plan activo.
+const PLANES_CONTINUIDAD = { 'Plan Cuidado':80, 'Plan Crecimiento':170, 'Plan Escala':280, 'Plan Liderazgo':450 };
+const COMISION_RECURRENTE_PCT = 0.10;
 
 const BENEFICIOS = {
   BASIC:   ['Kit de bienvenida incluido','Brochure comercial oficial','Herramienta de Auditoría B2B','Soporte por email'],
@@ -3365,7 +3598,7 @@ async function registrarse() {
 
   try {
     const urlParams = new URLSearchParams(window.location.search);
-    const refSponsor = urlParams.get('ref') || '';
+    const refSponsor = urlParams.get('ref') || localStorage.getItem('avanza_ref') || '';
     // Timeout de 15 segundos para evitar cuelgues infinitos
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 15000);
@@ -3755,6 +3988,13 @@ function renderDashboard() {
   document.getElementById('d-ventas6m').textContent = v6;
   document.getElementById('d-ganado').textContent = `USD ${Math.round(aliado.total_ganado||0).toLocaleString()}`;
   document.getElementById('d-pendiente').textContent = `USD ${Math.round(aliado.total_pendiente||0).toLocaleString()}`;
+  // MRR del aliado (10% de planes de continuidad activos de sus clientes).
+  // Si el backend todavía no devuelve este campo, queda en 0 y el sub-texto invita a vender continuidad.
+  const mrrEl = document.getElementById('d-mrr');
+  if(mrrEl) {
+    const mrr = Number(aliado.mrr_recurrente_usd || 0);
+    mrrEl.textContent = `USD ${Math.round(mrr).toLocaleString()}`;
+  }
   document.getElementById('d-refs-activos').textContent = refsActivos;
   
   const linkGeneral = aliado.link_ref || '';
@@ -3887,7 +4127,7 @@ function renderVentas() {
 async function renderComisiones() {
   if(!aliado) return;
 
-  // Tarjetas de comisión por plan (sin cambios)
+  // Grilla ONE-TIME — tarjetas de comisión por plan según nivel del aliado
   const nivel = aliado.nivel_calculado||aliado.nivel_actual||'BASIC';
   const p = pct(nivel);
   document.getElementById('planes-grid').innerHTML = Object.entries(PLANES).map(([plan,precio])=>`
@@ -3897,6 +4137,19 @@ async function renderComisiones() {
       <div class="plan-comision">USD ${Math.round(precio*p).toLocaleString()}</div>
       <div class="plan-pct">Nivel ${nivel} · ${Math.round(p*100)}%</div>
     </div>`).join('');
+
+  // Grilla RECURRENTE — tarjetas de comisión recurrente por Plan de Continuidad
+  // Comisión fija 10% mensual, no depende del nivel del aliado.
+  const gridRec = document.getElementById('planes-recurrentes-grid');
+  if(gridRec) {
+    gridRec.innerHTML = Object.entries(PLANES_CONTINUIDAD).map(([plan,precio])=>`
+      <div class="plan-card" style="border-color:rgba(250,204,21,0.25); background:rgba(250,204,21,0.03);">
+        <div class="plan-name" style="color:var(--amber);">${plan}</div>
+        <div class="plan-precio">Cliente paga: USD ${precio}/mes</div>
+        <div class="plan-comision" style="color:var(--amber);">USD ${Math.round(precio*COMISION_RECURRENTE_PCT)}/mes</div>
+        <div class="plan-pct" style="color:var(--text-muted);">Tu 10% recurrente · de por vida</div>
+      </div>`).join('');
+  }
 
   // Pintar CBU desde el objeto aliado que ya tenemos en memoria (spec §11)
   const cbuInput = document.getElementById('perfil-cbu');
@@ -3914,6 +4167,9 @@ async function renderComisiones() {
   const el = document.getElementById('tabla-comisiones');
   const totalPendEl = document.getElementById('com-total-pendiente');
   const totalAbonEl = document.getElementById('com-total-abonado');
+  const mrrEl = document.getElementById('com-mrr-actual');
+  const mrrDetalleEl = document.getElementById('com-mrr-detalle');
+  const tablaRecEl = document.getElementById('tabla-recurrentes-activos');
   el.innerHTML = `<div class="empty-state"><div class="spinner"></div><p style="margin-top:12px;">Cargando comisiones...</p></div>`;
 
   try {
@@ -3924,6 +4180,60 @@ async function renderComisiones() {
     // Totales en grande
     if(totalPendEl) totalPendEl.textContent = 'USD ' + Math.round(data.total_pendiente_usd||0).toLocaleString();
     if(totalAbonEl) totalAbonEl.textContent = 'USD ' + Math.round(data.total_abonado_usd||0).toLocaleString();
+
+    // MRR del aliado: suma del 10% sobre todos los planes de continuidad activos de sus clientes.
+    // El backend debe devolver:
+    //   - data.mrr_recurrente_usd: número (USD/mes que está cobrando ahora)
+    //   - data.clientes_continuidad_activos: array de { cliente, plan, precio_mensual, comision_mensual, fecha_alta }
+    // Si todavía no está implementado, mostramos cero + mensaje educativo.
+    const mrr = Number(data.mrr_recurrente_usd || 0);
+    const clientesRec = data.clientes_continuidad_activos || [];
+    if(mrrEl) mrrEl.textContent = 'USD ' + Math.round(mrr).toLocaleString();
+    if(mrrDetalleEl) {
+      if(clientesRec.length > 0) {
+        mrrDetalleEl.innerHTML = `<strong style="color:var(--text);">${clientesRec.length} cliente${clientesRec.length>1?'s':''}</strong> con Plan de Continuidad activo. Se acumula sobre el pendiente cada mes.`;
+      } else {
+        mrrDetalleEl.textContent = 'Todavía no tenés clientes con Plan de Continuidad activo. Cuando uno contrate, esto empieza a sumar.';
+      }
+    }
+
+    // Tabla de clientes con continuidad activa
+    if(tablaRecEl) {
+      if(clientesRec.length === 0) {
+        tablaRecEl.innerHTML = `<div class="empty-state"><i class="fa-solid fa-arrows-rotate"></i><p>Todavía no tenés clientes con Plan de Continuidad activo.<br><span style="font-size:.82rem;color:var(--text-dim);">Cuando uno de tus clientes contrate Plan Cuidado, Crecimiento, Escala o Liderazgo, vas a cobrar el 10% mensual mientras lo mantenga vivo.</span></p></div>`;
+      } else {
+        tablaRecEl.innerHTML = `
+          <table>
+            <thead>
+              <tr>
+                <th>Cliente</th>
+                <th>Plan</th>
+                <th>Precio mensual</th>
+                <th>Mi comisión / mes</th>
+                <th>Activo desde</th>
+                <th style="text-align:right;">Acciones</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${clientesRec.map(c => `
+                <tr data-continuidad-id="${c.id}">
+                  <td style="color:var(--text);font-weight:600;">${c.cliente||'—'}</td>
+                  <td>${c.plan||'—'}</td>
+                  <td>USD ${Math.round(c.precio_mensual||0).toLocaleString()}</td>
+                  <td style="color:var(--amber);font-weight:800;">USD ${Math.round(c.comision_mensual||0).toLocaleString()}/mes</td>
+                  <td style="font-size:.82rem;color:var(--text-dim);">${c.fecha_alta||'—'}</td>
+                  <td style="text-align:right;">
+                    <button onclick="darDeBajaContinuidad(${c.id}, '${(c.cliente||'').replace(/'/g,'\\\'')}', '${(c.plan||'').replace(/'/g,'\\\'')}')"
+                            style="background:transparent;border:1px solid rgba(239,68,68,0.4);color:#ef4444;border-radius:6px;padding:6px 12px;font-size:.78rem;font-weight:700;cursor:pointer;">
+                      <i class="fa-solid fa-circle-stop"></i> Baja
+                    </button>
+                  </td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>`;
+      }
+    }
 
     const comisiones = data.comisiones || [];
     if(!comisiones.length) {
@@ -3988,6 +4298,92 @@ async function renderComisiones() {
       <td style="color:var(--green);font-weight:800;">USD ${Math.round(v.comision).toLocaleString()}</td>
       <td>${v.pagada?'<span class="badge badge-green"><i class="fa-solid fa-check"></i> Pagada</span>':'<span class="badge badge-amber"><i class="fa-solid fa-clock"></i> Pendiente</span>'}</td>
     </tr>`).join('')}</tbody></table>`;
+  }
+}
+
+// ─── PLANES DE CONTINUIDAD — Aliado da de alta / baja sus propios clientes (v1.5) ──
+function actualizarPreviewContinuidad() {
+  const plan = document.getElementById('nc-plan').value;
+  const preview = document.getElementById('nc-preview');
+  if (!plan || !PLANES_CONTINUIDAD[plan]) {
+    preview.innerHTML = 'Elegí un plan para ver tu comisión mensual estimada.';
+    return;
+  }
+  const precio = PLANES_CONTINUIDAD[plan];
+  const comision = Math.round(precio * COMISION_RECURRENTE_PCT);
+  preview.innerHTML = `<i class="fa-solid fa-circle-info" style="color:var(--amber);"></i> Cliente paga <strong style="color:var(--text);">USD ${precio}/mes</strong> · Tu comisión: <strong style="color:var(--amber);">USD ${comision}/mes</strong> mientras esté activo. La primera comisión se acumula al instante en tus pendientes; cada 1ro del mes siguiente se suma otra automáticamente.`;
+}
+
+async function cargarNuevoContinuidad() {
+  if (!aliado) return;
+  const nombre = (document.getElementById('nc-nombre').value || '').trim();
+  const plan   = document.getElementById('nc-plan').value;
+  const email  = (document.getElementById('nc-email').value || '').trim();
+  const notas  = (document.getElementById('nc-notas').value || '').trim();
+  const btn    = document.getElementById('btn-nc-activar');
+  const estado = document.getElementById('nc-estado');
+
+  if (!nombre) { mostrarToast('Falta el nombre del cliente.', 'red'); return; }
+  if (!plan)   { mostrarToast('Falta elegir el plan.', 'red'); return; }
+
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span> Activando...';
+  estado.textContent = '';
+  try {
+    const res = await apiJSON(`${API}/aliado/continuidad/alta`, 'POST', {
+      nombre_cliente: nombre,
+      plan_continuidad: plan,
+      cliente_email: email || null,
+      notas: notas || null,
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      throw new Error(data.detail || data.mensaje || `Error ${res.status}`);
+    }
+    if (data.status === 'already_active') {
+      mostrarToast(data.mensaje || 'Ese cliente ya tiene este plan activo.', 'amber');
+    } else {
+      mostrarToast(data.mensaje || `${plan} activado.`, 'green');
+      // Limpiar el formulario
+      document.getElementById('nc-nombre').value = '';
+      document.getElementById('nc-plan').value = '';
+      document.getElementById('nc-email').value = '';
+      document.getElementById('nc-notas').value = '';
+      actualizarPreviewContinuidad();
+    }
+    // Re-render comisiones para mostrar el cliente nuevo + la comisión recién creada
+    await renderComisiones();
+  } catch (e) {
+    console.error('[CONTINUIDAD ALTA]', e);
+    mostrarToast('No pude activar el plan: ' + e.message, 'red');
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = '<i class="fa-solid fa-arrows-rotate"></i> Activar renta recurrente';
+  }
+}
+
+async function darDeBajaContinuidad(id, cliente, plan) {
+  if (!aliado || !id) return;
+  const ok = confirm(
+    `¿Dar de baja a ${cliente} (${plan})?\n\n` +
+    `A partir de ahora no se generan más comisiones recurrentes para este cliente. ` +
+    `Las comisiones que ya tenés acumuladas no se afectan.\n\n` +
+    `Solo confirmá si tu cliente ya canceló el servicio.`
+  );
+  if (!ok) return;
+  try {
+    const res = await apiJSON(`${API}/aliado/continuidad/${id}/baja`, 'POST', {
+      motivo_baja: 'Cancelación reportada por el aliado desde el portal',
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      throw new Error(data.detail || data.mensaje || `Error ${res.status}`);
+    }
+    mostrarToast(data.mensaje || 'Plan dado de baja.', 'green');
+    await renderComisiones();
+  } catch (e) {
+    console.error('[CONTINUIDAD BAJA]', e);
+    mostrarToast('No pude dar de baja: ' + e.message, 'red');
   }
 }
 
@@ -4441,6 +4837,10 @@ async function cargarBolsa() {
 
     // 2. Renderizar Disponibles — tarjetas
     const tbodyDisp = document.getElementById('tabla-bolsa-disponibles');
+    // Actualizar contador en la tarjeta-categoría "Básicos GRATIS"
+    if (typeof _setContadorCategoria === 'function') {
+      _setContadorCategoria('basico', data.disponibles.length);
+    }
     if(!data.disponibles.length) {
       tbodyDisp.innerHTML = '<div style="text-align:center;padding:24px;color:var(--text-dim);grid-column:1/-1;"><p>No hay leads disponibles en este momento. Volvé más tarde.</p></div>';
     } else {
@@ -4614,8 +5014,7 @@ async function cargarHistorialBolsa() {
 // Funciones de MI RED
 async function cargarRed() {
   if(!aliado) return;
-  document.getElementById('red-invitelink').textContent = `https://avanzadigital.digital/avanza-portal/portal.html?ref=${aliado.ref_code}`;
-  
+
   try {
     const res = await apiFetch(`${API}/aliados/${aliado.codigo}/red`);
     if(!res.ok) return;
@@ -4626,7 +5025,7 @@ async function cargarRed() {
     
     const tbody = document.getElementById('tabla-red');
     if(data.total_sub_aliados === 0) {
-      tbody.innerHTML = `<div class="empty-state"><i class="fa-solid fa-user-group"></i><p>Tu red está vacía.<br>Compartí tu enlace de invitación para sumar equipo y ganar comisiones pasivas.</p></div>`;
+      tbody.innerHTML = `<div class="empty-state"><i class="fa-solid fa-user-group"></i><p>Tu red está vacía.<br>Copiá tu link desde el <strong>Dashboard</strong> ("Tu link para sumar aliados a tu red") y mandalo a otros vendedores para empezar a generar comisiones pasivas.</p></div>`;
       return;
     }
     
@@ -4641,12 +5040,6 @@ async function cargarRed() {
         </tr>
       `).join('') + `</tbody></table>`;
   } catch(e) { console.error('Error cargando red', e); }
-}
-
-function copiarInviteLink() {
-  navigator.clipboard.writeText(document.getElementById('red-invitelink').textContent).then(()=>{
-    mostrarToast('¡Link de invitación copiado! Mandalo a otros vendedores.', 'amber');
-  });
 }
 
 // ─── SIGUIENTE MEJOR ACCIÓN ───────────────────────────────────────────────────
@@ -5308,8 +5701,12 @@ async function cargarCreditos() {
     const data = await res.json();
     const el = document.getElementById('d-creditos');
     if (el) el.textContent = data.saldo;
-    const mkt = document.getElementById('mkt-saldo');
-    if (mkt) mkt.textContent = `${data.saldo} créditos`;
+    // Actualizar los 3 lugares donde se muestra el saldo en la bolsa:
+    // selector de categorías, panel calificado, panel premium.
+    ['mkt-saldo','mkt-saldo-cal','mkt-saldo-prem'].forEach(id => {
+      const m = document.getElementById(id);
+      if (m) m.textContent = `${data.saldo} créditos`;
+    });
   } catch(e){ console.error('creditos:', e); }
 }
 
@@ -5862,84 +6259,158 @@ function renderLeadCard(lead, opts = {}) {
 
 
 // ─── MARKETPLACE DE LEADS PREMIUM ────────────────────────────────────
+// ─── HELPERS NUEVOS PARA SELECTOR DE CATEGORÍAS DE BOLSA ───────────────────
+// El portal ahora muestra 3 tarjetas grandes (Básicos GRATIS / Calificados /
+// Premium) y abre solo la categoría que el aliado elige. "Mis Reclamos" queda
+// siempre visible al tope con el badge de límite 3/3 y el contador 48hs.
+
+function mostrarCategoriaBolsa(tier) {
+  const selector = document.getElementById('bolsa-vista-selector');
+  const vBas = document.getElementById('bolsa-vista-basico');
+  const vCal = document.getElementById('bolsa-vista-calificado');
+  const vPre = document.getElementById('bolsa-vista-premium');
+  if (!selector || !vBas || !vCal || !vPre) return;
+  selector.style.display = 'none';
+  vBas.style.display = (tier === 'basico')     ? 'block' : 'none';
+  vCal.style.display = (tier === 'calificado') ? 'block' : 'none';
+  vPre.style.display = (tier === 'premium')    ? 'block' : 'none';
+  // Llevar la vista al panel elegido
+  const target = (tier === 'basico') ? vBas : (tier === 'calificado') ? vCal : vPre;
+  setTimeout(() => target.scrollIntoView({ behavior: 'smooth', block: 'start' }), 50);
+}
+
+function volverASelectorBolsa() {
+  const selector = document.getElementById('bolsa-vista-selector');
+  const vBas = document.getElementById('bolsa-vista-basico');
+  const vCal = document.getElementById('bolsa-vista-calificado');
+  const vPre = document.getElementById('bolsa-vista-premium');
+  if (!selector || !vBas || !vCal || !vPre) return;
+  selector.style.display = 'block';
+  vBas.style.display = 'none';
+  vCal.style.display = 'none';
+  vPre.style.display = 'none';
+  setTimeout(() => selector.scrollIntoView({ behavior: 'smooth', block: 'start' }), 50);
+}
+
+// Helper: actualiza saldo en los 3 lugares donde se muestra
+function _actualizarSaldoMkt(saldo) {
+  ['mkt-saldo','mkt-saldo-cal','mkt-saldo-prem'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.textContent = `${saldo} créditos`;
+  });
+}
+
+// Helper: actualiza el contador "X disponibles" en una tarjeta de categoría
+function _setContadorCategoria(tier, n) {
+  const el = document.getElementById(`cnt-bolsa-${tier}`);
+  if (el) el.textContent = n === 1 ? '1 disponible' : `${n} disponibles`;
+}
+
+// Helper: arma el filtro de países encima del `gridAnchor` que se le pase.
+// Reemplaza el filtro previo si ya existe. callback(p) recibe el código de país
+// elegido o '' para "todos".
+function _renderFiltroPaises(gridAnchor, idFiltro, paisesUnicos, colorActivo, onChange) {
+  const prev = document.getElementById(idFiltro);
+  if (prev) prev.remove();
+  if (!paisesUnicos || paisesUnicos.length <= 1) return;
+  const fc = document.createElement('div');
+  fc.id = idFiltro;
+  fc.style.cssText = 'display:flex;gap:8px;flex-wrap:wrap;margin:0;padding:14px 16px 6px;';
+  const allBtn = document.createElement('button');
+  allBtn.textContent = '🌎 Todos';
+  allBtn.style.cssText = `padding:6px 14px;border-radius:20px;border:1px solid var(--border);background:${colorActivo};color:#000;font-size:.8rem;cursor:pointer;font-weight:700;`;
+  allBtn.onclick = () => {
+    [...fc.querySelectorAll('button')].forEach(b => { b.style.background='transparent'; b.style.color='var(--text-muted)'; });
+    allBtn.style.background = colorActivo; allBtn.style.color = '#000';
+    onChange('');
+  };
+  fc.appendChild(allBtn);
+  paisesUnicos.forEach(p => {
+    const pi = paisInfo(p);
+    const btn = document.createElement('button');
+    btn.textContent = `${pi.bandera} ${pi.nombre}`;
+    btn.style.cssText = 'padding:6px 14px;border-radius:20px;border:1px solid var(--border);background:transparent;color:var(--text-muted);font-size:.8rem;cursor:pointer;';
+    btn.onclick = () => {
+      [...fc.querySelectorAll('button')].forEach(b => { b.style.background='transparent'; b.style.color='var(--text-muted)'; });
+      btn.style.background = colorActivo; btn.style.color = '#000';
+      onChange(p);
+    };
+    fc.appendChild(btn);
+  });
+  gridAnchor.before(fc);
+}
+
 async function cargarMarketplace() {
   if (!aliado) return;
-  const grid = document.getElementById('grid-marketplace');
-  if (!grid) return;
+  const gridPrem = document.getElementById('grid-premium');
+  const gridCal  = document.getElementById('grid-calificado');
+  if (!gridPrem || !gridCal) return;
   try {
     const res = await apiFetch(`${API}/bolsa/marketplace?codigo_aliado=${aliado.codigo}`);
     if (!res.ok) return;
     const data = await res.json();
-    document.getElementById('mkt-saldo').textContent = `${data.saldo_creditos} créditos`;
-    if (!data.leads.length) {
-      grid.innerHTML = `<div style="text-align:center; padding:32px; color:var(--text-dim); grid-column:1/-1;">
-        <i class="fa-solid fa-gem" style="font-size:1.5rem;color:var(--text-dim);opacity:.4;"></i>
-        <p style="margin-top:10px;">No hay leads premium disponibles en este momento.</p>
-        <p style="font-size:.8rem;margin-top:4px;">Volvé en unas horas — cargamos leads nuevos a diario.</p>
-      </div>`;
-      return;
-    }
 
-    // Filtro de país dinámico
-    const paisesUnicos = [...new Set(data.leads.map(l => l.pais || 'AR'))];
-    let filtroMktPais = '';
+    _actualizarSaldoMkt(data.saldo_creditos);
 
-    function renderMkt() {
-      const filtrados = filtroMktPais
-        ? data.leads.filter(l => (l.pais || 'AR') === filtroMktPais)
-        : data.leads;
+    // Separar por tier — el endpoint devuelve premium + calificado mezclados
+    const leadsPremium    = data.leads.filter(l => l.tier === 'premium');
+    const leadsCalificado = data.leads.filter(l => l.tier === 'calificado');
 
-      if (!filtrados.length) {
-        grid.innerHTML = `<div style="text-align:center; padding:24px; color:var(--text-dim); grid-column:1/-1;">No hay leads para ese país en este momento.</div>`;
+    _setContadorCategoria('premium',    leadsPremium.length);
+    _setContadorCategoria('calificado', leadsCalificado.length);
+
+    // ── Función genérica que renderiza una grilla de un tier dado ──
+    function renderGrillaTier(grid, leadsDelTier, tierLabel, idFiltro, colorActivo, gridAnchor) {
+      if (!leadsDelTier.length) {
+        grid.innerHTML = `<div style="text-align:center; padding:32px; color:var(--text-dim); grid-column:1/-1;">
+          <i class="fa-solid fa-gem" style="font-size:1.5rem;color:var(--text-dim);opacity:.4;"></i>
+          <p style="margin-top:10px;">No hay leads ${tierLabel} disponibles en este momento.</p>
+          <p style="font-size:.8rem;margin-top:4px;">Volvé en unas horas — cargamos leads nuevos a diario.</p>
+        </div>`;
+        const prev = document.getElementById(idFiltro);
+        if (prev) prev.remove();
         return;
       }
-      grid.innerHTML = filtrados.map(l => {
-        const puedePagar = data.saldo_creditos >= (l.costo_creditos || 0);
-        const accion = puedePagar
-          ? `<button onclick="comprarLead(${l.id},${l.costo_creditos})" style="width:100%;background:var(--amber);color:#000;border:none;border-radius:8px;padding:10px;font-size:.82rem;font-weight:800;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;">
-              <i class="fa-solid fa-bolt"></i> Comprar lead
-            </button>`
-          : `<button onclick="abrirModalComprarCreditos()" style="width:100%;background:rgba(250,204,21,0.12);color:var(--amber);border:1px solid rgba(250,204,21,0.35);border-radius:8px;padding:10px;font-size:.82rem;font-weight:800;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;" title="Te faltan ${(l.costo_creditos || 0) - data.saldo_creditos} créditos">
-              <i class="fa-solid fa-plus"></i> Cargar saldo (faltan ${(l.costo_creditos || 0) - data.saldo_creditos})
-            </button>`;
-        return renderLeadCard(l, { accion, mostrarCosto: true });
-      }).join('');
+      const paisesUnicos = [...new Set(leadsDelTier.map(l => l.pais || 'AR'))];
+      let filtroPais = '';
+
+      function pintar() {
+        const filtrados = filtroPais
+          ? leadsDelTier.filter(l => (l.pais || 'AR') === filtroPais)
+          : leadsDelTier;
+        if (!filtrados.length) {
+          grid.innerHTML = `<div style="text-align:center; padding:24px; color:var(--text-dim); grid-column:1/-1;">No hay leads para ese país en este momento.</div>`;
+          return;
+        }
+        grid.innerHTML = filtrados.map(l => {
+          const puedePagar = data.saldo_creditos >= (l.costo_creditos || 0);
+          const accion = puedePagar
+            ? `<button onclick="comprarLead(${l.id},${l.costo_creditos})" style="width:100%;background:var(--amber);color:#000;border:none;border-radius:8px;padding:10px;font-size:.82rem;font-weight:800;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;">
+                <i class="fa-solid fa-bolt"></i> Comprar lead
+              </button>`
+            : `<button onclick="abrirModalComprarCreditos()" style="width:100%;background:rgba(250,204,21,0.12);color:var(--amber);border:1px solid rgba(250,204,21,0.35);border-radius:8px;padding:10px;font-size:.82rem;font-weight:800;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;" title="Te faltan ${(l.costo_creditos || 0) - data.saldo_creditos} créditos">
+                <i class="fa-solid fa-plus"></i> Cargar saldo (faltan ${(l.costo_creditos || 0) - data.saldo_creditos})
+              </button>`;
+          return renderLeadCard(l, { accion, mostrarCosto: true });
+        }).join('');
+      }
+      _renderFiltroPaises(gridAnchor, idFiltro, paisesUnicos, colorActivo, p => { filtroPais = p; pintar(); });
+      pintar();
     }
 
-    // Renderizar botones de filtro solo si hay más de un país
-    const mktFiltroExist = document.getElementById('mkt-filtro-paises');
-    if (mktFiltroExist) mktFiltroExist.remove();
-    if (paisesUnicos.length > 1) {
-      const fc = document.createElement('div');
-      fc.id = 'mkt-filtro-paises';
-      fc.style.cssText = 'display:flex;gap:8px;flex-wrap:wrap;margin:0 16px 0;padding:14px 0 6px;';
-      const allBtn = document.createElement('button');
-      allBtn.textContent = '🌎 Todos';
-      allBtn.style.cssText = 'padding:6px 14px;border-radius:20px;border:1px solid var(--border);background:var(--amber);color:#000;font-size:.8rem;cursor:pointer;font-weight:700;';
-      allBtn.onclick = () => {
-        filtroMktPais = '';
-        [...fc.querySelectorAll('button')].forEach(b => { b.style.background='transparent'; b.style.color='var(--text-muted)'; });
-        allBtn.style.background = 'var(--amber)'; allBtn.style.color = '#000';
-        renderMkt();
-      };
-      fc.appendChild(allBtn);
-      paisesUnicos.forEach(p => {
-        const pi = paisInfo(p);
-        const btn = document.createElement('button');
-        btn.textContent = `${pi.bandera} ${pi.nombre}`;
-        btn.style.cssText = 'padding:6px 14px;border-radius:20px;border:1px solid var(--border);background:transparent;color:var(--text-muted);font-size:.8rem;cursor:pointer;';
-        btn.onclick = () => {
-          filtroMktPais = p;
-          [...fc.querySelectorAll('button')].forEach(b => { b.style.background='transparent'; b.style.color='var(--text-muted)'; });
-          btn.style.background = 'var(--amber)'; btn.style.color = '#000';
-          renderMkt();
-        };
-        fc.appendChild(btn);
-      });
-      grid.before(fc);
-    }
+    // Renderizar Premium dentro de su panel
+    renderGrillaTier(
+      gridPrem, leadsPremium, 'premium',
+      'mkt-filtro-paises-prem', 'var(--amber)',
+      gridPrem
+    );
+    // Renderizar Calificado dentro de su panel
+    renderGrillaTier(
+      gridCal, leadsCalificado, 'calificados',
+      'mkt-filtro-paises-cal', '#60a5fa',
+      gridCal
+    );
 
-    renderMkt();
   } catch(e) { console.error('marketplace:', e); }
 }
 
@@ -6947,11 +7418,11 @@ const ACADEMIA_MODULOS = [
       <div class="d-canal1-only">
         <h3>Materiales Canal 1</h3>
         <div class="aca-downloads">
-          <a class="aca-download" href="#" onclick="descargarPDF('https://drive.google.com/uc?export=download&id=1RL3N3TQLa4gZBBema51LNaqiCc2SsJ0M','Brochure_Comercial_AvanzaDigital_v4.pdf');return false;">
+          <a class="aca-download" href="#" onclick="descargarPDF('https://drive.google.com/uc?export=download&id=1DcfwVhAtijPvfARqHdqP7MVZNcZ6Gbsl','Brochure_Comercial_AvanzaDigital_v4.pdf');return false;">
             <i class="fa-solid fa-file-pdf" style="color:#ef4444;"></i>
             <div><div class="dl-title">Brochure Comercial v4</div><div class="dl-sub">Para mostrarle al cliente</div></div>
           </a>
-          <a class="aca-download" href="#" onclick="descargarPDF('https://drive.google.com/uc?export=download&id=1t6Z-Ldur7-6okC2FCcEMhwBpAFTEb5fX','Avanza_Partner_Intro_Canal1.pdf');return false;">
+          <a class="aca-download" href="#" onclick="descargarPDF('https://drive.google.com/uc?export=download&id=1kLslLvgP7R9QXx9s3Gw0ftjsdnWziwK2','Avanza_Partner_Intro_Canal1.pdf');return false;">
             <i class="fa-solid fa-rocket" style="color:#f97316;"></i>
             <div><div class="dl-title">Partner Intro — Canal 1</div><div class="dl-sub">Presentación del programa para tu canal</div></div>
           </a>
@@ -6963,7 +7434,7 @@ const ACADEMIA_MODULOS = [
             <i class="fa-solid fa-list-ol" style="color:#f97316;"></i>
             <div><div class="dl-title">Guión Canal 1</div><div class="dl-sub">Pitch adaptado a tu perfil de aliado</div></div>
           </a>
-          <a class="aca-download" href="#" onclick="descargarPDF('https://drive.google.com/uc?export=download&id=171PGzSjcdVREo0OeprFJLt4hj_qz3JMg','Guion_Ventas_Por_Rubro_v2.pdf');return false;">
+          <a class="aca-download" href="#" onclick="descargarPDF('https://drive.google.com/uc?export=download&id=1_JCSowJx9bH9AtLbutL052v3evuWQd0a','Guion_Ventas_Por_Rubro_v2.pdf');return false;">
             <i class="fa-solid fa-book" style="color:#3b82f6;"></i>
             <div><div class="dl-title">Guión por Rubro v2</div><div class="dl-sub">Casos por industria para cerrar</div></div>
           </a>

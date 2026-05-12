@@ -34,6 +34,12 @@ class Aliado(Base):
 
     # --- ONBOARDING ---
     onboarding_completado = Column(Boolean, default=False)
+    # Flags para la secuencia de emails de onboarding (día 1 / 3 / 7).
+    # SIN estas columnas en el modelo SQLAlchemy no las carga ni las guarda,
+    # haciendo que el scheduler reenvíe los emails cada 24h indefinidamente.
+    onboarding_email_d1_en = Column(DateTime, nullable=True)
+    onboarding_email_d3_en = Column(DateTime, nullable=True)
+    onboarding_email_d7_en = Column(DateTime, nullable=True)
 
     # --- REPUTACIÓN ---
     reputacion_score = Column(Integer, default=50)
@@ -463,6 +469,41 @@ class SolicitudCompraCreditos(Base):
     aliado = relationship("Aliado")
 
 
+# ─── PLAN DE CONTINUIDAD (suscripciones recurrentes mensuales) ───────────────
+# v1.5 — Cuando un cliente contrata un Plan de Continuidad mensual (Cuidado /
+# Crecimiento / Escala / Liderazgo), se crea un registro acá. Mientras esté
+# activo (fecha_baja IS NULL), el aliado correspondiente cobra el 10% mensual.
+#
+# Cada ciclo mensual genera una entrada en la tabla `comisiones` existente
+# (con plan=`<nombre_plan> (recurrente)`), reutilizando toda la infraestructura
+# de pago/abono que ya está en uso. Este modelo NO reemplaza a Comision; es
+# la fuente que dispara cada Comision recurrente mensualmente.
+class PlanContinuidadActivo(Base):
+    __tablename__ = "planes_continuidad_activos"
+
+    id = Column(Integer, primary_key=True, index=True)
+    aliado_id = Column(Integer, ForeignKey("aliados.id"), index=True, nullable=False)
+    nombre_cliente = Column(String, nullable=False)
+    cliente_email = Column(String, nullable=True)            # opcional, para conciliar
+    plan_continuidad = Column(String, nullable=False)        # 'Plan Cuidado' | 'Plan Crecimiento' | 'Plan Escala' | 'Plan Liderazgo'
+    precio_mensual_usd = Column(Float, nullable=False)       # precio que paga el cliente cada mes
+    comision_pct = Column(Float, default=0.10, nullable=False)  # fijo 10% para el aliado
+    fecha_alta = Column(DateTime, default=func.now(), nullable=False)
+    fecha_baja = Column(DateTime, nullable=True)             # NULL = activo. Si tiene fecha, está dado de baja.
+    motivo_baja = Column(Text, nullable=True)
+    notas = Column(Text, nullable=True)
+
+    aliado = relationship("Aliado")
+
+    @property
+    def activo(self) -> bool:
+        return self.fecha_baja is None
+
+    @property
+    def comision_mensual_usd(self) -> float:
+        return round(float(self.precio_mensual_usd) * float(self.comision_pct), 2)
+
+
 # ─── CONSTANTES DE NEGOCIO ───────────────────────────────────────────────────
 PLANES = {
     "Plan Base":         1050.0,
@@ -470,6 +511,16 @@ PLANES = {
     "Plan Industrial":   4900.0,
     "Estrategico 360":   7500.0,
 }
+
+# Planes de continuidad mensuales (suscripción). El aliado cobra 10% mensual
+# del precio mientras el cliente mantenga el plan activo.
+PLANES_CONTINUIDAD = {
+    "Plan Cuidado":       80.0,
+    "Plan Crecimiento":  170.0,
+    "Plan Escala":       280.0,
+    "Plan Liderazgo":    450.0,
+}
+COMISION_RECURRENTE_PCT = 0.10
 
 # Paquetes de créditos para recargar saldo en el marketplace de leads.
 # Anclados en USD; el precio ARS se calcula al cambio del día con dolarapi
