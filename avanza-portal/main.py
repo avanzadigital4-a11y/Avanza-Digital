@@ -750,7 +750,7 @@ def job_estipendio_mensual():
         if ahora.day != 1:
             return
 
-        BONUS_ESTIPENDIO = 20
+        BONUS_ESTIPENDIO = 50
         VENTANA_ACTIVIDAD_DIAS = 30
         ref_mes = f"estipendio:{ahora.year}-{ahora.month:02d}"
         corte_actividad = ahora - timedelta(days=VENTANA_ACTIVIDAD_DIAS)

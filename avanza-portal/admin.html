@@ -348,6 +348,7 @@ tr:hover td { background:rgba(255,255,255,0.02); }
       <button class="tab-btn" onclick="cambiarTab('auditorias',this)"><i class="fa-solid fa-magnifying-glass"></i> Auditorías</button>
       <button class="tab-btn" onclick="cambiarTab('bolsa',this)"><i class="fa-solid fa-bullhorn"></i> Bolsa de Leads</button>
       <button class="tab-btn" onclick="cambiarTab('comisiones',this)"><i class="fa-solid fa-percent"></i> Comisiones <span id="badge-comis" style="display:none;background:var(--red);color:white;font-size:.65rem;font-weight:800;padding:2px 7px;border-radius:50px;margin-left:2px;">0</span></button>
+      <button class="tab-btn" onclick="cambiarTab('continuidad',this)"><i class="fa-solid fa-arrows-rotate"></i> Continuidad</button>
       <button class="tab-btn" onclick="cambiarTab('pagos',this)"><i class="fa-solid fa-credit-card"></i> Pagos</button>
       <button class="tab-btn" onclick="cambiarTab('solicitudes',this)"><i class="fa-solid fa-coins"></i> Compra de créditos <span id="badge-sol" style="display:none;background:var(--amber);color:#000;font-size:.65rem;font-weight:800;padding:2px 7px;border-radius:50px;margin-left:2px;">0</span></button>
       <button class="tab-btn" onclick="cambiarTab('academia',this)"><i class="fa-solid fa-graduation-cap"></i> Academia</button>
@@ -856,6 +857,102 @@ tr:hover td { background:rgba(255,255,255,0.02); }
               <th>Estado</th><th>Fecha pago</th><th>Acción</th>
             </tr></thead>
             <tbody id="tabla-comis-body">
+              <tr><td colspan="8" style="padding:32px;text-align:center;color:var(--text-muted);">Cargando...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════════════════════════
+         TAB: CONTINUIDAD (v1.5) — Planes mensuales recurrentes
+    ═══════════════════════════════════════════════════════════════════ -->
+    <div id="tab-continuidad" class="tab-panel">
+
+      <!-- KPIs -->
+      <div id="cont-kpis" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin-bottom:20px;"></div>
+
+      <!-- Acción manual -->
+      <div class="table-wrap" style="margin-bottom:20px;">
+        <div class="table-head">
+          <div>
+            <h3><i class="fa-solid fa-bolt" style="color:var(--amber);"></i> Generar comisiones del mes</h3>
+            <div style="font-size:.82rem;color:var(--text-muted);margin-top:4px;">El cron corre el día 1 de cada mes. Si necesitás disparar manualmente (por testing o si el cron falló), usá este botón. Es <strong>idempotente</strong>: si las comisiones del mes ya están, no se duplican.</div>
+          </div>
+          <button onclick="generarComisionesMesAdmin()" id="btn-gen-cont"
+                  style="background:var(--amber);color:#000;border:none;border-radius:8px;padding:10px 18px;font-weight:800;cursor:pointer;font-size:.88rem;">
+            <i class="fa-solid fa-arrows-rotate"></i> Generar mes en curso
+          </button>
+        </div>
+        <div id="cont-gen-resultado" style="padding:0 18px 14px;font-size:.85rem;color:var(--text-muted);"></div>
+      </div>
+
+      <!-- Alta manual (admin) -->
+      <div class="table-wrap" style="margin-bottom:20px;">
+        <div class="table-head">
+          <div>
+            <h3><i class="fa-solid fa-plus" style="color:var(--primary);"></i> Alta manual de continuidad</h3>
+            <div style="font-size:.82rem;color:var(--text-muted);margin-top:4px;">Atribuir una venta de continuidad a un aliado existente (cuando el cierre fue por fuera del checkout).</div>
+          </div>
+        </div>
+        <div style="padding:0 18px 18px;display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;align-items:end;">
+          <div>
+            <label style="font-size:.72rem;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;display:block;margin-bottom:6px;">Aliado (código) *</label>
+            <select id="cont-alta-aliado" style="width:100%;background:#111;border:1px solid var(--border);border-radius:6px;padding:9px 12px;color:var(--text);font-size:.88rem;font-family:'Inter',sans-serif;">
+              <option value="">— Elegir aliado —</option>
+            </select>
+          </div>
+          <div>
+            <label style="font-size:.72rem;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;display:block;margin-bottom:6px;">Cliente *</label>
+            <input type="text" id="cont-alta-cliente" placeholder="Ej: Metalúrgica San Martín" style="width:100%;background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:6px;padding:9px 12px;color:var(--text);font-size:.88rem;font-family:'Inter',sans-serif;">
+          </div>
+          <div>
+            <label style="font-size:.72rem;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;display:block;margin-bottom:6px;">Plan *</label>
+            <select id="cont-alta-plan" style="width:100%;background:#111;border:1px solid var(--border);border-radius:6px;padding:9px 12px;color:var(--text);font-size:.88rem;font-family:'Inter',sans-serif;">
+              <option value="">— Elegir plan —</option>
+              <option value="Plan Cuidado">Plan Cuidado (USD 80/mes)</option>
+              <option value="Plan Crecimiento">Plan Crecimiento (USD 170/mes)</option>
+              <option value="Plan Escala">Plan Escala (USD 280/mes)</option>
+              <option value="Plan Liderazgo">Plan Liderazgo (USD 450/mes)</option>
+            </select>
+          </div>
+          <div>
+            <label style="font-size:.72rem;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;display:block;margin-bottom:6px;">Email cliente (opcional)</label>
+            <input type="email" id="cont-alta-email" placeholder="contacto@empresa.com" style="width:100%;background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:6px;padding:9px 12px;color:var(--text);font-size:.88rem;font-family:'Inter',sans-serif;">
+          </div>
+          <div>
+            <button onclick="altaContinuidadAdmin()" id="btn-cont-alta"
+                    style="width:100%;background:var(--primary);color:#fff;border:none;border-radius:6px;padding:10px 16px;font-weight:800;cursor:pointer;font-size:.88rem;">
+              <i class="fa-solid fa-circle-plus"></i> Crear alta
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tabla activos -->
+      <div class="table-wrap">
+        <div class="table-head">
+          <div>
+            <h3><i class="fa-solid fa-users-gear" style="color:var(--amber);"></i> Planes de continuidad activos</h3>
+            <div style="font-size:.82rem;color:var(--text-muted);margin-top:4px;">Cada uno genera una comisión mensual (titular 10% + sponsor 5% si tiene) el día 1 del mes.</div>
+          </div>
+          <div style="display:flex;gap:8px;align-items:center;">
+            <label style="font-size:.78rem;color:var(--text-muted);display:flex;align-items:center;gap:6px;cursor:pointer;">
+              <input type="checkbox" id="cont-incluir-bajas" onchange="cargarContinuidadAdmin()" style="margin:0;">
+              Incluir dados de baja
+            </label>
+            <button onclick="cargarContinuidadAdmin()" style="background:transparent;border:1px solid var(--border);color:var(--text-muted);border-radius:8px;padding:7px 14px;font-size:.8rem;cursor:pointer;"><i class="fa-solid fa-rotate-right"></i></button>
+          </div>
+        </div>
+        <div style="overflow-x:auto;">
+          <table>
+            <thead><tr>
+              <th>Aliado</th><th>Cliente</th><th>Plan</th>
+              <th style="text-align:right;">Precio/mes</th>
+              <th style="text-align:right;">Comisión titular</th>
+              <th>Alta</th><th>Estado</th><th style="text-align:right;">Acciones</th>
+            </tr></thead>
+            <tbody id="tabla-cont-body">
               <tr><td colspan="8" style="padding:32px;text-align:center;color:var(--text-muted);">Cargando...</td></tr>
             </tbody>
           </table>
@@ -2048,6 +2145,7 @@ function cambiarTab(tab, btn) {
   if(tab==='auditorias')  cargarAuditoriasAdmin();
   if(tab==='bolsa')       cargarAdminBolsa();
   if(tab==='comisiones')  cargarAdminComisiones();
+  if(tab==='continuidad') cargarContinuidadAdmin();
   if(tab==='pagos')       cargarAdminPagos();
   if(tab==='solicitudes') cargarSolicitudesCreditos();
   if(tab==='academia')    cargarAdminAcademia();
@@ -2832,6 +2930,246 @@ function actualizarBadgeComisiones() {
   if (n > 0) { badge.textContent = n; badge.style.display = 'inline'; }
   else       { badge.style.display = 'none'; }
 }
+
+// ═══════════════════════════════════════════════════════════════════════════
+// TAB CONTINUIDAD (v1.5) — Planes mensuales recurrentes
+// ═══════════════════════════════════════════════════════════════════════════
+
+let continuidadCache = [];
+const PLANES_CONTINUIDAD_PRECIOS = {
+  'Plan Cuidado': 80, 'Plan Crecimiento': 170, 'Plan Escala': 280, 'Plan Liderazgo': 450,
+};
+
+function _poblarSelectAliadosContinuidad() {
+  const sel = document.getElementById('cont-alta-aliado');
+  if (!sel || typeof todosAliados === 'undefined' || !todosAliados) return;
+  const valorActual = sel.value;
+  // Mantener solo el placeholder + repoblar
+  sel.innerHTML = '<option value="">— Elegir aliado —</option>' +
+    [...todosAliados]
+      .filter(a => a.activo !== false)
+      .sort((a,b) => (a.nombre||'').localeCompare(b.nombre||''))
+      .map(a => `<option value="${a.codigo}">${a.codigo} — ${a.nombre}</option>`)
+      .join('');
+  if (valorActual) sel.value = valorActual;
+}
+
+async function cargarContinuidadAdmin() {
+  const body = document.getElementById('tabla-cont-body');
+  if (!body) return;
+  _poblarSelectAliadosContinuidad();
+  const incluirBajas = !!(document.getElementById('cont-incluir-bajas')?.checked);
+  try {
+    const url = `${API}/admin/continuidad?activos=${incluirBajas ? 'false' : 'true'}`;
+    const r = await apiFetch(url);
+    if (!r.ok) {
+      body.innerHTML = `<tr><td colspan="8" style="padding:32px;text-align:center;color:var(--red);">Error al cargar (${r.status})</td></tr>`;
+      return;
+    }
+    const data = await r.json();
+    continuidadCache = data.items || [];
+    renderKpisContinuidad();
+    renderTablaContinuidad();
+  } catch (e) {
+    console.error(e);
+    body.innerHTML = `<tr><td colspan="8" style="padding:32px;text-align:center;color:var(--red);">Error de conexión</td></tr>`;
+  }
+}
+
+function renderKpisContinuidad() {
+  const activos = continuidadCache.filter(p => p.activo !== false);
+  const totalActivos = activos.length;
+  const mrrTotal = activos.reduce((s, p) => s + (p.comision_mensual_usd || 0), 0);
+  const ingresosClientesMes = activos.reduce((s, p) => s + (p.precio_mensual_usd || 0), 0);
+  const porPlan = {};
+  activos.forEach(p => { porPlan[p.plan] = (porPlan[p.plan] || 0) + 1; });
+
+  const kpis = [
+    { label: 'Planes activos', value: totalActivos, color: 'var(--amber)' },
+    { label: 'MRR a abonar (10%)', value: `USD ${mrrTotal.toFixed(2)}`, color: 'var(--green)' },
+    { label: 'Ingresos clientes/mes', value: `USD ${ingresosClientesMes.toFixed(2)}`, color: 'var(--text)' },
+    { label: 'Distribución', value: Object.entries(porPlan).map(([p,n]) => `${p.replace('Plan ','')}: ${n}`).join(' · ') || '—', color: 'var(--text-muted)', isText: true },
+  ];
+
+  const cont = document.getElementById('cont-kpis');
+  cont.innerHTML = kpis.map(k => `
+    <div style="background:#0f0f10;border:1px solid var(--border);border-radius:10px;padding:14px 16px;">
+      <div style="font-size:.7rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;">${k.label}</div>
+      <div style="font-size:${k.isText ? '.78rem' : '1.6rem'};font-weight:${k.isText ? '500' : '900'};color:${k.color};line-height:1.2;">${k.value}</div>
+    </div>`).join('');
+}
+
+function renderTablaContinuidad() {
+  const body = document.getElementById('tabla-cont-body');
+  if (!continuidadCache.length) {
+    body.innerHTML = `<tr><td colspan="8" style="padding:32px;text-align:center;color:var(--text-muted);">No hay planes de continuidad${document.getElementById('cont-incluir-bajas')?.checked ? '' : ' activos'}.</td></tr>`;
+    return;
+  }
+  body.innerHTML = continuidadCache.map(p => {
+    const esActivo = p.activo !== false;
+    const escapeJS = s => String(s||'').replace(/'/g, "\\'");
+    return `
+    <tr>
+      <td><div style="font-weight:600;color:var(--text);">${p.aliado_nombre||'—'}</div><div style="font-size:.72rem;color:var(--text-muted);">${p.aliado_codigo||'—'}</div></td>
+      <td>${p.cliente||'—'}</td>
+      <td>${p.plan||'—'}</td>
+      <td style="text-align:right;">USD ${(p.precio_mensual_usd||0).toFixed(2)}</td>
+      <td style="text-align:right;color:var(--amber);font-weight:700;">USD ${(p.comision_mensual_usd||0).toFixed(2)}</td>
+      <td style="font-size:.78rem;color:var(--text-dim);">${p.fecha_alta||'—'}</td>
+      <td>${esActivo
+        ? '<span class="badge badge-green"><i class="fa-solid fa-circle-check"></i> Activo</span>'
+        : `<span class="badge" style="background:rgba(239,68,68,0.15);color:#ef4444;border:1px solid rgba(239,68,68,0.3);"><i class="fa-solid fa-circle-stop"></i> Baja ${p.fecha_baja||''}</span>`}</td>
+      <td style="text-align:right;white-space:nowrap;">
+        ${esActivo ? `
+          <button onclick="actualizarPrecioContinuidadAdmin(${p.id}, ${p.precio_mensual_usd}, '${escapeJS(p.plan)}')" title="Cambiar precio o plan"
+                  style="background:transparent;border:1px solid var(--border);color:var(--text-muted);border-radius:6px;padding:5px 10px;font-size:.74rem;cursor:pointer;margin-right:4px;">
+            <i class="fa-solid fa-pen"></i>
+          </button>
+          <button onclick="bajaContinuidadAdmin(${p.id}, '${escapeJS(p.cliente)}')" title="Dar de baja"
+                  style="background:transparent;border:1px solid rgba(239,68,68,0.4);color:#ef4444;border-radius:6px;padding:5px 10px;font-size:.74rem;cursor:pointer;">
+            <i class="fa-solid fa-circle-stop"></i>
+          </button>
+        ` : '<span style="color:var(--text-dim);font-size:.78rem;">—</span>'}
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+async function altaContinuidadAdmin() {
+  const codigo = document.getElementById('cont-alta-aliado').value;
+  const cliente = (document.getElementById('cont-alta-cliente').value || '').trim();
+  const plan = document.getElementById('cont-alta-plan').value;
+  const email = (document.getElementById('cont-alta-email').value || '').trim();
+  const btn = document.getElementById('btn-cont-alta');
+
+  if (!codigo) { mostrarToast('Falta elegir el aliado.', 'red'); return; }
+  if (!cliente) { mostrarToast('Falta el nombre del cliente.', 'red'); return; }
+  if (!plan) { mostrarToast('Falta elegir el plan.', 'red'); return; }
+
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span> Creando...';
+  try {
+    const r = await apiFetch(`${API}/admin/continuidad/alta`, {
+      method: 'POST',
+      body: {
+        aliado_codigo: codigo,
+        nombre_cliente: cliente,
+        plan_continuidad: plan,
+        cliente_email: email || null,
+      },
+    });
+    const data = await r.json().catch(() => ({}));
+    if (!r.ok) throw new Error(data.detail || `Error ${r.status}`);
+    mostrarToast(data.mensaje || 'Plan creado.', 'green');
+    document.getElementById('cont-alta-cliente').value = '';
+    document.getElementById('cont-alta-plan').value = '';
+    document.getElementById('cont-alta-email').value = '';
+    await cargarContinuidadAdmin();
+  } catch (e) {
+    mostrarToast('No pude crear el plan: ' + e.message, 'red');
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = '<i class="fa-solid fa-circle-plus"></i> Crear alta';
+  }
+}
+
+async function bajaContinuidadAdmin(id, cliente) {
+  if (!confirm(`¿Dar de baja al plan de ${cliente}?\n\nLas comisiones ya generadas no se modifican. Las próximas no se generan más.`)) return;
+  try {
+    const r = await apiFetch(`${API}/admin/continuidad/${id}/baja`, {
+      method: 'POST',
+      body: { motivo_baja: 'Baja administrativa desde panel' },
+    });
+    const data = await r.json().catch(() => ({}));
+    if (!r.ok) throw new Error(data.detail || `Error ${r.status}`);
+    mostrarToast(data.mensaje || 'Plan dado de baja.', 'green');
+    await cargarContinuidadAdmin();
+  } catch (e) {
+    mostrarToast('No pude dar de baja: ' + e.message, 'red');
+  }
+}
+
+async function actualizarPrecioContinuidadAdmin(id, precioActual, planActual) {
+  // Diálogo escalonado: precio primero, plan después (si elige cambiarlo)
+  const nuevoPrecioStr = prompt(
+    `Precio mensual actual: USD ${Number(precioActual).toFixed(2)}\n\n` +
+    `Ingresá el NUEVO precio mensual (USD).\n` +
+    `Esto se aplica desde la próxima comisión generada — las comisiones ya creadas no se modifican.`,
+    String(precioActual)
+  );
+  if (nuevoPrecioStr === null) return;
+  const nuevoPrecio = parseFloat(nuevoPrecioStr);
+  if (isNaN(nuevoPrecio) || nuevoPrecio <= 0) {
+    mostrarToast('Precio inválido.', 'red');
+    return;
+  }
+
+  let nuevoPlan = '';
+  const cambiarPlan = confirm(
+    `Plan actual: ${planActual}\n\n¿También querés cambiar el nombre del plan?\n\nOK = sí, cambiar  ·  Cancelar = mantener "${planActual}"`
+  );
+  if (cambiarPlan) {
+    const opciones = Object.keys(PLANES_CONTINUIDAD_PRECIOS).join(' / ');
+    nuevoPlan = (prompt(`Nombre del plan nuevo (uno de: ${opciones}):`, planActual) || '').trim();
+    if (nuevoPlan && !PLANES_CONTINUIDAD_PRECIOS[nuevoPlan]) {
+      mostrarToast(`Plan inválido. Tiene que ser exactamente uno de: ${opciones}`, 'red');
+      return;
+    }
+  }
+
+  const motivo = prompt('Motivo del cambio (opcional, queda en el historial):', '') || '';
+
+  try {
+    const body = { precio_mensual_usd: nuevoPrecio };
+    if (nuevoPlan && nuevoPlan !== planActual) body.plan_continuidad = nuevoPlan;
+    if (motivo) body.motivo = motivo;
+    const r = await apiFetch(`${API}/admin/continuidad/${id}/precio`, {
+      method: 'POST',
+      body,
+    });
+    const data = await r.json().catch(() => ({}));
+    if (!r.ok) throw new Error(data.detail || `Error ${r.status}`);
+    mostrarToast(data.mensaje || 'Precio actualizado.', 'green');
+    await cargarContinuidadAdmin();
+  } catch (e) {
+    mostrarToast('No pude actualizar: ' + e.message, 'red');
+  }
+}
+
+async function generarComisionesMesAdmin() {
+  if (!confirm('¿Generar las comisiones recurrentes del mes en curso?\n\nEs idempotente: si ya están creadas, no se duplican.')) return;
+  const btn = document.getElementById('btn-gen-cont');
+  const resultadoEl = document.getElementById('cont-gen-resultado');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span> Generando...';
+  resultadoEl.innerHTML = '';
+  try {
+    const r = await apiFetch(`${API}/admin/continuidad/generar-comisiones-mes`, {
+      method: 'POST',
+      body: {},
+    });
+    const data = await r.json().catch(() => ({}));
+    if (!r.ok) throw new Error(data.detail || `Error ${r.status}`);
+    const total = (data.creadas_titular || 0) + (data.creadas_sponsor || 0);
+    mostrarToast(data.mensaje || 'Comisiones generadas.', 'green');
+    resultadoEl.innerHTML = `
+      <div style="margin-top:8px;padding:12px 14px;background:#0f0f10;border:1px solid var(--border);border-radius:8px;">
+        <strong style="color:var(--text);">${data.mensaje || ''}</strong><br>
+        Titular creadas: <strong style="color:var(--amber);">${data.creadas_titular || 0}</strong> ·
+        Sponsor (RED) creadas: <strong style="color:var(--text);">${data.creadas_sponsor || 0}</strong> ·
+        Saltadas (ya existían): <strong style="color:var(--text-muted);">${data.saltadas_por_idempotencia || 0}</strong>
+      </div>`;
+    // Refrescar también el panel de Comisiones porque acaban de aparecer nuevas pendientes
+    await cargarAdminComisiones();
+  } catch (e) {
+    mostrarToast('No pude generar: ' + e.message, 'red');
+    resultadoEl.innerHTML = `<span style="color:var(--red);">Error: ${e.message}</span>`;
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = '<i class="fa-solid fa-arrows-rotate"></i> Generar mes en curso';
+  }
+}
+
 
 // ═══════════════════════════════════════════════════════════════════════════
 // TAB PAGOS (§12)
