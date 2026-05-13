@@ -6289,6 +6289,7 @@ def portal_publico_aliado(ref_code: str, db: Session = Depends(get_db)):
         badge_html = f'<span style="background:rgba(74,222,128,0.15);color:#4ade80;border:1px solid rgba(74,222,128,0.3);padding:3px 10px;border-radius:20px;font-size:.68rem;font-weight:800;letter-spacing:1px;text-transform:uppercase;margin-left:8px;">{det["badge"]}</span>' if det.get("badge") else ""
         includes_items = "".join(f'<li style="display:flex;gap:8px;align-items:flex-start;font-size:.82rem;color:#a1a1aa;margin-bottom:6px;"><span style="color:#4ade80;flex-shrink:0;">✓</span>{item}</li>' for item in det.get("includes", []))
         ideal = det.get("ideal", "")
+        wa_plan_encoded = nombre_plan.replace(" ", "%20")
         planes_html += f"""
         <div class="plan-card">
           <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:12px;margin-bottom:14px;">
@@ -6309,7 +6310,7 @@ def portal_publico_aliado(ref_code: str, db: Session = Depends(get_db)):
                style="flex:1;min-width:140px;padding:14px;background:#3b82f6;color:#fff;border-radius:8px;border:none;cursor:pointer;font-weight:800;font-size:.9rem;">
               Contratar {nombre_plan} →
             </button>
-            <a href="https://wa.me/{wa_contacto}?text=Hola%20{wa_titular_encoded}%2C%20me%20interesa%20el%20{nombre_plan.replace(' ', '%20')}%20de%20Avanza%20Digital.%20%C2%BFPodemos%20hablar%3F"
+            <a href="https://wa.me/{wa_contacto}?text=Hola%20{wa_titular_encoded}%2C%20me%20interesa%20el%20{wa_plan_encoded}%20de%20Avanza%20Digital.%20%C2%BFPodemos%20hablar%3F"
                target="_blank"
                style="flex:1;min-width:140px;padding:14px;background:rgba(37,211,102,0.12);color:#25d366;border:1px solid rgba(37,211,102,0.3);border-radius:8px;cursor:pointer;font-weight:800;font-size:.9rem;text-decoration:none;text-align:center;display:inline-flex;align-items:center;justify-content:center;gap:6px;">
               💬 Consultar
