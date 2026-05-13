@@ -6290,6 +6290,7 @@ def portal_publico_aliado(ref_code: str, db: Session = Depends(get_db)):
         includes_items = "".join(f'<li style="display:flex;gap:8px;align-items:flex-start;font-size:.82rem;color:#a1a1aa;margin-bottom:6px;"><span style="color:#4ade80;flex-shrink:0;">✓</span>{item}</li>' for item in det.get("includes", []))
         ideal = det.get("ideal", "")
         wa_plan_encoded = nombre_plan.replace(" ", "%20")
+        _ideal_html = ('<p style="font-size:.78rem;color:#52525b;margin-bottom:16px;font-style:italic;">' + ideal + '</p>') if ideal else ''
         planes_html += f"""
         <div class="plan-card">
           <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:12px;margin-bottom:14px;">
@@ -6304,7 +6305,7 @@ def portal_publico_aliado(ref_code: str, db: Session = Depends(get_db)):
             </div>
           </div>
           <ul style="list-style:none;padding:0;margin:0 0 16px;">{includes_items}</ul>
-          {"<p style=\"font-size:.78rem;color:#52525b;margin-bottom:16px;font-style:italic;\">" + ideal + "</p>" if ideal else ""}
+          {_ideal_html}
           <div style="display:flex;gap:10px;flex-wrap:wrap;">
             <button onclick="abrirModal(\'{nombre_plan}\',\'{ref_code}\')"
                style="flex:1;min-width:140px;padding:14px;background:#3b82f6;color:#fff;border-radius:8px;border:none;cursor:pointer;font-weight:800;font-size:.9rem;">
