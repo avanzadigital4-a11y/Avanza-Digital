@@ -384,6 +384,20 @@
   .tab-panel { display: none; animation: fadeIn 0.25s ease; }
   .tab-panel.active { display: block; }
 
+  /* ── Fila secundaria de herramientas ────────────────────────────────── */
+  .tabs-extra-row {
+    display: none; gap: 4px; flex-wrap: wrap;
+    background: rgba(255,255,255,0.02);
+    border: 1px solid var(--border); border-radius: var(--radius-sm);
+    padding: 4px; margin-bottom: 20px;
+    animation: fadeIn 0.2s ease;
+    position: sticky; top: 136px; z-index: 99; backdrop-filter: blur(10px);
+    width: fit-content;
+  }
+  .tabs-extra-row.visible { display: flex; }
+  .tab-btn-mas { border: 1px solid var(--border) !important; border-radius: 50px !important; }
+  .tab-btn-mas.active { background: rgba(255,255,255,0.08) !important; color: var(--text) !important; }
+
   /* ── Canal 2: visibilidad dinámica ──────────────────────────────────── */
   .canal-card:hover { transform: translateY(-1px); box-shadow: 0 4px 16px rgba(0,0,0,0.3); }
   .rubro-card:hover { box-shadow: 0 4px 20px rgba(0,0,0,0.25); }
@@ -727,6 +741,7 @@
     .btn-nav-support span { display: none; }
     .page-wrap { padding: 100px 16px 100px; }
     .tabs { width: 100%; border-radius: var(--radius-sm); }
+    .tabs-extra-row { width: 100%; border-radius: var(--radius-sm); top: 148px; }
     .tab-btn { flex: 1; justify-content: center; padding: 9px 8px; font-size: 0.78rem; }
     .metric-value { font-size: 1.6rem; }
     th, td { padding: 12px 16px; }
@@ -803,6 +818,66 @@
   .toggle-dot.off { background: var(--text-dim); }
   .toggle-dot.on  { background: #a855f7; box-shadow: 0 0 6px rgba(168,85,247,0.6); animation: pulse 1.5s infinite; }
   @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.5} }
+
+  /* ── CAMINO CRÍTICO ── */
+  .critical-path {
+    display: flex; align-items: center; gap: 0;
+    background: rgba(0,0,0,0.35); border: 1px solid rgba(255,255,255,0.1);
+    border-radius: var(--radius); padding: 16px 20px; margin-bottom: 20px;
+    flex-wrap: wrap; gap: 6px;
+  }
+  .cp-step {
+    display: flex; align-items: center; gap: 8px;
+    background: rgba(255,255,255,0.04); border: 1px solid var(--border);
+    border-radius: 8px; padding: 8px 14px; cursor: pointer; transition: all .18s;
+    text-decoration: none; flex-shrink: 0;
+  }
+  .cp-step:hover { background: rgba(255,255,255,0.08); border-color: var(--border-h); }
+  .cp-step.cp-critical {
+    background: rgba(239,68,68,0.12); border-color: rgba(239,68,68,0.4);
+    box-shadow: 0 0 12px rgba(239,68,68,0.15);
+  }
+  .cp-step.cp-critical:hover { background: rgba(239,68,68,0.2); }
+  .cp-num {
+    width: 20px; height: 20px; border-radius: 50%;
+    background: rgba(255,255,255,0.1); color: var(--text-dim);
+    font-size: .68rem; font-weight: 800; display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+  }
+  .cp-critical .cp-num { background: #ef4444; color: #fff; }
+  .cp-label { font-size: .82rem; font-weight: 700; color: var(--text); white-space: nowrap; }
+  .cp-critical .cp-label { color: #fca5a5; }
+  .cp-badge-crit {
+    font-size: .58rem; font-weight: 800; letter-spacing: .8px; text-transform: uppercase;
+    background: #ef4444; color: #fff; padding: 2px 6px; border-radius: 4px; flex-shrink: 0;
+  }
+  .cp-arrow { color: var(--text-dim); font-size: .75rem; flex-shrink: 0; padding: 0 2px; }
+  .cp-title { font-size: .72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--text-dim); margin-right: 10px; white-space: nowrap; flex-shrink: 0; }
+
+  /* ── PIPELINE UNIFICADO ── */
+  .pipeline-section-header {
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 12px; margin-bottom: 16px; flex-wrap: wrap;
+  }
+  .pipeline-stage-label {
+    display: inline-flex; align-items: center; gap: 8px;
+    font-size: .7rem; font-weight: 800; text-transform: uppercase; letter-spacing: 1.2px;
+    padding: 4px 12px; border-radius: 50px;
+  }
+  .pipeline-stage-label.stage-1 { background: rgba(59,130,246,0.15); color: var(--primary); border: 1px solid rgba(59,130,246,0.3); }
+  .pipeline-stage-label.stage-2 { background: rgba(239,68,68,0.12); color: #fca5a5; border: 1px solid rgba(239,68,68,0.35); }
+  .pipeline-stage-label.stage-3 { background: rgba(74,222,128,0.12); color: var(--green); border: 1px solid var(--green-border); }
+  .pipeline-divider {
+    display: flex; align-items: center; gap: 12px; margin: 28px 0 24px;
+  }
+  .pipeline-divider-line { flex: 1; height: 1px; background: var(--border); }
+  .pipeline-divider-arrow {
+    display: flex; align-items: center; gap: 6px;
+    font-size: .72rem; font-weight: 700; color: var(--text-dim); white-space: nowrap;
+    background: rgba(0,0,0,0.4); border: 1px solid var(--border); border-radius: 50px; padding: 4px 12px;
+  }
+  .pipeline-divider.critical-divider .pipeline-divider-arrow {
+    color: #fca5a5; border-color: rgba(239,68,68,0.35); background: rgba(239,68,68,0.08);
+  }
 </style>
 </head>
 <body>
@@ -820,8 +895,8 @@
       <div class="login-logo"><i class="fa-solid fa-layer-group"></i> Avanza</div>
       <div class="login-badge" id="login-badge">Partner Network · Portal de Aliado</div>
       <div class="field">
-        <label><i class="fa-solid fa-id-badge"></i> &nbsp;Tu código de aliado</label>
-        <input type="text" id="login-codigo" placeholder="AL-001" autocomplete="username" onkeydown="if(event.key==='Enter')iniciarSesion()">
+        <label><i class="fa-solid fa-id-badge"></i> &nbsp;Email o código de aliado</label>
+        <input type="text" id="login-codigo" placeholder="tu@email.com o AL-001" autocomplete="username" onkeydown="if(event.key==='Enter')iniciarSesion()">
       </div>
       <div class="field">
         <label><i class="fa-solid fa-lock"></i> &nbsp;Contraseña</label>
@@ -1059,20 +1134,30 @@
   <div class="page-wrap">
 
     <div class="tabs" id="main-tabs">
+      <!-- ── PRIMARIOS (siempre visibles) ── -->
       <button class="tab-btn active" onclick="cambiarTab('dashboard',this)"><i class="fa-solid fa-chart-line"></i> Dashboard</button>
-      <!-- CANAL 2 EXCLUSIVO -->
-      <button class="tab-btn tab-canal2" onclick="cambiarTab('kit-ventas',this)" style="display:none;background:rgba(74,222,128,0.12);border-color:rgba(74,222,128,0.3);color:#4ade80;"><i class="fa-solid fa-briefcase"></i> Kit de Ventas <span style="background:#4ade80;color:#000;font-size:.6rem;font-weight:800;padding:2px 6px;border-radius:4px;margin-left:4px;">C2</span></button>
-      <button class="tab-btn tab-canal2" onclick="cambiarTab('selector-rubro',this)" style="display:none;background:rgba(74,222,128,0.12);border-color:rgba(74,222,128,0.3);color:#4ade80;"><i class="fa-solid fa-crosshairs"></i> Selector de Rubro <span style="background:#4ade80;color:#000;font-size:.6rem;font-weight:800;padding:2px 6px;border-radius:4px;margin-left:4px;">C2</span></button>
-      <!-- CANAL 1 EXCLUSIVO -->
-      <button class="tab-btn tab-canal1" onclick="cambiarTab('academia',this)" style="background:rgba(249,115,22,0.12);border-color:rgba(249,115,22,0.3);color:#f97316;"><i class="fa-solid fa-graduation-cap"></i> Academia <span style="background:#f97316;color:#000;font-size:.6rem;font-weight:800;padding:2px 6px;border-radius:4px;margin-left:4px;">NUEVO</span></button>
+      <!-- C1: Bolsa de Leads -->
       <button class="tab-btn tab-canal1" onclick="cambiarTab('bolsa',this)"><i class="fa-solid fa-bullhorn"></i> Bolsa de Leads <span style="background:var(--green);color:#000;font-size:.6rem;font-weight:800;padding:2px 6px;border-radius:4px;margin-left:4px;">NUEVO</span></button>
-      <!-- AMBOS CANALES -->
+      <!-- C2: Kit de Ventas (primer tab al entrar) -->
+      <button class="tab-btn tab-canal2" onclick="cambiarTab('kit-ventas',this)" style="display:none;background:rgba(74,222,128,0.12);border-color:rgba(74,222,128,0.3);color:#4ade80;"><i class="fa-solid fa-briefcase"></i> Kit de Ventas <span style="background:#4ade80;color:#000;font-size:.6rem;font-weight:800;padding:2px 6px;border-radius:4px;margin-left:4px;">C2</span></button>
+      <!-- C1: Referidos → redirige al Pipeline unificado -->
+      <button class="tab-btn tab-canal1" onclick="cambiarTab('pipeline',document.getElementById('btn-tab-pipeline'))"><i class="fa-solid fa-user-plus"></i> Referidos</button>
+      <!-- Pipeline unificado (ambos canales) -->
+      <button class="tab-btn" id="btn-tab-pipeline" onclick="cambiarTab('pipeline',this)"><i class="fa-solid fa-bars-progress"></i> Pipeline</button>
+      <!-- Ambos: Comisiones -->
+      <button class="tab-btn" onclick="cambiarTab('comisiones',this)"><i class="fa-solid fa-dollar-sign"></i> Comisiones</button>
+      <!-- Toggle herramientas secundarias -->
+      <button class="tab-btn tab-btn-mas" id="btn-mas-tabs" onclick="toggleMasTabsRow()" title="Más herramientas"><i class="fa-solid fa-grid-2"></i> Herramientas</button>
+    </div>
+
+    <!-- ── FILA SECUNDARIA (togglable) ── -->
+    <div class="tabs-extra-row" id="tabs-extra-row">
+      <button class="tab-btn" onclick="cambiarTab('academia',this)" style="background:rgba(249,115,22,0.12);border-color:rgba(249,115,22,0.3);color:#f97316;"><i class="fa-solid fa-graduation-cap"></i> Academia</button>
+      <button class="tab-btn tab-canal2" onclick="cambiarTab('selector-rubro',this)" style="display:none;background:rgba(74,222,128,0.12);border-color:rgba(74,222,128,0.3);color:#4ade80;"><i class="fa-solid fa-crosshairs"></i> Selector de Rubro</button>
+      <button class="tab-btn" onclick="cambiarTab('prospectos',this)"><i class="fa-solid fa-bullseye"></i> Prospectos</button>
+      <button class="tab-btn" onclick="cambiarTab('ventas',this)"><i class="fa-solid fa-handshake"></i> Ventas</button>
       <button class="tab-btn" onclick="cambiarTab('cotizador',this)"><i class="fa-solid fa-file-invoice-dollar"></i> Cotizador</button>
       <button class="tab-btn" onclick="cambiarTab('herramientas',this)"><i class="fa-solid fa-magnifying-glass"></i> Auditoría</button>
-      <button class="tab-btn" onclick="cambiarTab('prospectos',this)"><i class="fa-solid fa-bullseye"></i> Prospectos</button>
-      <button class="tab-btn tab-canal1" onclick="cambiarTab('referidos',this)"><i class="fa-solid fa-user-plus"></i> Referidos</button>
-      <button class="tab-btn" onclick="cambiarTab('ventas',this)"><i class="fa-solid fa-handshake"></i> Ventas</button>
-      <button class="tab-btn" onclick="cambiarTab('comisiones',this)"><i class="fa-solid fa-dollar-sign"></i> Comisiones</button>
       <button class="tab-btn" onclick="cambiarTab('red',this)"><i class="fa-solid fa-users-rays" style="color:var(--amber);"></i> Mi Red</button>
       <button class="tab-btn" onclick="cambiarTab('comunidad',this)"><i class="fa-solid fa-comments" style="color:#c084fc;"></i> Comunidad <span style="background:#c084fc;color:#000;font-size:.6rem;font-weight:800;padding:2px 6px;border-radius:4px;margin-left:4px;">NUEVO</span></button>
     </div>
@@ -1084,6 +1169,63 @@
           <div class="welcome-name">Hola, <span id="d-firstname">aliado</span> 👋</div>
           <div class="welcome-sub" id="d-welcome-sub">Nivel actual: — · Comisión: —</div>
         </div>
+      </div>
+
+      <!-- BANNER GRUPO WHATSAPP -->
+      <a href="https://chat.whatsapp.com/CqHsCyLUTmQK9I5JnvhCYx" target="_blank" rel="noopener" style="display:flex; align-items:center; gap:16px; background:linear-gradient(135deg,rgba(37,211,102,0.08),rgba(37,211,102,0.03)); border:1px solid rgba(37,211,102,0.25); border-radius:var(--radius); padding:16px 20px; margin-bottom:24px; text-decoration:none; transition:border-color 0.2s,background 0.2s;" onmouseover="this.style.borderColor='rgba(37,211,102,0.5)'" onmouseout="this.style.borderColor='rgba(37,211,102,0.25)'">
+        <div style="width:44px;height:44px;border-radius:50%;background:#25D366;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="white" xmlns="http://www.w3.org/2000/svg"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+        </div>
+        <div style="flex:1;">
+          <div style="font-size:0.9rem;font-weight:700;color:#4ade80;margin-bottom:2px;">📲 Únete al grupo de Avanza Partners</div>
+          <div style="font-size:0.8rem;color:var(--text-muted);">Tips de ventas, novedades del portal y comunidad de aliados</div>
+        </div>
+        <div style="font-size:0.78rem;font-weight:600;color:#25D366;white-space:nowrap;display:flex;align-items:center;gap:6px;">Unirme <i class="fa-solid fa-arrow-right" style="font-size:0.7rem;"></i></div>
+      </a>
+
+      <!-- CAMINO CRÍTICO AL COBRO — canal-aware -->
+      <div class="critical-path d-canal1-only" id="cp-canal1" style="display:none;">
+        <span class="cp-title"><i class="fa-solid fa-route"></i> Tu camino al cobro</span>
+        <a href="#" class="cp-step" onclick="cambiarTab('bolsa', document.querySelector('.tab-canal1[onclick*=bolsa]')); return false;">
+          <span class="cp-num">1</span>
+          <i class="fa-solid fa-bullhorn" style="color:var(--primary);font-size:.82rem;"></i>
+          <span class="cp-label">Bolsa de Leads</span>
+        </a>
+        <span class="cp-arrow"><i class="fa-solid fa-chevron-right"></i></span>
+        <a href="#" class="cp-step cp-critical" onclick="cambiarTab('pipeline', document.getElementById('btn-tab-pipeline')); return false;">
+          <span class="cp-num">2</span>
+          <i class="fa-solid fa-user-plus" style="color:#fca5a5;font-size:.82rem;"></i>
+          <span class="cp-label">Registrar Referido</span>
+          <span class="cp-badge-crit">Paso crítico</span>
+        </a>
+        <span class="cp-arrow"><i class="fa-solid fa-chevron-right"></i></span>
+        <a href="#" class="cp-step" onclick="cambiarTab('comisiones', document.querySelector('.tab-btn[onclick*=comisiones]')); return false;">
+          <span class="cp-num">3</span>
+          <i class="fa-solid fa-dollar-sign" style="color:var(--green);font-size:.82rem;"></i>
+          <span class="cp-label">Cobrar comisión</span>
+        </a>
+      </div>
+
+      <div class="critical-path d-canal2-only" id="cp-canal2" style="display:none;">
+        <span class="cp-title"><i class="fa-solid fa-route"></i> Tu camino al cobro</span>
+        <a href="#" class="cp-step" onclick="cambiarTab('cotizador', document.querySelector('.tab-btn[onclick*=cotizador]')); return false;">
+          <span class="cp-num">1</span>
+          <i class="fa-solid fa-file-invoice-dollar" style="color:#4ade80;font-size:.82rem;"></i>
+          <span class="cp-label">Cotizador</span>
+        </a>
+        <span class="cp-arrow"><i class="fa-solid fa-chevron-right"></i></span>
+        <a href="#" class="cp-step cp-critical" onclick="cambiarTab('pipeline', document.getElementById('btn-tab-pipeline')); return false;">
+          <span class="cp-num">2</span>
+          <i class="fa-solid fa-user-plus" style="color:#fca5a5;font-size:.82rem;"></i>
+          <span class="cp-label">Registrar Referido</span>
+          <span class="cp-badge-crit">Paso crítico</span>
+        </a>
+        <span class="cp-arrow"><i class="fa-solid fa-chevron-right"></i></span>
+        <a href="#" class="cp-step" onclick="cambiarTab('comisiones', document.querySelector('.tab-btn[onclick*=comisiones]')); return false;">
+          <span class="cp-num">3</span>
+          <i class="fa-solid fa-dollar-sign" style="color:var(--green);font-size:.82rem;"></i>
+          <span class="cp-label">Cobrar comisión</span>
+        </a>
       </div>
 
       <!-- SIGUIENTE MEJOR ACCIÓN (Canal 1 only) -->
@@ -1161,23 +1303,144 @@
       </div>
 
       <!-- REPUTACIÓN + CRÉDITOS (v1.3) -->
-      <div class="bento-box d-canal1-only" style="margin-bottom:24px; background:linear-gradient(135deg,rgba(192,132,252,0.06),transparent); border-color:rgba(192,132,252,0.2);"id="bloque-reputacion">
+      <div class="bento-box d-canal1-only" style="margin-bottom:24px; background:linear-gradient(135deg,rgba(192,132,252,0.06),transparent); border-color:rgba(192,132,252,0.2);" id="bloque-reputacion">
+
+        <!-- Fila principal: score + créditos -->
         <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:20px;">
           <div style="flex:1; min-width:220px;">
             <h3 style="font-size:0.95rem;font-weight:700;margin-bottom:6px;"><i class="fa-solid fa-shield-halved" style="color:#c084fc;margin-right:6px;"></i>Mi Reputación</h3>
-            <div style="display:flex; align-items:baseline; gap:8px; margin-bottom:8px;">
+            <div style="display:flex; align-items:baseline; gap:8px; margin-bottom:4px;">
               <span id="d-reput-score" style="font-size:2.2rem; font-weight:900; color:#c084fc;">—</span>
               <span style="font-size:0.85rem; color:var(--text-dim);">/ 100</span>
+              <span id="d-reput-rango-badge" style="font-size:.68rem; font-weight:800; padding:2px 9px; border-radius:50px; letter-spacing:.6px; margin-left:4px;"></span>
             </div>
-            <div id="d-reput-badges" style="display:flex; flex-wrap:wrap; gap:6px; margin-top:8px;"></div>
-            <p id="d-reput-caption" style="font-size:0.78rem; color:var(--text-dim); margin-top:8px;">Cargando...</p>
+            <div id="d-reput-badges" style="display:flex; flex-wrap:wrap; gap:6px; margin-bottom:10px;"></div>
+
+            <!-- Consecuencias por rango -->
+            <div id="d-reput-consecuencia" style="font-size:.78rem; color:var(--text-dim); line-height:1.5; margin-bottom:10px;"></div>
+
+            <!-- Toggle explicación -->
+            <button onclick="toggleReputExplicacion()" id="btn-reput-toggle"
+              style="background:transparent;border:none;color:#c084fc;font-size:.76rem;font-weight:700;cursor:pointer;padding:0;display:inline-flex;align-items:center;gap:5px;font-family:'Inter',sans-serif;">
+              <i class="fa-solid fa-circle-question"></i> ¿Cómo sube mi score?
+              <i class="fa-solid fa-chevron-down" id="reput-toggle-icon" style="font-size:.6rem; transition:transform .2s;"></i>
+            </button>
           </div>
+
           <div style="min-width:140px; text-align:right;">
             <h3 style="font-size:0.85rem;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;">Créditos Bolsa</h3>
-            <div style="font-size:2rem; font-weight:900; color:var(--amber);" id="d-creditos">0</div>
-            <p style="font-size:0.72rem; color:var(--text-dim); margin-top:4px;">Para comprar leads Premium</p>
+            <div id="d-creditos-wrap">
+              <div style="font-size:2rem; font-weight:900; color:var(--amber);" id="d-creditos">0</div>
+              <p style="font-size:0.72rem; color:var(--text-dim); margin-top:4px;" id="d-creditos-sub">Para comprar leads Premium</p>
+              <div id="d-creditos-cta" style="display:none; margin-top:8px;">
+                <button onclick="abrirComprarCreditos()" style="background:rgba(245,158,11,0.15);color:var(--amber);border:1px solid rgba(245,158,11,0.4);border-radius:8px;padding:6px 12px;font-size:.72rem;font-weight:800;cursor:pointer;white-space:nowrap;letter-spacing:.3px;">
+                  <i class="fa-solid fa-plus"></i> Comprar créditos
+                </button>
+              </div>
+            </div>
           </div>
         </div>
+
+        <!-- Panel explicativo (colapsado por defecto) -->
+        <div id="reput-explicacion" style="display:none; margin-top:18px; border-top:1px solid rgba(192,132,252,0.15); padding-top:16px;">
+
+          <!-- Rangos y consecuencias -->
+          <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:8px; margin-bottom:16px;">
+            <div style="background:rgba(239,68,68,0.08); border:1px solid rgba(239,68,68,0.2); border-radius:8px; padding:10px 12px;">
+              <div style="font-size:.72rem; font-weight:800; color:#ef4444; text-transform:uppercase; letter-spacing:.6px; margin-bottom:4px;">0 – 49 · Inicial</div>
+              <div style="font-size:.76rem; color:var(--text-muted); line-height:1.4;">Acceso solo a leads básicos gratuitos. Sin prioridad en asignación.</div>
+            </div>
+            <div style="background:rgba(245,158,11,0.08); border:1px solid rgba(245,158,11,0.25); border-radius:8px; padding:10px 12px;">
+              <div style="font-size:.72rem; font-weight:800; color:var(--amber); text-transform:uppercase; letter-spacing:.6px; margin-bottom:4px;">50 – 69 · Confiable</div>
+              <div style="font-size:.76rem; color:var(--text-muted); line-height:1.4;">Acceso a leads calificados. Visible en el leaderboard interno.</div>
+            </div>
+            <div style="background:rgba(74,222,128,0.08); border:1px solid rgba(74,222,128,0.2); border-radius:8px; padding:10px 12px;">
+              <div style="font-size:.72rem; font-weight:800; color:var(--green); text-transform:uppercase; letter-spacing:.6px; margin-bottom:4px;">70 – 84 · Destacado</div>
+              <div style="font-size:.76rem; color:var(--text-muted); line-height:1.4;">Prioridad en leads premium. Candidato a badges de calidad.</div>
+            </div>
+            <div style="background:rgba(192,132,252,0.1); border:1px solid rgba(192,132,252,0.3); border-radius:8px; padding:10px 12px;">
+              <div style="font-size:.72rem; font-weight:800; color:#c084fc; text-transform:uppercase; letter-spacing:.6px; margin-bottom:4px;">85 – 100 · Élite</div>
+              <div style="font-size:.76rem; color:var(--text-muted); line-height:1.4;">Máxima prioridad. Acceso anticipado a leads nuevos. Todos los badges desbloqueables.</div>
+            </div>
+          </div>
+
+          <!-- Factores con barras -->
+          <div style="font-size:.76rem; font-weight:700; color:var(--text-muted); text-transform:uppercase; letter-spacing:1px; margin-bottom:10px;">Cómo se calcula tu score</div>
+          <div style="display:flex; flex-direction:column; gap:10px;">
+
+            <div>
+              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+                <span style="font-size:.8rem; font-weight:600; color:var(--text);">🎯 Tasa de cierre <span style="color:var(--text-dim); font-weight:400;">(referidos → ventas)</span></span>
+                <div style="display:flex; align-items:center; gap:8px;">
+                  <span id="rf-cierre-val" style="font-size:.75rem; font-weight:700; color:#c084fc;">—%</span>
+                  <span style="font-size:.68rem; color:var(--text-dim);">+40 pts máx</span>
+                </div>
+              </div>
+              <div style="height:5px; background:rgba(255,255,255,0.06); border-radius:50px; overflow:hidden;">
+                <div id="rf-cierre-bar" style="height:100%; background:linear-gradient(90deg,#c084fc,#818cf8); border-radius:50px; width:0%; transition:width .6s ease;"></div>
+              </div>
+              <div style="font-size:.72rem; color:var(--text-dim); margin-top:3px;">Registrá más referidos y cerrá ventas. Con 40% o más de conversión desbloqueás el badge 🎯 Closer.</div>
+            </div>
+
+            <div>
+              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+                <span style="font-size:.8rem; font-weight:600; color:var(--text);">⚡ Éxito en Bolsa <span style="color:var(--text-dim); font-weight:400;">(leads contactados exitosamente)</span></span>
+                <div style="display:flex; align-items:center; gap:8px;">
+                  <span id="rf-bolsa-val" style="font-size:.75rem; font-weight:700; color:#c084fc;">—%</span>
+                  <span style="font-size:.68rem; color:var(--text-dim);">+20 pts máx</span>
+                </div>
+              </div>
+              <div style="height:5px; background:rgba(255,255,255,0.06); border-radius:50px; overflow:hidden;">
+                <div id="rf-bolsa-bar" style="height:100%; background:linear-gradient(90deg,#c084fc,#818cf8); border-radius:50px; width:0%; transition:width .6s ease;"></div>
+              </div>
+              <div style="font-size:.72rem; color:var(--text-dim); margin-top:3px;">Contactá los leads reclamados dentro de las 48hs y marcalos como "Contactado". Con 30%+ de éxito desbloqueás 🏆 Bolsa Master.</div>
+            </div>
+
+            <div>
+              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+                <span style="font-size:.8rem; font-weight:600; color:var(--text);">🔥 Actividad reciente <span style="color:var(--text-dim); font-weight:400;">(últimos 30 días)</span></span>
+                <div style="display:flex; align-items:center; gap:8px;">
+                  <span id="rf-activo-val" style="font-size:.75rem; font-weight:700; color:#c084fc;">—</span>
+                  <span style="font-size:.68rem; color:var(--text-dim);">+10 pts</span>
+                </div>
+              </div>
+              <div style="height:5px; background:rgba(255,255,255,0.06); border-radius:50px; overflow:hidden;">
+                <div id="rf-activo-bar" style="height:100%; background:linear-gradient(90deg,#c084fc,#818cf8); border-radius:50px; width:0%; transition:width .6s ease;"></div>
+              </div>
+              <div style="font-size:.72rem; color:var(--text-dim); margin-top:3px;">Entrá al portal, registrá referidos o cerrá ventas dentro del último mes para mantener activos los 10 puntos.</div>
+            </div>
+
+            <div>
+              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+                <span style="font-size:.8rem; font-weight:600; color:var(--text);">👑 Red activa <span style="color:var(--text-dim); font-weight:400;">(sub-aliados vendiendo)</span></span>
+                <div style="display:flex; align-items:center; gap:8px;">
+                  <span id="rf-red-val" style="font-size:.75rem; font-weight:700; color:#c084fc;">—</span>
+                  <span style="font-size:.68rem; color:var(--text-dim);">+10 pts máx</span>
+                </div>
+              </div>
+              <div style="height:5px; background:rgba(255,255,255,0.06); border-radius:50px; overflow:hidden;">
+                <div id="rf-red-bar" style="height:100%; background:linear-gradient(90deg,#c084fc,#818cf8); border-radius:50px; width:0%; transition:width .6s ease;"></div>
+              </div>
+              <div style="font-size:.72rem; color:var(--text-dim); margin-top:3px;">3 puntos por cada sub-aliado activo (máx 3). Con 3 o más desbloqueás 👑 Embajador.</div>
+            </div>
+
+          </div>
+
+          <!-- Badges desbloqueables -->
+          <div style="margin-top:14px; padding-top:12px; border-top:1px solid rgba(255,255,255,0.05);">
+            <div style="font-size:.72rem; font-weight:700; color:var(--text-muted); text-transform:uppercase; letter-spacing:1px; margin-bottom:8px;">Badges desbloqueables</div>
+            <div style="display:flex; flex-wrap:wrap; gap:6px;">
+              <span title="Tasa de cierre ≥ 40% con 2+ ventas" style="background:rgba(192,132,252,0.08);color:var(--text-dim);border:1px solid rgba(192,132,252,0.15);padding:4px 10px;border-radius:20px;font-size:.72rem;font-weight:600;cursor:help;">🎯 Closer</span>
+              <span title="Contacta leads reclamados en menos de 6hs (3 veces)" style="background:rgba(192,132,252,0.08);color:var(--text-dim);border:1px solid rgba(192,132,252,0.15);padding:4px 10px;border-radius:20px;font-size:.72rem;font-weight:600;cursor:help;">⚡ Rápido</span>
+              <span title="Activo 30+ días + 10 logins" style="background:rgba(192,132,252,0.08);color:var(--text-dim);border:1px solid rgba(192,132,252,0.15);padding:4px 10px;border-radius:20px;font-size:.72rem;font-weight:600;cursor:help;">🔥 Fiel</span>
+              <span title="Ticket promedio ≥ USD 3.500" style="background:rgba(192,132,252,0.08);color:var(--text-dim);border:1px solid rgba(192,132,252,0.15);padding:4px 10px;border-radius:20px;font-size:.72rem;font-weight:600;cursor:help;">💎 Top Ticket</span>
+              <span title="3+ sub-aliados vendiendo" style="background:rgba(192,132,252,0.08);color:var(--text-dim);border:1px solid rgba(192,132,252,0.15);padding:4px 10px;border-radius:20px;font-size:.72rem;font-weight:600;cursor:help;">👑 Embajador</span>
+              <span title="Tasa de éxito en bolsa ≥ 30% con 3+ leads" style="background:rgba(192,132,252,0.08);color:var(--text-dim);border:1px solid rgba(192,132,252,0.15);padding:4px 10px;border-radius:20px;font-size:.72rem;font-weight:600;cursor:help;">🏆 Bolsa Master</span>
+            </div>
+            <div style="font-size:.7rem; color:var(--text-dim); margin-top:6px;">Pasá el cursor sobre cada badge para ver la condición de desbloqueo.</div>
+          </div>
+
+        </div><!-- /reput-explicacion -->
       </div>
 
       <!-- v1.5: Las 3 fuentes de ingreso del aliado (educativo) -->
@@ -1352,7 +1615,7 @@
             <div style="font-size:.95rem;font-weight:800;margin-bottom:4px;">Guía de Conversación</div>
             <div style="font-size:.8rem;color:var(--text-muted);line-height:1.5;">Cómo abrir la conversación, qué preguntar y cómo presentar el servicio sin sonar a vendedor. Incluye las objeciones más comunes y cómo responderlas.</div>
           </div>
-          <a href="#" onclick="descargarPDF('https://drive.google.com/uc?export=download&id=171PGzSjcdVREo0OeprFJLt4hj_qz3JMg','Guion_Ventas_Por_Rubro_v2.pdf');return false;" class="btn-primary" style="display:inline-flex;align-items:center;gap:6px;font-size:.82rem;padding:10px 16px;text-decoration:none;border-radius:8px;width:fit-content;">
+          <a href="#" onclick="descargarPDF('https://drive.google.com/uc?export=download&id=1V9HIVq6UCAIu1a_UsG8_dW3msXXtvhBX','Guion_Ventas_Por_Rubro_v2.pdf');return false;" class="btn-primary" style="display:inline-flex;align-items:center;gap:6px;font-size:.82rem;padding:10px 16px;text-decoration:none;border-radius:8px;width:fit-content;">
             <i class="fa-solid fa-download"></i> Descargar PDF
           </a>
         </div>
@@ -1366,7 +1629,7 @@
             <div style="font-size:.95rem;font-weight:800;margin-bottom:4px;">Guión por Rubro</div>
             <div style="font-size:.8rem;color:var(--text-muted);line-height:1.5;">El pitch exacto y el caso de éxito para cada industria. Leé solo la página del rubro de tu próximo cliente antes de hablar.</div>
           </div>
-          <a href="#" onclick="descargarPDF('https://drive.google.com/uc?export=download&id=171PGzSjcdVREo0OeprFJLt4hj_qz3JMg','Guion_Ventas_Por_Rubro_v2.pdf');return false;" class="btn-primary" style="display:inline-flex;align-items:center;gap:6px;font-size:.82rem;padding:10px 16px;text-decoration:none;border-radius:8px;width:fit-content;">
+          <a href="#" onclick="descargarPDF('https://drive.google.com/uc?export=download&id=1V9HIVq6UCAIu1a_UsG8_dW3msXXtvhBX','Guion_Ventas_Por_Rubro_v2.pdf');return false;" class="btn-primary" style="display:inline-flex;align-items:center;gap:6px;font-size:.82rem;padding:10px 16px;text-decoration:none;border-radius:8px;width:fit-content;">
             <i class="fa-solid fa-download"></i> Descargar PDF
           </a>
           <button onclick="cambiarTab('selector-rubro', document.querySelector('.tab-canal2[onclick*=selector-rubro]'))" style="background:transparent;border:1px solid rgba(74,222,128,0.4);color:#4ade80;display:inline-flex;align-items:center;gap:6px;font-size:.82rem;padding:10px 16px;border-radius:8px;width:fit-content;cursor:pointer;">
@@ -1849,6 +2112,175 @@
       </div>
     </div>
 
+    <!-- ══════════════════════════════════════════════════════════════════════
+         TAB PIPELINE UNIFICADO — Prospectos → Referidos → Ventas
+    ══════════════════════════════════════════════════════════════════════ -->
+    <div id="tab-pipeline" class="tab-panel">
+
+      <div class="welcome-header">
+        <div>
+          <div class="welcome-name">Pipeline <span style="font-size:1rem;font-weight:500;color:var(--text-muted);">— de prospecto a cobro en un solo lugar</span></div>
+          <div class="welcome-sub">Prospectos → Registrar referido (paso crítico) → Ventas confirmadas</div>
+        </div>
+      </div>
+
+      <!-- ── STAGE 1: PROSPECTOS ── -->
+      <div class="pipeline-section-header">
+        <div style="display:flex;align-items:center;gap:10px;">
+          <span class="pipeline-stage-label stage-1"><i class="fa-solid fa-bullseye"></i> Paso 1 — Prospectos</span>
+          <span style="font-size:.8rem;color:var(--text-muted);">Cargá a tu cliente antes de avanzar</span>
+        </div>
+      </div>
+
+      <div id="pl-prosp-alertas"></div>
+
+      <div class="bento-box" style="margin-bottom:20px;">
+        <h3 style="font-size:.92rem;font-weight:700;margin-bottom:14px;"><i class="fa-solid fa-plus" style="color:var(--primary);"></i> &nbsp;Cargar nuevo prospecto</h3>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+          <div>
+            <label style="font-size:.72rem;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;display:block;margin-bottom:6px;">Nombre / Empresa *</label>
+            <input type="text" id="pl-np-nombre" placeholder="Ej: Metalúrgica San Martín" style="width:100%;background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px 14px;color:var(--text);font-size:.88rem;font-family:'Inter',sans-serif;outline:none;box-sizing:border-box;">
+          </div>
+          <div>
+            <label style="font-size:.72rem;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;display:block;margin-bottom:6px;">Contacto (WA / email)</label>
+            <input type="text" id="pl-np-contacto" placeholder="3424000000 o mail@empresa.com" style="width:100%;background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px 14px;color:var(--text);font-size:.88rem;font-family:'Inter',sans-serif;outline:none;box-sizing:border-box;">
+          </div>
+          <div>
+            <label style="font-size:.72rem;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;display:block;margin-bottom:6px;">Plan de interés</label>
+            <select id="pl-np-plan" style="width:100%;background:#111;border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px 14px;color:var(--text);font-size:.88rem;font-family:'Inter',sans-serif;outline:none;">
+              <option value="">— No sé aún —</option>
+              <option value="Plan Base">Plan Base (USD 1.050)</option>
+              <option value="Plan Pro">Plan Pro (USD 2.900)</option>
+              <option value="Plan Industrial">Plan Industrial (USD 4.900)</option>
+              <option value="Estrategico 360">Estratégico 360 (USD 7.500)</option>
+            </select>
+          </div>
+          <div>
+            <label style="font-size:.72rem;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;display:block;margin-bottom:6px;">Rubro del cliente</label>
+            <select id="pl-np-rubro" style="width:100%;background:#111;border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px 14px;color:var(--text);font-size:.88rem;font-family:'Inter',sans-serif;outline:none;">
+              <option value="">— No sé aún —</option>
+              <option value="Metalúrgica / Manufactura">Metalúrgica / Manufactura</option>
+              <option value="Agro / Maquinaria agrícola">Agro / Maquinaria agrícola</option>
+              <option value="Logística / Transporte">Logística / Transporte</option>
+              <option value="Servicios B2B / Consultoría">Servicios B2B / Consultoría</option>
+              <option value="Comercio / Retail B2B">Comercio / Retail B2B</option>
+              <option value="Construcción / Obras">Construcción / Obras</option>
+              <option value="Salud / Clínicas">Salud / Clínicas</option>
+              <option value="Educación / Capacitación">Educación / Capacitación</option>
+              <option value="Tecnología / Software">Tecnología / Software</option>
+              <option value="Otro">Otro</option>
+            </select>
+          </div>
+          <div>
+            <label style="font-size:.72rem;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;display:block;margin-bottom:6px;">Nota inicial</label>
+            <input type="text" id="pl-np-nota" placeholder="Ej: pide info, evalúa con socio..." style="width:100%;background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px 14px;color:var(--text);font-size:.88rem;font-family:'Inter',sans-serif;outline:none;box-sizing:border-box;">
+          </div>
+        </div>
+        <div style="margin-top:14px;display:flex;gap:10px;align-items:center;">
+          <button onclick="plCrearProspecto()" style="background:var(--primary);color:white;border:none;border-radius:var(--radius-sm);padding:10px 22px;font-size:.88rem;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif;">
+            <i class="fa-solid fa-plus"></i> &nbsp;Agregar prospecto
+          </button>
+          <span id="pl-np-msg" style="font-size:.82rem;color:var(--green);display:none;"><i class="fa-solid fa-check"></i> Cargado correctamente</span>
+        </div>
+      </div>
+
+      <div class="table-wrap" style="margin-bottom:0;">
+        <div class="table-head">
+          <h3><i class="fa-solid fa-users" style="color:var(--primary);"></i> &nbsp;Mis prospectos</h3>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;">
+            <button onclick="plFiltrarProspectos('todos',this)" id="pl-pfiltro-todos" style="background:var(--primary);color:white;border:none;border-radius:6px;padding:5px 12px;font-size:.75rem;font-weight:600;cursor:pointer;">Todos</button>
+            <button onclick="plFiltrarProspectos('sin_contactar',this)" id="pl-pfiltro-sin" style="background:transparent;color:var(--text-muted);border:1px solid var(--border);border-radius:6px;padding:5px 12px;font-size:.75rem;font-weight:600;cursor:pointer;">Sin contactar</button>
+            <button onclick="plFiltrarProspectos('contactado',this)" id="pl-pfiltro-cont" style="background:transparent;color:var(--text-muted);border:1px solid var(--border);border-radius:6px;padding:5px 12px;font-size:.75rem;font-weight:600;cursor:pointer;">Contactados</button>
+            <button onclick="plFiltrarProspectos('propuesta_enviada',this)" id="pl-pfiltro-prop" style="background:transparent;color:var(--text-muted);border:1px solid var(--border);border-radius:6px;padding:5px 12px;font-size:.75rem;font-weight:600;cursor:pointer;">Propuesta enviada</button>
+            <button onclick="plFiltrarProspectos('respondio',this)" id="pl-pfiltro-resp" style="background:transparent;color:var(--text-muted);border:1px solid var(--border);border-radius:6px;padding:5px 12px;font-size:.75rem;font-weight:600;cursor:pointer;">Respondieron</button>
+          </div>
+        </div>
+        <div id="pl-lista-prospectos" style="padding:0 4px 8px;"></div>
+      </div>
+
+      <!-- ── DIVIDER: PASO 1 → PASO 2 ── -->
+      <div class="pipeline-divider critical-divider">
+        <div class="pipeline-divider-line"></div>
+        <div class="pipeline-divider-arrow">
+          <i class="fa-solid fa-arrow-down" style="color:#ef4444;"></i>
+          <span>Cuando el cliente dice que sí → registralo YA antes del pago</span>
+          <i class="fa-solid fa-arrow-down" style="color:#ef4444;"></i>
+        </div>
+        <div class="pipeline-divider-line"></div>
+      </div>
+
+      <!-- ── STAGE 2: REFERIDOS (PASO CRÍTICO) ── -->
+      <div class="pipeline-section-header">
+        <div style="display:flex;align-items:center;gap:10px;">
+          <span class="pipeline-stage-label stage-2"><i class="fa-solid fa-triangle-exclamation"></i> Paso 2 — Registrar Referido</span>
+          <span style="font-size:.8rem;color:#fca5a5;font-weight:600;">⚠ Hacé esto ANTES de que el cliente pague</span>
+        </div>
+      </div>
+
+      <div class="form-wrap" style="margin-bottom:0;">
+        <div class="bento-box" style="border-color:rgba(239,68,68,0.3);background:linear-gradient(135deg,rgba(239,68,68,0.06),transparent);">
+          <div class="form-title"><i class="fa-solid fa-user-plus" style="color:#ef4444;"></i> &nbsp;Registrar un referido</div>
+          <div class="form-desc">Completá este formulario <strong style="color:white;">antes de que el cliente pague</strong>. Es el único requisito obligatorio del contrato para que la venta te sea atribuida.</div>
+          <div class="alert-box">
+            <i class="fa-solid fa-triangle-exclamation"></i>
+            <span><strong>Regla crítica:</strong> Si el cliente paga antes de que lo registres acá, la venta no puede atribuirse a tu cuenta. Registrá primero, confirmá el pago después.</span>
+          </div>
+          <div class="form-row">
+            <label>Nombre completo del cliente o empresa</label>
+            <input type="text" id="pl-ref-nombre" placeholder="Ej: Metalúrgica San Martín S.A.">
+          </div>
+          <div class="form-row">
+            <label>Plan elegido</label>
+            <select id="pl-ref-plan">
+              <option value="">— Seleccioná un plan —</option>
+              <option value="Plan Base">Plan Base — USD 1.050</option>
+              <option value="Plan Pro">Plan Pro — USD 2.900</option>
+              <option value="Plan Industrial">Plan Industrial — USD 4.900</option>
+              <option value="Estrategico 360">Estratégico 360 — USD 7.500</option>
+            </select>
+          </div>
+          <div class="form-row">
+            <label>Notas (opcional)</label>
+            <textarea id="pl-ref-notas" rows="3" placeholder="Ej: El cliente evalúa Plan Pro e Industrial, pide demo esta semana..."></textarea>
+          </div>
+          <button class="btn-primary" id="pl-btn-ref" onclick="plRegistrarReferido()" style="max-width:300px;background:#ef4444;border-color:#ef4444;">
+            <i class="fa-solid fa-paper-plane"></i> Registrar referido ahora
+          </button>
+          <div class="success-box" id="pl-ref-success"></div>
+        </div>
+      </div>
+
+      <div class="table-wrap" style="margin-top:16px;margin-bottom:0;">
+        <div class="table-head"><h3><i class="fa-solid fa-list-check" style="color:var(--primary);"></i> &nbsp;Mis referidos registrados</h3></div>
+        <div id="pl-tabla-referidos"></div>
+      </div>
+
+      <!-- ── DIVIDER: PASO 2 → PASO 3 ── -->
+      <div class="pipeline-divider">
+        <div class="pipeline-divider-line"></div>
+        <div class="pipeline-divider-arrow">
+          <i class="fa-solid fa-arrow-down" style="color:var(--green);"></i>
+          <span>El cliente pagó → tu venta queda confirmada abajo</span>
+          <i class="fa-solid fa-arrow-down" style="color:var(--green);"></i>
+        </div>
+        <div class="pipeline-divider-line"></div>
+      </div>
+
+      <!-- ── STAGE 3: VENTAS CONFIRMADAS ── -->
+      <div class="pipeline-section-header">
+        <div style="display:flex;align-items:center;gap:10px;">
+          <span class="pipeline-stage-label stage-3"><i class="fa-solid fa-handshake"></i> Paso 3 — Ventas Confirmadas</span>
+          <span style="font-size:.8rem;color:var(--text-muted);">Comisión acreditada en menos de 24 hs</span>
+        </div>
+      </div>
+
+      <div class="table-wrap">
+        <div class="table-head"><h3><i class="fa-solid fa-handshake" style="color:var(--green);"></i> &nbsp;Historial de ventas confirmadas</h3></div>
+        <div id="pl-tabla-ventas"></div>
+      </div>
+
+    </div><!-- /tab-pipeline -->
+
     <div id="tab-referidos" class="tab-panel">
       <div class="form-wrap">
         <div class="bento-box">
@@ -2233,8 +2665,8 @@
         <!-- Link de referido -->
         <div id="onboard-ref-box" style="background:rgba(59,130,246,0.08);border:1px solid rgba(59,130,246,0.2);border-radius:10px;padding:12px 14px;display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;">
           <div style="min-width:0;">
-            <div style="font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--text-muted);margin-bottom:3px;"><i class="fa-solid fa-link"></i> Tu link de referido</div>
-            <div id="onboard-ref-link" style="font-size:.8rem;color:var(--primary);font-weight:600;word-break:break-all;">—</div>
+            <div style="font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--text-muted);margin-bottom:3px;"><i class="fa-solid fa-store"></i> Tu página de ventas personal — mandársela a clientes</div>
+            <div id="onboard-sales-link" style="font-size:.8rem;color:var(--primary);font-weight:600;word-break:break-all;">—</div>
           </div>
           <button onclick="copiarRefOnboarding()" style="background:rgba(59,130,246,0.15);border:1px solid rgba(59,130,246,0.3);color:#93c5fd;padding:7px 12px;border-radius:8px;font-size:.78rem;font-weight:700;cursor:pointer;white-space:nowrap;flex-shrink:0;">
             <i class="fa-solid fa-copy"></i> Copiar
@@ -2750,14 +3182,49 @@
 </div>
 
 <div id="tab-bolsa" class="tab-panel">
-  <div style="background:rgba(59,130,246,0.08); border:1px solid rgba(59,130,246,0.2); border-radius:var(--radius); padding:20px; margin-bottom:24px; display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:16px;">
+  <div style="background:rgba(59,130,246,0.08); border:1px solid rgba(59,130,246,0.2); border-radius:var(--radius); padding:20px; margin-bottom:16px; display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:16px;">
     <div>
       <h3 style="color:#3b82f6; font-size:1rem; margin-bottom:8px;"><i class="fa-solid fa-bullseye"></i> Conseguí Clientes Servidos</h3>
-      <p style="font-size:.85rem; color:var(--text-muted); line-height:1.6;">Reclamá empresas que ya pre-filtramos para vos. <strong>Atención:</strong> Una vez que reclames un contacto, tenés <strong style="color:var(--amber);">48 horas para contactarlo</strong>. Si no cambiás su estado a "Contactado" en ese tiempo, el sistema te lo quitará y lo devolverá a la bolsa.</p>
+      <p style="font-size:.85rem; color:var(--text-muted); line-height:1.6; max-width:560px;">Reclamá empresas que ya pre-filtramos para vos. El contacto queda reservado para vos durante 48 horas desde el momento del reclamo.</p>
     </div>
     <div id="bolsa-limite-badge" style="display:none; flex-shrink:0; text-align:center; background:rgba(0,0,0,0.25); border:1px solid var(--border); border-radius:10px; padding:12px 20px; min-width:120px;">
       <div style="font-size:1.6rem; font-weight:900;" id="bolsa-limite-num">0/3</div>
       <div style="font-size:.72rem; color:var(--text-muted); margin-top:2px;">reclamos activos</div>
+    </div>
+  </div>
+
+  <!-- REGLA 48HS — visual prominente -->
+  <div style="background:rgba(245,158,11,0.08); border:1px solid rgba(245,158,11,0.35); border-radius:var(--radius-sm); padding:16px 20px; margin-bottom:24px; display:flex; align-items:flex-start; gap:14px;">
+    <div style="flex-shrink:0; width:40px; height:40px; background:rgba(245,158,11,0.15); border-radius:50%; display:flex; align-items:center; justify-content:center;">
+      <i class="fa-solid fa-hourglass-half" style="color:var(--amber); font-size:1.1rem;"></i>
+    </div>
+    <div style="flex:1;">
+      <div style="font-size:.82rem; font-weight:800; color:var(--amber); text-transform:uppercase; letter-spacing:.8px; margin-bottom:6px;">Regla de las 48 horas</div>
+      <div style="display:flex; gap:16px; flex-wrap:wrap;">
+        <div style="display:flex; align-items:center; gap:8px; background:rgba(0,0,0,0.3); border-radius:8px; padding:8px 12px; border:1px solid rgba(245,158,11,0.2);">
+          <i class="fa-solid fa-hand-pointer" style="color:var(--amber); font-size:.9rem;"></i>
+          <span style="font-size:.8rem; color:var(--text);">Reclamás un lead</span>
+        </div>
+        <div style="display:flex; align-items:center; color:var(--text-dim); font-size:.85rem;">→</div>
+        <div style="display:flex; align-items:center; gap:8px; background:rgba(245,158,11,0.12); border-radius:8px; padding:8px 12px; border:1px solid rgba(245,158,11,0.3);">
+          <i class="fa-solid fa-clock" style="color:var(--amber); font-size:.9rem;"></i>
+          <span style="font-size:.8rem; color:var(--amber); font-weight:700;">El contador empieza ya</span>
+        </div>
+        <div style="display:flex; align-items:center; color:var(--text-dim); font-size:.85rem;">→</div>
+        <div style="display:flex; align-items:center; gap:8px; background:rgba(0,0,0,0.3); border-radius:8px; padding:8px 12px; border:1px solid rgba(255,255,255,0.07);">
+          <i class="fa-solid fa-paper-plane" style="color:#60a5fa; font-size:.9rem;"></i>
+          <span style="font-size:.8rem; color:var(--text);">Contactás al cliente</span>
+        </div>
+        <div style="display:flex; align-items:center; color:var(--text-dim); font-size:.85rem;">→</div>
+        <div style="display:flex; align-items:center; gap:8px; background:rgba(74,222,128,0.1); border-radius:8px; padding:8px 12px; border:1px solid rgba(74,222,128,0.25);">
+          <i class="fa-solid fa-check" style="color:var(--green); font-size:.9rem;"></i>
+          <span style="font-size:.8rem; color:var(--green); font-weight:700;">Marcás "Contactado"</span>
+        </div>
+      </div>
+      <p style="font-size:.78rem; color:var(--text-dim); margin-top:10px; line-height:1.5;">
+        <i class="fa-solid fa-triangle-exclamation" style="color:#ef4444; margin-right:4px;"></i>
+        <strong style="color:#fca5a5;">Si no cambiás el estado a "Contactado" dentro de las 48hs, el lead vuelve automáticamente a la bolsa y perdés el reclamo.</strong> El contador corre desde el momento en que lo reclamás, no desde que lo contactás.
+      </p>
     </div>
   </div>
 
@@ -3637,8 +4104,8 @@ async function registrarse() {
 
 function copiarRefOnboarding() {
   if (!aliado) return;
-  const link = `https://avanzadigital.digital/alianzas?ref=${aliado.ref_code}`;
-  navigator.clipboard.writeText(link).then(() => mostrarToast('Link copiado al portapapeles', 'green'));
+  const link = `https://avanzadigital.digital/p/${aliado.ref_code}`;
+  navigator.clipboard.writeText(link).then(() => mostrarToast('Página de ventas copiada al portapapeles ✓', 'green'));
 }
 
 
@@ -3684,7 +4151,21 @@ function cambiarTab(tab, btn) {
   const panel = document.getElementById(`tab-${tab}`);
   if (panel) panel.classList.add('active');
   if (btn) btn.classList.add('active');
+
+  // Gestionar estado del botón "Herramientas" y visibilidad de fila secundaria
+  const TABS_SEC = ['academia','selector-rubro','cotizador','herramientas','prospectos','ventas','red','comunidad'];
+  const extraRow = document.getElementById('tabs-extra-row');
+  const btnMas   = document.getElementById('btn-mas-tabs');
+  if (TABS_SEC.includes(tab)) {
+    if (extraRow) extraRow.classList.add('visible');
+    if (btnMas)   btnMas.classList.add('active');
+  } else {
+    if (btnMas)   btnMas.classList.remove('active');
+    // No ocultamos la fila si el usuario la dejó abierta — se cierra solo con el toggle
+  }
+
   if(tab==='prospectos') cargarProspectos();
+  if(tab==='pipeline') { cargarProspectosPipeline(); plRenderReferidos(); plRenderVentas(); }
   if(tab==='selector-rubro') cargarBadgesRubro();
   if(tab==='bolsa') { cargarBolsa(); cargarHistorialBolsa(); cargarMarketplace(); }
   if(tab==='red') cargarRed();
@@ -3693,6 +4174,24 @@ function cambiarTab(tab, btn) {
   // v1.4: refrescar TC al entrar al cotizador y comisiones al entrar a su tab
   if(tab==='cotizador') { cargarTipoDeCambio(); recuperarUltimoLinkActivo(); }
   if(tab==='comisiones') renderComisiones();
+}
+
+// ── Toggle fila de herramientas secundarias ──────────────────────────────────
+function toggleMasTabsRow() {
+  const row = document.getElementById('tabs-extra-row');
+  const btn = document.getElementById('btn-mas-tabs');
+  const visible = row.classList.toggle('visible');
+  // Solo marca activo el botón "Herramientas" si la fila está visible
+  // Y si hay un tab secundario activo (lo hace cambiarTab), o si el usuario
+  // lo abrió manualmente sin estar en un tab secundario.
+  if (!visible) btn.classList.remove('active');
+  else {
+    // Verificar si el tab activo actual es secundario
+    const TABS_SEC = ['academia','selector-rubro','cotizador','herramientas','prospectos','ventas','red','comunidad'];
+    const panelActivo = document.querySelector('.tab-panel.active');
+    const tabId = panelActivo ? panelActivo.id.replace('tab-','') : '';
+    if (TABS_SEC.includes(tabId)) btn.classList.add('active');
+  }
 }
 
 // ── CANAL 2: Selector de rubro ──────────────────────────────────────────────
@@ -3842,7 +4341,7 @@ function cerrarBannerKitVentas() {
 
 // ── BANNER KIT VENTAS: ir directo al Módulo 8 de la Academia ─────────────────
 function irAModulo8KitVentas() {
-  const tabAcademia = document.querySelector('.tab-canal1[onclick*="academia"]');
+  const tabAcademia = document.querySelector('.tab-btn[onclick*="academia"]');
   if (tabAcademia) {
     cambiarTab('academia', tabAcademia);
     setTimeout(() => {
@@ -3912,8 +4411,8 @@ async function cargarTodo() {
   document.getElementById('float-support').style.display = 'flex';
 
   // Onboarding primer login: poblar ref link
-  const refBox = document.getElementById('onboard-ref-link');
-  if (refBox && aliado) refBox.textContent = `avanzadigital.digital/alianzas?ref=${aliado.ref_code}`;
+  const refBox = document.getElementById('onboard-sales-link');
+  if (refBox && aliado) refBox.textContent = `avanzadigital.digital/p/${aliado.ref_code}`;
 
   // Onboarding primer login: guion recomendado para Canal 2
   _inyectarGuionRecomendado(aliado);
@@ -4580,6 +5079,163 @@ async function crearProspecto() {
   } catch { alert('Error de conexión.'); }
 }
 
+// ── PIPELINE UNIFICADO: funciones wrapper ────────────────────────────────────
+
+let todosProspectosPipeline = [];
+let filtroProspPipelineActivo = 'todos';
+
+async function cargarProspectosPipeline() {
+  try {
+    const res = await apiFetch(`${API}/prospectos/aliado/${aliado.codigo}`);
+    if(!res.ok) return;
+    todosProspectosPipeline = await res.json();
+    plRenderAlertas();
+    plRenderProspectos();
+  } catch {}
+}
+
+function plRenderAlertas() {
+  const sinContactar = todosProspectosPipeline.filter(p=>p.estado==='sin_contactar').length;
+  const sinSeguimiento = todosProspectosPipeline.filter(p=>p.estado==='contactado').length;
+  const conPropuesta = todosProspectosPipeline.filter(p=>p.estado==='propuesta_enviada').length;
+  let html = '';
+  if(sinContactar>0)
+    html += `<div style="background:rgba(239,68,68,0.12);border:1px solid rgba(239,68,68,0.3);border-radius:10px;padding:12px 16px;margin-bottom:12px;font-size:.88rem;font-weight:600;color:#ef4444;">
+      <i class="fa-solid fa-circle-exclamation"></i> &nbsp;Tenés <strong>${sinContactar}</strong> prospecto${sinContactar>1?'s':''} sin contactar
+    </div>`;
+  if(sinSeguimiento>0)
+    html += `<div style="background:rgba(245,158,11,0.1);border:1px solid rgba(245,158,11,0.25);border-radius:10px;padding:12px 16px;margin-bottom:12px;font-size:.88rem;font-weight:600;color:#f59e0b;">
+      <i class="fa-solid fa-clock"></i> &nbsp;Tenés <strong>${sinSeguimiento}</strong> sin seguimiento
+    </div>`;
+  if(conPropuesta>0)
+    html += `<div style="background:rgba(59,130,246,0.08);border:1px solid rgba(59,130,246,0.25);border-radius:10px;padding:12px 16px;margin-bottom:16px;font-size:.88rem;font-weight:600;color:var(--primary);">
+      <i class="fa-solid fa-file-invoice"></i> &nbsp;Tenés <strong>${conPropuesta}</strong> propuesta${conPropuesta>1?'s':''} enviada${conPropuesta>1?'s':''} esperando respuesta
+    </div>`;
+  const el = document.getElementById('pl-prosp-alertas');
+  if(el) el.innerHTML = html;
+}
+
+function plFiltrarProspectos(filtro, btn) {
+  filtroProspPipelineActivo = filtro;
+  document.querySelectorAll('[id^="pl-pfiltro-"]').forEach(b=>{
+    b.style.background='transparent'; b.style.color='var(--text-muted)'; b.style.border='1px solid var(--border)';
+  });
+  btn.style.background='var(--primary)'; btn.style.color='white'; btn.style.border='none';
+  plRenderProspectos();
+}
+
+function plRenderProspectos() {
+  const lista = filtroProspPipelineActivo==='todos'
+    ? todosProspectosPipeline
+    : todosProspectosPipeline.filter(p=>p.estado===filtroProspPipelineActivo);
+  const contenedor = document.getElementById('pl-lista-prospectos');
+  if(!contenedor) return;
+  if(!lista.length) {
+    contenedor.innerHTML = `<div style="padding:32px;text-align:center;color:var(--text-muted);font-size:.88rem;">
+      ${filtroProspPipelineActivo==='todos'?'Todavía no cargaste ningún prospecto o lead.':'No hay prospectos en este estado.'}
+    </div>`;
+    return;
+  }
+  const estadoLabel = { sin_contactar:'Sin contactar', contactado:'Contactado', propuesta_enviada:'Propuesta enviada', respondio:'Respondió', perdido:'Perdido' };
+  const estadoColor = { sin_contactar:'var(--red)', contactado:'var(--amber)', propuesta_enviada:'var(--primary)', respondio:'var(--green)', perdido:'#71717a' };
+  contenedor.innerHTML = lista.map(p=>`
+    <div style="border-bottom:1px solid var(--border);padding:14px 8px;display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap;${p.estado==='perdido'?'opacity:0.62;':''}">
+      <div style="flex:1;min-width:0;">
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+          <span style="font-weight:700;font-size:.92rem;${p.estado==='perdido'?'text-decoration:line-through;':''}">${p.nombre}</span>
+          ${p.interesante?'<span title="Buen prospecto" style="font-size:.95rem;">🔥</span>':''}
+          <span style="font-size:.7rem;font-weight:700;padding:2px 9px;border-radius:50px;background:rgba(0,0,0,0.3);border:1px solid ${estadoColor[p.estado]||'var(--border)'};color:${estadoColor[p.estado]||'var(--text-muted);'}">${estadoLabel[p.estado]||p.estado}</span>
+        </div>
+        ${p.plan_interes?`<div style="font-size:.78rem;color:var(--text-muted);margin-top:3px;"><i class="fa-solid fa-tag" style="font-size:.68rem;"></i> ${p.plan_interes}</div>`:''}
+        ${p.nota?`<div style="font-size:.78rem;color:var(--text-muted);margin-top:3px;">${p.nota}</div>`:''}
+      </div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;">
+        ${p.estado==='sin_contactar'?`<button onclick="accionProspecto(${p.id},'contactar');cargarProspectosPipeline()" style="background:var(--primary);color:white;border:none;border-radius:8px;padding:7px 13px;font-size:.76rem;font-weight:700;cursor:pointer;white-space:nowrap;"><i class="fa-solid fa-paper-plane"></i> Contacté</button>`:''}
+        ${p.estado==='contactado'?`<button onclick="accionProspecto(${p.id},'propuesta_enviada');cargarProspectosPipeline()" style="background:rgba(59,130,246,0.15);color:var(--primary);border:1px solid rgba(59,130,246,0.35);border-radius:8px;padding:7px 13px;font-size:.76rem;font-weight:700;cursor:pointer;white-space:nowrap;"><i class="fa-solid fa-file-invoice"></i> Envié propuesta</button>`:''}
+        ${p.estado!=='perdido'?`<button onclick="abrirMarcarPerdido(${p.id},'${(p.nombre||'').replace(/'/g,"\\'")}');setTimeout(cargarProspectosPipeline,500)" title="Marcar como perdido" style="background:rgba(113,113,122,0.12);color:#a1a1aa;border:1px solid rgba(113,113,122,0.3);border-radius:8px;padding:7px 12px;font-size:.76rem;cursor:pointer;"><i class="fa-solid fa-circle-xmark"></i></button>`:''}
+      </div>
+    </div>
+  `).join('');
+}
+
+async function plCrearProspecto() {
+  const nombre = document.getElementById('pl-np-nombre').value.trim();
+  if(!nombre) { alert('El nombre es obligatorio.'); return; }
+  const contacto = document.getElementById('pl-np-contacto').value.trim();
+  const plan = document.getElementById('pl-np-plan').value;
+  const rubro = document.getElementById('pl-np-rubro').value;
+  const nota = document.getElementById('pl-np-nota').value.trim();
+  const url = `${API}/prospectos/crear?codigo_aliado=${aliado.codigo}&nombre=${encodeURIComponent(nombre)}&contacto=${encodeURIComponent(contacto)}&plan_interes=${encodeURIComponent(plan)}&rubro=${encodeURIComponent(rubro)}&nota=${encodeURIComponent(nota)}`;
+  try {
+    const res = await apiFetch(url, {method:'POST'});
+    if(res.ok) {
+      ['pl-np-nombre','pl-np-contacto','pl-np-nota'].forEach(id=>document.getElementById(id).value='');
+      document.getElementById('pl-np-plan').value='';
+      document.getElementById('pl-np-rubro').value='';
+      const msg = document.getElementById('pl-np-msg');
+      msg.style.display='inline'; setTimeout(()=>msg.style.display='none',2500);
+      await cargarProspectosPipeline();
+    } else { const d=await res.json(); alert(d.detail||'Error al cargar.'); }
+  } catch { alert('Error de conexión.'); }
+}
+
+async function plRegistrarReferido() {
+  const nombre = document.getElementById('pl-ref-nombre').value.trim();
+  const plan = document.getElementById('pl-ref-plan').value;
+  const notas = document.getElementById('pl-ref-notas').value;
+  const btn = document.getElementById('pl-btn-ref');
+  const success = document.getElementById('pl-ref-success');
+  if (!nombre||!plan) { alert('Completá el nombre del cliente y el plan elegido.'); return; }
+  btn.innerHTML='<span class="spinner"></span> Registrando...'; btn.disabled=true; success.style.display='none';
+  try {
+    const res = await apiFetch(`${API}/referidos/registrar?ref_code=${aliado.ref_code}&nombre_cliente=${encodeURIComponent(nombre)}&plan_elegido=${encodeURIComponent(plan)}&notas=${encodeURIComponent(notas)}`,{method:'POST'});
+    const data = await res.json();
+    if (res.ok) {
+      const comision = Math.round(PLANES[plan]*pct(aliado.nivel_calculado||'BASIC'));
+      success.innerHTML=`<i class="fa-solid fa-circle-check"></i> <strong>Referido registrado.</strong> Avanza Digital fue notificado.<br>Comisión estimada si se cierra: <strong>USD ${comision.toLocaleString()}</strong>.`;
+      success.style.display='block';
+      document.getElementById('pl-ref-nombre').value='';
+      document.getElementById('pl-ref-plan').value='';
+      document.getElementById('pl-ref-notas').value='';
+      setTimeout(()=>{ cargarTodo(); plRenderReferidos(); },800);
+    } else { alert(data.detail||'Error al registrar'); }
+  } catch { alert('Error de conexión. Verificá que el servidor esté activo.'); }
+  btn.innerHTML='<i class="fa-solid fa-paper-plane"></i> Registrar referido ahora'; btn.disabled=false;
+}
+
+function plRenderReferidos() {
+  const refs = aliado?.referidos||[];
+  const el = document.getElementById('pl-tabla-referidos');
+  if(!el) return;
+  if (!refs.length) { el.innerHTML=`<div class="empty-state"><i class="fa-solid fa-user-plus"></i><p>Todavía no registraste ningún referido.<br>Usá el formulario de arriba <strong style="color:white;">antes de que el cliente pague</strong>.</p></div>`; return; }
+  el.innerHTML=`<table><thead><tr><th>Cliente / Empresa</th><th>Plan</th><th>Comisión est.</th><th>Fecha</th><th>Confirmado</th><th>Estado</th></tr></thead><tbody>${refs.map(r=>{
+    const nivel = aliado.nivel_calculado || aliado.nivel_actual || 'BASIC';
+    const comEst = Math.round((PLANES[r.plan]||0)*pct(nivel));
+    return `<tr>
+      <td style="color:var(--text);font-weight:600;">${r.cliente}</td>
+      <td><span class="badge badge-blue">${r.plan}</span></td>
+      <td style="color:var(--green);font-weight:700;">${comEst>0?'USD '+comEst.toLocaleString():'—'}</td>
+      <td style="font-size:.82rem;color:var(--text-dim);">${r.fecha}</td>
+      <td>${r.confirmado?'<span class="badge badge-green"><i class="fa-solid fa-check"></i> Confirmado</span>':'<span class="badge badge-gray"><i class="fa-solid fa-clock"></i> Pendiente</span>'}</td>
+      <td>${r.convertido?'<span class="badge badge-green"><i class="fa-solid fa-handshake"></i> Venta cerrada</span>':'<span class="badge badge-blue"><i class="fa-solid fa-clock"></i> En proceso</span>'}</td>
+    </tr>`;
+  }).join('')}</tbody></table>`;
+}
+
+function plRenderVentas() {
+  const ventas = aliado?.ventas||[];
+  const el = document.getElementById('pl-tabla-ventas');
+  if(!el) return;
+  if (!ventas.length) { el.innerHTML=`<div class="empty-state"><i class="fa-solid fa-handshake"></i><p>Todavía no tenés ventas confirmadas.<br>Cuando Avanza registre tu primera venta, aparecerá acá.</p></div>`; return; }
+  el.innerHTML=`<table><thead><tr><th>Cliente</th><th>Plan</th><th>Valor (USD)</th><th>Tu comisión</th><th>Estado</th><th>Fecha</th></tr></thead><tbody>${ventas.map(v=>`<tr>
+    <td style="color:var(--text);font-weight:600;">${v.cliente}</td><td>${v.plan}</td>
+    <td>USD ${v.valor.toLocaleString()}</td>
+    <td style="color:var(--green);font-weight:800;">USD ${Math.round(v.comision).toLocaleString()}</td>
+    <td>${v.pagada?'<span class="badge badge-green"><i class="fa-solid fa-circle-check"></i> Pagada</span>':'<span class="badge badge-amber"><i class="fa-solid fa-clock"></i> Pendiente 24hs</span>'}</td>
+    <td style="font-size:.82rem;color:var(--text-dim);">${v.fecha||'—'}</td>
+  </tr>`).join('')}</tbody></table>`;
+}
+
 async function accionProspecto(id, accion) {
   const endpointMap = { seguimiento: 'contactar', propuesta_enviada: 'propuesta_enviada' };
   const endpoint = endpointMap[accion] ?? accion;
@@ -5162,7 +5818,13 @@ async function cargarOnboardingChecklist() {
           ${p.completado?'<i class="fa-solid fa-check" style="font-size:.7rem;"></i>':''}
         </div>
         <span>${p.titulo}</span>
-        ${!p.completado?'<span style="margin-left:auto;font-size:.72rem;font-weight:700;color:var(--primary);background:rgba(59,130,246,0.1);padding:2px 8px;border-radius:50px;">Pendiente</span>':''}
+        ${!p.completado && p.id==='cbu'
+          ? `<a href="#" onclick="cambiarTab('comisiones', document.querySelector('.tab-btn[onclick*=comisiones]')); return false;"
+               style="margin-left:auto;font-size:.72rem;font-weight:700;color:var(--amber);background:rgba(250,204,21,0.1);border:1px solid rgba(250,204,21,0.3);padding:2px 10px;border-radius:50px;text-decoration:none;white-space:nowrap;">
+               Cargar →</a>`
+          : !p.completado
+          ? '<span style="margin-left:auto;font-size:.72rem;font-weight:700;color:var(--primary);background:rgba(59,130,246,0.1);padding:2px 8px;border-radius:50px;">Pendiente</span>'
+          : ''}
       </div>
     `).join('');
   } catch(e) { console.warn('Error onboarding checklist', e); }
@@ -5696,25 +6358,91 @@ async function cargarReputacion() {
     const res = await apiFetch(`${API}/aliados/${aliado.codigo}/reputacion`);
     if (!res.ok) return;
     const data = await res.json();
-    const scoreEl = document.getElementById('d-reput-score');
-    if (scoreEl) scoreEl.textContent = data.score;
+    const score = data.score ?? 0;
+    const f = data.factores || {};
 
-    const cap = document.getElementById('d-reput-caption');
-    if (cap) {
-      const f = data.factores || {};
-      cap.textContent = `Tasa de cierre: ${f.tasa_cierre||0}% · Éxito bolsa: ${f.tasa_bolsa||0}% · Red activa: ${f.red_activa||0}`;
+    // Score principal
+    const scoreEl = document.getElementById('d-reput-score');
+    if (scoreEl) scoreEl.textContent = score;
+
+    // Rango badge + consecuencia
+    const rangoBadge = document.getElementById('d-reput-rango-badge');
+    const consecuencia = document.getElementById('d-reput-consecuencia');
+    let rangoLabel, rangoColor, rangoFg, consecText;
+    if (score >= 85) {
+      rangoLabel = 'Élite'; rangoColor = 'rgba(192,132,252,0.2)'; rangoFg = '#c084fc';
+      consecText = '✅ Máxima prioridad en la Bolsa. Acceso anticipado a leads nuevos. Todos los badges desbloqueables.';
+    } else if (score >= 70) {
+      rangoLabel = 'Destacado'; rangoColor = 'rgba(74,222,128,0.15)'; rangoFg = 'var(--green)';
+      consecText = '✅ Prioridad en leads premium. Candidato a todos los badges de calidad.';
+    } else if (score >= 50) {
+      rangoLabel = 'Confiable'; rangoColor = 'rgba(245,158,11,0.15)'; rangoFg = 'var(--amber)';
+      consecText = '⚡ Acceso a leads calificados. Visible en el leaderboard interno. Para subir a Destacado: mejorá tu tasa de cierre o éxito en bolsa.';
+    } else {
+      rangoLabel = 'Inicial'; rangoColor = 'rgba(239,68,68,0.12)'; rangoFg = '#ef4444';
+      consecText = '⚠ Acceso solo a leads básicos gratuitos. Registrá referidos y contactá leads para subir de rango.';
     }
+    if (rangoBadge) {
+      rangoBadge.textContent = rangoLabel;
+      rangoBadge.style.background = rangoColor;
+      rangoBadge.style.color = rangoFg;
+      rangoBadge.style.border = `1px solid ${rangoFg}`;
+    }
+    if (consecuencia) consecuencia.textContent = consecText;
+
+    // Badges ganados
     const box = document.getElementById('d-reput-badges');
     if (box) {
       if (data.badges && data.badges.length) {
-        box.innerHTML = data.badges.map(b=>
-          `<span title="${b.desc}" style="background:rgba(192,132,252,0.12); color:#c084fc; border:1px solid rgba(192,132,252,0.25); padding:4px 10px; border-radius:20px; font-size:.72rem; font-weight:700;">${b.icono} ${b.label}</span>`
+        box.innerHTML = data.badges.map(b =>
+          `<span title="${b.desc}" style="background:rgba(192,132,252,0.18); color:#c084fc; border:1px solid rgba(192,132,252,0.35); padding:4px 10px; border-radius:20px; font-size:.72rem; font-weight:700;">${b.icono} ${b.label}</span>`
         ).join('');
       } else {
-        box.innerHTML = `<span style="font-size:.76rem; color:var(--text-dim);">Sin badges aún — empezá a vender y aparecerán solas.</span>`;
+        box.innerHTML = `<span style="font-size:.76rem; color:var(--text-dim);">Sin badges aún — seguí vendiendo para desbloquearlos.</span>`;
       }
     }
+
+    // Factor bars (pintamos con timeout para que el CSS transition sea visible)
+    setTimeout(() => {
+      // Tasa de cierre → máx 40 pts → barra sobre 40%
+      const cierrePct = Math.min(100, (f.tasa_cierre || 0) / 40 * 100);
+      const cierreBar = document.getElementById('rf-cierre-bar');
+      const cierreVal = document.getElementById('rf-cierre-val');
+      if (cierreBar) cierreBar.style.width = cierrePct + '%';
+      if (cierreVal) cierreVal.textContent = (f.tasa_cierre || 0) + '%';
+
+      // Éxito bolsa → máx 20 pts → barra sobre 50% (50% tasa = 20 pts)
+      const bolsaPct = Math.min(100, (f.tasa_bolsa || 0) / 50 * 100);
+      const bolsaBar = document.getElementById('rf-bolsa-bar');
+      const bolsaVal = document.getElementById('rf-bolsa-val');
+      if (bolsaBar) bolsaBar.style.width = bolsaPct + '%';
+      if (bolsaVal) bolsaVal.textContent = (f.tasa_bolsa || 0) + '%';
+
+      // Actividad reciente → binario 0 o 10 pts
+      const activo = f.activo_reciente;
+      const activoBar = document.getElementById('rf-activo-bar');
+      const activoVal = document.getElementById('rf-activo-val');
+      if (activoBar) activoBar.style.width = activo ? '100%' : '0%';
+      if (activoVal) { activoVal.textContent = activo ? 'Activo' : 'Inactivo'; activoVal.style.color = activo ? 'var(--green)' : '#ef4444'; }
+
+      // Red activa → máx 3 sub-aliados = 10 pts (3 pts c/u)
+      const redActiva = f.red_activa || 0;
+      const redPct = Math.min(100, (redActiva / 3) * 100);
+      const redBar = document.getElementById('rf-red-bar');
+      const redVal = document.getElementById('rf-red-val');
+      if (redBar) redBar.style.width = redPct + '%';
+      if (redVal) redVal.textContent = `${redActiva} aliado${redActiva !== 1 ? 's' : ''}`;
+    }, 150);
+
   } catch(e){ console.error('reputacion:', e); }
+}
+
+function toggleReputExplicacion() {
+  const panel = document.getElementById('reput-explicacion');
+  const icon  = document.getElementById('reput-toggle-icon');
+  const open  = panel.style.display === 'block';
+  panel.style.display = open ? 'none' : 'block';
+  if (icon) icon.style.transform = open ? '' : 'rotate(180deg)';
 }
 
 // ─── CRÉDITOS ────────────────────────────────────────────────────────
@@ -5724,13 +6452,24 @@ async function cargarCreditos() {
     const res = await apiFetch(`${API}/aliados/${aliado.codigo}/creditos`);
     if (!res.ok) return;
     const data = await res.json();
+    const saldo = data.saldo ?? 0;
     const el = document.getElementById('d-creditos');
-    if (el) el.textContent = data.saldo;
+    if (el) {
+      el.textContent = saldo;
+      el.style.color = saldo > 0 ? 'var(--amber)' : 'var(--text-dim)';
+    }
+    // Sub-texto y CTA según saldo
+    const sub = document.getElementById('d-creditos-sub');
+    const cta = document.getElementById('d-creditos-cta');
+    if (sub) sub.textContent = saldo > 0
+      ? `Crédito${saldo !== 1 ? 's' : ''} disponible${saldo !== 1 ? 's' : ''} para leads calificados`
+      : 'Sin créditos — solo podés reclamar leads básicos';
+    if (cta) cta.style.display = saldo === 0 ? 'block' : 'none';
     // Actualizar los 3 lugares donde se muestra el saldo en la bolsa:
     // selector de categorías, panel calificado, panel premium.
     ['mkt-saldo','mkt-saldo-cal','mkt-saldo-prem'].forEach(id => {
       const m = document.getElementById(id);
-      if (m) m.textContent = `${data.saldo} créditos`;
+      if (m) m.textContent = `${saldo} créditos`;
     });
   } catch(e){ console.error('creditos:', e); }
 }
@@ -7425,6 +8164,7 @@ const ACADEMIA_MODULOS = [
   },
   {
     id: 8,
+    canal: 'canal1',
     num: 'MÓDULO 08',
     title: 'Materiales descargables',
     desc: 'Brochure comercial, guión por rubro, contrato y kit corto — todo lo que necesitás para vender.',
@@ -7481,16 +8221,25 @@ const ACADEMIA_MODULOS = [
       <h4>Contrato de Aliado</h4>
       <p><strong>Cuándo:</strong> antes de registrarte formalmente. Ya lo firmaste cuando te diste de alta en el portal — este es para que tengas la referencia completa de términos y condiciones, niveles de comisión y obligaciones.</p>
 
-      <h3>Tu link de referido</h3>
-      <p>El arma más poderosa que tenés. Cada vez que le pasás tu link personalizado a un prospecto y este se registra o contrata, la venta te queda atribuida automáticamente sin necesidad de registrarlo a mano.</p>
+      <h3>Tus dos links — cuál usar en cada caso</h3>
+      <p>Tenés dos links distintos en el Dashboard. Confundirlos es el error más común. Este es el mapa:</p>
+
+      <div class="aca-highlight" style="margin-bottom:1rem;">
+        <div class="label">LINK 1 — PÁGINA DE VENTAS PERSONAL <code>/p/tu-link</code></div>
+        <div class="text"><strong>Para tus clientes (empresas que podrían contratar).</strong> Es una landing de ventas con tus datos, los planes, casos de éxito y botón de pago. Cuando el cliente entra y paga desde ahí, la venta te queda atribuida automáticamente.<br><br>
+        Usalo en:<br>
+        • Cuando mandás el brochure por WhatsApp tras el pitch<br>
+        • En tu firma de email a prospectos<br>
+        • En propuestas a empresas</div>
+      </div>
 
       <div class="aca-highlight">
-        <div class="label">TU LINK DE REFERIDO</div>
-        <div class="text">Está en el <strong>Dashboard del portal</strong> → botón "Copiar mi link". Usalo en:<br>
-        • Tu firma de email<br>
+        <div class="label">LINK 2 — LINK DE RECLUTAMIENTO <code>/alianzas?ref=tu-link</code></div>
+        <div class="text"><strong>Para otros aliados (vendedores, agencias, consultores que quieran sumarse).</strong> Cuando alguien se registra desde este link, queda bajo tu red y generás 5% pasivo de cada venta que cierre.<br><br>
+        Usalo en:<br>
         • Tu bio de LinkedIn<br>
-        • Cuando mandás el brochure por WhatsApp<br>
-        • En conversaciones de networking donde alguien se muestre interesado</div>
+        • Conversaciones con vendedores o agencias que quieran el programa<br>
+        • <strong>Nunca</strong> lo mandes a un cliente final — no es una página de compra</div>
       </div>
 
       <h3>Flujo recomendado para cerrar una venta</h3>
@@ -7499,7 +8248,7 @@ const ACADEMIA_MODULOS = [
         <li><strong>Diagnóstico</strong> (15 min) — Aplicás el guión del Módulo 3</li>
         <li><strong>Pitch del caso</strong> del rubro (Módulo 5)</li>
         <li><strong>Pregunta de cierre</strong> (Módulo 5)</li>
-        <li><strong>Si dice sí</strong> → mandás Brochure + link de referido por WhatsApp</li>
+        <li><strong>Si dice sí</strong> → mandás el Brochure en PDF + tu <strong>página de ventas personal</strong> (<code>/p/tu-link</code>) por WhatsApp — el cliente paga directamente ahí y la venta te queda atribuida</li>
         <li><strong>Registrás al cliente en el portal</strong> con su nombre y plan elegido</li>
         <li><strong>Coordinás llamada técnica</strong> con equipo de Avanza para arrancar implementación</li>
         <li><strong>El cliente paga</strong> → tu comisión en 24hs</li>
@@ -7508,6 +8257,126 @@ const ACADEMIA_MODULOS = [
       <div class="aca-tip">
         <div class="label">¡LISTO!</div>
         <div class="text">Completaste la Academia. Ya sabés todo lo necesario para cerrar tu primera venta. <strong>El próximo paso es salir a vender</strong>. Andá al Dashboard, copiá tu link de referido, y empezá a escribirle a 5 prospectos hoy. La primera venta cambia todo.</div>
+      </div>
+    `
+  },
+
+  // ── MÓDULO 8 · CANAL 2 ──────────────────────────────────────────────────────
+  {
+    id: 8,
+    canal: 'canal2',
+    num: 'MÓDULO 08',
+    title: 'Tu kit de materiales',
+    desc: 'Guiones por perfil, brochure v5 y guía por rubro — todo adaptado a tu canal.',
+    tiempo: '5 min',
+    icon: 'fa-download',
+    content: `
+      <h3>Lo que vas a aprender</h3>
+      <ul>
+        <li>Qué guión usar según tu perfil (agencia, consultor, contador o proveedor)</li>
+        <li>Cuándo mandar el brochure y el partner intro a tu cliente</li>
+        <li>Cómo usar el guión por rubro para cerrar con el caso exacto</li>
+      </ul>
+
+      <h3>Tus guiones por perfil</h3>
+      <p>Como Canal 2, tu punto de entrada es distinto al de Canal 1: vos ya tenés una relación previa con el cliente. Cada guión está armado para introducir Avanza <strong>sin romper ese vínculo</strong> y sin sonar a vendedor. Descargá el de tu perfil y tenelo abierto en el celular.</p>
+
+      <div class="aca-downloads">
+        <a class="aca-download" href="#" onclick="descargarPDF('https://drive.google.com/uc?export=download&id=1GH0y75Db9LtTRUweAnQBm4ZKw9fHkf1H','Guion_Ventas_Canal2_Agencia_v1.pdf');return false;">
+          <i class="fa-solid fa-bullhorn" style="color:#f97316;"></i>
+          <div>
+            <div class="dl-title">Guión — Agencia Digital</div>
+            <div class="dl-sub">El cliente pide una web. Vos reencuadrás el pedido</div>
+          </div>
+        </a>
+        <a class="aca-download" href="#" onclick="descargarPDF('https://drive.google.com/uc?export=download&id=1cZICwO6cfT4MmLj7gn37clCr-nN6mgcW','Guion_Ventas_Canal2_Consultor_v1.pdf');return false;">
+          <i class="fa-solid fa-magnifying-glass-chart" style="color:#3b82f6;"></i>
+          <div>
+            <div class="dl-title">Guión — Consultor Industrial</div>
+            <div class="dl-sub">Lo incorporás como hallazgo del informe de auditoría</div>
+          </div>
+        </a>
+        <a class="aca-download" href="#" onclick="descargarPDF('https://drive.google.com/uc?export=download&id=1hT4iHxV-2suvC4LAlg2Y0y7gvUsM25iN','Guion_Ventas_Canal2_Contador_v1.pdf');return false;">
+          <i class="fa-solid fa-calculator" style="color:#4ade80;"></i>
+          <div>
+            <div class="dl-title">Guión — Contador / Estudio Contable</div>
+            <div class="dl-sub">Lo introducís en la revisión mensual con los números del cliente</div>
+          </div>
+        </a>
+        <a class="aca-download" href="#" onclick="descargarPDF('https://drive.google.com/uc?export=download&id=1HzOldnXGD8jkPrFuY95XyXcQ5-7SKT7w','Guion_Ventas_Canal2_Proveedor_v1.pdf');return false;">
+          <i class="fa-solid fa-truck" style="color:#a78bfa;"></i>
+          <div>
+            <div class="dl-title">Guión — Proveedor B2B</div>
+            <div class="dl-sub">Lo mencionás después de cerrar tu propia venta, nunca antes</div>
+          </div>
+        </a>
+      </div>
+
+      <h3>Brochure y presentación del programa</h3>
+      <p>Estos dos documentos son los que <strong>le mandás al cliente</strong> una vez que mostró interés. No los mandes sin contexto — siempre acompañados con el mensaje de WhatsApp de tu guión.</p>
+
+      <div class="aca-downloads">
+        <a class="aca-download" href="#" onclick="descargarPDF('https://drive.google.com/uc?export=download&id=1IY7yrkzDdtkvv3U5hNk3C__6iNReN9Au','Brochure_Comercial_AvanzaDigital_v5.pdf');return false;">
+          <i class="fa-solid fa-file-pdf" style="color:#ef4444;"></i>
+          <div>
+            <div class="dl-title">Brochure Comercial v5</div>
+            <div class="dl-sub">Planes, precios, casos de éxito y ROI — para mostrarle al cliente</div>
+          </div>
+        </a>
+        <a class="aca-download" href="#" onclick="descargarPDF('https://drive.google.com/uc?export=download&id=1Cc9CTpt0yVNaHfeRzxUZySB__pGf17xt','Avanza_Partner_Intro.pdf');return false;">
+          <i class="fa-solid fa-rocket" style="color:#f97316;"></i>
+          <div>
+            <div class="dl-title">Partner Intro — Canal 2</div>
+            <div class="dl-sub">Qué es el programa, cómo funciona y cuánto cobrás</div>
+          </div>
+        </a>
+        <a class="aca-download" href="#" onclick="descargarPDF('https://drive.google.com/uc?export=download&id=1V9HIVq6UCAIu1a_UsG8_dW3msXXtvhBX','Guion_Ventas_Por_Rubro_Aliados_v2.pdf');return false;">
+          <i class="fa-solid fa-book" style="color:#3b82f6;"></i>
+          <div>
+            <div class="dl-title">Guión por Rubro v2</div>
+            <div class="dl-sub">El caso exacto para cada industria — metalúrgica, logística, servicios, parques</div>
+          </div>
+        </a>
+      </div>
+
+      <h3>Cuándo usar cada material</h3>
+
+      <div class="aca-highlight" style="margin-bottom:1rem;">
+        <div class="label">PASO 1 — EL MOMENTO DE INTRODUCCIÓN</div>
+        <div class="text">Usás <strong>tu guión de perfil</strong> para hacer la transición natural. No menciones el brochure todavía — primero conseguís el "me interesa".</div>
+      </div>
+
+      <div class="aca-highlight" style="margin-bottom:1rem;">
+        <div class="label">PASO 2 — CONSEGUÍS EL SÍ INICIAL</div>
+        <div class="text">Ahí mandás el <strong>Brochure Comercial v5</strong> por WhatsApp, acompañado del mensaje que está en tu guión de perfil. No mandes solo el PDF — siempre con contexto.</div>
+      </div>
+
+      <div class="aca-highlight" style="margin-bottom:1rem;">
+        <div class="label">PASO 3 — CLIENTE PREGUNTA POR EL CASO DE SU RUBRO</div>
+        <div class="text">Abrís el <strong>Guión por Rubro</strong>, encontrás el caso que más se parece a su empresa (Balconi = metalúrgica/fábrica; Oñate = transporte/logística; Sol. Técnicas = servicios/mantenimiento; PLI = proyectos de escala) y contás ese caso con el pitch verbal que está en el guión.</div>
+      </div>
+
+      <div class="aca-highlight">
+        <div class="label">REGLA DE ORO DE CANAL 2</div>
+        <div class="text"><strong>Registrá al cliente en el portal ANTES de que pague.</strong> Eso es lo único técnico que tenés que hacer. Si lo registrás después, corrés el riesgo de perder la comisión porque el sistema ya no puede atribuirte la venta.</div>
+      </div>
+
+      <h3>Tu flujo de cierre según perfil</h3>
+      <table class="aca-table">
+        <thead>
+          <tr><th>Perfil</th><th>Momento de entrada</th><th>Regla de oro</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><strong>Agencia</strong></td><td>El cliente pide una web / rediseño / SEO</td><td>Reencuadrá ANTES de cotizar — si cotizás primero, Avanza parece caro</td></tr>
+          <tr><td><strong>Consultor</strong></td><td>Entrega del informe / "optimizamos todo menos ventas"</td><td>Incluilo como hallazgo del informe, no como sugerencia suelta</td></tr>
+          <tr><td><strong>Contador</strong></td><td>Revisión mensual / facturación estancada</td><td>Usá los números del cliente, no los de un caso ajeno</td></tr>
+          <tr><td><strong>Proveedor B2B</strong></td><td>Después de cerrar tu pedido, nunca antes</td><td>Primero cerrás lo tuyo — tu venta principal no puede sufrir</td></tr>
+        </tbody>
+      </table>
+
+      <div class="aca-tip">
+        <div class="label">¡LISTO!</div>
+        <div class="text">Completaste la Academia. Tenés el guión de tu perfil, el brochure y el caso de rubro. <strong>El próximo paso es identificar 3 clientes de tu cartera actual que podrían necesitar un sistema comercial</strong> y aplicar el momento de entrada de tu guión en la próxima conversación que ya tengas con ellos.</div>
       </div>
     `
   }
@@ -7520,16 +8389,24 @@ function inicializarAcademia() {
 function renderAcademiaIndex() {
   document.getElementById('aca-index').style.display = 'block';
   document.getElementById('aca-lessons-container').innerHTML = '';
-  
+
+  const esCanal2 = aliado?.tipo_aliado === 'canal2';
+  const modulosVisibles = ACADEMIA_MODULOS.filter(m => {
+    if (m.canal === 'canal1' && esCanal2) return false;
+    if (m.canal === 'canal2' && !esCanal2) return false;
+    return true;
+  });
+  const total = modulosVisibles.length;
+
   const progreso = getAcademiaProgreso();
-  const completados = progreso.length;
-  const pct = Math.round((completados / 8) * 100);
+  const completados = progreso.filter(id => modulosVisibles.some(m => m.id === id)).length;
+  const pct = Math.round((completados / total) * 100);
   
   document.getElementById('aca-progress-fill').style.width = pct + '%';
-  document.getElementById('aca-progress-text').textContent = `${completados} de 8 módulos completados (${pct}%)`;
+  document.getElementById('aca-progress-text').textContent = `${completados} de ${total} módulos completados (${pct}%)`;
   
   const grid = document.getElementById('aca-modules-grid');
-  grid.innerHTML = ACADEMIA_MODULOS.map(m => `
+  grid.innerHTML = modulosVisibles.map(m => `
     <div class="aca-module ${progreso.includes(m.id) ? 'completed' : ''}" onclick="abrirModulo(${m.id})">
       <div class="num">${m.num}</div>
       <h3>${m.title}</h3>
@@ -7563,14 +8440,28 @@ function marcarModuloCompleto(id) {
 }
 
 function abrirModulo(id) {
+  const esCanal2 = aliado?.tipo_aliado === 'canal2';
+  // Verificar que el módulo sea visible para este canal
+  const modCheck = ACADEMIA_MODULOS.find(x => x.id === id);
+  if (!modCheck) return;
+  if (modCheck.canal === 'canal1' && esCanal2) return;
+  if (modCheck.canal === 'canal2' && !esCanal2) return;
+
   const m = ACADEMIA_MODULOS.find(x => x.id === id);
   if (!m) return;
-  
+
   document.getElementById('aca-index').style.display = 'none';
   const progreso = getAcademiaProgreso();
   const completo = progreso.includes(id);
-  const prevModulo = ACADEMIA_MODULOS.find(x => x.id === id - 1);
-  const nextModulo = ACADEMIA_MODULOS.find(x => x.id === id + 1);
+
+  const modulosVisibles = ACADEMIA_MODULOS.filter(m => {
+    if (m.canal === 'canal1' && esCanal2) return false;
+    if (m.canal === 'canal2' && !esCanal2) return false;
+    return true;
+  });
+  const idx = modulosVisibles.findIndex(x => x.id === id);
+  const prevModulo = idx > 0 ? modulosVisibles[idx - 1] : null;
+  const nextModulo = idx < modulosVisibles.length - 1 ? modulosVisibles[idx + 1] : null;
   
   const html = `
     <div class="aca-lesson active">

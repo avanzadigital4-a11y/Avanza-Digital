@@ -124,7 +124,7 @@
     <!-- HERO -->
     <section class="hero-section" style="padding-top: 30px; padding-bottom: 50px;">
         <div class="container" style="text-align: center;">
-            <span class="badge-outline" style="color: #fb923c; border-color: rgba(251,146,60,0.3); background: rgba(251,146,60,0.1);">CANAL 1 · Bolsa de Leads con IA</span>
+            <span class="badge-outline" style="color: #fb923c; border-color: rgba(251,146,60,0.3); background: rgba(251,146,60,0.1);">LA ÚNICA RED EN LATAM · Leads curados · IA incluida · Vos cerrás</span>
             <h1 style="font-size: 3.6rem; font-weight: 900; letter-spacing: -2px; margin: 20px 0; color: white;">
                 Empezás sin cartera.<br>
                 <span style="color: #fb923c;">El sistema te trae los leads.</span>
@@ -135,6 +135,7 @@
                 <strong style="color: white;">Vos cerrás la venta.</strong>
                 Nosotros implementamos el sistema.
                 <strong style="color: white;">Ambos cobramos.</strong>
+                <br><span style="font-size: 1rem; color: #fb923c; font-weight: 600;">No hay otra plataforma en la región que funcione así.</span>
             </p>
 
             <div style="display: flex; gap: 15px; justify-content: center; flex-wrap: wrap;">
@@ -158,29 +159,39 @@
         <div class="container">
             <div class="section-header">
                 <h2>Para quién es este programa</h2>
-                <p>Canal 1 está pensado para cuatro perfiles con un punto en común: no necesitan cartera previa.</p>
+                <p>Canal 1 está pensado para perfiles de ventas con un punto en común: ya saben hablar con clientes, o quieren aprender. La bolsa hace la prospección — vos ponés la habilidad.</p>
             </div>
 
-            <div class="results-grid" style="grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); max-width: 1000px; margin: 0 auto;">
+            <div class="results-grid" style="grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); max-width: 1200px; margin: 0 auto;">
+                <div class="bento-box result-card" style="border-color: rgba(251,146,60,0.2);">
+                    <div class="result-icon" style="color: #fb923c;">🎯</div>
+                    <h3>Closers de ventas</h3>
+                    <p>Sos bueno cerrando pero perdés tiempo prospectando. Acá los leads llegan curados con score IA y pitch incluido — vos entrás directo a cerrar.</p>
+                </div>
+                <div class="bento-box result-card" style="border-color: rgba(251,146,60,0.2);">
+                    <div class="result-icon" style="color: #fb923c;">📞</div>
+                    <h3>SDRs, Setters y BDRs</h3>
+                    <p>Sabés calificar y abrir conversaciones mejor que nadie. Usá ese skill para generar tus propias comisiones, no solo el pipeline de otra empresa.</p>
+                </div>
                 <div class="bento-box result-card" style="border-color: rgba(251,146,60,0.2);">
                     <div class="result-icon" style="color: #fb923c;">💼</div>
                     <h3>Vendedores independientes</h3>
-                    <p>Querés construir un ingreso desde cero sin depender de ningún empleador ni cartera previa.</p>
+                    <p>Querés construir un ingreso sin depender de un empleador. Comisiones del 10% al 20%, pago en 24hs y sin techo de ganancias.</p>
                 </div>
                 <div class="bento-box result-card" style="border-color: rgba(251,146,60,0.2);">
                     <div class="result-icon" style="color: #fb923c;">🚀</div>
                     <h3>Emprendedores digitales</h3>
-                    <p>Sabés vender pero no tenés producto propio. Acá tenés uno listo con brochure, guión y sistema.</p>
+                    <p>Sabés vender pero no tenés producto propio. Acá tenés uno listo con brochure, guión por rubro y sistema de cobro incluido.</p>
                 </div>
                 <div class="bento-box result-card" style="border-color: rgba(251,146,60,0.2);">
                     <div class="result-icon" style="color: #fb923c;">🌐</div>
                     <h3>Referidores de red</h3>
-                    <p>Conocés personas y empresas en tu ciudad. Convertí esas conexiones en comisiones desde el primer mes.</p>
+                    <p>Conocés personas y empresas en tu ciudad o industria. Convertí esas conexiones en comisiones desde el primer mes.</p>
                 </div>
                 <div class="bento-box result-card" style="border-color: rgba(251,146,60,0.2);">
                     <div class="result-icon" style="color: #fb923c;">📈</div>
-                    <h3>Aliados en crecimiento</h3>
-                    <p>Tenés experiencia en ventas y querés escalar. El leaderboard, los badges y Mi Red amplifican tu resultado.</p>
+                    <h3>Aliados que quieren escalar</h3>
+                    <p>Ya vendiste antes y querés más. El leaderboard, los badges, Mi Red y el piloto automático de IA amplifican tu resultado.</p>
                 </div>
             </div>
         </div>
@@ -523,23 +534,22 @@
       // Captura ?ref= de la URL y lo guarda en el formulario + localStorage
       (function() {
         const params = new URLSearchParams(window.location.search);
-        const ref = params.get('ref');
+        const ref = params.get('ref') || localStorage.getItem('avanza_ref') || '';
         if (ref) {
           const campo = document.getElementById('ref_aliado');
           if (campo) campo.value = ref;
           localStorage.setItem('avanza_ref', ref);
-
+          // Inyecta ?ref= en todos los links al portal para no perder la atribución
+          document.querySelectorAll('a[href*="portal.html"]').forEach(function(a) {
+            var url = new URL(a.href, window.location.href);
+            url.searchParams.set('ref', ref);
+            a.href = url.toString();
+          });
           const banner = document.createElement('div');
           banner.style.cssText = 'position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:rgba(251,146,60,0.12);border:1px solid rgba(251,146,60,0.3);color:#fb923c;padding:10px 20px;border-radius:50px;font-size:0.82rem;font-family:Inter,sans-serif;z-index:9999;backdrop-filter:blur(10px);white-space:nowrap;';
           banner.innerHTML = '<i class="fa-solid fa-handshake" style="margin-right:8px;"></i>Accediste a través de un aliado Avanza';
           document.body.appendChild(banner);
           setTimeout(() => banner.remove(), 5000);
-        } else {
-          const refGuardado = localStorage.getItem('avanza_ref');
-          if (refGuardado) {
-            const campo = document.getElementById('ref_aliado');
-            if (campo) campo.value = refGuardado;
-          }
         }
       })();
 

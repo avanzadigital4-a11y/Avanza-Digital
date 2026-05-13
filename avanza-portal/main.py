@@ -1376,7 +1376,7 @@ def cambiar_username_aliado_actual(
         "ok": True,
         "ref_code_anterior": ref_code_viejo,
         "ref_code_nuevo": aliado.ref_code,
-        "link_ref": f"https://avanzadigital.digital/alianzas?ref={aliado.ref_code}",
+        "link_ref": f"{PORTAL_URL}/p/{aliado.ref_code}",
         "link_perfil": f"{PORTAL_URL}/p/{aliado.ref_code}",
         "mensaje": "¡Listo! Tu link personalizado quedó activo.",
     }
@@ -1508,7 +1508,8 @@ def auto_registro(request: Request,
             </p>
           </div>
 
-          <p style="color:#a1a1aa;margin-bottom:28px;font-size:.9rem;">Tu link de referido: <a href="https://avanzadigital.digital/alianzas?ref={a.ref_code}" style="color:#3b82f6;">/alianzas?ref={a.ref_code}</a></p>
+          <p style="color:#a1a1aa;margin-bottom:8px;font-size:.9rem;font-weight:700;">Tu link de ventas (para clientes):</p>
+          <p style="margin-bottom:28px;font-size:.9rem;"><a href="{PORTAL_URL}/p/{a.ref_code}" style="color:#3b82f6;">{PORTAL_URL}/p/{a.ref_code}</a></p>
 
           <a href="https://avanza-digital-production.up.railway.app/portal.html#bolsa" style="display:inline-block;padding:14px 28px;background:#f97316;color:#000;border-radius:8px;text-decoration:none;font-weight:800;font-size:1rem;">Ver leads disponibles →</a>
 
@@ -1596,7 +1597,7 @@ def login_aliado(request: Request,
     codigo: str = "", password: str = "",
     db: Session = Depends(get_db),
 ):
-    """Portal del aliado: login con código + contraseña.
+    """Portal del aliado: login con código o email + contraseña.
 
     Acepta body JSON (preferido) o query string (legacy, queda en logs).
     Devuelve los datos del aliado + un JWT en el campo `token` para usar en
@@ -1610,8 +1611,11 @@ def login_aliado(request: Request,
     if not codigo or not password:
         raise HTTPException(400, "Faltan codigo y password.")
 
-    # Buscar aliado activo con ese código
-    a = db.query(Aliado).filter(Aliado.codigo == codigo, Aliado.activo == True).first()
+    # Buscar aliado activo por email o por código
+    if "@" in codigo:
+        a = db.query(Aliado).filter(Aliado.email == codigo.lower().strip(), Aliado.activo == True).first()
+    else:
+        a = db.query(Aliado).filter(Aliado.codigo == codigo, Aliado.activo == True).first()
     # Comparación constant-time del password (corre verify aunque no exista el aliado)
     fake_hash = hash_password("dummy_password_for_timing")
     target_hash = a.password_hash if a else fake_hash
@@ -1707,7 +1711,8 @@ def crear_aliado(body: schemas.CrearAliadoIn | None = Body(default=None),
         "mensaje": f"Aliado {a.codigo} creado", "codigo": a.codigo,
         "ref_code": a.ref_code, "password_inicial": password,
         "ref_code": a.ref_code,
-        "link_ref": f"https://avanzadigital.digital/alianzas?ref={a.ref_code}",
+        "link_ref": f"{PORTAL_URL}/p/{a.ref_code}",
+        "link_perfil": f"{PORTAL_URL}/p/{a.ref_code}",
     }
 
 
@@ -2454,7 +2459,7 @@ def _aliado_detalle(a, incluir_token: bool = False):
         "total_pendiente": round(a.total_pendiente, 2),
         "mrr_recurrente_usd": mrr_recurrente,
         "ref_code": a.ref_code,
-        "link_ref":    f"https://avanzadigital.digital/alianzas?ref={a.ref_code}",
+        "link_ref":    f"{PORTAL_URL}/p/{a.ref_code}",
         "link_perfil": f"{PORTAL_URL}/p/{a.ref_code}",
         # Flag para el frontend: si es False, el aliado todavía puede
         # personalizar su slug una vez (botón "Personalizá tu link" visible).
@@ -3481,6 +3486,7 @@ def estado_onboarding(codigo: str, db: Session = Depends(get_db), _owner=Depends
     # real sobre cómo funciona el programa antes de comprometer un contacto propio.
     pasos = [
         {"id": "registro", "titulo": "Te registraste", "completado": True},
+        {"id": "cbu", "titulo": "Cargá tu CBU para cobrar", "completado": bool(getattr(a, "cbu_alias", None))},
     ]
     if not es_canal2:
         pasos.append({
@@ -4671,7 +4677,7 @@ def _render_mensaje_piloto(p: Prospecto, paso: int) -> tuple:
         cta = ""
         if aliado and aliado.ref_code and paso == 1 and "http" not in cuerpo_html_inner.lower():
             cta = (
-                f"<br><br><a href='https://avanzadigital.digital/alianzas?ref={aliado.ref_code}' "
+                f"<br><br><a href='{PORTAL_URL}/p/{aliado.ref_code}' "
                 f"style='color:#3b82f6;'>Te dejo este link al diagnóstico gratuito</a> por si te sirve."
             )
         elif aliado and aliado.whatsapp and paso == 3 and "http" not in cuerpo_html_inner.lower():
@@ -4716,7 +4722,7 @@ def _render_mensaje_piloto_template(p: Prospecto, paso: int) -> tuple:
         mensaje = (
             f"Hola {nombre_prospecto},<br><br>"
             f"Soy {aliado.nombre.split()[0]}. Hace unos días hablamos y quería retomar.<br><br>"
-            f"Te dejo este <a href='https://avanzadigital.digital/alianzas?ref={aliado.ref_code}' "
+            f"Te dejo este <a href='{PORTAL_URL}/p/{aliado.ref_code}' "
             f"style='color:#3b82f6;'>diagnóstico gratuito</a> — toma 30 segundos y devuelve un "
             f"reporte con el estado real de tu presencia digital.<br><br>"
             f"Si te hace clic, hablamos.<br><br>"
@@ -6219,7 +6225,18 @@ def admin_ocultar_post(id: int, ocultar: bool = True, db: Session = Depends(get_
 # URL pública /p/{ref_code} que muestra una landing mínima con el nombre del
 # aliado, los planes y el botón de pago con atribución automática.
 
-from fastapi.responses import HTMLResponse
+from fastapi.responses import HTMLResponse, RedirectResponse
+
+@app.get("/alias/{ref_code}")
+def alias_redirect(ref_code: str, db: Session = Depends(get_db)):
+    """Redirige /alias/{ref_code} → /?ref={ref_code} si el aliado existe.
+    Usado por el catch-all de _redirects para que cada aliado tenga una URL
+    limpia (ej: avanzadigital.digital/gonzaloasesor) sin configuración manual.
+    """
+    a = db.query(Aliado).filter(Aliado.ref_code == ref_code, Aliado.activo == True).first()
+    if not a:
+        raise HTTPException(status_code=404, detail="Aliado no encontrado")
+    return RedirectResponse(url=f"https://avanzadigital.digital/?ref={ref_code}", status_code=301)
 
 @app.get("/p/{ref_code}", response_class=HTMLResponse)
 def portal_publico_aliado(ref_code: str, db: Session = Depends(get_db)):
@@ -6231,20 +6248,72 @@ def portal_publico_aliado(ref_code: str, db: Session = Depends(get_db)):
     titular = a.portal_publico_titular or a.nombre
     bio = a.portal_publico_bio or f"Asesor digital — Partner de Avanza Digital"
 
+    # WhatsApp de contacto: del aliado si tiene, si no el de Avanza
+    _wa_raw = (a.whatsapp or "").strip().replace("+", "").replace(" ", "").replace("-", "").replace("(", "").replace(")", "")
+    _wa_avanza = "5493424392759"
+    wa_contacto = _wa_raw if _wa_raw else _wa_avanza
+    wa_titular_encoded = titular.replace(" ", "%20")
+
+    PLAN_DETALLE = {
+        "Plan Base": {
+            "emoji": "🚀",
+            "tagline": "Para arrancar en 7 días",
+            "includes": ["Sitio web + cotizador automático", "Formulario de calificación de leads", "Panel de seguimiento básico", "3 meses de soporte técnico"],
+            "ideal": "Empresa que quiere su primer canal digital funcionando rápido."
+        },
+        "Plan Pro": {
+            "emoji": "⚡",
+            "tagline": "El más elegido por PYMEs industriales",
+            "badge": "MÁS POPULAR",
+            "includes": ["Todo el Plan Base", "CRM liviano integrado", "Automatizaciones de seguimiento", "Integración WhatsApp Business", "3 meses de soporte técnico"],
+            "ideal": "Empresa con equipo de ventas que necesita proceso replicable."
+        },
+        "Plan Industrial": {
+            "emoji": "🏭",
+            "tagline": "Sistema completo de adquisición B2B",
+            "includes": ["Todo el Plan Pro", "Landing de empresa personalizada", "Cotizador por rubro y producto", "Dashboard de métricas avanzado", "Secuencias de email automatizadas", "3 meses de soporte técnico"],
+            "ideal": "Empresa que quiere ser el referente digital de su rubro."
+        },
+        "Estrategico 360": {
+            "emoji": "🎯",
+            "tagline": "Transformación comercial integral",
+            "includes": ["Todo el Plan Industrial", "Auditoría comercial inicial", "Estrategia de contenidos B2B", "Capacitación del equipo comercial", "Revisiones mensuales 90 días", "Soporte prioritario 6 meses"],
+            "ideal": "Empresa que quiere rediseñar su área comercial completa."
+        },
+    }
     planes_html = ""
     for nombre_plan, precio in PLANES.items():
-        plan_id = nombre_plan.replace(" ", "_").lower()
+        det = PLAN_DETALLE.get(nombre_plan, {})
+        emoji = det.get("emoji", "📦")
+        tagline = det.get("tagline", "")
+        badge_html = f'<span style="background:rgba(74,222,128,0.15);color:#4ade80;border:1px solid rgba(74,222,128,0.3);padding:3px 10px;border-radius:20px;font-size:.68rem;font-weight:800;letter-spacing:1px;text-transform:uppercase;margin-left:8px;">{det["badge"]}</span>' if det.get("badge") else ""
+        includes_items = "".join(f'<li style="display:flex;gap:8px;align-items:flex-start;font-size:.82rem;color:#a1a1aa;margin-bottom:6px;"><span style="color:#4ade80;flex-shrink:0;">✓</span>{item}</li>' for item in det.get("includes", []))
+        ideal = det.get("ideal", "")
         planes_html += f"""
-        <div style='background:#111;border:1px solid #222;border-radius:12px;padding:24px;margin-bottom:16px;'>
-          <div style='display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;'>
+        <div class="plan-card">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:12px;margin-bottom:14px;">
             <div>
-              <h3 style='font-size:1.1rem;font-weight:800;margin-bottom:4px;'>{nombre_plan}</h3>
-              <p style='color:#a1a1aa;font-size:0.85rem;'>USD {int(precio)}</p>
+              <div style="font-size:1.5rem;margin-bottom:6px;">{emoji}</div>
+              <h3 style="font-size:1.05rem;font-weight:900;margin-bottom:4px;">{nombre_plan}{badge_html}</h3>
+              <p style="font-size:.8rem;color:#71717a;">{tagline}</p>
             </div>
-            <button onclick="abrirModal('{nombre_plan}','{ref_code}')"
-               style='padding:12px 20px;background:#3b82f6;color:#fff;border-radius:8px;border:none;cursor:pointer;font-weight:700;font-size:1rem;'>
-              Contratar →
+            <div style="text-align:right;">
+              <div style="font-size:1.8rem;font-weight:900;color:#e2e8f0;">USD {int(precio)}</div>
+              <div style="font-size:.72rem;color:#71717a;">pago único</div>
+            </div>
+          </div>
+          <ul style="list-style:none;padding:0;margin:0 0 16px;">{includes_items}</ul>
+          {"<p style=\"font-size:.78rem;color:#52525b;margin-bottom:16px;font-style:italic;\">" + ideal + "</p>" if ideal else ""}
+          <div style="display:flex;gap:10px;flex-wrap:wrap;">
+            <button onclick="abrirModal(\'{nombre_plan}\',\'{ref_code}\')"
+               style="flex:1;min-width:140px;padding:14px;background:#3b82f6;color:#fff;border-radius:8px;border:none;cursor:pointer;font-weight:800;font-size:.9rem;">
+              Contratar {nombre_plan} →
             </button>
+            <a href="https://wa.me/{wa_contacto}?text=Hola%20{wa_titular_encoded}%2C%20me%20interesa%20el%20{nombre_plan.replace(' ', '%20')}%20de%20Avanza%20Digital.%20%C2%BFPodemos%20hablar%3F"
+               target="_blank"
+               style="flex:1;min-width:140px;padding:14px;background:rgba(37,211,102,0.12);color:#25d366;border:1px solid rgba(37,211,102,0.3);border-radius:8px;cursor:pointer;font-weight:800;font-size:.9rem;text-decoration:none;text-align:center;display:inline-flex;align-items:center;justify-content:center;gap:6px;">
+              💬 Consultar
+            </a>
           </div>
         </div>
         """
@@ -6258,105 +6327,218 @@ def portal_publico_aliado(ref_code: str, db: Session = Depends(get_db)):
     html = f"""<!DOCTYPE html>
 <html lang="es"><head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>{titular} · Avanza Digital</title>
+<title>{titular} · Sistema de ventas para tu empresa · Avanza Digital</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
 <style>
-*{{box-sizing:border-box;}}
-body{{margin:0;font-family:Inter,sans-serif;background:#050505;color:#e2e8f0;}}
-.wrap{{max-width:640px;margin:0 auto;padding:48px 24px;}}
-.hero{{text-align:center;margin-bottom:40px;}}
-.hero h1{{font-size:2rem;font-weight:900;margin-bottom:8px;}}
-.hero p{{color:#a1a1aa;font-size:1rem;}}
-.badge{{display:inline-block;background:rgba(59,130,246,0.15);color:#93c5fd;padding:4px 12px;
-       border-radius:20px;font-size:0.72rem;font-weight:700;letter-spacing:1px;text-transform:uppercase;
-       margin-bottom:16px;}}
-.footer{{margin-top:48px;text-align:center;color:#71717a;font-size:0.78rem;}}
-a.cta{{display:inline-block;padding:12px 20px;background:#3b82f6;color:#fff!important;
-       border-radius:8px;text-decoration:none;font-weight:700;}}
-/* Modal */
-#modal-overlay{{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:100;
-  align-items:center;justify-content:center;padding:16px;}}
-.modal-box{{background:#111;border:1px solid #2a2a2a;border-radius:16px;padding:28px;
-  width:100%;max-width:420px;}}
-/* Pasos */
+*{{box-sizing:border-box;margin:0;padding:0;}}
+body{{font-family:Inter,sans-serif;background:#050505;color:#e2e8f0;line-height:1.6;}}
+.wrap{{max-width:680px;margin:0 auto;padding:0 20px 60px;}}
+.nav{{display:flex;align-items:center;justify-content:space-between;padding:18px 20px;border-bottom:1px solid rgba(255,255,255,0.06);max-width:680px;margin:0 auto;}}
+.nav-logo{{font-size:.85rem;font-weight:700;color:#a1a1aa;text-decoration:none;}}
+.nav-logo span{{color:#3b82f6;}}
+.asesor-bar{{background:rgba(59,130,246,0.08);border-bottom:1px solid rgba(59,130,246,0.15);padding:10px 20px;text-align:center;font-size:.78rem;color:#93c5fd;font-weight:600;}}
+.hero{{padding:52px 0 40px;text-align:center;}}
+.hero-badge{{display:inline-block;background:rgba(74,222,128,0.12);color:#4ade80;padding:5px 14px;border-radius:20px;font-size:.72rem;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:20px;border:1px solid rgba(74,222,128,0.2);}}
+.hero h1{{font-size:clamp(1.8rem,5vw,2.6rem);font-weight:900;line-height:1.15;margin-bottom:16px;}}
+.hero h1 span{{color:#3b82f6;}}
+.hero-sub{{color:#a1a1aa;font-size:1.05rem;max-width:520px;margin:0 auto 32px;}}
+.hero-cta{{display:inline-block;padding:16px 32px;background:#3b82f6;color:#fff;border-radius:10px;font-weight:800;font-size:1rem;text-decoration:none;transition:background .2s;border:none;cursor:pointer;}}
+.hero-cta:hover{{background:#2563eb;}}
+.hero-social{{margin-top:20px;font-size:.8rem;color:#71717a;}}
+.hero-social span{{color:#4ade80;font-weight:700;}}
+.section{{padding:40px 0;}}
+.section-label{{font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:2px;color:#71717a;margin-bottom:12px;}}
+.section h2{{font-size:1.5rem;font-weight:900;margin-bottom:16px;}}
+.problem-list{{list-style:none;padding:0;}}
+.problem-list li{{display:flex;gap:12px;align-items:flex-start;padding:10px 0;border-bottom:1px solid rgba(255,255,255,0.05);font-size:.92rem;color:#a1a1aa;}}
+.problem-list li:last-child{{border-bottom:none;}}
+.problem-list li::before{{content:"\u2717";color:#ef4444;font-weight:900;flex-shrink:0;margin-top:2px;}}
+.benefit-grid{{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:20px;}}
+@media(max-width:480px){{.benefit-grid{{grid-template-columns:1fr;}}}}
+.benefit-card{{background:#0f0f0f;border:1px solid rgba(255,255,255,0.07);border-radius:12px;padding:18px 16px;}}
+.benefit-icon{{font-size:1.4rem;margin-bottom:8px;}}
+.benefit-title{{font-size:.88rem;font-weight:800;margin-bottom:4px;}}
+.benefit-desc{{font-size:.78rem;color:#71717a;line-height:1.5;}}
+.caso-card{{background:#0a0a0a;border:1px solid rgba(255,255,255,0.06);border-radius:12px;padding:20px;margin-bottom:12px;}}
+.caso-header{{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px;flex-wrap:wrap;gap:8px;}}
+.caso-empresa{{font-size:.88rem;font-weight:800;}}
+.caso-rubro{{font-size:.7rem;color:#71717a;font-weight:600;text-transform:uppercase;letter-spacing:1px;margin-top:2px;}}
+.caso-badge{{background:rgba(74,222,128,0.1);color:#4ade80;padding:4px 10px;border-radius:20px;font-size:.72rem;font-weight:700;white-space:nowrap;}}
+.caso-resultado{{font-size:.85rem;color:#a1a1aa;line-height:1.5;}}
+.caso-resultado strong{{color:#e2e8f0;}}
+.divider{{border:none;border-top:1px solid rgba(255,255,255,0.06);margin:8px 0;}}
+.planes-title{{font-size:1.4rem;font-weight:900;margin-bottom:6px;}}
+.planes-sub{{color:#a1a1aa;font-size:.88rem;margin-bottom:24px;}}
+.plan-card{{background:#0f0f0f;border:1px solid rgba(255,255,255,0.08);border-radius:14px;padding:22px 20px;margin-bottom:12px;transition:border-color .2s;}}
+.plan-card:hover{{border-color:rgba(59,130,246,0.4);}}
+.garantia-box{{background:rgba(74,222,128,0.05);border:1px solid rgba(74,222,128,0.15);border-radius:12px;padding:20px;text-align:center;margin-top:20px;}}
+.garantia-box h3{{font-size:1rem;font-weight:800;color:#4ade80;margin-bottom:6px;}}
+.garantia-box p{{font-size:.83rem;color:#a1a1aa;}}
+.footer{{margin-top:48px;text-align:center;color:#3f3f46;font-size:.75rem;}}
+.footer a{{color:#52525b;}}
+.asesor-intro{{display:flex;gap:16px;align-items:flex-start;background:rgba(59,130,246,0.06);border:1px solid rgba(59,130,246,0.15);border-radius:14px;padding:22px 20px;margin-bottom:36px;}}
+.asesor-avatar{{width:54px;height:54px;border-radius:50%;background:linear-gradient(135deg,#3b82f6,#1d4ed8);display:flex;align-items:center;justify-content:center;font-size:1.4rem;flex-shrink:0;}}
+.asesor-intro-name{{font-size:1rem;font-weight:900;margin-bottom:4px;}}
+.asesor-intro-badge{{font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:#93c5fd;margin-bottom:6px;}}
+.asesor-intro-bio{{font-size:.82rem;color:#a1a1aa;line-height:1.55;}}
+#modal-overlay{{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.8);z-index:100;align-items:center;justify-content:center;padding:16px;}}
+.modal-box{{background:#111;border:1px solid #2a2a2a;border-radius:16px;padding:28px;width:100%;max-width:420px;}}
 .step{{display:none;}}
 .step.active{{display:block;}}
-/* Selector de moneda */
 .moneda-options{{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:16px 0;}}
-.moneda-btn{{padding:16px 12px;border-radius:10px;border:2px solid #2a2a2a;background:#1a1a1a;
-  color:#e2e8f0;cursor:pointer;text-align:center;transition:all .2s;font-family:Inter,sans-serif;}}
+.moneda-btn{{padding:16px 12px;border-radius:10px;border:2px solid #2a2a2a;background:#1a1a1a;color:#e2e8f0;cursor:pointer;text-align:center;transition:all .2s;font-family:Inter,sans-serif;}}
 .moneda-btn:hover{{border-color:#3b82f6;background:rgba(59,130,246,0.08);}}
 .moneda-btn.selected{{border-color:#3b82f6;background:rgba(59,130,246,0.12);}}
 .moneda-btn .icon{{font-size:1.6rem;margin-bottom:6px;}}
 .moneda-btn .label{{font-weight:800;font-size:.9rem;}}
 .moneda-btn .sublabel{{font-size:.72rem;color:#a1a1aa;margin-top:2px;}}
 .moneda-btn.paypal .icon{{color:#009cde;}}
-.moneda-btn.ars .icon{{color:#6ee7b7;}}
-/* Botones accion */
-.btn-cancel{{flex:1;padding:12px;border-radius:8px;border:1px solid #444;background:transparent;
-  color:#aaa;cursor:pointer;font-size:.95rem;font-family:Inter,sans-serif;}}
-.btn-primary{{flex:1;padding:12px;border-radius:8px;border:none;background:#3b82f6;
-  color:#fff;cursor:pointer;font-weight:700;font-size:.95rem;font-family:Inter,sans-serif;}}
+.btn-cancel{{flex:1;padding:12px;border-radius:8px;border:1px solid #444;background:transparent;color:#aaa;cursor:pointer;font-size:.95rem;font-family:Inter,sans-serif;}}
+.btn-primary{{flex:1;padding:12px;border-radius:8px;border:none;background:#3b82f6;color:#fff;cursor:pointer;font-weight:700;font-size:.95rem;font-family:Inter,sans-serif;}}
 .btn-primary:disabled{{opacity:.6;cursor:not-allowed;}}
-input[type=text]{{width:100%;padding:12px;border-radius:8px;border:1px solid #444;
-  background:#1a1a1a;color:#fff;font-size:1rem;font-family:Inter,sans-serif;}}
+input[type=text]{{width:100%;padding:12px;border-radius:8px;border:1px solid #444;background:#1a1a1a;color:#fff;font-size:1rem;font-family:Inter,sans-serif;}}
 input[type=text]:focus{{outline:none;border-color:#3b82f6;}}
 </style></head><body>
+<div class="asesor-bar">
+  Estás siendo atendido por <strong style="color:#e2e8f0;">{titular}</strong> · Partner certificado de Avanza Digital
+</div>
+<nav class="nav">
+  <a class="nav-logo" href="https://avanzadigital.digital">Avanza<span>Digital</span></a>
+  <a href="#planes" class="hero-cta" style="padding:10px 20px;font-size:.85rem;">Ver planes →</a>
+</nav>
 <div class="wrap">
-  <div class="hero">
-    <div class="badge">Asesor certificado · Avanza Partner Network</div>
-    <h1>{titular}</h1>
-    <p>{bio}</p>
-  </div>
-  <h2 style="font-size:1.2rem;font-weight:800;margin-bottom:16px;">Planes disponibles</h2>
-  {planes_html}
+  <section class="asesor-intro">
+    <div class="asesor-avatar">👤</div>
+    <div>
+      <div class="asesor-intro-badge">Partner certificado · Avanza Digital</div>
+      <div class="asesor-intro-name">{titular}</div>
+      <div class="asesor-intro-bio">{bio}</div>
+    </div>
+  </section>
+  <section class="hero">
+    <div class="hero-badge">Sistema de ventas B2B</div>
+    <h1>Tu empresa merece <span>conseguir clientes</span> de forma sistemática</h1>
+    <p class="hero-sub">Implementamos tu sistema digital de ventas en 30 días. Más presupuestos, más respuestas rápidas, más clientes. Sin depender de la suerte ni del boca a boca.</p>
+    <a href="#planes" class="hero-cta">Elegir mi plan →</a>
+    <p class="hero-social">Más de <span>40 PYMEs industriales</span> ya tienen su sistema funcionando</p>
+  </section>
+
+  <section class="section">
+    <div class="section-label">El problema</div>
+    <h2>¿Te suena alguna de estas situaciones?</h2>
+    <ul class="problem-list">
+      <li>Los presupuestos tardan días en salir y el cliente ya compró en otro lado</li>
+      <li>Dependés del boca a boca — no tenés forma de conseguir clientes nuevos sistemáticamente</li>
+      <li>Tu sitio web existe, pero no genera ninguna consulta real</li>
+      <li>No sabés cuántos clientes potenciales perdés por mes por responder tarde</li>
+      <li>Cada vendedor usa su propio método y no hay proceso replicable</li>
+    </ul>
+  </section>
+
+  <hr class="divider">
+
+  <section class="section">
+    <div class="section-label">La solución</div>
+    <h2>Un sistema que trabaja aunque vos no estés</h2>
+    <div class="benefit-grid">
+      <div class="benefit-card">
+        <div class="benefit-icon">⚡</div>
+        <div class="benefit-title">Respuestas en minutos</div>
+        <div class="benefit-desc">Cotizador automático y formularios inteligentes que califican y responden consultas sin intervención humana.</div>
+      </div>
+      <div class="benefit-card">
+        <div class="benefit-icon">🎯</div>
+        <div class="benefit-title">Leads que cierran</div>
+        <div class="benefit-desc">Cada consulta llega con el contexto completo: rubro, producto, urgencia y contacto directo al responsable.</div>
+      </div>
+      <div class="benefit-card">
+        <div class="benefit-icon">📊</div>
+        <div class="benefit-title">Métricas en tiempo real</div>
+        <div class="benefit-desc">CRM liviano integrado. Sabés exactamente de dónde vienen tus clientes y cuánto vale cada canal.</div>
+      </div>
+      <div class="benefit-card">
+        <div class="benefit-icon">🔁</div>
+        <div class="benefit-title">Sistema replicable</div>
+        <div class="benefit-desc">Proceso documentado que cualquier vendedor puede seguir. Dejás de depender de una sola persona.</div>
+      </div>
+    </div>
+  </section>
+
+  <hr class="divider">
+
+  <section class="section">
+    <div class="section-label">Resultados reales</div>
+    <h2>Lo que lograron empresas como la tuya</h2>
+    <div class="caso-card">
+      <div class="caso-header">
+        <div><div class="caso-empresa">Metalúrgica Balconi · Rafaela</div><div class="caso-rubro">Fabricación de estructuras</div></div>
+        <div class="caso-badge">+47% conversión</div>
+      </div>
+      <p class="caso-resultado">Tenían el mismo problema de presupuestos que se perdían. En <strong>21 días</strong> implementaron el sistema. Primer trimestre: <strong>3 contratos nuevos</strong> desde canales digitales.</p>
+    </div>
+    <div class="caso-card">
+      <div class="caso-header">
+        <div><div class="caso-empresa">Transportes Oñate · Rosario</div><div class="caso-rubro">Logística y transporte</div></div>
+        <div class="caso-badge">31hs → 4hs</div>
+      </div>
+      <p class="caso-resultado">Pasaron de tardar <strong>31 horas</strong> en responder cotizaciones a <strong>menos de 4 horas</strong>. Cerraron <strong>3 contratos nuevos</strong> el primer mes.</p>
+    </div>
+    <div class="caso-card">
+      <div class="caso-header">
+        <div><div class="caso-empresa">Soluciones Técnicas del Litoral · Paraná</div><div class="caso-rubro">Servicios técnicos industriales</div></div>
+        <div class="caso-badge">USD 8.400 primer trimestre</div>
+      </div>
+      <p class="caso-resultado">En <strong>7 días</strong> activaron el Plan Base. En 20 días les entró la primera consulta digital. Primer trimestre: <strong>USD 8.400 en contratos nuevos</strong>.</p>
+    </div>
+  </section>
+
+  <hr class="divider">
+
+  <section class="section" id="planes">
+    <div class="section-label">Planes</div>
+    <p class="planes-title">Elegí el plan que le va a tu empresa</p>
+    <p class="planes-sub">Implementación completa en 30 días. Pago único, sin costos ocultos.</p>
+    {planes_html}
+    <div class="garantia-box">
+      <h3>✓ Garantía de 3 meses incluida</h3>
+      <p>Todos los planes incluyen soporte técnico prioritario los primeros 90 días. Si algo no funciona, lo resolvemos nosotros.</p>
+    </div>
+  </section>
+
   <div class="footer">
-    <p>Al contratar desde este link, tu pago queda atribuido automáticamente a <strong style="color:#e2e8f0;">{titular}</strong>.</p>
-    <p style="margin-top:8px;"><a href="https://avanzadigital.digital" style="color:#3b82f6;">avanzadigital.digital</a></p>
+    <p>Atendido por <strong style="color:#52525b;">{titular}</strong> · Partner certificado de Avanza Digital</p>
+    <p style="margin-top:6px;">Tu pago queda atribuido automáticamente a tu asesor.<br>
+    <a href="https://avanzadigital.digital" target="_blank">avanzadigital.digital</a> ·
+    <a href="https://avanzadigital.digital/politica.html" target="_blank">Privacidad</a></p>
   </div>
 </div>
 
-<!-- Modal con 2 pasos -->
-<div id="modal-overlay" onclick="onOverlayClick(event)" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:100;align-items:center;justify-content:center;padding:16px;">
+<div id="modal-overlay" onclick="onOverlayClick(event)" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.8);z-index:100;align-items:center;justify-content:center;padding:16px;">
   <div class="modal-box" onclick="event.stopPropagation()">
-
-    <!-- PASO 1: datos de contacto del cliente -->
     <div id="step-nombre" class="step active">
-      <h3 style="margin:0 0 6px;font-size:1.15rem;font-weight:800;">Antes de pagar, necesitamos tus datos</h3>
-      <p style="color:#a1a1aa;font-size:.87rem;margin:0 0 18px;">Te enviaremos el formulario de inicio del proyecto al email apenas se confirme el pago.</p>
-
-      <label style="display:block;font-size:.78rem;color:#a1a1aa;margin-bottom:4px;font-weight:700;">Nombre completo *</label>
-      <input id="modal-nombre" type="text" placeholder="Tu nombre completo" style="margin-bottom:12px;"
-        onkeydown="if(event.key==='Enter') document.getElementById('modal-email').focus()">
-
-      <label style="display:block;font-size:.78rem;color:#a1a1aa;margin-bottom:4px;font-weight:700;">Email de contacto *</label>
-      <input id="modal-email" type="text" placeholder="tu@empresa.com" style="margin-bottom:12px;"
-        onkeydown="if(event.key==='Enter') document.getElementById('modal-whatsapp').focus()">
-
-      <label style="display:block;font-size:.78rem;color:#a1a1aa;margin-bottom:4px;font-weight:700;">WhatsApp con código de país *</label>
-      <input id="modal-whatsapp" type="text" placeholder="+5491155556666"
-        onkeydown="if(event.key==='Enter') irAPaso2()">
-
+      <h3 style="margin:0 0 6px;font-size:1.1rem;font-weight:800;">Completá tus datos para continuar</h3>
+      <p style="color:#a1a1aa;font-size:.85rem;margin:0 0 18px;">Te enviaremos el formulario de inicio del proyecto apenas se confirme el pago.</p>
+      <label style="display:block;font-size:.75rem;color:#a1a1aa;margin-bottom:4px;font-weight:700;">Nombre completo *</label>
+      <input id="modal-nombre" type="text" placeholder="Tu nombre completo" style="margin-bottom:12px;" onkeydown="if(event.key==='Enter') document.getElementById('modal-email').focus()">
+      <label style="display:block;font-size:.75rem;color:#a1a1aa;margin-bottom:4px;font-weight:700;">Email *</label>
+      <input id="modal-email" type="text" placeholder="tu@empresa.com" style="margin-bottom:12px;" onkeydown="if(event.key==='Enter') document.getElementById('modal-whatsapp').focus()">
+      <label style="display:block;font-size:.75rem;color:#a1a1aa;margin-bottom:4px;font-weight:700;">WhatsApp (con código de país) *</label>
+      <input id="modal-whatsapp" type="text" placeholder="+5491155556666" onkeydown="if(event.key==='Enter') irAPaso2()">
       <div style="display:flex;gap:10px;margin-top:18px;">
         <button class="btn-cancel" onclick="cerrarModal()">Cancelar</button>
         <button class="btn-primary" onclick="irAPaso2()">Siguiente →</button>
       </div>
     </div>
-
-    <!-- PASO 2: moneda -->
     <div id="step-moneda" class="step">
-      <h3 style="margin:0 0 6px;font-size:1.15rem;font-weight:800;">¿Cómo querés pagar?</h3>
-      <p style="color:#a1a1aa;font-size:.87rem;margin:0 0 4px;">Elegí tu moneda y método de pago.</p>
+      <h3 style="margin:0 0 6px;font-size:1.1rem;font-weight:800;">¿Cómo querés pagar?</h3>
+      <p style="color:#a1a1aa;font-size:.85rem;margin:0 0 4px;">Elegí tu moneda y método de pago.</p>
       <div class="moneda-options">
         <button class="moneda-btn ars selected" id="opt-ars" onclick="seleccionarMoneda('ars')">
-          <div class="icon">🏦</div>
-          <div class="label">Pesos ARS</div>
-          <div class="sublabel">MercadoPago</div>
+          <div class="icon">🏦</div><div class="label">Pesos ARS</div><div class="sublabel">MercadoPago</div>
         </button>
         {_btn_usd}
       </div>
-      <div id="moneda-info" style="background:rgba(59,130,246,0.08);border:1px solid rgba(59,130,246,0.2);
-          border-radius:8px;padding:10px 14px;font-size:.82rem;color:#93c5fd;margin-bottom:14px;">
+      <div id="moneda-info" style="background:rgba(59,130,246,0.08);border:1px solid rgba(59,130,246,0.2);border-radius:8px;padding:10px 14px;font-size:.82rem;color:#93c5fd;margin-bottom:14px;">
         🏦 Pagarás en <strong>pesos argentinos</strong> a través de <strong>MercadoPago</strong>.
       </div>
       <div style="display:flex;gap:10px;">
@@ -6364,121 +6546,94 @@ input[type=text]:focus{{outline:none;border-color:#3b82f6;}}
         <button class="btn-primary" id="btn-pagar" onclick="confirmarContratacion()">Ir a pagar →</button>
       </div>
     </div>
-
-    <!-- PASO 3: procesando -->
     <div id="step-procesando" class="step" style="text-align:center;padding:12px 0;">
       <div style="font-size:2rem;margin-bottom:12px;">⏳</div>
       <p style="font-weight:700;font-size:1rem;margin:0 0 6px;">Generando tu link de pago…</p>
       <p style="color:#a1a1aa;font-size:.85rem;margin:0;">Serás redirigido en segundos.</p>
     </div>
-
   </div>
 </div>
 
 <script>
-  let _plan = '', _ref = '', _moneda = 'ars';
-
+  let _plan = \'\', _ref = \'\', _moneda = \'ars\';
   function abrirModal(plan, ref) {{
-    _plan = plan; _ref = ref; _moneda = 'ars';
-    mostrarPaso('step-nombre');
-    document.getElementById('modal-overlay').style.display = 'flex';
-    setTimeout(() => document.getElementById('modal-nombre').focus(), 60);
+    _plan = plan; _ref = ref; _moneda = \'ars\';
+    mostrarPaso(\'step-nombre\');
+    document.getElementById(\'modal-overlay\').style.display = \'flex\';
+    setTimeout(() => document.getElementById(\'modal-nombre\').focus(), 60);
   }}
   function cerrarModal() {{
-    document.getElementById('modal-overlay').style.display = 'none';
-    ['modal-nombre','modal-email','modal-whatsapp'].forEach(id => {{
+    document.getElementById(\'modal-overlay\').style.display = \'none\';
+    [\'modal-nombre\',\'modal-email\',\'modal-whatsapp\'].forEach(id => {{
       const el = document.getElementById(id);
-      if (el) {{ el.value = ''; el.style.borderColor = '#444'; }}
+      if (el) {{ el.value = \'\'; el.style.borderColor = \'#444\'; }}
     }});
   }}
   function onOverlayClick(e) {{
-    if (e.target === document.getElementById('modal-overlay')) cerrarModal();
+    if (e.target === document.getElementById(\'modal-overlay\')) cerrarModal();
   }}
   function mostrarPaso(id) {{
-    ['step-nombre','step-moneda','step-procesando'].forEach(s => {{
-      document.getElementById(s).classList.remove('active');
+    [\'step-nombre\',\'step-moneda\',\'step-procesando\'].forEach(s => {{
+      document.getElementById(s).classList.remove(\'active\');
     }});
-    document.getElementById(id).classList.add('active');
+    document.getElementById(id).classList.add(\'active\');
   }}
-  function _marcarError(id) {{
-    const el = document.getElementById(id);
-    el.style.borderColor = '#ef4444';
-    el.focus();
-  }}
-  function _esEmailValido(s) {{
-    return /^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(s);
-  }}
-  function _esWhatsappValido(s) {{
-    // Acepta + y dígitos, mínimo 8 dígitos. Espacios y guiones se eliminan.
-    const limpio = s.replace(/[\\s\\-\\(\\)]/g, '');
-    return /^\\+?[0-9]{{8,15}}$/.test(limpio);
-  }}
+  function _marcarError(id) {{ const el = document.getElementById(id); el.style.borderColor = \'#ef4444\'; el.focus(); }}
+  function _esEmailValido(s) {{ return /^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(s); }}
+  function _esWhatsappValido(s) {{ const limpio = s.replace(/[\\s\\-\\(\\)]/g, \'\'); return /^\\+?[0-9]{{8,15}}$/.test(limpio); }}
   function irAPaso2() {{
-    const nombre   = document.getElementById('modal-nombre').value.trim();
-    const email    = document.getElementById('modal-email').value.trim();
-    const whatsapp = document.getElementById('modal-whatsapp').value.trim();
-
-    // Reset bordes
-    ['modal-nombre','modal-email','modal-whatsapp'].forEach(id => {{
-      document.getElementById(id).style.borderColor = '#444';
-    }});
-
-    if (!nombre)              {{ _marcarError('modal-nombre');   return; }}
-    if (!_esEmailValido(email))    {{ _marcarError('modal-email');    return; }}
-    if (!_esWhatsappValido(whatsapp)) {{ _marcarError('modal-whatsapp'); return; }}
-
-    mostrarPaso('step-moneda');
+    const nombre = document.getElementById(\'modal-nombre\').value.trim();
+    const email = document.getElementById(\'modal-email\').value.trim();
+    const whatsapp = document.getElementById(\'modal-whatsapp\').value.trim();
+    [\'modal-nombre\',\'modal-email\',\'modal-whatsapp\'].forEach(id => {{ document.getElementById(id).style.borderColor = \'#444\'; }});
+    if (!nombre) {{ _marcarError(\'modal-nombre\'); return; }}
+    if (!_esEmailValido(email)) {{ _marcarError(\'modal-email\'); return; }}
+    if (!_esWhatsappValido(whatsapp)) {{ _marcarError(\'modal-whatsapp\'); return; }}
+    mostrarPaso(\'step-moneda\');
   }}
-  function volverAPaso1() {{
-    mostrarPaso('step-nombre');
-    setTimeout(() => document.getElementById('modal-nombre').focus(), 60);
-  }}
+  function volverAPaso1() {{ mostrarPaso(\'step-nombre\'); setTimeout(() => document.getElementById(\'modal-nombre\').focus(), 60); }}
   function seleccionarMoneda(m) {{
     _moneda = m;
-    document.getElementById('opt-ars').classList.toggle('selected', m === 'ars');
-    const optUsd = document.getElementById('opt-usd');
-    if (optUsd) optUsd.classList.toggle('selected', m === 'usd');
-    const info = document.getElementById('moneda-info');
-    if (m === 'ars') {{
-      info.style.background = 'rgba(59,130,246,0.08)';
-      info.style.borderColor = 'rgba(59,130,246,0.2)';
-      info.style.color = '#93c5fd';
-      info.innerHTML = '🏦 Pagarás en <strong>pesos argentinos</strong> a través de <strong>MercadoPago</strong>.';
+    document.getElementById(\'opt-ars\').classList.toggle(\'selected\', m === \'ars\');
+    const optUsd = document.getElementById(\'opt-usd\');
+    if (optUsd) optUsd.classList.toggle(\'selected\', m === \'usd\');
+    const info = document.getElementById(\'moneda-info\');
+    if (m === \'ars\') {{
+      info.style.background = \'rgba(59,130,246,0.08)\'; info.style.borderColor = \'rgba(59,130,246,0.2)\'; info.style.color = \'#93c5fd\';
+      info.innerHTML = \'🏦 Pagarás en <strong>pesos argentinos</strong> a través de <strong>MercadoPago</strong>.\';
     }} else {{
-      info.style.background = 'rgba(0,156,222,0.08)';
-      info.style.borderColor = 'rgba(0,156,222,0.25)';
-      info.style.color = '#7dd3fc';
-      info.innerHTML = '💵 Pagarás en <strong>dólares USD</strong> a través de <strong>PayPal</strong>. Ideal para pagos internacionales.';
+      info.style.background = \'rgba(0,156,222,0.08)\'; info.style.borderColor = \'rgba(0,156,222,0.25)\'; info.style.color = \'#7dd3fc\';
+      info.innerHTML = \'💵 Pagarás en <strong>dólares USD</strong> a través de <strong>PayPal</strong>.\';
     }}
   }}
   async function confirmarContratacion() {{
-    const nombre   = document.getElementById('modal-nombre').value.trim();
-    const email    = document.getElementById('modal-email').value.trim();
-    const whatsapp = document.getElementById('modal-whatsapp').value.trim();
+    const nombre = document.getElementById(\'modal-nombre\').value.trim();
+    const email = document.getElementById(\'modal-email\').value.trim();
+    const whatsapp = document.getElementById(\'modal-whatsapp\').value.trim();
     if (!nombre || !email || !whatsapp) {{ volverAPaso1(); return; }}
-    mostrarPaso('step-procesando');
+    mostrarPaso(\'step-procesando\');
     try {{
       const url = `/checkout/crear?plan=${{encodeURIComponent(_plan)}}&ref_code=${{_ref}}&nombre_cliente=${{encodeURIComponent(nombre)}}&moneda=${{_moneda}}&cliente_email=${{encodeURIComponent(email)}}&cliente_whatsapp=${{encodeURIComponent(whatsapp)}}`;
-      const res = await fetch(url, {{method:'POST'}});
+      const res = await fetch(url, {{method:\'POST\'}});
       let data;
       try {{ data = await res.json(); }} catch(_) {{ data = {{}}; }}
       if (!res.ok) {{
-        const msg = data.detail || 'Error al generar el link de pago. Intentá de nuevo.';
-        alert(msg);
-        mostrarPaso('step-moneda');
+        alert(data.detail || \'Error al generar el link de pago. Intentá de nuevo.\');
+        mostrarPaso(\'step-moneda\');
       }} else if (data.checkout_url) {{
         window.location.href = data.checkout_url;
       }} else {{
-        alert('Error al generar el link de pago. Intentá de nuevo.');
-        mostrarPaso('step-moneda');
+        alert(\'Error al generar el link de pago. Intentá de nuevo.\');
+        mostrarPaso(\'step-moneda\');
       }}
     }} catch(e) {{
-      alert('Error de conexión. Revisá tu conexión e intentá de nuevo.');
-      mostrarPaso('step-moneda');
+      alert(\'Error de conexión. Revisá tu conexión e intentá de nuevo.\');
+      mostrarPaso(\'step-moneda\');
     }}
   }}
 </script>
 </body></html>"""
+
     return HTMLResponse(html)
 
 

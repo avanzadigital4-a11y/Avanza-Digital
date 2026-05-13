@@ -3,9 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Auditoría Digital Gratuita | Avanza Digital</title>
-    <meta name="description" content="Auditá el estado digital de tu empresa en segundos. Velocidad real, SEO, captación de leads y más. Herramienta gratuita de Avanza Digital.">
+    <title>Auditoría Digital Gratuita para tu Empresa o Ecommerce | Avanza Digital</title>
+    <meta name="description" content="Auditoría digital gratuita para tu empresa o ecommerce. Analizá velocidad, SEO, captación de leads y conversión en segundos. Sin registro. Resultados instantáneos.">
     <link rel="canonical" href="https://avanzadigital.digital/auditoria-digital.html">
+    <meta name="keywords" content="auditoría digital gratuita, auditoría ecommerce gratuita, auditoría web gratuita argentina, analizar mi sitio web gratis, diagnóstico digital empresa argentina">
+    <meta name="geo.region" content="AR-S" />
+    <meta name="geo.placename" content="Santa Fe" />
+    <meta property="og:title" content="Auditoría Digital Gratuita para tu Empresa o Ecommerce | Avanza Digital">
+    <meta property="og:description" content="Analizá velocidad, SEO y captación de leads de tu sitio en segundos. Herramienta gratuita, sin registro.">
+    <meta property="og:url" content="https://avanzadigital.digital/auditoria-digital.html">
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><path d=%22M10 20 L40 50 L10 80 L30 80 L60 50 L30 20 Z%22 fill=%22%230044cc%22/><path d=%22M45 20 L75 50 L45 80 L65 80 L95 50 L65 20 Z%22 fill=%22%2300cccc%22/></svg>">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -196,6 +202,35 @@
         ml('account', '2246059');
     </script>
     <!-- End MailerLite Universal -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "HowTo",
+      "name": "Cómo hacer una auditoría digital gratuita de tu empresa",
+      "description": "Analizá el estado digital de tu empresa o ecommerce en segundos con la herramienta gratuita de Avanza Digital.",
+      "step": [
+        {
+          "@type": "HowToStep",
+          "name": "Ingresá tu dominio",
+          "text": "Escribí la URL de tu sitio web o ecommerce en el campo de búsqueda."
+        },
+        {
+          "@type": "HowToStep",
+          "name": "Ejecutá el análisis",
+          "text": "La herramienta analiza velocidad, SEO on-page, captación de leads y estado técnico en tiempo real."
+        },
+        {
+          "@type": "HowToStep",
+          "name": "Revisá los resultados",
+          "text": "Obtenés un informe con puntuación y recomendaciones priorizadas para mejorar tu presencia digital."
+        }
+      ],
+      "tool": {
+        "@type": "HowToTool",
+        "name": "Auditoría Digital Avanza Digital"
+      }
+    }
+    </script>
 </head>
 <body>
 
@@ -333,7 +368,7 @@
         <h2>¿Querés resolver estos<br>problemas de raíz?</h2>
         <p>Avanza Digital convierte estos hallazgos en un sistema de ventas B2B operativo.<br>Diagnóstico gratuito, propuesta en 24hs.</p>
         <div class="cta-buttons">
-            <a href="https://wa.me/5493424392759" target="_blank" class="btn-primary-cta"><i class="fab fa-whatsapp"></i>Hablar con un especialista</a>
+            <a href="https://wa.me/5493424392759" target="_blank" class="btn-primary-cta" id="btn-especialista"><i class="fab fa-whatsapp"></i>Hablar con un especialista</a>
             <a href="index.html#servicios" class="btn-secondary-cta">Ver planes <i class="fas fa-arrow-right"></i></a>
         </div>
     </div>
@@ -886,7 +921,24 @@ document.getElementById('domain-input').addEventListener('keydown',e=>{if(e.key=
     const params = new URLSearchParams(window.location.search);
     const domain = params.get('domain');
     const ref = params.get('ref');
-    if(ref) window._auditRef = ref; // guardamos el aliado para mandarlo con el lead
+    if(ref) {
+        window._auditRef = ref; // guardamos el aliado para mandarlo con el lead
+
+        // Actualizar el botón "Hablar con un especialista" con el WA del aliado
+        fetch(`https://avanza-digital-production.up.railway.app/aliados/wa-publica/${encodeURIComponent(ref)}`)
+            .then(r => r.json())
+            .then(data => {
+                const btn = document.getElementById('btn-especialista');
+                if(btn && data.whatsapp) {
+                    btn.href = `https://wa.me/${data.whatsapp}`;
+                    // Si es un aliado real (no fallback), personalizar el texto
+                    if(data.es_aliado) {
+                        btn.title = `Hablar con ${data.nombre}`;
+                    }
+                }
+            })
+            .catch(() => {}); // silencioso: el botón ya tiene el WA de Avanza como fallback
+    }
     if(domain){
         document.getElementById('domain-input').value = domain;
         setTimeout(startAudit, 300);

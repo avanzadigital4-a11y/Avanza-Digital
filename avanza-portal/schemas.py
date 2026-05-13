@@ -45,7 +45,7 @@ class CambiarUsernameIn(_Base):
 
 
 class LoginAliadoIn(_Base):
-    codigo: str = Field(..., min_length=3, max_length=40)
+    codigo: str = Field(..., min_length=3, max_length=200)  # acepta código OR email
     password: str = Field(..., min_length=1, max_length=200)
 
 
