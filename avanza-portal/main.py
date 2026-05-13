@@ -214,6 +214,12 @@ DATOS_USD = {
     "notas":          os.environ.get("USD_NOTAS",        "Enviá el monto exacto en USD. Recibís los créditos cuando confirmamos el pago (24hs hábiles)."),
 }
 
+# ─── USDT/USDC para clientes finales ─────────────────────────────────────────
+# USD_DESTINO y USD_RED configuran el método de pago cripto en la landing
+# pública /p/{ref_code}. Si USD_DESTINO no está definido, cae a USD_DESTINATARIO.
+USDT_DIRECCION = os.environ.get("USD_DESTINO", os.environ.get("USD_DESTINATARIO", ""))
+USDT_RED       = os.environ.get("USD_RED", "TRC20")
+
 
 def enviar_email(destinatario: str, asunto: str, cuerpo_html: str):
     """Envía un email con cadena de fallback: Brevo → Resend → SMTP → log.
@@ -6227,6 +6233,21 @@ def admin_ocultar_post(id: int, ocultar: bool = True, db: Session = Depends(get_
 
 from fastapi.responses import HTMLResponse, RedirectResponse
 
+@app.get("/config/usdt")
+def config_usdt_publico():
+    """Endpoint público que devuelve la configuración de pago en USDT/USDC.
+    Usado por el portal de aliados en el cotizador para mostrar instrucciones al cliente.
+    No expone datos sensibles (solo la dirección de billetera y la red, que el cliente
+    necesita ver para transferir).
+    """
+    return {
+        "activo":    bool(USDT_DIRECCION),
+        "direccion": USDT_DIRECCION,
+        "red":       USDT_RED or "TRC20",
+        "metodo":    os.environ.get("USD_METODO", "USDT"),
+    }
+
+
 @app.get("/alias/{ref_code}")
 def alias_redirect(ref_code: str, db: Session = Depends(get_db)):
     """Redirige /alias/{ref_code} → /?ref={ref_code} si el aliado existe.
@@ -6246,7 +6267,7 @@ def portal_publico_aliado(ref_code: str, db: Session = Depends(get_db)):
         return HTMLResponse("<h1>Portal no disponible</h1>", status_code=404)
 
     titular = a.portal_publico_titular or a.nombre
-    bio = a.portal_publico_bio or f"Asesor digital — Partner de Avanza Digital"
+    bio = a.portal_publico_bio or (f"Asesor digital · {a.ciudad}" if getattr(a, 'ciudad', None) else "Asesor digital — Partner de Avanza Digital")
 
     # WhatsApp de contacto: del aliado si tiene, si no el de Avanza
     _wa_raw = (a.whatsapp or "").strip().replace("+", "").replace(" ", "").replace("-", "").replace("(", "").replace(")", "")
@@ -6326,6 +6347,21 @@ def portal_publico_aliado(ref_code: str, db: Session = Depends(get_db)):
     _btn_usd_inactivo = '<button class="moneda-btn" style="opacity:.35;cursor:not-allowed;" disabled><div class="icon">💵</div><div class="label">USD no disponible</div><div class="sublabel">Próximamente</div></button>'
     _btn_usd = _btn_usd_activo if paypal_activo else _btn_usd_inactivo
 
+    usdt_activo = bool(USDT_DIRECCION)
+    _btn_usdt = (
+        '<button class="moneda-btn usdt" id="opt-usdt" onclick="seleccionarMoneda(\'usdt\')">'
+        '<div class="icon">🪙</div><div class="label">USDT / USDC</div>'
+        f'<div class="sublabel">{USDT_RED or "TRC20"}</div></button>'
+        if usdt_activo else
+        '<button class="moneda-btn" style="opacity:.35;cursor:not-allowed;" disabled>'
+        '<div class="icon">🪙</div><div class="label">USDT no disponible</div>'
+        '<div class="sublabel">Próximamente</div></button>'
+    )
+    # Precio de cada plan para mostrarlo en el step de USDT
+    _plan_precios_js = ", ".join(f'"{k}": {int(v)}' for k, v in PLANES.items())
+    _usdt_dir_js = USDT_DIRECCION.replace("'", "\\'")
+    _usdt_red_js = (USDT_RED or "TRC20").replace("'", "\\'")
+
     html = f"""<!DOCTYPE html>
 <html lang="es"><head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
@@ -6387,7 +6423,8 @@ body{{font-family:Inter,sans-serif;background:#050505;color:#e2e8f0;line-height:
 .modal-box{{background:#111;border:1px solid #2a2a2a;border-radius:16px;padding:28px;width:100%;max-width:420px;}}
 .step{{display:none;}}
 .step.active{{display:block;}}
-.moneda-options{{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:16px 0;}}
+.moneda-options{{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin:16px 0;}}
+@media(max-width:420px){{.moneda-options{{grid-template-columns:1fr;}}}}
 .moneda-btn{{padding:16px 12px;border-radius:10px;border:2px solid #2a2a2a;background:#1a1a1a;color:#e2e8f0;cursor:pointer;text-align:center;transition:all .2s;font-family:Inter,sans-serif;}}
 .moneda-btn:hover{{border-color:#3b82f6;background:rgba(59,130,246,0.08);}}
 .moneda-btn.selected{{border-color:#3b82f6;background:rgba(59,130,246,0.12);}}
@@ -6395,6 +6432,8 @@ body{{font-family:Inter,sans-serif;background:#050505;color:#e2e8f0;line-height:
 .moneda-btn .label{{font-weight:800;font-size:.9rem;}}
 .moneda-btn .sublabel{{font-size:.72rem;color:#a1a1aa;margin-top:2px;}}
 .moneda-btn.paypal .icon{{color:#009cde;}}
+.moneda-btn.usdt .icon{{color:#26a17b;}}
+.moneda-btn.usdt.selected{{border-color:#26a17b;background:rgba(38,161,123,0.12);}}
 .btn-cancel{{flex:1;padding:12px;border-radius:8px;border:1px solid #444;background:transparent;color:#aaa;cursor:pointer;font-size:.95rem;font-family:Inter,sans-serif;}}
 .btn-primary{{flex:1;padding:12px;border-radius:8px;border:none;background:#3b82f6;color:#fff;cursor:pointer;font-weight:700;font-size:.95rem;font-family:Inter,sans-serif;}}
 .btn-primary:disabled{{opacity:.6;cursor:not-allowed;}}
@@ -6539,6 +6578,7 @@ input[type=text]:focus{{outline:none;border-color:#3b82f6;}}
           <div class="icon">🏦</div><div class="label">Pesos ARS</div><div class="sublabel">MercadoPago</div>
         </button>
         {_btn_usd}
+        {_btn_usdt}
       </div>
       <div id="moneda-info" style="background:rgba(59,130,246,0.08);border:1px solid rgba(59,130,246,0.2);border-radius:8px;padding:10px 14px;font-size:.82rem;color:#93c5fd;margin-bottom:14px;">
         🏦 Pagarás en <strong>pesos argentinos</strong> a través de <strong>MercadoPago</strong>.
@@ -6553,10 +6593,45 @@ input[type=text]:focus{{outline:none;border-color:#3b82f6;}}
       <p style="font-weight:700;font-size:1rem;margin:0 0 6px;">Generando tu link de pago…</p>
       <p style="color:#a1a1aa;font-size:.85rem;margin:0;">Serás redirigido en segundos.</p>
     </div>
+    <div id="step-usdt" class="step" style="padding:4px 0;">
+      <h3 style="margin:0 0 6px;font-size:1.05rem;font-weight:800;">🪙 Instrucciones de pago en USDT/USDC</h3>
+      <p style="color:#a1a1aa;font-size:.82rem;margin:0 0 16px;">Realizá la transferencia y avisanos por WhatsApp para confirmar.</p>
+      <div style="background:#1a1a1a;border:1px solid rgba(38,161,123,0.35);border-radius:10px;padding:14px;margin-bottom:14px;">
+        <div style="display:flex;gap:10px;align-items:center;margin-bottom:10px;flex-wrap:wrap;">
+          <span style="font-size:.72rem;font-weight:700;color:#a1a1aa;text-transform:uppercase;letter-spacing:1px;min-width:56px;">Red</span>
+          <span id="modal-usdt-red" style="color:#26a17b;font-weight:800;font-size:.9rem;background:rgba(38,161,123,0.1);border:1px solid rgba(38,161,123,0.3);padding:3px 10px;border-radius:20px;">{_usdt_red_js}</span>
+        </div>
+        <div style="margin-bottom:10px;">
+          <div style="font-size:.72rem;font-weight:700;color:#a1a1aa;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;">Monto exacto</div>
+          <div id="modal-usdt-monto" style="font-size:1.4rem;font-weight:900;color:#e2e8f0;">USD —</div>
+        </div>
+        <div>
+          <div style="font-size:.72rem;font-weight:700;color:#a1a1aa;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;">Dirección de billetera</div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+            <input type="text" id="modal-usdt-dir" value="{_usdt_dir_js}" readonly style="flex:1;min-width:140px;font-family:monospace;font-size:.75rem;background:#111;border:1px solid rgba(38,161,123,0.2);border-radius:6px;padding:9px;">
+            <button onclick="copiarDirUSDT()" style="background:rgba(38,161,123,0.15);color:#26a17b;border:1px solid rgba(38,161,123,0.35);border-radius:6px;padding:0 12px;height:36px;font-weight:700;cursor:pointer;font-size:.8rem;white-space:nowrap;">
+              <i class="fa-solid fa-copy"></i> Copiar
+            </button>
+          </div>
+        </div>
+      </div>
+      <p style="font-size:.78rem;color:#71717a;margin:0 0 14px;line-height:1.5;padding:10px;background:rgba(0,0,0,0.4);border-radius:8px;border-left:2px solid rgba(38,161,123,0.5);">
+        Enviá el monto exacto y avisale a <strong style="color:#e2e8f0;">{titular}</strong> por WhatsApp en cuanto realices la transferencia. Tu plan se activa en cuanto Avanza confirma el pago (hasta 24hs hábiles).
+      </p>
+      <div style="display:flex;gap:10px;">
+        <button class="btn-cancel" onclick="volverAPaso1()">← Volver</button>
+        <a href="https://wa.me/{wa_contacto}?text=Hola%2C+realic%C3%A9+la+transferencia+en+USDT+para+el+%7B%7Bplan%7D%7D" id="modal-usdt-wa-btn"
+           target="_blank"
+           style="flex:1;padding:12px;border-radius:8px;border:none;background:#25d366;color:#fff;cursor:pointer;font-weight:700;font-size:.95rem;text-decoration:none;text-align:center;display:flex;align-items:center;justify-content:center;gap:6px;">
+          <i class="fa-brands fa-whatsapp"></i> Confirmar por WhatsApp
+        </a>
+      </div>
+    </div>
   </div>
 </div>
 
 <script>
+  const _PLAN_PRECIOS = {{{_plan_precios_js}}};
   let _plan = \'\', _ref = \'\', _moneda = \'ars\';
   function abrirModal(plan, ref) {{
     _plan = plan; _ref = ref; _moneda = \'ars\';
@@ -6575,7 +6650,7 @@ input[type=text]:focus{{outline:none;border-color:#3b82f6;}}
     if (e.target === document.getElementById(\'modal-overlay\')) cerrarModal();
   }}
   function mostrarPaso(id) {{
-    [\'step-nombre\',\'step-moneda\',\'step-procesando\'].forEach(s => {{
+    [\'step-nombre\',\'step-moneda\',\'step-procesando\',\'step-usdt\'].forEach(s => {{
       document.getElementById(s).classList.remove(\'active\');
     }});
     document.getElementById(id).classList.add(\'active\');
@@ -6599,20 +6674,50 @@ input[type=text]:focus{{outline:none;border-color:#3b82f6;}}
     document.getElementById(\'opt-ars\').classList.toggle(\'selected\', m === \'ars\');
     const optUsd = document.getElementById(\'opt-usd\');
     if (optUsd) optUsd.classList.toggle(\'selected\', m === \'usd\');
+    const optUsdt = document.getElementById(\'opt-usdt\');
+    if (optUsdt) optUsdt.classList.toggle(\'selected\', m === \'usdt\');
     const info = document.getElementById(\'moneda-info\');
     if (m === \'ars\') {{
       info.style.background = \'rgba(59,130,246,0.08)\'; info.style.borderColor = \'rgba(59,130,246,0.2)\'; info.style.color = \'#93c5fd\';
       info.innerHTML = \'🏦 Pagarás en <strong>pesos argentinos</strong> a través de <strong>MercadoPago</strong>.\';
-    }} else {{
+    }} else if (m === \'usd\') {{
       info.style.background = \'rgba(0,156,222,0.08)\'; info.style.borderColor = \'rgba(0,156,222,0.25)\'; info.style.color = \'#7dd3fc\';
       info.innerHTML = \'💵 Pagarás en <strong>dólares USD</strong> a través de <strong>PayPal</strong>.\';
+    }} else {{
+      info.style.background = \'rgba(38,161,123,0.08)\'; info.style.borderColor = \'rgba(38,161,123,0.25)\'; info.style.color = \'#6ee7b7\';
+      info.innerHTML = \'🪙 Pagarás en <strong>USDT/USDC</strong>. Transferencia directa a billetera cripto (confirmación manual en 24hs hábiles).\';
     }}
+  }}
+  function copiarDirUSDT() {{
+    const el = document.getElementById(\'modal-usdt-dir\');
+    if (!el) return;
+    navigator.clipboard.writeText(el.value).then(() => {{
+      el.style.borderColor = \'#26a17b\';
+      setTimeout(() => el.style.borderColor = \'rgba(38,161,123,0.2)\', 1500);
+    }}).catch(() => {{
+      el.select(); document.execCommand(\'copy\');
+    }});
   }}
   async function confirmarContratacion() {{
     const nombre = document.getElementById(\'modal-nombre\').value.trim();
     const email = document.getElementById(\'modal-email\').value.trim();
     const whatsapp = document.getElementById(\'modal-whatsapp\').value.trim();
     if (!nombre || !email || !whatsapp) {{ volverAPaso1(); return; }}
+
+    // Flujo USDT: mostrar instrucciones de transferencia sin checkout automático
+    if (_moneda === \'usdt\') {{
+      const precio = _PLAN_PRECIOS[_plan] || \'—\';
+      document.getElementById(\'modal-usdt-monto\').textContent = `USD ${{precio}}`;
+      // Actualizar link WA con el plan y monto
+      const waBtn = document.getElementById(\'modal-usdt-wa-btn\');
+      if (waBtn) {{
+        const texto = encodeURIComponent(`Hola, realicé la transferencia de USD ${{precio}} en USDT para el ${{_plan}} de Avanza Digital. Mi nombre: ${{nombre}}, email: ${{email}}`);
+        waBtn.href = `https://wa.me/{wa_contacto}?text=${{texto}}`;
+      }}
+      mostrarPaso(\'step-usdt\');
+      return;
+    }}
+
     mostrarPaso(\'step-procesando\');
     try {{
       const url = `/checkout/crear?plan=${{encodeURIComponent(_plan)}}&ref_code=${{_ref}}&nombre_cliente=${{encodeURIComponent(nombre)}}&moneda=${{_moneda}}&cliente_email=${{encodeURIComponent(email)}}&cliente_whatsapp=${{encodeURIComponent(whatsapp)}}`;

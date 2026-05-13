@@ -1064,7 +1064,7 @@
       <div style="background:rgba(249,115,22,0.05);border:1px solid rgba(249,115,22,0.2);border-radius:10px;padding:16px;margin-bottom:24px;display:flex;align-items:flex-start;gap:12px;">
         <input type="checkbox" id="reg-tyc" style="margin-top:3px;width:16px;height:16px;accent-color:var(--orange);flex-shrink:0;cursor:pointer;">
         <label for="reg-tyc" style="font-size:.83rem;color:var(--text-muted);cursor:pointer;line-height:1.5;">
-          Leí y acepto el <a href="https://avanza-digital.onrender.com/contrato" target="_blank" style="color:var(--orange);font-weight:700;">Acuerdo de Aliado Avanza Partner Network v3 — 2026</a>. Entiendo que actúo como referidor independiente, que debo registrar el referido antes del pago del cliente, y que la comisión se abona dentro de las 24hs del cobro.
+          Leí y acepto el <a href="https://avanza-digital.onrender.com/contrato" target="_blank" style="color:var(--orange);font-weight:700;">Acuerdo de Aliado Avanza Partner Network v3 — 2026</a>. Entiendo que actúo como referidor independiente, que debo registrar el prospecto antes del pago del cliente, y que la comisión se abona dentro de las 24hs del cobro.
         </label>
       </div>
 
@@ -1141,7 +1141,7 @@
       <!-- C2: Kit de Ventas (primer tab al entrar) -->
       <button class="tab-btn tab-canal2" onclick="cambiarTab('kit-ventas',this)" style="display:none;background:rgba(74,222,128,0.12);border-color:rgba(74,222,128,0.3);color:#4ade80;"><i class="fa-solid fa-briefcase"></i> Kit de Ventas <span style="background:#4ade80;color:#000;font-size:.6rem;font-weight:800;padding:2px 6px;border-radius:4px;margin-left:4px;">C2</span></button>
       <!-- C1: Referidos → redirige al Pipeline unificado -->
-      <button class="tab-btn tab-canal1" onclick="cambiarTab('pipeline',document.getElementById('btn-tab-pipeline'))"><i class="fa-solid fa-user-plus"></i> Referidos</button>
+      <button class="tab-btn tab-canal1" onclick="cambiarTab('pipeline',document.getElementById('btn-tab-pipeline'))"><i class="fa-solid fa-user-plus"></i> Prospectos</button>
       <!-- Pipeline unificado (ambos canales) -->
       <button class="tab-btn" id="btn-tab-pipeline" onclick="cambiarTab('pipeline',this)"><i class="fa-solid fa-bars-progress"></i> Pipeline</button>
       <!-- Ambos: Comisiones -->
@@ -1195,7 +1195,7 @@
         <a href="#" class="cp-step cp-critical" onclick="cambiarTab('pipeline', document.getElementById('btn-tab-pipeline')); return false;">
           <span class="cp-num">2</span>
           <i class="fa-solid fa-user-plus" style="color:#fca5a5;font-size:.82rem;"></i>
-          <span class="cp-label">Registrar Referido</span>
+          <span class="cp-label">Registrar prospecto</span>
           <span class="cp-badge-crit">Paso crítico</span>
         </a>
         <span class="cp-arrow"><i class="fa-solid fa-chevron-right"></i></span>
@@ -1217,7 +1217,7 @@
         <a href="#" class="cp-step cp-critical" onclick="cambiarTab('pipeline', document.getElementById('btn-tab-pipeline')); return false;">
           <span class="cp-num">2</span>
           <i class="fa-solid fa-user-plus" style="color:#fca5a5;font-size:.82rem;"></i>
-          <span class="cp-label">Registrar Referido</span>
+          <span class="cp-label">Registrar prospecto</span>
           <span class="cp-badge-crit">Paso crítico</span>
         </a>
         <span class="cp-arrow"><i class="fa-solid fa-chevron-right"></i></span>
@@ -1296,7 +1296,7 @@
         </div>
         <div class="metric-card">
           <div class="metric-icon blue"><i class="fa-solid fa-users"></i></div>
-          <div class="metric-label">Referidos activos</div>
+          <div class="metric-label">Prospectos activos</div>
           <div class="metric-value blue" id="d-refs-activos">—</div>
           <div class="metric-sub">En proceso de cierre</div>
         </div>
@@ -1370,7 +1370,7 @@
 
             <div>
               <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
-                <span style="font-size:.8rem; font-weight:600; color:var(--text);">🎯 Tasa de cierre <span style="color:var(--text-dim); font-weight:400;">(referidos → ventas)</span></span>
+                <span style="font-size:.8rem; font-weight:600; color:var(--text);">🎯 Tasa de cierre <span style="color:var(--text-dim); font-weight:400;">(prospectos → ventas)</span></span>
                 <div style="display:flex; align-items:center; gap:8px;">
                   <span id="rf-cierre-val" style="font-size:.75rem; font-weight:700; color:#c084fc;">—%</span>
                   <span style="font-size:.68rem; color:var(--text-dim);">+40 pts máx</span>
@@ -1379,7 +1379,7 @@
               <div style="height:5px; background:rgba(255,255,255,0.06); border-radius:50px; overflow:hidden;">
                 <div id="rf-cierre-bar" style="height:100%; background:linear-gradient(90deg,#c084fc,#818cf8); border-radius:50px; width:0%; transition:width .6s ease;"></div>
               </div>
-              <div style="font-size:.72rem; color:var(--text-dim); margin-top:3px;">Registrá más referidos y cerrá ventas. Con 40% o más de conversión desbloqueás el badge 🎯 Closer.</div>
+              <div style="font-size:.72rem; color:var(--text-dim); margin-top:3px;">Registrá más prospectos y cerrá ventas. Con 40% o más de conversión desbloqueás el badge 🎯 Closer.</div>
             </div>
 
             <div>
@@ -1407,7 +1407,7 @@
               <div style="height:5px; background:rgba(255,255,255,0.06); border-radius:50px; overflow:hidden;">
                 <div id="rf-activo-bar" style="height:100%; background:linear-gradient(90deg,#c084fc,#818cf8); border-radius:50px; width:0%; transition:width .6s ease;"></div>
               </div>
-              <div style="font-size:.72rem; color:var(--text-dim); margin-top:3px;">Entrá al portal, registrá referidos o cerrá ventas dentro del último mes para mantener activos los 10 puntos.</div>
+              <div style="font-size:.72rem; color:var(--text-dim); margin-top:3px;">Entrá al portal, registrá prospectos o cerrá ventas dentro del último mes para mantener activos los 10 puntos.</div>
             </div>
 
             <div>
@@ -1505,6 +1505,57 @@
           <div class="ref-url" id="d-perfillink" style="color:var(--text);">Cargando...</div>
         </div>
         <button class="btn-copy" style="background:var(--primary);color:#fff;" onclick="copiarPerfilLink()"><i class="fa-solid fa-copy"></i> Copiar</button>
+      </div>
+
+      <!-- BLOQUE EDITOR PERFIL PÚBLICO -->
+      <div id="perfil-editor-card" class="bento-box" style="display:none; margin-bottom:24px; border-color:rgba(59,130,246,0.25);">
+        <div style="display:flex; align-items:center; gap:10px; margin-bottom:16px;">
+          <i class="fa-solid fa-pen-to-square" style="color:var(--primary); font-size:1rem;"></i>
+          <h3 style="font-size:0.95rem; font-weight:700;">Personalizá tu página pública</h3>
+          <span style="font-size:.68rem; font-weight:800; text-transform:uppercase; letter-spacing:1px; color:var(--primary); background:rgba(59,130,246,0.12); border:1px solid rgba(59,130,246,0.2); padding:2px 8px; border-radius:50px;">Visible en /p/tu-codigo</span>
+        </div>
+
+        <div style="display:flex; flex-direction:column; gap:14px;">
+          <!-- Título profesional -->
+          <div>
+            <label style="display:block; font-size:.78rem; font-weight:700; color:var(--text-muted); text-transform:uppercase; letter-spacing:1px; margin-bottom:6px;">
+              Título profesional <span style="color:var(--text-dim); font-weight:400; text-transform:none; letter-spacing:0;">· ej: "Consultor contable · Rosario"</span>
+            </label>
+            <input id="pp-titular" type="text" maxlength="120" placeholder="Consultor contable · Rosario"
+              style="width:100%; background:rgba(255,255,255,0.05); border:1px solid var(--border); border-radius:var(--radius-sm); padding:11px 14px; color:var(--text); font-family:'Inter',sans-serif; font-size:.9rem; outline:none; transition:border-color .2s;"
+              onfocus="this.style.borderColor='var(--primary)'" onblur="this.style.borderColor='var(--border)'"
+              oninput="document.getElementById('pp-titular-count').textContent=this.value.length">
+            <div style="text-align:right; font-size:.72rem; color:var(--text-dim); margin-top:4px;">
+              <span id="pp-titular-count">0</span>/120
+            </div>
+          </div>
+
+          <!-- Bio -->
+          <div>
+            <label style="display:block; font-size:.78rem; font-weight:700; color:var(--text-muted); text-transform:uppercase; letter-spacing:1px; margin-bottom:6px;">
+              Presentación <span style="color:var(--text-dim); font-weight:400; text-transform:none; letter-spacing:0;">· 2-3 líneas sobre vos y lo que ofrecés</span>
+            </label>
+            <textarea id="pp-bio" maxlength="500" rows="3" placeholder="Ayudo a empresas de la región a conseguir más clientes con sistemas digitales. Trabajo con pymes industriales, de servicios y comercio desde hace 8 años."
+              style="width:100%; background:rgba(255,255,255,0.05); border:1px solid var(--border); border-radius:var(--radius-sm); padding:11px 14px; color:var(--text); font-family:'Inter',sans-serif; font-size:.9rem; outline:none; resize:vertical; min-height:80px; transition:border-color .2s; line-height:1.5;"
+              onfocus="this.style.borderColor='var(--primary)'" onblur="this.style.borderColor='var(--border)'"
+              oninput="document.getElementById('pp-bio-count').textContent=this.value.length"></textarea>
+            <div style="text-align:right; font-size:.72rem; color:var(--text-dim); margin-top:4px;">
+              <span id="pp-bio-count">0</span>/500
+            </div>
+          </div>
+
+          <!-- Acciones -->
+          <div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
+            <button onclick="guardarPortalPublico()"
+              style="background:var(--primary); color:#fff; border:none; border-radius:var(--radius-sm); padding:10px 22px; font-size:.88rem; font-weight:700; font-family:'Inter',sans-serif; cursor:pointer; display:inline-flex; align-items:center; gap:8px; transition:background .2s;"
+              onmouseover="this.style.background='var(--primary-h)'" onmouseout="this.style.background='var(--primary)'">
+              <i class="fa-solid fa-floppy-disk"></i> Guardar
+            </button>
+            <span id="pp-guardado-msg" style="display:none; font-size:.82rem; font-weight:700; color:var(--green); display:none; align-items:center; gap:6px;">
+              <i class="fa-solid fa-circle-check"></i> ¡Guardado!
+            </span>
+          </div>
+        </div>
       </div>
 
       <!-- ONBOARDING CHECKLIST -->
@@ -2034,6 +2085,57 @@
                     <i class="fa-brands fa-paypal"></i> Generar link en dólares (PayPal)
                   </button>
                 </div>
+                <div style="margin-top:10px;">
+                  <button id="btn-checkout-usdt" onclick="mostrarInstruccionesUSDT()" style="background:linear-gradient(135deg,rgba(247,147,26,0.25),rgba(247,147,26,0.12)); color:#f7931a; border:1px solid rgba(247,147,26,0.4); border-radius:8px; padding:14px; font-weight:800; cursor:pointer; font-size:0.88rem; display:flex; align-items:center; justify-content:center; gap:8px; width:100%; transition:all 0.2s;">
+                    <i class="fa-solid fa-circle-dollar-to-slot"></i> Generar instrucciones USDT/USDC
+                  </button>
+                </div>
+
+                <!-- Panel de instrucciones USDT (oculto por defecto) -->
+                <div id="cot-usdt-instrucciones" style="display:none; margin-top:14px; padding:16px; background:rgba(247,147,26,0.05); border:1px solid rgba(247,147,26,0.25); border-radius:10px;">
+                  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; flex-wrap:wrap; gap:8px;">
+                    <div style="font-size:0.82rem; font-weight:700; color:#f7931a;">
+                      <i class="fa-solid fa-circle-check"></i> Instrucciones de pago · USDT/USDC
+                    </div>
+                    <button onclick="document.getElementById('cot-usdt-instrucciones').style.display='none'" style="background:transparent; border:none; color:var(--text-dim); cursor:pointer; font-size:0.75rem;">✕ Cerrar</button>
+                  </div>
+
+                  <div id="cot-usdt-loading" style="color:var(--text-muted); font-size:0.85rem; text-align:center; padding:10px 0;">
+                    <i class="fa-solid fa-spinner fa-spin"></i> Cargando datos de pago…
+                  </div>
+
+                  <div id="cot-usdt-content" style="display:none;">
+                    <!-- Red -->
+                    <div style="display:flex; align-items:center; gap:8px; margin-bottom:10px;">
+                      <span style="font-size:0.72rem; font-weight:700; color:var(--text-dim); text-transform:uppercase; letter-spacing:1px; min-width:60px;">Red</span>
+                      <span id="cot-usdt-red" style="font-size:0.9rem; font-weight:800; color:#f7931a; background:rgba(247,147,26,0.1); border:1px solid rgba(247,147,26,0.25); padding:3px 10px; border-radius:20px;">—</span>
+                    </div>
+                    <!-- Dirección -->
+                    <div style="margin-bottom:10px;">
+                      <div style="font-size:0.72rem; font-weight:700; color:var(--text-dim); text-transform:uppercase; letter-spacing:1px; margin-bottom:6px;">Dirección de billetera</div>
+                      <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
+                        <input type="text" id="cot-usdt-direccion" readonly style="flex:1; min-width:200px; background:rgba(0,0,0,0.5); border:1px solid rgba(247,147,26,0.2); border-radius:6px; padding:10px; color:var(--text); font-family:monospace; font-size:0.78rem; outline:none;">
+                        <button onclick="copiarDireccionUSDT()" style="background:rgba(247,147,26,0.15); color:#f7931a; border:1px solid rgba(247,147,26,0.35); border-radius:6px; padding:0 14px; height:38px; font-weight:700; cursor:pointer; font-size:0.78rem; white-space:nowrap; transition:all 0.2s;">
+                          <i class="fa-solid fa-copy"></i> Copiar
+                        </button>
+                      </div>
+                    </div>
+                    <!-- Mensaje WhatsApp -->
+                    <div style="margin-bottom:12px;">
+                      <div style="font-size:0.72rem; font-weight:700; color:var(--text-dim); text-transform:uppercase; letter-spacing:1px; margin-bottom:6px;">Mensaje listo para WhatsApp</div>
+                      <textarea id="cot-usdt-wpp-msg" readonly rows="5" style="width:100%; background:rgba(0,0,0,0.4); border:1px solid rgba(255,255,255,0.08); border-radius:6px; padding:10px; color:var(--text-muted); font-size:0.78rem; line-height:1.5; resize:none; outline:none; font-family:inherit;"></textarea>
+                      <div style="display:flex; gap:8px; flex-wrap:wrap; margin-top:8px;">
+                        <button onclick="copiarMensajeUSDT()" style="flex:1; background:rgba(37,211,102,0.1); color:#25d366; border:1px solid rgba(37,211,102,0.3); border-radius:6px; padding:9px 14px; font-weight:700; cursor:pointer; font-size:0.8rem; display:flex; align-items:center; justify-content:center; gap:6px; transition:all 0.2s;">
+                          <i class="fa-solid fa-copy"></i> Copiar mensaje
+                        </button>
+                      </div>
+                    </div>
+                    <div style="font-size:0.75rem; color:var(--text-dim); line-height:1.5; padding:10px; background:rgba(0,0,0,0.3); border-radius:6px; border-left:2px solid rgba(247,147,26,0.4);">
+                      <i class="fa-solid fa-triangle-exclamation" style="color:#f7931a; margin-right:4px;"></i>
+                      <strong style="color:var(--text-muted);">Flujo manual:</strong> el cliente te avisa cuando transfiere. Vos confirmás el pago al admin de Avanza por WhatsApp para que lo procesen. La comisión se acredita igual que con los otros métodos.
+                    </div>
+                  </div>
+                </div>
 
                 <!-- Resultado de link generado con expiración -->
                 <div id="cot-link-generado" style="display:none; margin-top:14px; padding:14px; background:rgba(74,222,128,0.05); border:1px solid rgba(74,222,128,0.2); border-radius:8px;">
@@ -2113,14 +2215,14 @@
     </div>
 
     <!-- ══════════════════════════════════════════════════════════════════════
-         TAB PIPELINE UNIFICADO — Prospectos → Referidos → Ventas
+         TAB PIPELINE UNIFICADO — Prospectos → Prospectos registrados → Ventas
     ══════════════════════════════════════════════════════════════════════ -->
     <div id="tab-pipeline" class="tab-panel">
 
       <div class="welcome-header">
         <div>
           <div class="welcome-name">Pipeline <span style="font-size:1rem;font-weight:500;color:var(--text-muted);">— de prospecto a cobro en un solo lugar</span></div>
-          <div class="welcome-sub">Prospectos → Registrar referido (paso crítico) → Ventas confirmadas</div>
+          <div class="welcome-sub">Prospectos → Registrar prospecto (paso crítico) → Ventas confirmadas</div>
         </div>
       </div>
 
@@ -2212,14 +2314,14 @@
       <!-- ── STAGE 2: REFERIDOS (PASO CRÍTICO) ── -->
       <div class="pipeline-section-header">
         <div style="display:flex;align-items:center;gap:10px;">
-          <span class="pipeline-stage-label stage-2"><i class="fa-solid fa-triangle-exclamation"></i> Paso 2 — Registrar Referido</span>
+          <span class="pipeline-stage-label stage-2"><i class="fa-solid fa-triangle-exclamation"></i> Paso 2 — Registrar Prospecto</span>
           <span style="font-size:.8rem;color:#fca5a5;font-weight:600;">⚠ Hacé esto ANTES de que el cliente pague</span>
         </div>
       </div>
 
       <div class="form-wrap" style="margin-bottom:0;">
         <div class="bento-box" style="border-color:rgba(239,68,68,0.3);background:linear-gradient(135deg,rgba(239,68,68,0.06),transparent);">
-          <div class="form-title"><i class="fa-solid fa-user-plus" style="color:#ef4444;"></i> &nbsp;Registrar un referido</div>
+          <div class="form-title"><i class="fa-solid fa-user-plus" style="color:#ef4444;"></i> &nbsp;Registrar un prospecto</div>
           <div class="form-desc">Completá este formulario <strong style="color:white;">antes de que el cliente pague</strong>. Es el único requisito obligatorio del contrato para que la venta te sea atribuida.</div>
           <div class="alert-box">
             <i class="fa-solid fa-triangle-exclamation"></i>
@@ -2244,14 +2346,14 @@
             <textarea id="pl-ref-notas" rows="3" placeholder="Ej: El cliente evalúa Plan Pro e Industrial, pide demo esta semana..."></textarea>
           </div>
           <button class="btn-primary" id="pl-btn-ref" onclick="plRegistrarReferido()" style="max-width:300px;background:#ef4444;border-color:#ef4444;">
-            <i class="fa-solid fa-paper-plane"></i> Registrar referido ahora
+            <i class="fa-solid fa-paper-plane"></i> Registrar prospecto ahora
           </button>
           <div class="success-box" id="pl-ref-success"></div>
         </div>
       </div>
 
       <div class="table-wrap" style="margin-top:16px;margin-bottom:0;">
-        <div class="table-head"><h3><i class="fa-solid fa-list-check" style="color:var(--primary);"></i> &nbsp;Mis referidos registrados</h3></div>
+        <div class="table-head"><h3><i class="fa-solid fa-list-check" style="color:var(--primary);"></i> &nbsp;Mis prospectos registrados</h3></div>
         <div id="pl-tabla-referidos"></div>
       </div>
 
@@ -2284,7 +2386,7 @@
     <div id="tab-referidos" class="tab-panel">
       <div class="form-wrap">
         <div class="bento-box">
-          <div class="form-title"><i class="fa-solid fa-user-plus" style="color:var(--primary);"></i> &nbsp;Registrar un referido</div>
+          <div class="form-title"><i class="fa-solid fa-user-plus" style="color:var(--primary);"></i> &nbsp;Registrar un prospecto</div>
           <div class="form-desc">Completá este formulario <strong style="color:white;">antes de que el cliente pague</strong>. Es el único requisito obligatorio del contrato para que la venta te sea atribuida.</div>
           <div class="alert-box">
             <i class="fa-solid fa-triangle-exclamation"></i>
@@ -2309,13 +2411,13 @@
             <textarea id="ref-notas" rows="3" placeholder="Ej: El cliente evalúa Plan Pro e Industrial, pide demo esta semana..."></textarea>
           </div>
           <button class="btn-primary" id="btn-ref" onclick="registrarReferido()" style="max-width:300px;">
-            <i class="fa-solid fa-paper-plane"></i> Registrar referido ahora
+            <i class="fa-solid fa-paper-plane"></i> Registrar prospecto ahora
           </button>
           <div class="success-box" id="ref-success"></div>
         </div>
       </div>
       <div class="table-wrap">
-        <div class="table-head"><h3><i class="fa-solid fa-list-check" style="color:var(--primary);"></i> &nbsp;Mis referidos registrados</h3></div>
+        <div class="table-head"><h3><i class="fa-solid fa-list-check" style="color:var(--primary);"></i> &nbsp;Mis prospectos registrados</h3></div>
         <div id="tabla-referidos"></div>
       </div>
     </div>
@@ -2689,8 +2791,8 @@
           <div class="onboard-step">
             <div class="onboard-step-num">2</div>
             <div>
-              <div class="onboard-step-title">Registrá el referido ANTES del pago</div>
-              <div class="onboard-step-desc">Es el único paso crítico. Usá la pestaña <strong>Referidos</strong> antes de que el cliente transfiera.</div>
+              <div class="onboard-step-title">Registrá el prospecto ANTES del pago</div>
+              <div class="onboard-step-desc">Es el único paso crítico. Usá la pestaña <strong>Prospectos</strong> antes de que el cliente transfiera.</div>
             </div>
           </div>
           <div class="onboard-step">
@@ -4470,7 +4572,7 @@ function getMotivationalMsg(aliado) {
   if (v6 >= 3) return { icon:'🔥', text:`<strong>${v6} ventas</strong> en los últimos 6 meses. Estás a ${5-v6} de nivel ELITE y 20% de comisión.` };
   if (v6 === 2) return { icon:'⚡', text:`¡Bien! ${v6} ventas cerradas. <strong>Solo 1 más</strong> para llegar a PREMIUM (15%).` };
   if (v6 === 1) return { icon:'💡', text:`<strong>Primera venta lograda.</strong> Agregá 1 más para subir a SILVER y ganar más en cada cierre.` };
-  if (refs > 0) return { icon:'👀', text:`Tenés <strong>${refs} referido${refs>1?'s':''} en proceso</strong>. El próximo cierre puede ser el tuyo. ¡Hacé seguimiento!` };
+  if (refs > 0) return { icon:'👀', text:`Tenés <strong>${refs} prospecto${refs>1?'s':''} en proceso</strong>. El próximo cierre puede ser el tuyo. ¡Hacé seguimiento!` };
   return { icon:'🚀', text:`<strong>Prospectá hoy mismo.</strong> Usá tu enlace de auditoría y envíaselo a empresas industriales. ¡Funciona!` };
 }
 
@@ -4511,11 +4613,27 @@ function renderDashboard() {
 
   // Página de ventas personal (/p/{ref_code})
   const perfilCard = document.getElementById('perfil-publico-card');
+  const perfilEditor = document.getElementById('perfil-editor-card');
   if (aliado.portal_publico_activo && aliado.link_perfil) {
     document.getElementById('d-perfillink').textContent = aliado.link_perfil;
     if (perfilCard) perfilCard.style.display = 'flex';
+    // Mostrar y pre-cargar el bloque editor
+    if (perfilEditor) {
+      perfilEditor.style.display = 'block';
+      const titularInput = document.getElementById('pp-titular');
+      const bioInput = document.getElementById('pp-bio');
+      if (titularInput) {
+        titularInput.value = aliado.portal_publico_titular || '';
+        document.getElementById('pp-titular-count').textContent = titularInput.value.length;
+      }
+      if (bioInput) {
+        bioInput.value = aliado.portal_publico_bio || '';
+        document.getElementById('pp-bio-count').textContent = bioInput.value.length;
+      }
+    }
   } else {
     if (perfilCard) perfilCard.style.display = 'none';
+    if (perfilEditor) perfilEditor.style.display = 'none';
   }
   document.getElementById('d-wpp-link').textContent = linkAuditoria;
 
@@ -4579,6 +4697,38 @@ function copiarPerfilLink() {
   });
 }
 
+async function guardarPortalPublico() {
+  if (!aliado) return;
+  const titular = (document.getElementById('pp-titular').value || '').trim();
+  const bio     = (document.getElementById('pp-bio').value     || '').trim();
+
+  const btn = document.querySelector('[onclick="guardarPortalPublico()"]');
+  if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Guardando…'; }
+
+  try {
+    const res = await fetch(`${API}/aliados/${aliado.codigo}/portal-publico`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ portal_publico_titular: titular, portal_publico_bio: bio })
+    });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
+    // Actualizar el objeto local para que el fallback sea coherente si recarga
+    aliado.portal_publico_titular = titular;
+    aliado.portal_publico_bio     = bio;
+
+    // Mostrar confirmación inline
+    const msg = document.getElementById('pp-guardado-msg');
+    if (msg) { msg.style.display = 'inline-flex'; setTimeout(() => { msg.style.display = 'none'; }, 3500); }
+    mostrarToast('Perfil público actualizado ✓', 'green');
+  } catch (err) {
+    console.error('Error al guardar perfil público:', err);
+    mostrarToast('Error al guardar. Intentá de nuevo.', 'red');
+  } finally {
+    if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fa-solid fa-floppy-disk"></i> Guardar'; }
+  }
+}
+
 function copiarAuditLink() {
   navigator.clipboard.writeText(document.getElementById('d-auditlink').textContent).then(()=>{
     mostrarToast('Enlace de auditoría copiado', 'green');
@@ -4595,7 +4745,7 @@ function copiarMensajeWpp() {
 function renderReferidos() {
   const refs = aliado.referidos||[];
   const el = document.getElementById('tabla-referidos');
-  if (!refs.length) { el.innerHTML=`<div class="empty-state"><i class="fa-solid fa-user-plus"></i><p>Todavía no registraste ningún referido.<br>Usá el formulario de arriba <strong style="color:white;">antes de que el cliente pague</strong>.</p></div>`; return; }
+  if (!refs.length) { el.innerHTML=`<div class="empty-state"><i class="fa-solid fa-user-plus"></i><p>Todavía no registraste ningún prospecto.<br>Usá el formulario de arriba <strong style="color:white;">antes de que el cliente pague</strong>.</p></div>`; return; }
   el.innerHTML=`<table><thead><tr><th>Cliente / Empresa</th><th>Plan</th><th>Comisión est.</th><th>Fecha</th><th>Confirmado</th><th>Estado</th></tr></thead><tbody>${refs.map(r=>{
     const nivel = aliado.nivel_calculado || aliado.nivel_actual || 'BASIC';
     const comEst = Math.round((PLANES[r.plan]||0)*pct(nivel));
@@ -4936,7 +5086,7 @@ async function registrarReferido() {
     const data = await res.json();
     if (res.ok) {
       const comision = Math.round(PLANES[plan]*pct(aliado.nivel_calculado||'BASIC'));
-      success.innerHTML=`<i class="fa-solid fa-circle-check"></i> <strong>Referido registrado.</strong> Avanza Digital fue notificado.<br>Comisión estimada si se cierra: <strong>USD ${comision.toLocaleString()}</strong>.`;
+      success.innerHTML=`<i class="fa-solid fa-circle-check"></i> <strong>Prospecto registrado.</strong> Avanza Digital fue notificado.<br>Comisión estimada si se cierra: <strong>USD ${comision.toLocaleString()}</strong>.`;
       success.style.display='block';
       document.getElementById('ref-nombre').value='';
       document.getElementById('ref-plan').value='';
@@ -4944,7 +5094,7 @@ async function registrarReferido() {
       setTimeout(cargarTodo,800);
     } else { alert(data.detail||'Error al registrar'); }
   } catch { alert('Error de conexión. Verificá que el servidor esté activo.'); }
-  btn.innerHTML='<i class="fa-solid fa-paper-plane"></i> Registrar referido ahora'; btn.disabled=false;
+  btn.innerHTML='<i class="fa-solid fa-paper-plane"></i> Registrar prospecto ahora'; btn.disabled=false;
 }
 
 // ── PROSPECTOS ──────────────────────────────────────────────────────────────
@@ -5192,7 +5342,7 @@ async function plRegistrarReferido() {
     const data = await res.json();
     if (res.ok) {
       const comision = Math.round(PLANES[plan]*pct(aliado.nivel_calculado||'BASIC'));
-      success.innerHTML=`<i class="fa-solid fa-circle-check"></i> <strong>Referido registrado.</strong> Avanza Digital fue notificado.<br>Comisión estimada si se cierra: <strong>USD ${comision.toLocaleString()}</strong>.`;
+      success.innerHTML=`<i class="fa-solid fa-circle-check"></i> <strong>Prospecto registrado.</strong> Avanza Digital fue notificado.<br>Comisión estimada si se cierra: <strong>USD ${comision.toLocaleString()}</strong>.`;
       success.style.display='block';
       document.getElementById('pl-ref-nombre').value='';
       document.getElementById('pl-ref-plan').value='';
@@ -5200,14 +5350,14 @@ async function plRegistrarReferido() {
       setTimeout(()=>{ cargarTodo(); plRenderReferidos(); },800);
     } else { alert(data.detail||'Error al registrar'); }
   } catch { alert('Error de conexión. Verificá que el servidor esté activo.'); }
-  btn.innerHTML='<i class="fa-solid fa-paper-plane"></i> Registrar referido ahora'; btn.disabled=false;
+  btn.innerHTML='<i class="fa-solid fa-paper-plane"></i> Registrar prospecto ahora'; btn.disabled=false;
 }
 
 function plRenderReferidos() {
   const refs = aliado?.referidos||[];
   const el = document.getElementById('pl-tabla-referidos');
   if(!el) return;
-  if (!refs.length) { el.innerHTML=`<div class="empty-state"><i class="fa-solid fa-user-plus"></i><p>Todavía no registraste ningún referido.<br>Usá el formulario de arriba <strong style="color:white;">antes de que el cliente pague</strong>.</p></div>`; return; }
+  if (!refs.length) { el.innerHTML=`<div class="empty-state"><i class="fa-solid fa-user-plus"></i><p>Todavía no registraste ningún prospecto.<br>Usá el formulario de arriba <strong style="color:white;">antes de que el cliente pague</strong>.</p></div>`; return; }
   el.innerHTML=`<table><thead><tr><th>Cliente / Empresa</th><th>Plan</th><th>Comisión est.</th><th>Fecha</th><th>Confirmado</th><th>Estado</th></tr></thead><tbody>${refs.map(r=>{
     const nivel = aliado.nivel_calculado || aliado.nivel_actual || 'BASIC';
     const comEst = Math.round((PLANES[r.plan]||0)*pct(nivel));
@@ -6049,6 +6199,79 @@ function copiarLinkPago() {
     .catch(() => mostrarToast('No se pudo copiar', 'red'));
 }
 
+// ── USDT/USDC — instrucciones para el cotizador del aliado ───────────────────
+let _usdtConfig = null;
+
+async function mostrarInstruccionesUSDT() {
+  const plan = document.getElementById('cot-plan')?.value;
+  if (!plan) { mostrarToast('Seleccioná un plan primero', 'red'); return; }
+
+  const panel = document.getElementById('cot-usdt-instrucciones');
+  const loading = document.getElementById('cot-usdt-loading');
+  const content = document.getElementById('cot-usdt-content');
+
+  panel.style.display = 'block';
+  loading.style.display = 'block';
+  content.style.display = 'none';
+  panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+
+  try {
+    if (!_usdtConfig) {
+      const res = await fetch(`${API}/config/usdt`);
+      if (!res.ok) throw new Error('No se pudo obtener la configuración de pago USDT.');
+      _usdtConfig = await res.json();
+    }
+
+    const { direccion, red, metodo } = _usdtConfig;
+    if (!direccion) {
+      loading.innerHTML = '<i class="fa-solid fa-triangle-exclamation" style="color:#ef4444;"></i> Pago en USDT no configurado. Contactá al admin de Avanza.';
+      return;
+    }
+
+    // Calcular precio USD del plan seleccionado
+    const PLAN_PRECIOS = {
+      'Plan Base': 1050, 'Plan Pro': 2900,
+      'Plan Industrial': 4900, 'Estratégico 360': 7500
+    };
+    const precioUSD = PLAN_PRECIOS[plan] || '—';
+    const redLabel = red || 'TRC20';
+    const monedaLabel = metodo && metodo.toUpperCase().includes('USDC') ? 'USDT/USDC' : 'USDT';
+
+    document.getElementById('cot-usdt-red').textContent = redLabel;
+    document.getElementById('cot-usdt-direccion').value = direccion;
+
+    const msg = `Hola! Te comparto los datos para el pago del ${plan} de Avanza Digital en ${monedaLabel}:\n\n` +
+      `💰 Monto exacto: USD ${precioUSD}\n` +
+      `🌐 Red: ${redLabel}\n` +
+      `📋 Dirección:\n${direccion}\n\n` +
+      `⚠ Importante: enviá exactamente USD ${precioUSD} y avisame cuando lo hagas para confirmar con Avanza. ` +
+      `Una vez confirmado el pago iniciamos la implementación.`;
+    document.getElementById('cot-usdt-wpp-msg').value = msg;
+
+    loading.style.display = 'none';
+    content.style.display = 'block';
+  } catch (err) {
+    loading.innerHTML = `<i class="fa-solid fa-triangle-exclamation" style="color:#ef4444;"></i> ${err.message}`;
+  }
+}
+
+function copiarDireccionUSDT() {
+  const dir = document.getElementById('cot-usdt-direccion')?.value;
+  if (!dir) return;
+  navigator.clipboard.writeText(dir)
+    .then(() => mostrarToast('Dirección copiada al portapapeles', 'green'))
+    .catch(() => mostrarToast('No se pudo copiar', 'red'));
+}
+
+function copiarMensajeUSDT() {
+  const msg = document.getElementById('cot-usdt-wpp-msg')?.value;
+  if (!msg) return;
+  navigator.clipboard.writeText(msg)
+    .then(() => mostrarToast('Mensaje copiado — pegalo en WhatsApp', 'green'))
+    .catch(() => mostrarToast('No se pudo copiar', 'red'));
+}
+// ─────────────────────────────────────────────────────────────────────────────
+
 async function regenerarLinkPago() {
   if(!_ultimoLinkGenerado || !_ultimoLinkGenerado.id) {
     // si no tenemos el id, generamos uno nuevo desde cero con la misma moneda
@@ -6380,7 +6603,7 @@ async function cargarReputacion() {
       consecText = '⚡ Acceso a leads calificados. Visible en el leaderboard interno. Para subir a Destacado: mejorá tu tasa de cierre o éxito en bolsa.';
     } else {
       rangoLabel = 'Inicial'; rangoColor = 'rgba(239,68,68,0.12)'; rangoFg = '#ef4444';
-      consecText = '⚠ Acceso solo a leads básicos gratuitos. Registrá referidos y contactá leads para subir de rango.';
+      consecText = '⚠ Acceso solo a leads básicos gratuitos. Registrá prospectos y contactá leads para subir de rango.';
     }
     if (rangoBadge) {
       rangoBadge.textContent = rangoLabel;
@@ -7601,7 +7824,7 @@ const ACADEMIA_MODULOS = [
       <h3>Atribución de ventas — el paso crítico</h3>
       <p>Para que una venta te pertenezca, tenés que cumplir <strong>3 condiciones</strong>:</p>
       <ol>
-        <li>Registrar al referido <strong>en el portal ANTES del pago del cliente</strong>, indicando nombre y plan elegido.</li>
+        <li>Registrar al prospecto <strong>en el portal ANTES del pago del cliente</strong>, indicando nombre y plan elegido.</li>
         <li>Avanza Digital confirma la recepción del registro.</li>
         <li>Usar el link con tu parámetro <code>?ref=</code> cuenta como registro automático válido.</li>
       </ol>
@@ -7616,7 +7839,7 @@ const ACADEMIA_MODULOS = [
 
       <h3>Tus obligaciones como aliado</h3>
       <ul>
-        <li>Registrar el referido <strong>antes</strong> de que pague</li>
+        <li>Registrar el prospecto <strong>antes</strong> de que pague</li>
         <li>Usar solo los materiales comerciales oficiales que te damos</li>
         <li>No hacer promesas técnicas ni compromisos fuera de los planes oficiales</li>
         <li>Mantener confidencialidad sobre los términos del acuerdo y la estructura de comisiones</li>
