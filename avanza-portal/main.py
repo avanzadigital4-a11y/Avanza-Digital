@@ -6218,6 +6218,10 @@ def admin_fijar_post(id: int, fijar: bool = True, db: Session = Depends(get_db))
     p.fijado = fijar; db.commit()
     return {"mensaje": "Post fijado." if fijar else "Post desfijado."}
 
+@app.get("/auditoria-digital")
+def auditoria_digital_redirect():
+    from fastapi.responses import FileResponse
+    return FileResponse("auditoria-digital.html")
 
 @app.post("/admin/comunidad/{id}/ocultar")
 def admin_ocultar_post(id: int, ocultar: bool = True, db: Session = Depends(get_db)):
