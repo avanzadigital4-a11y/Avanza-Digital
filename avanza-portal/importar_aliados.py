@@ -1,220 +1,95 @@
 """
-importar_aliados.py
-Ejecutar desde la carpeta avanza-portal:
-    python importar_aliados.py
-"""
+importar_aliados.py — One-shot script para cargar aliados desde un CSV.
 
-import requests
+USO:
+    cd avanza-portal/scripts
+    python importar_aliados.py --csv aliados.csv --api https://avanza-digital.onrender.com
+
+El CSV debe tener encabezado con las columnas:
+    nombre, dni, email, whatsapp, ciudad, perfil, fecha_firma
+
+IMPORTANTE — POR QUÉ NO HARDCODEAR DATOS PERSONALES:
+La versión anterior de este archivo tenía los 15 aliados del primer batch con
+nombre, DNI, email y WhatsApp escritos directamente en el código. Si el repo se
+volviera público en algún momento, eso filtra datos personales de personas reales
+sin su consentimiento (LPDP en Argentina, GDPR si hay alguno europeo).
+
+Mantené el CSV fuera del repo (.gitignore ya cubre *.csv). Si lo necesitás otra
+vez, generalo desde el Excel original y borralo cuando termines de importar.
+"""
+import argparse
+import csv
+import sys
 import time
 
-API = "https://avanza-digital-production.up.railway.app"
+import requests
 
-# Los 15 aliados del Excel
-ALIADOS = [
-    {
-        "nombre":     "Morena Alejandra Altamiranda Ganini",
-        "dni":        "46.128.865",
-        "email":      "morealtamiranda24@gmail.com",
-        "whatsapp":   "+54 9 3548 414273",
-        "ciudad":     "La Falda, Córdoba",
-        "perfil":     "Closer de ventas B2B",
-        "fecha_firma":"12/03/2026",
-    },
-    {
-        "nombre":     "Maximiliano Lionel Villafañe",
-        "dni":        "48.121.122",
-        "email":      "maximovillafane@gmail.com",
-        "whatsapp":   "+54 9 3813 658051",
-        "ciudad":     "San Miguel de Tucumán",
-        "perfil":     "Generación de clientes",
-        "fecha_firma":"12/03/2026",
-    },
-    {
-        "nombre":     "Alejandro Ezequiel Vyhñak",
-        "dni":        "48576415",
-        "email":      "avyhnak@gmail.com",
-        "whatsapp":   "+54 911 32374824",
-        "ciudad":     "Ramos Mejía, Buenos Aires",
-        "perfil":     "Estudiante universitario",
-        "fecha_firma":"16/03/2026",
-    },
-    {
-        "nombre":     "Suarez Alejandro M",
-        "dni":        "34092505",
-        "email":      "suarezalejandro@avanza.ref",  # sin email en contrato
-        "whatsapp":   "",
-        "ciudad":     "",
-        "perfil":     "",
-        "fecha_firma":"16/03/2026",
-    },
-    {
-        "nombre":     "Vera Diego Ezequiel",
-        "dni":        "43747608",
-        "email":      "veraaeze@gmail.com",
-        "whatsapp":   "+54 9 3795 024193",
-        "ciudad":     "Corrientes Capital",
-        "perfil":     "",
-        "fecha_firma":"17/03/2026",
-    },
-    {
-        "nombre":     "Margheritta Ramiro",
-        "dni":        "50-075-348",
-        "email":      "margherittaramiro@gmail.com",
-        "whatsapp":   "+54 221 495-0961",
-        "ciudad":     "Buenos Aires, La Plata",
-        "perfil":     "Asistente de ventas",
-        "fecha_firma":"17/03/2026",
-    },
-    {
-        "nombre":     "Kevin David Celiz",
-        "dni":        "41564930",
-        "email":      "celizdavid86@gmail.com",
-        "whatsapp":   "",
-        "ciudad":     "Buenos Aires",
-        "perfil":     "Generación de leads y ventas digitales",
-        "fecha_firma":"17/03/2026",
-    },
-    {
-        "nombre":     "Axel Amieva",
-        "dni":        "39393769",
-        "email":      "axelamieva@avanza.ref",  # sin email en contrato
-        "whatsapp":   "",
-        "ciudad":     "",
-        "perfil":     "",
-        "fecha_firma":"17/03/2026",
-    },
-    {
-        "nombre":     "Marco Alexander Cáceres García",
-        "dni":        "20-95758318-1",
-        "email":      "marcoalex270@gmail.com",
-        "whatsapp":   "+34614587345",
-        "ciudad":     "Buenos Aires",
-        "perfil":     "Técnico en administración",
-        "fecha_firma":"17/03/2026",
-    },
-    {
-        "nombre":     "Lucas Lopez",
-        "dni":        "50824332",
-        "email":      "lucaslopez20117@gmail.com",
-        "whatsapp":   "",
-        "ciudad":     "Buenos Aires",
-        "perfil":     "",
-        "fecha_firma":"19/03/2026",
-    },
-    {
-        "nombre":     "Leonel Martinez Mazzoconi",
-        "dni":        "42454483",
-        "email":      "leonelmartinez@avanza.ref",  # sin email en contrato
-        "whatsapp":   "",
-        "ciudad":     "",
-        "perfil":     "",
-        "fecha_firma":"",
-    },
-    {
-        "nombre":     "Jose Angel Zambrano",
-        "dni":        "27242828",
-        "email":      "jazsrm7@gmail.com",
-        "whatsapp":   "+584124555382",
-        "ciudad":     "Venezuela, Estado Miranda, Cua",
-        "perfil":     "Socio estrategico",
-        "fecha_firma":"19/03/2026",
-    },
-    {
-        "nombre":     "Guillermo Santellan",
-        "dni":        "20240319528",
-        "email":      "guillermosantellan3@gmail.com",
-        "whatsapp":   "3855101222",
-        "ciudad":     "Santiago del Estero",
-        "perfil":     "Closer de elite",
-        "fecha_firma":"19/03/2026",
-    },
-    {
-        "nombre":     "Santiago Escudero Nicolas",
-        "dni":        "47.267.862 / 20-47267862-1",
-        "email":      "santiagoescudero257@gmail.com",
-        "whatsapp":   "+54 266 512 6537",
-        "ciudad":     "San Luis",
-        "perfil":     "Closer de ventas",
-        "fecha_firma":"18/03/2026",
-    },
-    {
-        "nombre":     "Maximiliano Ezequiel Torrez",
-        "dni":        "20-39941229-4",
-        "email":      "ezequiel.closer.ventas@gmail.com",
-        "whatsapp":   "2302694127",
-        "ciudad":     "La Pampa",
-        "perfil":     "",
-        "fecha_firma":"19/03/2026",
-    },
-]
 
-def importar():
-    print("\n🚀 Iniciando importación de aliados a Avanza Partner System\n")
-    print("─" * 60)
+def importar(csv_path: str, api_base: str, admin_key: str = "", dry_run: bool = False) -> None:
+    with open(csv_path, encoding="utf-8") as f:
+        reader = csv.DictReader(f)
+        filas = list(reader)
 
-    exitosos = 0
-    fallidos  = 0
-    saltados  = 0
+    print(f"Importando {len(filas)} aliados desde {csv_path} -> {api_base}")
+    if dry_run:
+        print("(modo --dry-run: no se mandan requests)")
 
-    for a in ALIADOS:
-        params = {
-            "nombre":      a["nombre"],
-            "email":       a["email"],
-            "whatsapp":    a.get("whatsapp", ""),
-            "ciudad":      a.get("ciudad", ""),
-            "dni":         a.get("dni", ""),
-            "perfil":      a.get("perfil", ""),
-            "fecha_firma": a.get("fecha_firma", ""),
-            "password":    "avanza2026",
+    ok = 0
+    fail = 0
+    headers = {"Content-Type": "application/json"}
+    if admin_key:
+        headers["X-API-Key"] = admin_key
+
+    for i, fila in enumerate(filas, start=1):
+        payload = {
+            "nombre":      (fila.get("nombre") or "").strip(),
+            "dni":         (fila.get("dni") or "").strip(),
+            "email":       (fila.get("email") or "").strip().lower(),
+            "whatsapp":    (fila.get("whatsapp") or "").strip(),
+            "ciudad":      (fila.get("ciudad") or "").strip(),
+            "perfil":      (fila.get("perfil") or "").strip(),
+            "fecha_firma": (fila.get("fecha_firma") or "").strip(),
         }
+        if not payload["nombre"] or not payload["email"]:
+            print(f"  [{i}] x fila sin nombre o email, salteo")
+            fail += 1
+            continue
+
+        if dry_run:
+            print(f"  [{i}] ~ {payload['nombre']} <{payload['email']}>")
+            ok += 1
+            continue
 
         try:
-            res = requests.post(
-                f"{API}/aliados/crear",
-                params=params,
-                timeout=10
-            )
-
-            # Intentar parsear JSON
-            try:
-                data = res.json()
-            except ValueError:
-                print(f"  ❌ ERROR {res.status_code} — {a['nombre']} (respuesta no JSON)")
-                print(f"     Respuesta: {res.text[:200]}")
-                fallidos += 1
-                continue
-
-            if res.status_code == 200:
-                print(f"  ✅ {data['codigo']} — {a['nombre']}")
-                print(f"     Link: {data['link_ref']}")
-                exitosos += 1
-
-            elif "Ya existe" in str(data.get("detail", "")):
-                print(f"  ⚠️  SALTADO — {a['nombre']} (ya existe en el sistema)")
-                saltados += 1
-
+            r = requests.post(f"{api_base}/aliados", json=payload, headers=headers, timeout=15)
+            if 200 <= r.status_code < 300:
+                print(f"  [{i}] OK {payload['nombre']}")
+                ok += 1
             else:
-                print(f"  ❌ ERROR {res.status_code} — {a['nombre']}")
-                print(f"     Detalle: {data.get('detail', 'No detail')}")
-                print(f"     Respuesta completa: {data}")
-                fallidos += 1
+                print(f"  [{i}] x {payload['nombre']} - HTTP {r.status_code}: {r.text[:200]}")
+                fail += 1
+        except requests.RequestException as e:
+            print(f"  [{i}] x {payload['nombre']} - error de red: {e}")
+            fail += 1
+        # Throttle suave para no martillar la API
+        time.sleep(0.3)
 
-        except Exception as e:
-            print(f"  ❌ EXCEPCIÓN — {a['nombre']}: {str(e)}")
-            fallidos += 1
+    print(f"\nResumen: {ok} OK, {fail} fail.")
 
-        time.sleep(0.1)  # pequeña pausa entre requests
-
-    print("\n" + "─" * 60)
-    print(f"  ✅ Importados exitosamente: {exitosos}")
-    print(f"  ⚠️  Saltados (ya existían):  {saltados}")
-    print(f"  ❌ Fallidos:                {fallidos}")
-    print(f"  📊 Total procesados:        {exitosos + saltados + fallidos}")
-    print("─" * 60)
-
-    if exitosos > 0:
-        print(f"\n🎉 ¡Listo! Los aliados ya están en el sistema.")
-        print(f"   Abrí admin.html y verificalos en la tab Aliados.\n")
 
 if __name__ == "__main__":
-    importar()
+    p = argparse.ArgumentParser(description="Importar aliados desde CSV.")
+    p.add_argument("--csv", required=True, help="Path al CSV con los aliados.")
+    p.add_argument("--api", required=True, help="Base URL de la API (sin slash final).")
+    p.add_argument("--admin-key", default="", help="ADMIN_API_KEY si el endpoint la requiere.")
+    p.add_argument("--dry-run", action="store_true", help="Solo imprime, no hace requests.")
+    args = p.parse_args()
+
+    if args.api.endswith("/"):
+        args.api = args.api[:-1]
+
+    try:
+        importar(args.csv, args.api, args.admin_key, args.dry_run)
+    except FileNotFoundError:
+        print(f"CSV no encontrado: {args.csv}", file=sys.stderr)
+        sys.exit(1)

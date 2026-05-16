@@ -158,6 +158,35 @@ class Admin(Base):
     creado_en = Column(DateTime, default=func.now())
 
 
+# ─── AUDITORÍA DE ACCIONES ADMIN ─────────────────────────────────────────────
+class AdminAuditLog(Base):
+    """Bitácora de acciones sensibles del panel admin.
+
+    Se escribe cuando un admin: aprueba/rechaza una solicitud de créditos,
+    ajusta créditos manualmente, da de baja a un aliado, edita una venta,
+    cambia el nivel de un aliado, libera leads, etc.
+
+    Inmutable por diseño (no se debe UPDATE/DELETE — solo INSERT). El campo
+    `entidad`/`entidad_id` permite filtrar por "todo lo que pasó con el
+    aliado X" o "toda la historia de la solicitud Y".
+
+    NO usar para acciones del aliado mismo (ese flujo es el de TransaccionCredito
+    + AutomationLog) ni para auditorías de leads (eso es AuditoriaLog).
+    """
+    __tablename__ = "admin_audit_log"
+
+    id            = Column(Integer, primary_key=True, index=True)
+    admin_username = Column(String, index=True, nullable=False)
+    via           = Column(String, nullable=True)   # 'jwt' | 'api_key'
+    accion        = Column(String, index=True, nullable=False)   # 'aprobar_solicitud', 'ajustar_creditos', etc.
+    entidad       = Column(String, index=True, nullable=True)    # 'aliado' | 'solicitud_creditos' | 'lead' | 'venta' | ...
+    entidad_id    = Column(String, index=True, nullable=True)    # id o codigo
+    detalle       = Column(Text,   nullable=True)                # JSON serializado con los campos antes/después
+    ip            = Column(String, nullable=True)
+    user_agent    = Column(String, nullable=True)
+    creado_en     = Column(DateTime, default=func.now(), index=True)
+
+
 # ─── PROSPECTO ───────────────────────────────────────────────────────────────
 class Prospecto(Base):
     __tablename__ = "prospectos"

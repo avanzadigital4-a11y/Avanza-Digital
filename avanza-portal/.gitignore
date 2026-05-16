@@ -26,6 +26,14 @@ backup_*.sql
 .DS_Store
 Thumbs.db
 
+# ─── Datos personales / one-shot imports (NUNCA commitear) ───────────────────
+# El script scripts/importar_aliados.py espera un CSV con datos de aliados
+# (nombre, DNI, email, WhatsApp). Esos archivos NO deben subir al repo.
+scripts/*.csv
+scripts/*.xlsx
+scripts/*.xls
+aliados.csv
+
 # ─── Variables de entorno (DEBEN ir en el panel de Render/Railway, NO acá) ──
 .env
 .env.local

@@ -61,3 +61,42 @@ Options -Indexes
   ExpiresByType application/javascript "access plus 1 month"
   ExpiresByType text/html "access plus 1 hour"
 </IfModule>
+
+# ================================================
+# CABECERAS DE SEGURIDAD
+# ================================================
+<IfModule mod_headers.c>
+  # --- Content-Security-Policy ---
+  # Origenes habilitados:
+  #   * GTM / GA (Google Tag Manager, Google Analytics)
+  #   * Cloudflare Worker (proxy de PageSpeed + Anthropic)
+  #   * Fuentes Google
+  #   * Backend Render (donde vive la API del portal)
+  # Si en algun momento agregas un dominio mas (CDN, embed de YouTube,
+  # iframe de MercadoPago, etc.) sumalo en la directiva correspondiente.
+  Header set Content-Security-Policy "default-src 'self'; \
+script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.googletagmanager.com https://www.google-analytics.com https://*.googletagmanager.com https://cdn.jsdelivr.net; \
+style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; \
+font-src 'self' https://fonts.gstatic.com data:; \
+img-src 'self' data: https: blob:; \
+connect-src 'self' https://www.google-analytics.com https://*.analytics.google.com https://*.googletagmanager.com https://*.workers.dev https://avanza-digital.onrender.com https://avanzadigital.digital https://dolarapi.com https://api.mercadopago.com https://api-m.paypal.com; \
+frame-src 'self' https://www.googletagmanager.com https://www.mercadopago.com.ar https://www.paypal.com; \
+object-src 'none'; \
+base-uri 'self'; \
+form-action 'self' https://www.mercadopago.com.ar https://www.paypal.com; \
+frame-ancestors 'self';"
+
+  # --- Otras cabeceras de seguridad razonables para sitio estatico ---
+  Header set X-Content-Type-Options "nosniff"
+  Header set Referrer-Policy "strict-origin-when-cross-origin"
+  Header set X-Frame-Options "SAMEORIGIN"
+  Header set Permissions-Policy "geolocation=(), microphone=(), camera=(), payment=(self)"
+  # HSTS: solo si todo el sitio (incluido cualquier subdominio) va por HTTPS.
+  # Comentado por seguridad — descomentar cuando estes 100% seguro.
+  # Header set Strict-Transport-Security "max-age=31536000; includeSubDomains"
+</IfModule>
+
+# ================================================
+# PAGINA 404 PERSONALIZADA
+# ================================================
+ErrorDocument 404 /404.html

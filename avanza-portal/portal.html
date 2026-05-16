@@ -879,6 +879,10 @@
     color: #fca5a5; border-color: rgba(239,68,68,0.35); background: rgba(239,68,68,0.08);
   }
 </style>
+  <script
+    src="https://js.sentry-cdn.com/b7cd138fe81da0167e10adbf97d2092c.min.js"
+    crossorigin="anonymous"
+  ></script>
 </head>
 <body>
 
@@ -1473,15 +1477,6 @@
           </div>
         </div>
         <p style="font-size:.76rem;color:var(--text-dim);margin-top:14px;line-height:1.5;">Las 3 son acumulables. Un cliente que vendés con plan de implementación + plan de continuidad te da las dos primeras al mismo tiempo. <a href="#" onclick="cambiarTab('comisiones', document.querySelector('.tab-btn[onclick*=comisiones]')); return false;" style="color:var(--amber);font-weight:700;text-decoration:underline;">Ver el detalle en Comisiones →</a></p>
-      </div>
-
-      <div class="ref-card">
-        <div style="flex:1;">
-          <div class="ref-label"><i class="fa-solid fa-users-rays" style="color:var(--amber);"></i> &nbsp;Tu link para sumar aliados a tu red</div>
-          <div class="ref-url" id="d-reflink">Cargando...</div>
-          <div style="font-size:.72rem;color:var(--text-dim);margin-top:6px;line-height:1.4;">Mandalo a vendedores, agencias o profesionales que quieran sumarse. Cuando se registren desde acá, cobrás <strong style="color:var(--amber);">5% pasivo</strong> de cada venta que cierren, para siempre. <span style="color:var(--text-muted);">Para mandar a clientes finales que quieran contratar un servicio, usá tu página de ventas personal (abajo).</span></div>
-        </div>
-        <button class="btn-copy" onclick="copiarLink()"><i class="fa-solid fa-copy"></i> Copiar</button>
       </div>
 
       <!-- PERSONALIZAR USERNAME (visible solo si username_personalizado === false) -->
@@ -2644,7 +2639,7 @@
           <i class="fa-solid fa-circle-info" style="color:var(--amber);font-size:1.2rem;margin-top:2px;"></i>
           <div style="flex:1;font-size:.88rem;color:var(--text-muted);line-height:1.5;">
             <strong style="color:var(--text);">¿Cómo se suma alguien a tu red?</strong><br>
-            Mandale tu link desde el <a href="#" onclick="cambiarTab('dashboard', document.querySelector('.tab-btn[onclick*=dashboard]')); return false;" style="color:var(--amber);font-weight:700;text-decoration:underline;">Dashboard</a> ("Tu link para sumar aliados a tu red"). Cuando esa persona se registre como aliado desde tu link, queda automáticamente bajo tu red y empezás a cobrar el 5% pasivo de todas sus ventas.
+            Mandá tu página de ventas personal desde el <a href="#" onclick="cambiarTab('dashboard', document.querySelector('.tab-btn[onclick*=dashboard]')); return false;" style="color:var(--amber);font-weight:700;text-decoration:underline;">Dashboard</a>. Cuando esa persona se registre como aliado desde tu link, queda automáticamente bajo tu red y empezás a cobrar el 5% pasivo de todas sus ventas.
           </div>
         </div>
 
@@ -4598,10 +4593,8 @@ function renderDashboard() {
   }
   document.getElementById('d-refs-activos').textContent = refsActivos;
   
-  const linkGeneral = aliado.link_ref || '';
-  const linkAuditoria = linkGeneral.replace('alianzas', 'auditoria-digital.html');
-  
-  document.getElementById('d-reflink').textContent = linkGeneral;
+  const linkAuditoria = `https://avanzadigital.digital/auditoria-digital?ref=${aliado.ref_code}`;
+
   document.getElementById('d-auditlink').textContent = linkAuditoria;
 
   // Card de "Personalizá tu link": visible solo si todavía no personalizó.
@@ -4683,12 +4676,6 @@ function renderDashboard() {
       <i class="fa-solid fa-circle-check" style="color:var(--green);font-size:0.8rem;flex-shrink:0;"></i> ${b}
     </div>`
   ).join('');
-}
-
-function copiarLink() {
-  navigator.clipboard.writeText(document.getElementById('d-reflink').textContent).then(()=>{
-    mostrarToast('Link copiado', 'green');
-  });
 }
 
 function copiarPerfilLink() {
@@ -5856,7 +5843,7 @@ async function cargarRed() {
     
     const tbody = document.getElementById('tabla-red');
     if(data.total_sub_aliados === 0) {
-      tbody.innerHTML = `<div class="empty-state"><i class="fa-solid fa-user-group"></i><p>Tu red está vacía.<br>Copiá tu link desde el <strong>Dashboard</strong> ("Tu link para sumar aliados a tu red") y mandalo a otros vendedores para empezar a generar comisiones pasivas.</p></div>`;
+      tbody.innerHTML = `<div class="empty-state"><i class="fa-solid fa-user-group"></i><p>Tu red está vacía.<br>Copiá tu página de ventas personal desde el <strong>Dashboard</strong> y compartíla con vendedores o colegas que quieran sumarse como aliados.</p></div>`;
       return;
     }
     
@@ -8479,7 +8466,7 @@ const ACADEMIA_MODULOS = [
 
       <div class="aca-tip">
         <div class="label">¡LISTO!</div>
-        <div class="text">Completaste la Academia. Ya sabés todo lo necesario para cerrar tu primera venta. <strong>El próximo paso es salir a vender</strong>. Andá al Dashboard, copiá tu link de referido, y empezá a escribirle a 5 prospectos hoy. La primera venta cambia todo.</div>
+        <div class="text">Completaste la Academia. Ya sabés todo lo necesario para cerrar tu primera venta. <strong>El próximo paso es salir a vender</strong>. Andá al Dashboard, copiá tu página de ventas personal, y empezá a escribirle a 5 prospectos hoy. La primera venta cambia todo.</div>
       </div>
     `
   },

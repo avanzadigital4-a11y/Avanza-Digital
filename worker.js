@@ -3,12 +3,18 @@
 //  Variables de entorno necesarias (Settings → Secrets):
 //    avanzadigital  → tu key de console.anthropic.com
 //    GOOGLE_KEY     → tu key de console.cloud.google.com
+//  Variables de entorno opcionales:
+//    AI_MODEL_FAST  → modelo "barato" (default: claude-haiku-4-5-20251001)
+//    AI_MODEL_HEAVY → modelo "caro" para razonamiento (default: claude-sonnet-4-6)
 // ============================================================
+
+const DEFAULT_FAST_MODEL  = 'claude-haiku-4-5-20251001';
+const DEFAULT_HEAVY_MODEL = 'claude-sonnet-4-6';
 
 export default {
   async fetch(request, env) {
 
-    const ALLOWED_ORIGIN = '*'; // en producción: 'https://avanzadigital.digital'
+    const ALLOWED_ORIGIN = '*'; // en produccion: 'https://avanzadigital.digital'
 
     if (request.method === 'OPTIONS') {
       return new Response(null, {
@@ -22,17 +28,17 @@ export default {
     }
 
     if (request.method !== 'POST') {
-      return new Response('Método no permitido', { status: 405 });
+      return new Response('Metodo no permitido', { status: 405 });
     }
 
     let body;
     try {
       body = await request.json();
     } catch {
-      return new Response('Body inválido', { status: 400 });
+      return new Response('Body invalido', { status: 400 });
     }
 
-    // ── RUTA 1: PageSpeed Insights ──────────────────────────
+    // -- RUTA 1: PageSpeed Insights -------------------------
     if (body.type === 'pagespeed') {
       const { url, strategy } = body;
       if (!url || !strategy) {
@@ -57,12 +63,26 @@ export default {
       });
     }
 
-    // ── RUTA 2: Anthropic AI ─────────────────────────────────
+    // -- RUTA 2: Anthropic AI -------------------------------
+    //
+    // Modelo por defecto: Haiku 4.5 (5-10x mas barato que Sonnet, calidad
+    // equivalente para tareas cortas: resumir un analisis de PageSpeed,
+    // sugerencias rapidas en la comunidad, redactar 1-2 parrafos, etc.).
+    //
+    // Para razonamiento mas pesado (analisis multi-paso, generacion larga,
+    // toma de decisiones que requiere chain-of-thought), el cliente puede
+    // pedir explicitamente { "mode": "heavy" } y se usa Sonnet 4.6. Tambien
+    // se acepta { "model": "<id-exacto>" } como override directo.
+    //
     if (body.type === 'ai') {
-      const { prompt } = body;
+      const { prompt, mode, model, max_tokens } = body;
       if (!prompt) {
         return new Response('Falta el campo "prompt"', { status: 400 });
       }
+
+      const fastModel  = env.AI_MODEL_FAST  || DEFAULT_FAST_MODEL;
+      const heavyModel = env.AI_MODEL_HEAVY || DEFAULT_HEAVY_MODEL;
+      const chosenModel = model || (mode === 'heavy' ? heavyModel : fastModel);
 
       const aiRes = await fetch('https://api.anthropic.com/v1/messages', {
         method: 'POST',
@@ -72,8 +92,8 @@ export default {
           'anthropic-version': '2023-06-01',
         },
         body: JSON.stringify({
-          model: 'claude-sonnet-4-6',
-          max_tokens: 4000,
+          model: chosenModel,
+          max_tokens: Number.isInteger(max_tokens) ? max_tokens : 4000,
           messages: [{ role: 'user', content: prompt }],
         }),
       });
@@ -85,6 +105,7 @@ export default {
         headers: {
           'Content-Type': 'application/json',
           'Access-Control-Allow-Origin': ALLOWED_ORIGIN,
+          'X-Avanza-AI-Model': chosenModel,
         },
       });
     }
@@ -98,14 +119,29 @@ export default {
 //  PASOS PARA ACTUALIZAR
 // ============================================================
 //
-//  1. Cloudflare → Workers & Pages → tu Worker → Edit
-//     Reemplazá el código con este archivo → Deploy
+//  1. Cloudflare > Workers & Pages > tu Worker > Edit
+//     Reemplaza el codigo con este archivo > Deploy
 //
-//  2. Agregá el secreto de Google:
-//     Settings → Variables and Secrets → Add
+//  2. Agrega el secreto de Google:
+//     Settings > Variables and Secrets > Add
 //     Name: GOOGLE_KEY  |  Type: Secret  |  Value: tu API key de Google
-//     (la de Anthropic ya la tenés guardada como "avanzadigital")
+//     (la de Anthropic ya la tenes guardada como "avanzadigital")
 //
-//  3. Listo — ninguna key queda visible en el HTML
+//  3. (Opcional) Para forzar otro modelo sin tocar codigo:
+//     Settings > Variables and Secrets > Add
+//     AI_MODEL_FAST  = claude-haiku-4-5-20251001
+//     AI_MODEL_HEAVY = claude-sonnet-4-6
+//
+//  4. Listo - ninguna key queda visible en el HTML
+//
+//  -- COMO PEDIR DESDE EL FRONT -------------------------------
+//  Por defecto (Haiku, barato):
+//     fetch(worker, { method:'POST', body:JSON.stringify({
+//        type:'ai', prompt:'Resumi esto en 3 bullets: ...'
+//     })})
+//  Para tareas pesadas (Sonnet):
+//     body:JSON.stringify({ type:'ai', mode:'heavy', prompt:'...' })
+//  Override directo del modelo:
+//     body:JSON.stringify({ type:'ai', model:'claude-opus-4-7', prompt:'...' })
 //
 // ============================================================

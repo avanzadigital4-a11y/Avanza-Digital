@@ -2,14 +2,14 @@ from fastapi import FastAPI, Depends, HTTPException, Request, status, Background
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
-from sqlalchemy import text
+from sqlalchemy import text, func
 from sqlalchemy.exc import OperationalError, ProgrammingError
 from passlib.context import CryptContext
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from pydantic import BaseModel
 from typing import Optional
 from models import (
-    Aliado, Admin, Venta, Referido, Prospecto, AuditoriaLog, LeadBolsa,
+    Aliado, Admin, AdminAuditLog, Venta, Referido, Prospecto, AuditoriaLog, LeadBolsa,
     TransaccionCredito, PostComunidad, ComentarioComunidad, AutomationLog,
     LinkPago, Comision, AcademiaModulo, AliadoModuloCompletado,
     SolicitudCompraCreditos, ReporteMalContacto,
@@ -26,6 +26,8 @@ from database import engine, get_db, Base
 from auth import (
     crear_token, current_aliado_required, current_admin_required,
     verify_ownership_dep, ADMIN_API_KEY, JWT_SECRET,
+    decodificar_token, decodificar_token_ignorando_exp,
+    JWT_REFRESH_WINDOW_HOURS,
 )
 import schemas
 import groq_ai  # IA opcional — si GROQ_API_KEY no está, todo cae a fallback heurístico
@@ -164,9 +166,16 @@ RESEND_FROM    = os.environ.get("RESEND_FROM", "Avanza Digital <no-reply@avanzad
 # ─── BREVO (emails transaccionales — proveedor primario) ─────────────────────
 # Free tier: 300 emails/día, 9.000/mes — permanente, sin tarjeta.
 # Variable de entorno: BREVO_API_KEY
-# Remitente: el mismo EMAIL_FROM ya configurado (avanzadigital4@gmail.com o dominio propio)
+#
+# IMPORTANTE: Brevo (y cualquier proveedor serio) rechaza enviar desde Gmail
+# genérico — los emails enviados desde @gmail.com vía Brevo terminan en spam
+# o son directamente rechazados (DMARC reject). Por defecto usamos un
+# remitente del dominio propio. ANTES de que esto funcione hay que:
+#   1) Verificar el dominio avanzadigital.digital en Brevo
+#   2) Configurar los registros SPF, DKIM y DMARC en la zona DNS
+# Sin esos pasos el From debe coincidir con un sender verificado en Brevo.
 BREVO_API_KEY = os.environ.get("BREVO_API_KEY", "")
-BREVO_FROM    = os.environ.get("BREVO_FROM", ADMIN_EMAIL)
+BREVO_FROM    = os.environ.get("BREVO_FROM", "no-reply@avanzadigital.digital")
 BREVO_FROM_NAME = os.environ.get("BREVO_FROM_NAME", "Avanza Digital")
 
 # ─── DOLAR API ───────────────────────────────────────────────────────────────
@@ -496,6 +505,17 @@ def job_notificaciones_24h():
         db.close()
 
 scheduler = BackgroundScheduler()
+# Si ENABLE_SCHEDULER != "1", reemplazamos add_job y start por no-ops.
+# Esto permite seguir cargando el módulo sin que ningún job se registre, y
+# evita ejecuciones duplicadas cuando hay >1 worker (uvicorn --workers N o
+# gunicorn con varios workers). Patrón: activar ENABLE_SCHEDULER=1 SOLO en
+# una instancia (worker dedicado) y dejarlo en "0" en las demás.
+ENABLE_SCHEDULER = os.environ.get("ENABLE_SCHEDULER", "1") == "1"
+if not ENABLE_SCHEDULER:
+    print("[SCHEDULER] Desactivado por ENABLE_SCHEDULER != '1' — no se registran jobs.")
+    scheduler.add_job = lambda *args, **kwargs: None  # type: ignore[assignment]
+    scheduler.start   = lambda *args, **kwargs: None  # type: ignore[assignment]
+
 scheduler.add_job(job_notificaciones_24h, "interval", hours=1)
 
 
@@ -1299,7 +1319,177 @@ def generar_codigo_aliado(db):
 def root(): return {"status": "Avanza Partner Portal activo", "version": "1.2"}
 
 @app.get("/health")
-def health(): return {"status": "ok"}
+def health():
+    """Healthcheck público mínimo — para Render/Railway. Solo confirma que el
+    proceso responde. NO toca DB para no romper el deploy si la DB tarda en
+    levantar."""
+    return {"status": "ok"}
+
+
+# ─── HELPER: REGISTRAR ACCIÓN DE ADMIN EN BITÁCORA ───────────────────────────
+def _admin_log(
+    db: Session,
+    admin: dict,
+    request: Request,
+    accion: str,
+    entidad: str = None,
+    entidad_id=None,
+    detalle: dict = None,
+):
+    """Registra una acción admin sensible en admin_audit_log.
+
+    `admin` es lo que devuelve `current_admin_required` — un dict con
+    {via, username, ...}. Si por algún motivo viene incompleto, se loguea
+    con 'desconocido' antes que perder el evento.
+
+    Esta función NO hace commit (lo deja al caller para mantener atómico el
+    flujo de "operación + auditoría" en la misma transacción). Si la
+    operación falla y hay rollback, la entrada de auditoría también se
+    revierte — eso es deseable: solo queremos auditar acciones que pasaron.
+    """
+    try:
+        import json as _json
+        detalle_str = _json.dumps(detalle, default=str, ensure_ascii=False) if detalle else None
+        entry = AdminAuditLog(
+            admin_username=(admin or {}).get("username") or "desconocido",
+            via=(admin or {}).get("via"),
+            accion=accion,
+            entidad=entidad,
+            entidad_id=str(entidad_id) if entidad_id is not None else None,
+            detalle=detalle_str,
+            ip=(request.client.host if request and request.client else None),
+            user_agent=(request.headers.get("user-agent") if request else None),
+        )
+        db.add(entry)
+    except Exception as e:
+        # No queremos que un fallo de auditoría tumbe la operación principal.
+        print(f"[ADMIN_AUDIT] Error registrando '{accion}': {e}")
+
+
+# ─── HEALTHCHECK ADMIN — MÉTRICAS REALES ─────────────────────────────────────
+@app.get("/admin/healthcheck")
+def admin_healthcheck(
+    admin: dict = Depends(current_admin_required),
+    db: Session = Depends(get_db),
+):
+    """Healthcheck rico para el panel admin: estado del sistema + métricas
+    operativas que importan para detectar problemas antes de que un aliado
+    nos avise por WhatsApp.
+
+    Diferencia con `/health`:
+      - /health: para Render/uptime monitors (cheap, no tocar DB).
+      - /admin/healthcheck: para el operador humano (queries reales).
+    """
+    now = datetime.now()
+    desde_24h = now - timedelta(hours=24)
+    desde_7d = now - timedelta(days=7)
+
+    # --- Aliados ---
+    aliados_total      = db.query(Aliado).count()
+    aliados_activos    = db.query(Aliado).filter(Aliado.activo == True).count()
+    aliados_login_24h  = db.query(Aliado).filter(Aliado.ultimo_login >= desde_24h).count()
+    aliados_nuevos_7d  = db.query(Aliado).filter(Aliado.creado_en >= desde_7d).count()
+
+    # --- Créditos circulando ---
+    from sqlalchemy import func as _func
+    total_creditos = db.query(_func.coalesce(_func.sum(Aliado.creditos), 0)).scalar() or 0
+
+    # --- Bolsa de leads ---
+    leads_disponibles = db.query(LeadBolsa).filter(LeadBolsa.estado == "disponible").count()
+    leads_reclamados  = db.query(LeadBolsa).filter(LeadBolsa.estado == "reclamado").count()
+
+    # --- Ventas ---
+    ventas_confirmadas_7d = db.query(Venta).filter(
+        Venta.confirmada == True, Venta.fecha_venta >= desde_7d
+    ).count()
+    ventas_pendientes_confirmar = db.query(Venta).filter(Venta.confirmada == False).count()
+
+    # --- Comisiones ---
+    comisiones_pendientes = db.query(Comision).filter(Comision.estado == "pendiente").count()
+    monto_pendiente_usd = db.query(_func.coalesce(_func.sum(Comision.comision_usd), 0)).filter(
+        Comision.estado == "pendiente"
+    ).scalar() or 0.0
+
+    # --- Solicitudes de compra de créditos ---
+    solic_pendientes = db.query(SolicitudCompraCreditos).filter(
+        SolicitudCompraCreditos.estado == "pendiente"
+    ).count()
+
+    # --- Reportes de mal contacto pendientes ---
+    reportes_pendientes = db.query(ReporteMalContacto).filter(
+        ReporteMalContacto.estado == "pendiente"
+    ).count()
+
+    # --- Última corrida visible de jobs cron ---
+    # No tenemos un metadato directo, así que aproximamos: si en las últimas
+    # 25hs no hubo NINGUNA TransaccionCredito automática (motivos no manuales),
+    # el scheduler probablemente está caído. Heurística — útil para alertar.
+    motivos_automaticos = ["estipendio", "bienvenida", "compra_lead", "primera_venta"]
+    ultima_tx_auto = db.query(_func.max(TransaccionCredito.creado_en)).filter(
+        TransaccionCredito.motivo.in_(motivos_automaticos)
+    ).scalar()
+
+    # --- Última acción admin registrada ---
+    ultima_admin = db.query(_func.max(AdminAuditLog.creado_en)).scalar()
+
+    # --- DB ping ---
+    db_ok = True
+    db_error = None
+    try:
+        db.execute(text("SELECT 1"))
+    except Exception as e:
+        db_ok = False
+        db_error = str(e)[:200]
+
+    # Flags rojos para mostrar en el panel
+    alertas = []
+    if not db_ok:
+        alertas.append({"nivel": "critico", "mensaje": "DB no responde a SELECT 1"})
+    if ultima_tx_auto and (now - ultima_tx_auto) > timedelta(hours=25):
+        alertas.append({"nivel": "warning",
+                        "mensaje": f"No hubo transacciones automáticas en {(now - ultima_tx_auto).total_seconds()//3600:.0f}h — ¿scheduler caído?"})
+    if not ultima_tx_auto:
+        alertas.append({"nivel": "info",
+                        "mensaje": "Nunca hubo transacciones automáticas (sistema nuevo o scheduler nunca corrió)."})
+    if solic_pendientes >= 10:
+        alertas.append({"nivel": "warning",
+                        "mensaje": f"{solic_pendientes} solicitudes de compra pendientes — revisar panel."})
+    if reportes_pendientes >= 5:
+        alertas.append({"nivel": "warning",
+                        "mensaje": f"{reportes_pendientes} reportes de mal contacto pendientes."})
+
+    return {
+        "fecha":   now.isoformat(),
+        "status":  "ok" if db_ok and not [a for a in alertas if a["nivel"] == "critico"] else "degraded",
+        "db":      {"ok": db_ok, "error": db_error},
+        "aliados": {
+            "total":       aliados_total,
+            "activos":     aliados_activos,
+            "login_24h":   aliados_login_24h,
+            "nuevos_7d":   aliados_nuevos_7d,
+        },
+        "creditos": {"circulando_total": int(total_creditos)},
+        "bolsa":   {"disponibles": leads_disponibles, "reclamados": leads_reclamados},
+        "ventas":  {
+            "confirmadas_7d":          ventas_confirmadas_7d,
+            "pendientes_confirmar":    ventas_pendientes_confirmar,
+        },
+        "comisiones": {
+            "pendientes":            comisiones_pendientes,
+            "monto_pendiente_usd":   round(float(monto_pendiente_usd), 2),
+        },
+        "operaciones": {
+            "solicitudes_credito_pendientes":   solic_pendientes,
+            "reportes_mal_contacto_pendientes": reportes_pendientes,
+        },
+        "scheduler": {
+            "ultima_tx_automatica": ultima_tx_auto.isoformat() if ultima_tx_auto else None,
+        },
+        "admin_audit": {
+            "ultima_accion": ultima_admin.isoformat() if ultima_admin else None,
+        },
+        "alertas": alertas,
+    }
 
 # ─── DESCARGA DE MATERIALES (públicos) ───────────────────────────────────────
 from fastapi.responses import RedirectResponse
@@ -1644,6 +1834,64 @@ def login_aliado(request: Request,
         print(f"Error guardando tracking de login: {e}")
 
     return _aliado_detalle(a, incluir_token=True)
+
+
+# ─── REFRESH TOKEN ───────────────────────────────────────────────────────────
+@app.post("/auth/refresh")
+@limiter.limit("30/minute")
+def refresh_token(request: Request, db: Session = Depends(get_db)):
+    """Renueva un JWT que está por vencer (o vencido hace poco).
+
+    Acepta el token en el header `Authorization: Bearer ...` aunque ya esté
+    expirado, mientras la firma sea válida y no haya pasado más de
+    JWT_REFRESH_WINDOW_HOURS desde el `iat`. Devuelve un nuevo token con la
+    misma identidad y tipo.
+
+    El front llama a este endpoint cuando recibe un 401 con detalle de token
+    expirado, para no obligar al aliado a reloguearse. Si el refresh también
+    falla → 401 y el front muestra el modal de login.
+    """
+    from jose import JWTError as _JWTError
+    auth_header = request.headers.get("Authorization") or request.headers.get("authorization") or ""
+    parts = auth_header.split()
+    if len(parts) != 2 or parts[0].lower() != "bearer":
+        raise HTTPException(401, "Falta token Bearer en header Authorization.")
+    token = parts[1]
+
+    try:
+        payload = decodificar_token_ignorando_exp(token)
+    except _JWTError:
+        raise HTTPException(401, "Token con firma inválida — no se puede refrescar.")
+
+    tipo = payload.get("tipo")
+    sub  = payload.get("sub")
+    iat  = payload.get("iat")
+    if not tipo or not sub or not iat:
+        raise HTTPException(401, "Token incompleto.")
+    if tipo not in ("aliado", "admin"):
+        raise HTTPException(401, "Tipo de token desconocido.")
+
+    # iat puede venir como int (unix epoch) o como datetime serializado
+    try:
+        iat_dt = datetime.fromtimestamp(iat, tz=timezone.utc) if isinstance(iat, (int, float)) else datetime.fromisoformat(str(iat))
+    except Exception:
+        raise HTTPException(401, "Token con iat inválido.")
+    edad = datetime.now(timezone.utc) - iat_dt
+    if edad > timedelta(hours=JWT_REFRESH_WINDOW_HOURS):
+        raise HTTPException(401, "El token está fuera de la ventana de refresh — reloguearse.")
+
+    # Validar que el sujeto siga siendo válido en la DB.
+    if tipo == "aliado":
+        a = db.query(Aliado).filter(Aliado.codigo == sub, Aliado.activo == True).first()
+        if not a:
+            raise HTTPException(401, "Aliado del token no encontrado o inactivo.")
+    else:  # admin
+        adm = db.query(Admin).filter(Admin.username == sub).first()
+        if not adm:
+            raise HTTPException(401, "Admin del token no encontrado.")
+
+    nuevo = crear_token(sub=sub, tipo=tipo)
+    return {"token": nuevo, "tipo": tipo}
 
 
 # ─── ALIADOS — RUTAS FIJAS (deben ir ANTES de /{codigo}) ─────────────────────
@@ -4848,10 +5096,42 @@ def ver_automation_log(codigo: str, db: Session = Depends(get_db), _owner=Depend
 # ─── MARKETPLACE DE LEADS + CRÉDITOS (D) ─────────────────────────────────────
 
 def _ajustar_creditos(db: Session, aliado: Aliado, delta: int, motivo: str, ref: str = ""):
-    """Helper: suma/resta créditos y registra transacción."""
-    aliado.creditos = (aliado.creditos or 0) + delta
-    if aliado.creditos < 0:
-        aliado.creditos = 0
+    """Helper: suma/resta créditos y registra transacción.
+
+    ATÓMICO: usa UPDATE ... WHERE id=? AND creditos+delta>=0 para evitar race
+    conditions cuando dos requests del mismo aliado intentan descontar a la vez
+    (doble click en "Comprar lead", scripts maliciosos, retries, etc.).
+
+    Si delta es NEGATIVO y el saldo cambió por debajo de lo necesario, lanza
+    HTTPException 400 (que el caller puede capturar para devolver "saldo insuficiente").
+    Si delta es POSITIVO siempre tiene éxito (no hay tope superior).
+    """
+    from sqlalchemy import update
+    from fastapi import HTTPException
+
+    res = db.execute(
+        update(Aliado)
+        .where(
+            Aliado.id == aliado.id,
+            # Postgres + SQLite: COALESCE para tratar NULL como 0.
+            func.coalesce(Aliado.creditos, 0) + delta >= 0,
+        )
+        .values(creditos=func.coalesce(Aliado.creditos, 0) + delta)
+    )
+    if res.rowcount == 0:
+        # Saldo cambió bajo nuestros pies o no alcanzaba. Solo es un error real
+        # si era un débito; un crédito (delta>0) nunca debería fallar este check.
+        if delta < 0:
+            raise HTTPException(
+                400,
+                "Saldo insuficiente o cambió antes de procesar. Reintentá la operación.",
+            )
+        else:
+            raise HTTPException(500, "Error inesperado ajustando créditos del aliado.")
+
+    # Refrescamos el objeto en memoria para que el caller vea el valor nuevo.
+    db.refresh(aliado)
+
     t = TransaccionCredito(aliado_id=aliado.id, delta=delta, motivo=motivo, referencia=ref)
     db.add(t)
 
@@ -4915,14 +5195,24 @@ def ver_creditos(codigo: str, db: Session = Depends(get_db), _owner=Depends(veri
 
 @app.post("/admin/aliados/{codigo}/creditos")
 def admin_ajustar_creditos(codigo: str,
+                            request: Request,
                             body: schemas.AjusteCreditosIn | None = Body(default=None),
                             delta: int = 0, motivo: str = "recarga_admin",
+                            admin: dict = Depends(current_admin_required),
                             db: Session = Depends(get_db)):
     """Admin: asigna/quita créditos a un aliado. (Protegido por middleware admin.)"""
     if body is not None:
         delta, motivo = body.delta, body.motivo
     a = _get_aliado(codigo, db)
+    saldo_antes = a.creditos or 0
     _ajustar_creditos(db, a, delta, motivo, "admin")
+    _admin_log(
+        db, admin, request,
+        accion="ajustar_creditos",
+        entidad="aliado", entidad_id=a.codigo,
+        detalle={"delta": delta, "motivo": motivo,
+                 "saldo_antes": saldo_antes, "saldo_despues": a.creditos},
+    )
     db.commit()
     return {"mensaje": f"Saldo actualizado.", "nuevo_saldo": a.creditos}
 
@@ -5031,10 +5321,43 @@ def comprar_lead(id: int,
     if reclamos_activos >= LIMITE_RECLAMOS_ACTIVOS:
         raise HTTPException(400, f"Ya tenés {LIMITE_RECLAMOS_ACTIVOS} leads reclamados activos.")
 
-    lead.estado = "reclamado"
-    lead.aliado_id = a.id
-    lead.fecha_reclamo = datetime.now()
-    _ajustar_creditos(db, a, -costo, "compra_lead", f"lead:{lead.id}")
+    # --- CLAIM ATÓMICO DEL LEAD (anti-TOCTOU) ─────────────────────────────────
+    # Dos aliados pueden haber pasado las validaciones de arriba al mismo tiempo.
+    # Acá nos aseguramos de que SOLO uno se quede con el lead: el UPDATE
+    # condicional WHERE estado='disponible' falla con rowcount=0 para el segundo.
+    from sqlalchemy import update as _sa_update
+    res_claim = db.execute(
+        _sa_update(LeadBolsa)
+        .where(LeadBolsa.id == id, LeadBolsa.estado == "disponible")
+        .values(
+            estado="reclamado",
+            aliado_id=a.id,
+            fecha_reclamo=datetime.now(),
+        )
+    )
+    if res_claim.rowcount == 0:
+        # Otro aliado nos ganó de mano (race condition). Devolvemos 409
+        # para que el front pueda refrescar la lista y mostrar un toast amable.
+        raise HTTPException(409, "Otro aliado acaba de comprar este lead — refrescá la bolsa.")
+
+    # Refrescamos la instancia local para mantener consistencia.
+    db.refresh(lead)
+
+    # Descuento atómico de créditos. Si por algún motivo extremo (compras
+    # paralelas con varios leads) el saldo ya no alcanza, _ajustar_creditos
+    # lanza 400. En ese caso revertimos el reclamo del lead antes de propagar.
+    try:
+        _ajustar_creditos(db, a, -costo, "compra_lead", f"lead:{lead.id}")
+    except HTTPException:
+        # Rollback explícito del reclamo del lead, para no dejarlo "vendido" sin cobrar.
+        db.execute(
+            _sa_update(LeadBolsa)
+            .where(LeadBolsa.id == id, LeadBolsa.aliado_id == a.id)
+            .values(estado="disponible", aliado_id=None, fecha_reclamo=None)
+        )
+        db.commit()
+        raise
+
     db.commit()
 
     # --- AVISO SALDO BAJO (no bloquea la respuesta) ─────────────────────────
@@ -5862,7 +6185,10 @@ def admin_listar_solicitudes(estado: str = "pendiente",
 
 # --- Endpoint admin: confirmar solicitud + acreditar créditos ---
 @app.post("/admin/solicitudes-creditos/{sol_id}/confirmar")
-def admin_confirmar_solicitud(sol_id: int, db: Session = Depends(get_db)):
+def admin_confirmar_solicitud(sol_id: int,
+                               request: Request,
+                               admin: dict = Depends(current_admin_required),
+                               db: Session = Depends(get_db)):
     """Marca como confirmada y acredita los créditos al aliado.
 
     IDEMPOTENTE: si la solicitud ya está confirmada, devuelve OK sin hacer nada.
@@ -5890,6 +6216,17 @@ def admin_confirmar_solicitud(sol_id: int, db: Session = Depends(get_db)):
 
     s.estado = "confirmada"
     s.confirmado_en = datetime.now()
+    _admin_log(
+        db, admin, request,
+        accion="aprobar_solicitud_creditos",
+        entidad="solicitud_creditos", entidad_id=s.id,
+        detalle={
+            "aliado_codigo": a.codigo,
+            "creditos":      s.creditos,
+            "precio_ars":    float(s.precio_ars or 0),
+            "codigo_referencia": s.codigo_referencia,
+        },
+    )
     db.commit(); db.refresh(s)
 
     # Email al aliado
@@ -5918,7 +6255,9 @@ def admin_confirmar_solicitud(sol_id: int, db: Session = Depends(get_db)):
 # --- Endpoint admin: rechazar solicitud ---
 @app.post("/admin/solicitudes-creditos/{sol_id}/rechazar")
 def admin_rechazar_solicitud(sol_id: int,
+                              request: Request,
                               body: schemas.RechazarSolicitudIn,
+                              admin: dict = Depends(current_admin_required),
                               db: Session = Depends(get_db)):
     """Marca la solicitud como rechazada. NO acredita créditos."""
     s = db.query(SolicitudCompraCreditos).filter(
@@ -5933,6 +6272,12 @@ def admin_rechazar_solicitud(sol_id: int,
     s.estado = "rechazada"
     s.notas_admin = body.motivo.strip()
     s.confirmado_en = datetime.now()
+    _admin_log(
+        db, admin, request,
+        accion="rechazar_solicitud_creditos",
+        entidad="solicitud_creditos", entidad_id=s.id,
+        detalle={"motivo": body.motivo, "codigo_referencia": s.codigo_referencia},
+    )
     db.commit(); db.refresh(s)
 
     # Email al aliado con el motivo

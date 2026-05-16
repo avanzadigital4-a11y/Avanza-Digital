@@ -9,12 +9,13 @@ auth.py — Autenticación y autorización con JWT
     * current_admin_required → exige JWT tipo 'admin' (o, durante el período de
                                 migración, X-API-Key válida).
 
-JWT_SECRET DEBE estar seteado como env var en producción. Si falta, se genera
-uno aleatorio en memoria y se loguea un warning — eso invalida los tokens en
-cada redeploy y NO debe usarse en prod.
+JWT_SECRET DEBE estar seteado como env var en producción. Si falta y ENV=production,
+el módulo aborta el arranque (fail-loud). En dev, genera un secret en memoria con
+warning (esto invalida los tokens en cada redeploy y NO debe usarse en prod).
 """
 import os
 import secrets
+import sys
 import warnings
 from datetime import datetime, timedelta, timezone
 from typing import Optional
@@ -28,16 +29,37 @@ from models import Admin, Aliado
 
 # ─── CONFIG ──────────────────────────────────────────────────────────────────
 JWT_ALGORITHM = "HS256"
-JWT_EXPIRE_HOURS = int(os.environ.get("JWT_EXPIRE_HOURS", "24"))
+# 7 días por defecto: para un portal B2B esto es razonable (no es un banco)
+# y elimina la fricción de tokens caducados cada 24h. Si se necesita más
+# seguridad, bajalo a 24 y usá refresh tokens activos.
+JWT_EXPIRE_HOURS = int(os.environ.get("JWT_EXPIRE_HOURS", "168"))  # 7 días
+
+# Ventana durante la cual un token expirado todavía puede ser refrescado
+# (controla cuánto puede "dormir" un aliado offline antes de tener que loguearse
+# de nuevo a mano). Por defecto: 30 días.
+JWT_REFRESH_WINDOW_HOURS = int(os.environ.get("JWT_REFRESH_WINDOW_HOURS", "720"))
 
 _jwt_secret_env = os.environ.get("JWT_SECRET", "").strip()
+_env_name = os.environ.get("ENV", "").lower().strip() or os.environ.get("ENVIRONMENT", "").lower().strip()
+_is_production = _env_name in ("production", "prod")
+
 if not _jwt_secret_env:
-    # Fallback inseguro: token random en memoria. Solo dev local.
+    if _is_production:
+        # Fail-loud: en producción NO arrancamos sin JWT_SECRET. Generar un
+        # secret en memoria significa que todos los aliados se desloguean en
+        # cada redeploy (Render reinicia solo a veces) — eso es trampa silenciosa.
+        print(
+            "[AUTH] FATAL: JWT_SECRET no configurada en producción. "
+            "Configurá JWT_SECRET como variable de entorno antes de levantar el servidor.",
+            file=sys.stderr,
+        )
+        sys.exit(1)
+    # Dev local: fallback inseguro con aviso.
     JWT_SECRET = secrets.token_urlsafe(64)
     warnings.warn(
         "[AUTH] JWT_SECRET no configurada — generada en memoria. "
-        "Los tokens se invalidarán en cada redeploy. "
-        "Configurar JWT_SECRET en producción.",
+        "Los tokens se invalidarán en cada reinicio. "
+        "Solo aceptable en desarrollo local.",
         stacklevel=2,
     )
 else:
@@ -71,6 +93,18 @@ def crear_token(*, sub: str, tipo: str, extra: Optional[dict] = None) -> str:
 def decodificar_token(token: str) -> dict:
     """Decodifica y valida firma+expiración. Lanza JWTError si es inválido."""
     return jwt.decode(token, JWT_SECRET, algorithms=[JWT_ALGORITHM])
+
+
+def decodificar_token_ignorando_exp(token: str) -> dict:
+    """Decodifica un token IGNORANDO su expiración. Usado SOLO por /auth/refresh
+    para permitir extender tokens que acaban de vencer (dentro de la ventana de
+    refresh). Sigue validando la firma — un token con firma inválida no se
+    puede refrescar.
+    """
+    return jwt.decode(
+        token, JWT_SECRET, algorithms=[JWT_ALGORITHM],
+        options={"verify_exp": False},
+    )
 
 
 # ─── DEPENDENCIES ────────────────────────────────────────────────────────────
