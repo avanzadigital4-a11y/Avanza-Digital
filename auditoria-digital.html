@@ -641,13 +641,14 @@ Devolvé SOLO JSON válido sin backticks:
 }`;
 
     try {
-        const res = await fetch(WORKER_URL,{
-            method:'POST',
-            headers:{'Content-Type':'application/json'},
-            body: JSON.stringify({type:'ai',prompt})
+        // Llama al backend propio (Groq) en lugar del Worker de Cloudflare
+        const res = await fetch('/auditoria-ia', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({prompt, domain})
         });
 
-        if(!res.ok){
+        if (!res.ok) {
             const err = await res.text();
             console.warn('AI falló, mostrando con datos reales:', res.status, err);
             stepDone('ai','Parcial');
@@ -655,14 +656,12 @@ Devolvé SOLO JSON válido sin backticks:
             return;
         }
 
-        const data = await res.json();
-        const text = data.content.map(b=>b.text||'').join('');
-        const clean = text.replace(/```json\n?/g,'').replace(/```\n?/g,'').trim();
-        auditData = JSON.parse(clean);
+        // El backend devuelve el JSON directamente (Groq con json_mode)
+        auditData = await res.json();
         stepDone('ai','OK');
         renderReport(auditData, buildMetrics(rawData.desk, rawData.mob));
 
-    } catch(err){
+    } catch(err) {
         console.warn('AI error:', err);
         stepDone('ai','Parcial');
         renderFallback(domain, buildMetrics(rawData?.desk, rawData?.mob));

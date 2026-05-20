@@ -6549,6 +6549,47 @@ def auditoria_digital_redirect():
     from fastapi.responses import FileResponse
     return FileResponse("auditoria-digital.html")
 
+
+class AuditoriaIARequest(BaseModel):
+    prompt: str
+    domain: str = ""
+
+@app.post("/auditoria-ia")
+async def auditoria_ia(body: AuditoriaIARequest):
+    """
+    Genera el análisis de IA para la auditoría digital usando Groq.
+    Reemplaza la llamada al Worker de Cloudflare (que usaba Anthropic con créditos agotados).
+    """
+    import groq_ai, json as _json
+
+    system = (
+        "Sos un experto en marketing digital B2B industrial en Argentina. "
+        "Analizás datos reales de Google Lighthouse para PyMEs industriales argentinas. "
+        "Devolvés ÚNICAMENTE el JSON solicitado, sin texto adicional, sin bloques de código."
+    )
+
+    raw = groq_ai._chat(
+        body.prompt,
+        system,
+        model=groq_ai.GROQ_MODEL_QUALITY,
+        max_tokens=1200,
+        temperature=0.4,
+        json_mode=True,
+    )
+
+    if not raw:
+        raise HTTPException(status_code=503, detail="Groq no disponible — usá el fallback heurístico.")
+
+    try:
+        data = _json.loads(raw)
+    except Exception:
+        obj = groq_ai._extract_json(raw)
+        if not obj:
+            raise HTTPException(status_code=502, detail="Respuesta de IA no parseable.")
+        data = obj
+
+    return data
+
 @app.post("/admin/comunidad/{id}/ocultar")
 def admin_ocultar_post(id: int, ocultar: bool = True, db: Session = Depends(get_db)):
     p = db.query(PostComunidad).filter(PostComunidad.id == id).first()
