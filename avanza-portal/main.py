@@ -6550,12 +6550,48 @@ def auditoria_digital_redirect():
     return FileResponse("auditoria-digital.html")
 
 
+# ── Endpoint público: datos del aliado para la auditoría (barra + card) ───────
+@app.get("/aliados/wa-publica/{ref_code}")
+def aliado_wa_publica(ref_code: str, db: Session = Depends(get_db)):
+    """
+    Devuelve datos públicos del aliado para mostrar en la auditoría digital.
+    No requiere autenticación.
+    """
+    a = db.query(Aliado).filter(
+        Aliado.ref_code == ref_code,
+        Aliado.activo == True
+    ).first()
+    if not a:
+        return {
+            "es_aliado": False,
+            "nombre": None,
+            "whatsapp": None,
+            "foto_url": None,
+            "titular": None,
+            "bio": None,
+        }
+    titular = getattr(a, "portal_publico_titular", None) or a.nombre
+    bio = getattr(a, "portal_publico_bio", None) or (
+        f"Asesor digital · {a.ciudad}" if getattr(a, "ciudad", None) else "Partner certificado · Avanza Digital"
+    )
+    foto_url = getattr(a, "portal_publico_foto_url", None)
+    return {
+        "es_aliado": True,
+        "nombre": a.nombre,
+        "titular": titular,
+        "bio": bio,
+        "whatsapp": a.whatsapp,
+        "foto_url": foto_url,
+        "ref_code": a.ref_code,
+    }
+
+
 class AuditoriaIARequest(BaseModel):
     prompt: str
     domain: str = ""
 
 @app.post("/auditoria-ia")
-async def auditoria_ia(body: AuditoriaIARequest):
+def auditoria_ia(body: AuditoriaIARequest):
     """
     Genera el análisis de IA para la auditoría digital usando Groq.
     Reemplaza la llamada al Worker de Cloudflare (que usaba Anthropic con créditos agotados).

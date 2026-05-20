@@ -280,6 +280,25 @@
 
 <section id="email-gate-section" style="display:none;padding:60px 24px;text-align:center;position:relative;z-index:1;">
     <div class="scanner-box" style="max-width:480px;">
+
+        <!-- Card del aliado: se muestra solo si hay ?ref= válido -->
+        <div id="aliado-gate-card" style="display:none; background:rgba(59,130,246,0.07); border:1px solid rgba(59,130,246,0.25); border-radius:14px; padding:16px 20px; margin-bottom:24px; text-align:left; display:none;">
+            <div style="display:flex; align-items:center; gap:14px;">
+                <div id="aliado-gate-avatar" style="width:52px;height:52px;border-radius:50%;background:linear-gradient(135deg,#3b82f6,#1d4ed8);display:flex;align-items:center;justify-content:center;font-size:1.4rem;flex-shrink:0;overflow:hidden;">👤</div>
+                <div style="flex:1;min-width:0;">
+                    <div style="font-size:0.68rem;text-transform:uppercase;letter-spacing:1px;color:#3b82f6;font-weight:700;margin-bottom:2px;">Partner certificado · Avanza Digital</div>
+                    <div id="aliado-gate-nombre" style="font-weight:700;font-size:1rem;color:#f1f5f9;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"></div>
+                    <div id="aliado-gate-titular" style="font-size:0.8rem;color:#94a3b8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"></div>
+                </div>
+            </div>
+            <div id="aliado-gate-wa-wrap" style="display:none;margin-top:12px;">
+                <a id="aliado-gate-wa" href="#" target="_blank"
+                   style="display:inline-flex;align-items:center;gap:6px;background:#25d366;color:#fff;font-weight:700;font-size:0.82rem;padding:8px 16px;border-radius:8px;text-decoration:none;">
+                   <i class="fab fa-whatsapp"></i> Hablar con <span id="aliado-gate-wa-nombre" style="max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"></span>
+                </a>
+            </div>
+        </div>
+
         <div style="font-size:2.5rem;margin-bottom:16px;">📊</div>
         <h3 style="font-size:1.4rem;font-weight:800;margin-bottom:8px;letter-spacing:-0.5px;">Tu reporte está listo</h3>
         <p style="color:var(--text-dim);font-size:0.9rem;line-height:1.6;margin-bottom:28px;">Dejá tu email para recibir el reporte completo con el análisis de IA y el plan de acción personalizado.</p>
@@ -947,6 +966,32 @@ document.getElementById('domain-input').addEventListener('keydown',e=>{if(e.key=
                     if(bar && nombre) {
                         nombre.textContent = data.nombre;
                         bar.style.display = 'block';
+                    }
+                    // Poblar la card del email gate
+                    const card = document.getElementById('aliado-gate-card');
+                    if(card) {
+                        // Avatar: foto real o emoji fallback
+                        const avatarEl = document.getElementById('aliado-gate-avatar');
+                        if(avatarEl && data.foto_url) {
+                            avatarEl.innerHTML = `<img src="${data.foto_url}" alt="${data.nombre}" style="width:100%;height:100%;object-fit:cover;">`;
+                        }
+                        // Nombre y titular
+                        const nombreEl = document.getElementById('aliado-gate-nombre');
+                        if(nombreEl) nombreEl.textContent = data.nombre;
+                        const titularEl = document.getElementById('aliado-gate-titular');
+                        if(titularEl) titularEl.textContent = data.titular || data.bio || '';
+                        // Botón de WhatsApp
+                        if(data.whatsapp) {
+                            const waWrap = document.getElementById('aliado-gate-wa-wrap');
+                            const waLink = document.getElementById('aliado-gate-wa');
+                            const waLabel = document.getElementById('aliado-gate-wa-nombre');
+                            const firstName = (data.nombre || '').split(' ')[0];
+                            if(waWrap) waWrap.style.display = 'block';
+                            if(waLink) waLink.href = `https://wa.me/${data.whatsapp}`;
+                            if(waLabel) waLabel.textContent = firstName;
+                        }
+                        // Mostrar la card
+                        card.style.display = 'block';
                     }
                 }
             })
