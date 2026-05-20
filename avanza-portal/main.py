@@ -6598,6 +6598,8 @@ def portal_publico_aliado(ref_code: str, db: Session = Depends(get_db)):
 
     titular = a.portal_publico_titular or a.nombre
     bio = a.portal_publico_bio or (f"Asesor digital · {a.ciudad}" if getattr(a, 'ciudad', None) else "Asesor digital — Partner de Avanza Digital")
+    foto_url = getattr(a, 'portal_publico_foto_url', None)
+    avatar_html = f'<img src="{foto_url}" alt="{titular}" style="width:54px;height:54px;border-radius:50%;object-fit:cover;">' if foto_url else '👤'
 
     # WhatsApp de contacto: del aliado si tiene, si no el de Avanza
     _wa_raw = (a.whatsapp or "").strip().replace("+", "").replace(" ", "").replace("-", "").replace("(", "").replace(")", "")
@@ -6787,7 +6789,7 @@ input[type=text]:focus{{outline:none;border-color:#3b82f6;}}
 </nav>
 <div class="wrap">
   <section class="asesor-intro">
-    <div class="asesor-avatar">👤</div>
+    <div class="asesor-avatar">{avatar_html}</div>
     <div>
       <div class="asesor-intro-badge">Partner certificado · Avanza Digital</div>
       <div class="asesor-intro-name">{titular}</div>

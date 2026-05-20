@@ -4808,7 +4808,6 @@ async function subirFotoCloudinary(input) {
     // Guardar en carpeta separada por aliado para orden
     formData.append('folder', `avanza/perfiles/${aliado?.codigo || 'unknown'}`);
     // Recorte cuadrado automático centrado en la cara
-    formData.append('transformation', 'c_thumb,g_face,w_400,h_400');
 
     const res = await fetch('https://api.cloudinary.com/v1_1/dqbekidhy/image/upload', {
       method: 'POST',

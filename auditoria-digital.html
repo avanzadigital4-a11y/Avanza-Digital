@@ -234,6 +234,11 @@
 </head>
 <body>
 
+<!-- Barra de aliado (se muestra solo si hay ?ref= en la URL) -->
+<div id="aliado-bar" style="display:none; background:rgba(59,130,246,0.08); border-bottom:1px solid rgba(59,130,246,0.2); padding:8px 20px; text-align:center; font-size:0.82rem; color:#94a3b8; font-family:'Inter',sans-serif;">
+  Estás siendo atendido por <strong id="aliado-bar-nombre" style="color:#e2e8f0;"></strong> · <span style="color:#3b82f6;">Partner certificado de Avanza Digital</span>
+</div>
+
 <nav>
     <a href="index.html" class="nav-logo"><div class="dot"></div>Avanza</a>
     <ul class="nav-links">
@@ -932,9 +937,17 @@ document.getElementById('domain-input').addEventListener('keydown',e=>{if(e.key=
                 const btn = document.getElementById('btn-especialista');
                 if(btn && data.whatsapp) {
                     btn.href = `https://wa.me/${data.whatsapp}`;
-                    // Si es un aliado real (no fallback), personalizar el texto
                     if(data.es_aliado) {
                         btn.title = `Hablar con ${data.nombre}`;
+                    }
+                }
+                // Mostrar barra del aliado si es un aliado real
+                if(data.es_aliado && data.nombre) {
+                    const bar = document.getElementById('aliado-bar');
+                    const nombre = document.getElementById('aliado-bar-nombre');
+                    if(bar && nombre) {
+                        nombre.textContent = data.nombre;
+                        bar.style.display = 'block';
                     }
                 }
             })
