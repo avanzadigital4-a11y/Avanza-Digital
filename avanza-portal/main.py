@@ -218,7 +218,7 @@ SOLICITUD_CREDITOS_EXPIRACION_HS = int(os.environ.get("SOLICITUD_CREDITOS_EXPIRA
 # La verificación sigue siendo manual (admin confirma cuando llega el pago).
 DATOS_USD = {
     "metodo":         os.environ.get("USD_METODO",       "USDT"),
-    "destinatario":   os.environ.get("USD_DESTINATARIO", "avanzadigital4@gmail.com"),
+    "destinatario":   os.environ.get("USD_DESTINO", os.environ.get("USD_DESTINATARIO", "avanzadigital4@gmail.com")),
     "etiqueta_dest":  os.environ.get("USD_ETIQUETA",     "Dirección USDT (TRC20)"),
     "red":            os.environ.get("USD_RED",          ""),  # ej: "TRC20" para USDT
     "notas":          os.environ.get("USD_NOTAS",        "Enviá el monto exacto en USD. Recibís los créditos cuando confirmamos el pago (24hs hábiles)."),
