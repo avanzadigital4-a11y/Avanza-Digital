@@ -53,6 +53,7 @@ class Aliado(Base):
     portal_publico_activo = Column(Boolean, default=True)
     portal_publico_titular = Column(String, nullable=True)
     portal_publico_bio = Column(Text, nullable=True)
+    portal_publico_foto_url = Column(String, nullable=True)  # URL de foto de perfil del aliado
 
     # --- CANAL DE ALIADO ---
     tipo_aliado = Column(String, default="canal1")

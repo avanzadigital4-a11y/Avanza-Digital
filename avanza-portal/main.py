@@ -6745,6 +6745,13 @@ body{{font-family:Inter,sans-serif;background:#050505;color:#e2e8f0;line-height:
 .garantia-box p{{font-size:.83rem;color:#a1a1aa;}}
 .footer{{margin-top:48px;text-align:center;color:#3f3f46;font-size:.75rem;}}
 .footer a{{color:#52525b;}}
+.audit-cta-box{{background:rgba(59,130,246,0.05);border:1px solid rgba(59,130,246,0.18);border-radius:14px;padding:28px 22px;margin:8px 0 28px;text-align:center;}}
+.audit-cta-box .audit-label{{font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:#93c5fd;margin-bottom:10px;display:block;}}
+.audit-cta-box h3{{font-size:1.15rem;font-weight:900;color:#e2e8f0;margin:0 0 8px;}}
+.audit-cta-box p{{font-size:.85rem;color:#a1a1aa;max-width:460px;margin:0 auto 18px;line-height:1.55;}}
+.audit-btn{{display:inline-flex;align-items:center;gap:8px;padding:13px 26px;background:linear-gradient(135deg,#3b82f6,#6366f1);color:#fff;border-radius:10px;font-weight:800;font-size:.9rem;text-decoration:none;transition:opacity .2s;}}
+.audit-btn:hover{{opacity:.88;}}
+.audit-free-tag{{display:block;font-size:.72rem;color:#71717a;margin-top:10px;}}
 .asesor-intro{{display:flex;gap:16px;align-items:flex-start;background:rgba(59,130,246,0.06);border:1px solid rgba(59,130,246,0.15);border-radius:14px;padding:22px 20px;margin-bottom:36px;}}
 .asesor-avatar{{width:54px;height:54px;border-radius:50%;background:linear-gradient(135deg,#3b82f6,#1d4ed8);display:flex;align-items:center;justify-content:center;font-size:1.4rem;flex-shrink:0;}}
 .asesor-intro-name{{font-size:1rem;font-weight:900;margin-bottom:4px;}}
@@ -6794,6 +6801,16 @@ input[type=text]:focus{{outline:none;border-color:#3b82f6;}}
     <a href="#planes" class="hero-cta">Elegir mi plan →</a>
     <p class="hero-social">Más de <span>40 PYMEs industriales</span> ya tienen su sistema funcionando</p>
   </section>
+
+  <div class="audit-cta-box">
+    <span class="audit-label">📊 Diagnóstico gratuito · Sin registro</span>
+    <h3>¿Cómo está la presencia digital de tu empresa hoy?</h3>
+    <p>Analizamos tu sitio web en segundos: velocidad, SEO, captación de leads y conversión. Resultado instantáneo con plan de acción personalizado.</p>
+    <a href="https://avanzadigital.digital/auditoria-digital.html?ref={ref_code}" class="audit-btn" target="_blank">
+      📋 Hacer diagnóstico gratis →
+    </a>
+    <span class="audit-free-tag">Gratis · Sin spam · Resultado en menos de 30 segundos</span>
+  </div>
 
   <section class="section">
     <div class="section-label">El problema</div>

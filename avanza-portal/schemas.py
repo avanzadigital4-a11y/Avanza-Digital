@@ -136,6 +136,7 @@ class ActualizarPerfilIn(_Base):
     portal_publico_titular: Optional[str] = None
     portal_publico_bio: Optional[str] = None
     portal_publico_activo: Optional[bool] = None
+    portal_publico_foto_url: Optional[str] = None  # URL de foto de perfil (solo https://)
 
 
 class ActualizarCBUIn(_Base):
