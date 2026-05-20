@@ -7059,7 +7059,22 @@ input[type=text]:focus{{outline:none;border-color:#3b82f6;}}
         alert(data.detail || \'Error al generar el link de pago. Intentá de nuevo.\');
         mostrarPaso(\'step-moneda\');
       }} else if (data.checkout_url) {{
-        window.location.href = data.checkout_url;
+        if (data.checkout_url.startsWith('tron:') || data.tipo === 'usdt') {{
+          const dirEl = document.getElementById('modal-usdt-dir');
+          const montoEl = document.getElementById('modal-usdt-monto');
+          if (dirEl && data.direccion) dirEl.value = data.direccion;
+          if (montoEl) montoEl.textContent = 'USD ' + (data.monto_usdt || '—');
+          const waBtn = document.getElementById('modal-usdt-wa-btn');
+          if (waBtn) {{
+            const _nom = document.getElementById('modal-nombre').value;
+            const _em  = document.getElementById('modal-email').value;
+            const texto = encodeURIComponent('Hola, realicé la transferencia de USD ' + (data.monto_usdt||'') + ' en USDT para el ' + _plan + '. Mi nombre: ' + _nom + ', email: ' + _em);
+            waBtn.href = 'https://wa.me/{wa_contacto}?text=' + texto;
+          }}
+          mostrarPaso('step-usdt');
+        }} else {{
+          window.location.href = data.checkout_url;
+        }}
       }} else {{
         alert(\'Error al generar el link de pago. Intentá de nuevo.\');
         mostrarPaso(\'step-moneda\');
