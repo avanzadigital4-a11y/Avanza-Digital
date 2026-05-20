@@ -2927,7 +2927,7 @@ async def _crear_link_usdt(a, plan: str, nombre_cliente: str, db):
         raise HTTPException(503, "TRON_MNEMONIC no configurado.")
 
     try:
-        hw = HDWallet(symbol=TRX)
+        hw = HDWallet(cryptocurrency=TRX)
         hw.from_mnemonic(mnemonic=TRON_MNEMONIC, language="english")
         hw.from_path(f"m/44'/195'/0'/0/{lp.id}")
         privkey_hex  = hw.private_key()
@@ -6655,6 +6655,11 @@ def portal_publico_aliado(ref_code: str, db: Session = Depends(get_db)):
     usdt_activo = bool(USDT_DIRECCION or TRON_MNEMONIC)
 
     usdt_activo = bool(USDT_DIRECCION)
+    _btn_usd = (
+        '<button class="moneda-btn" id="opt-usd" onclick="seleccionarMoneda(\'usd\')">'
+        '<div class="icon">💵</div><div class="label">USD</div>'
+        '<div class="sublabel">Transferencia</div></button>'
+    )
     _btn_usdt = (
         '<button class="moneda-btn usdt" id="opt-usdt" onclick="seleccionarMoneda(\'usdt\')">'
         '<div class="icon">🪙</div><div class="label">USDT / USDC</div>'
