@@ -2927,7 +2927,7 @@ async def _crear_link_usdt(a, plan: str, nombre_cliente: str, db):
         raise HTTPException(503, "TRON_MNEMONIC no configurado.")
 
     try:
-        hw = HDWallet(cryptocurrency=TRX)
+        hw = HDWallet(symbol=TRX)
         hw.from_mnemonic(mnemonic=TRON_MNEMONIC, language="english")
         hw.from_path(f"m/44'/195'/0'/0/{lp.id}")
         privkey_hex  = hw.private_key()
