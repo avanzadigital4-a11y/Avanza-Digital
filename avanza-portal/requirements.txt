@@ -12,3 +12,5 @@ httpx==0.27.0
 resend==0.7.2
 slowapi==0.1.9
 email-validator==2.2.0
+tronpy>=0.4.0
+hdwallet>=2.2.1

@@ -330,7 +330,7 @@
     z-index: 1000; display: flex; align-items: center; gap: 16px;
     background: rgba(10,10,10,0.85); border: 1px solid var(--border);
     border-radius: 50px; padding: 10px 20px; backdrop-filter: blur(20px);
-    white-space: nowrap; max-width: calc(100vw - 32px);
+    max-width: calc(100vw - 32px); flex-wrap: nowrap;
   }
 
   .nav-logo { font-size: 1rem; font-weight: 800; color: white; text-decoration: none; display: flex; align-items: center; gap: 8px; }
@@ -349,6 +349,7 @@
     background: rgba(255,255,255,0.06); border: 1px solid var(--border);
     color: var(--text-muted); padding: 7px 16px; border-radius: 50px;
     font-size: 0.82rem; font-family: 'Inter', sans-serif; cursor: pointer; transition: all 0.2s;
+    min-height: 34px; display: inline-flex; align-items: center; gap: 6px;
   }
   .btn-nav:hover { border-color: var(--border-h); color: var(--text); }
 
@@ -367,15 +368,34 @@
   .tabs {
     display: flex; gap: 4px; background: rgba(255,255,255,0.03);
     border: 1px solid var(--border); border-radius: 50px; padding: 4px;
-    width: fit-content; margin-bottom: 36px; flex-wrap: wrap;
+    width: fit-content; margin-bottom: 36px;
     position: sticky; top: 80px; z-index: 100; backdrop-filter: blur(10px);
+    overflow-x: auto; -webkit-overflow-scrolling: touch;
+    scrollbar-width: none; -ms-overflow-style: none;
   }
+  .tabs::-webkit-scrollbar { display: none; }
+
+  /* ── Fila secundaria de herramientas ────────────────────────────────── */
+  .tabs-extra-row {
+    display: none; gap: 4px;
+    background: rgba(255,255,255,0.02);
+    border: 1px solid var(--border); border-radius: var(--radius-sm);
+    padding: 4px; margin-bottom: 20px;
+    animation: fadeIn 0.2s ease;
+    position: sticky; top: 136px; z-index: 99; backdrop-filter: blur(10px);
+    width: fit-content;
+    overflow-x: auto; -webkit-overflow-scrolling: touch;
+    scrollbar-width: none; -ms-overflow-style: none;
+  }
+  .tabs-extra-row::-webkit-scrollbar { display: none; }
+  .tabs-extra-row.visible { display: flex; }
 
   .tab-btn {
     background: transparent; border: none; color: var(--text-muted);
     padding: 9px 20px; border-radius: 50px; font-size: 0.88rem;
     font-weight: 600; font-family: 'Inter', sans-serif; cursor: pointer;
     transition: all 0.2s; display: flex; align-items: center; gap: 7px;
+    white-space: nowrap; flex-shrink: 0;
   }
   .tab-btn i { font-size: 0.8rem; }
   .tab-btn.active { background: var(--primary); color: white; }
@@ -383,18 +403,6 @@
 
   .tab-panel { display: none; animation: fadeIn 0.25s ease; }
   .tab-panel.active { display: block; }
-
-  /* ── Fila secundaria de herramientas ────────────────────────────────── */
-  .tabs-extra-row {
-    display: none; gap: 4px; flex-wrap: wrap;
-    background: rgba(255,255,255,0.02);
-    border: 1px solid var(--border); border-radius: var(--radius-sm);
-    padding: 4px; margin-bottom: 20px;
-    animation: fadeIn 0.2s ease;
-    position: sticky; top: 136px; z-index: 99; backdrop-filter: blur(10px);
-    width: fit-content;
-  }
-  .tabs-extra-row.visible { display: flex; }
   .tab-btn-mas { border: 1px solid var(--border) !important; border-radius: 50px !important; }
   .tab-btn-mas.active { background: rgba(255,255,255,0.08) !important; color: var(--text) !important; }
 
@@ -490,9 +498,7 @@
     display: flex; align-items: center; justify-content: space-between;
     gap: 16px; flex-wrap: wrap; margin-bottom: 24px;
   }
-
-  .ref-label { font-size: 0.72rem; font-weight: 600; color: var(--text-dim); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px; }
-  .ref-url { font-size: 0.88rem; color: var(--primary); font-family: monospace; word-break: break-all; }
+  .ref-url { font-size: 0.88rem; color: var(--primary); font-family: monospace; word-break: break-all; overflow-wrap: anywhere; }
 
   .btn-copy {
     background: var(--primary); color: white; border: none;
@@ -581,6 +587,11 @@
     display: flex; align-items: center; gap: 8px;
     text-decoration: none; transition: transform 0.2s, box-shadow 0.2s;
     animation: popIn 0.5s 1s cubic-bezier(.4,0,.2,1) both;
+    max-width: calc(100vw - 48px);
+  }
+  @media (max-width: 600px) {
+    .float-support { bottom: 16px; right: 16px; padding: 11px 16px; font-size: 0.8rem; }
+    .float-support .float-support-text { display: none; }
   }
   .float-support:hover { transform: translateY(-3px); box-shadow: 0 10px 32px rgba(74,222,128,0.45); }
   @keyframes popIn { from{transform:scale(0.5) translateY(20px);opacity:0} to{transform:scale(1) translateY(0);opacity:1} }
@@ -736,18 +747,21 @@
 
   @media (max-width: 600px) {
     .login-box { padding: 32px 24px; }
-    .navbar-floating { padding: 8px 16px; gap: 10px; }
+    .navbar-floating { padding: 8px 14px; gap: 8px; }
     .nav-nombre { display: none; }
     .btn-nav-support span { display: none; }
+    .btn-nav .nav-btn-text { display: none; }
     .page-wrap { padding: 100px 16px 100px; }
-    .tabs { width: 100%; border-radius: var(--radius-sm); }
-    .tabs-extra-row { width: 100%; border-radius: var(--radius-sm); top: 148px; }
-    .tab-btn { flex: 1; justify-content: center; padding: 9px 8px; font-size: 0.78rem; }
+    .tabs { width: 100%; border-radius: var(--radius-sm); max-width: calc(100vw - 32px); }
+    .tabs-extra-row { width: 100%; border-radius: var(--radius-sm); top: 136px; max-width: calc(100vw - 32px); }
+    .tab-btn { flex: 0 0 auto; justify-content: center; padding: 9px 14px; font-size: 0.82rem; }
     .metric-value { font-size: 1.6rem; }
     th, td { padding: 12px 16px; }
     .welcome-header { flex-direction: column; align-items: flex-start; }
     .onboarding-box { max-height: 90vh; overflow-y: auto; }
     .onboard-header, .onboard-steps, .onboard-footer { padding-left: 20px; padding-right: 20px; }
+    .table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+    .aca-table { display: block; overflow-x: auto; -webkit-overflow-scrolling: touch; }
   }
 
   /* ─── SIGUIENTE MEJOR ACCIÓN ─── */
@@ -1132,7 +1146,7 @@
     <span class="nav-nivel" id="nav-nivel">BASIC</span>
     <span class="nav-nombre" id="nav-nombre">Aliado</span>
     <a href="https://wa.me/5493424392759" target="_blank" class="btn-nav-support"><i class="fa-brands fa-whatsapp"></i> <span>Soporte</span></a>
-    <button class="btn-nav" onclick="cerrarSesion()"><i class="fa-solid fa-right-from-bracket"></i> Salir</button>
+    <button class="btn-nav" onclick="cerrarSesion()"><i class="fa-solid fa-right-from-bracket"></i> <span class="nav-btn-text">Salir</span></button>
   </nav>
 
   <div class="page-wrap">
@@ -2060,7 +2074,7 @@
               </div>
               <p style="font-size:0.75rem; color:var(--text-dim); margin-top:8px;">Al enviar este link, si el cliente paga, la venta se registra a tu nombre automáticamente.</p>
 
-              <!-- NUEVO v1.4: Generador dual MP (ARS) + PayPal (USD) con tipo de cambio -->
+              <!-- NUEVO v1.4: Generador dual MP (ARS) + USDT TRC20 (USD) con tipo de cambio -->
               <div id="cot-checkout-box" style="display:none; margin-top:16px; background:rgba(0,0,0,0.3); border:1px solid rgba(255,255,255,0.06); border-radius:10px; padding:16px;">
                 <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; margin-bottom:14px;">
                   <div>
@@ -2077,7 +2091,7 @@
                     <i class="fa-solid fa-peso-sign"></i> Generar link en pesos (MP)
                   </button>
                   <button id="btn-checkout-usd" onclick="generarLinkPago('usd')" style="background:linear-gradient(135deg,#0070ba,#003087); color:#fff; border:none; border-radius:8px; padding:14px; font-weight:800; cursor:pointer; font-size:0.88rem; display:flex; align-items:center; justify-content:center; gap:8px;">
-                    <i class="fa-brands fa-paypal"></i> Generar link en dólares (PayPal)
+                    <i class="fa-solid fa-coins"></i> Generar link en dólares (USDT TRC20)
                   </button>
                 </div>
                 <div style="margin-top:10px;">
@@ -2635,11 +2649,20 @@
         <h3 style="font-size:1.2rem;font-weight:900;margin-bottom:8px;color:var(--amber);"><i class="fa-solid fa-network-wired"></i> Construí tu Agencia Descentralizada</h3>
         <p style="color:var(--text-muted);font-size:0.9rem;margin-bottom:20px;">Invitá a otros profesionales, agencias o vendedores a sumarse como aliados bajo tu red. <strong>Ganarás un 5% de comisión pasiva y automática por cada venta que ellos cierren.</strong> Para siempre.</p>
 
-        <div style="background:rgba(250,204,21,0.05); border:1px dashed rgba(250,204,21,0.3); border-radius:10px; padding:16px 18px; margin-bottom:20px; display:flex; align-items:flex-start; gap:14px;">
-          <i class="fa-solid fa-circle-info" style="color:var(--amber);font-size:1.2rem;margin-top:2px;"></i>
-          <div style="flex:1;font-size:.88rem;color:var(--text-muted);line-height:1.5;">
-            <strong style="color:var(--text);">¿Cómo se suma alguien a tu red?</strong><br>
-            Mandá tu página de ventas personal desde el <a href="#" onclick="cambiarTab('dashboard', document.querySelector('.tab-btn[onclick*=dashboard]')); return false;" style="color:var(--amber);font-weight:700;text-decoration:underline;">Dashboard</a>. Cuando esa persona se registre como aliado desde tu link, queda automáticamente bajo tu red y empezás a cobrar el 5% pasivo de todas sus ventas.
+        <!-- LINK DE RECLUTAMIENTO ─ visible siempre que el aliado esté logueado -->
+        <div style="margin-bottom:20px;">
+          <div style="font-size:.75rem;font-weight:800;color:var(--amber);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;">
+            <i class="fa-solid fa-link"></i> &nbsp;Tu link de reclutamiento — compartilo con profesionales
+          </div>
+          <div class="ref-card" style="background:rgba(250,204,21,0.05); border:1px solid rgba(250,204,21,0.3); margin-bottom:0;">
+            <div style="flex:1;">
+              <div class="ref-label" style="color:var(--amber); margin-bottom:4px;"><i class="fa-solid fa-user-plus"></i> &nbsp;Cuando alguien se registra desde este link queda automáticamente bajo tu red</div>
+              <div class="ref-url" id="red-link-reclutamiento" style="color:var(--text);">Cargando...</div>
+            </div>
+            <button class="btn-copy" style="background:var(--amber);color:#000;" onclick="copiarLinkRed()"><i class="fa-solid fa-copy"></i> Copiar</button>
+          </div>
+          <div style="font-size:.75rem;color:var(--text-dim);margin-top:8px;line-height:1.5;">
+            <i class="fa-solid fa-circle-info" style="color:var(--amber);"></i> &nbsp;Usalo en LinkedIn, WhatsApp o conversaciones con vendedores y agencias. <strong style="color:var(--text);">No lo mandes a clientes finales</strong> — para clientes usá tu <a href="#" onclick="cambiarTab('dashboard', document.querySelector('.tab-btn[onclick*=dashboard]')); return false;" style="color:var(--amber);font-weight:700;text-decoration:underline;">página de ventas del Dashboard</a>.
           </div>
         </div>
 
@@ -2687,7 +2710,7 @@
 </div>
 
 <a href="https://wa.me/5493424392759" target="_blank" class="float-support" id="float-support" style="display:none;">
-  <i class="fa-brands fa-whatsapp"></i> Soporte Avanza
+  <i class="fa-brands fa-whatsapp"></i> <span class="float-support-text">Soporte Avanza</span>
 </a>
 
 <div class="modal-overlay" id="modal-onboarding">
@@ -3564,8 +3587,8 @@
         .aca-table td strong { color: #fff; }
         .aca-table tr:last-child td { border-bottom: none; }
         
-        .aca-nav { display: flex; justify-content: space-between; gap: 10px; margin-top: 32px; padding-top: 20px; border-top: 1px solid var(--border); }
-        .aca-nav button { flex: 1; padding: 12px 16px; border-radius: 8px; font-weight: 700; font-size: 0.9rem; cursor: pointer; border: 1px solid var(--border); background: transparent; color: var(--text-muted); font-family: inherit; transition: all 0.2s; }
+        .aca-nav { display: flex; justify-content: space-between; gap: 10px; margin-top: 32px; padding-top: 20px; border-top: 1px solid var(--border); flex-wrap: wrap; }
+        .aca-nav button { flex: 1; min-width: 120px; padding: 12px 16px; border-radius: 8px; font-weight: 700; font-size: 0.9rem; cursor: pointer; border: 1px solid var(--border); background: transparent; color: var(--text-muted); font-family: inherit; transition: all 0.2s; }
         .aca-nav button:hover:not(:disabled) { color: #fff; border-color: var(--border-h); }
         .aca-nav button:disabled { opacity: 0.3; cursor: not-allowed; }
         .aca-nav .complete-btn { background: #f97316; color: #000; border-color: #f97316; }
@@ -4693,7 +4716,7 @@ async function guardarPortalPublico() {
   if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Guardando…'; }
 
   try {
-    const res = await fetch(`${API}/aliados/${aliado.codigo}/portal-publico`, {
+    const res = await apiFetch(`${API}/aliados/${aliado.codigo}/portal-publico`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ portal_publico_titular: titular, portal_publico_bio: bio })
@@ -4719,6 +4742,14 @@ async function guardarPortalPublico() {
 function copiarAuditLink() {
   navigator.clipboard.writeText(document.getElementById('d-auditlink').textContent).then(()=>{
     mostrarToast('Enlace de auditoría copiado', 'green');
+  });
+}
+
+function copiarLinkRed() {
+  const el = document.getElementById('red-link-reclutamiento');
+  if (!el || !el.textContent || el.textContent === 'Cargando...') return;
+  navigator.clipboard.writeText(el.textContent.trim()).then(()=>{
+    mostrarToast('Link de reclutamiento copiado ✓', 'green');
   });
 }
 
@@ -5833,6 +5864,12 @@ async function cargarHistorialBolsa() {
 async function cargarRed() {
   if(!aliado) return;
 
+  // Poblar link de reclutamiento
+  const linkRedEl = document.getElementById('red-link-reclutamiento');
+  if (linkRedEl && aliado.ref_code) {
+    linkRedEl.textContent = `https://avanzadigital.digital/alianzas?ref=${aliado.ref_code}`;
+  }
+
   try {
     const res = await apiFetch(`${API}/aliados/${aliado.codigo}/red`);
     if(!res.ok) return;
@@ -5843,7 +5880,7 @@ async function cargarRed() {
     
     const tbody = document.getElementById('tabla-red');
     if(data.total_sub_aliados === 0) {
-      tbody.innerHTML = `<div class="empty-state"><i class="fa-solid fa-user-group"></i><p>Tu red está vacía.<br>Copiá tu página de ventas personal desde el <strong>Dashboard</strong> y compartíla con vendedores o colegas que quieran sumarse como aliados.</p></div>`;
+      tbody.innerHTML = `<div class="empty-state"><i class="fa-solid fa-user-group"></i><p>Tu red está vacía.<br>Copiá tu <strong>link de reclutamiento</strong> de arriba y compartílo con vendedores, agencias o colegas que quieran sumarse como aliados.</p></div>`;
       return;
     }
     
@@ -6090,7 +6127,7 @@ async function generarLinkPago(moneda) {
     if(data.moneda === 'ars') {
       lgTitulo.innerHTML = `Link en pesos — <strong>ARS ${Math.round(data.precio_ars).toLocaleString('es-AR')}</strong> (TC ${Number(data.tipo_cambio).toLocaleString('es-AR')})`;
     } else {
-      lgTitulo.innerHTML = `Link en dólares — <strong>USD ${Number(data.precio_usd).toFixed(2)}</strong> (PayPal)`;
+      lgTitulo.innerHTML = `Link en dólares — <strong>USD ${Number(data.precio_usd).toFixed(2)}</strong> (USDT TRC20)`;
     }
     lgUrl.value = data.checkout_url;
     if(lgAviso) lgAviso.textContent = `Compartí este link con tu cliente. Expira a las 48 horas por seguridad (el tipo de cambio puede variar).`;
@@ -6163,7 +6200,7 @@ async function recuperarUltimoLinkActivo() {
     if(data.moneda === 'ars') {
       lgTitulo.innerHTML = `Link anterior en pesos — <strong>ARS ${Math.round(data.precio_ars).toLocaleString('es-AR')}</strong> (TC ${Number(data.tipo_cambio).toLocaleString('es-AR')})`;
     } else {
-      lgTitulo.innerHTML = `Link anterior en dólares — <strong>USD ${Number(data.precio_usd).toFixed(2)}</strong> (PayPal)`;
+      lgTitulo.innerHTML = `Link anterior en dólares — <strong>USD ${Number(data.precio_usd).toFixed(2)}</strong> (USDT TRC20)`;
     }
     lgUrl.value = data.checkout_url;
     if(lgAviso) lgAviso.textContent = 'Link recuperado de tu sesión anterior.';
@@ -6291,7 +6328,7 @@ async function regenerarLinkPago() {
       if(data.moneda === 'ars') {
         lgTitulo.innerHTML = `Link en pesos — <strong>ARS ${Math.round(data.precio_ars).toLocaleString('es-AR')}</strong> (TC ${Number(data.tipo_cambio).toLocaleString('es-AR')})`;
       } else {
-        lgTitulo.innerHTML = `Link en dólares — <strong>USD ${Number(data.precio_usd).toFixed(2)}</strong> (PayPal)`;
+        lgTitulo.innerHTML = `Link en dólares — <strong>USD ${Number(data.precio_usd).toFixed(2)}</strong> (USDT TRC20)`;
       }
       actualizarTextoVencimiento();
       mostrarToast('Link regenerado. El anterior quedó invalidado.', 'green');

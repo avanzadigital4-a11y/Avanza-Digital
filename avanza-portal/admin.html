@@ -975,7 +975,7 @@ tr:hover td { background:rgba(255,255,255,0.02); }
         <div class="table-head">
           <div>
             <h3><i class="fa-solid fa-credit-card" style="color:var(--green);"></i> Pagos recibidos</h3>
-            <div style="font-size:.82rem;color:var(--text-muted);margin-top:4px;">Historial de todos los cobros procesados por MercadoPago y PayPal.</div>
+            <div style="font-size:.82rem;color:var(--text-muted);margin-top:4px;">Historial de todos los cobros procesados por MercadoPago y USDT (TRC20).</div>
           </div>
           <button onclick="cargarAdminPagos()" style="background:transparent;border:1px solid var(--border);color:var(--text-muted);border-radius:8px;padding:7px 14px;font-size:.8rem;cursor:pointer;"><i class="fa-solid fa-rotate-right"></i> Actualizar</button>
         </div>
@@ -3202,13 +3202,13 @@ function renderKpisPagos() {
   const total    = pagosCache.length;
   const sumUsd   = pagosCache.reduce((s,p)=>s+(p.precio_usd||0),0);
   const mp       = pagosCache.filter(p=>(p.processor||'').toLowerCase().includes('mercado') || (p.processor||'').toLowerCase()==='mp').length;
-  const paypal   = pagosCache.filter(p=>(p.processor||'').toLowerCase().includes('paypal')).length;
+  const usdt     = pagosCache.filter(p=>(p.processor||'').toLowerCase().includes('usdt')).length;
 
   const kpis = [
     { label: 'Total pagos', value: total, color: 'var(--text)' },
     { label: 'Recaudado (USD)', value: `USD ${Math.round(sumUsd).toLocaleString()}`, color: 'var(--green)' },
     { label: 'Vía MercadoPago', value: mp, color: 'var(--primary)' },
-    { label: 'Vía PayPal', value: paypal, color: '#a855f7' },
+    { label: 'Vía USDT', value: usdt, color: '#26a17b' },
   ];
   document.getElementById('pagos-kpis').innerHTML = kpis.map(k=>`
     <div style="background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:12px;padding:14px 18px;">
@@ -3225,7 +3225,7 @@ function renderPagos() {
   }
   body.innerHTML = pagosCache.map(p => {
     const proc = (p.processor||'').toLowerCase();
-    const procBadge = proc.includes('paypal')  ? '<span class="badge badge-purple"><i class="fa-brands fa-paypal"></i> PayPal</span>'
+    const procBadge = proc.includes('usdt')    ? '<span class="badge badge-green"><i class="fa-solid fa-coins"></i> USDT TRC20</span>'
                     : proc.includes('mercado') || proc==='mp' ? '<span class="badge badge-blue"><i class="fa-solid fa-money-check-dollar"></i> MercadoPago</span>'
                     : `<span class="badge badge-gray">${escapeHtml(p.processor||'—')}</span>`;
     const fecha = p.created_at ? new Date(p.created_at).toLocaleString('es-AR', {dateStyle:'short', timeStyle:'short'}) : '—';

@@ -148,16 +148,17 @@ ADMIN_EMAIL   = os.environ.get("ADMIN_EMAIL", "avanzadigital4@gmail.com")
 MP_ACCESS_TOKEN = os.environ.get("MP_ACCESS_TOKEN", "")
 MP_WEBHOOK_SECRET = os.environ.get("MP_WEBHOOK_SECRET", "")
 # URL pública del BACKEND (donde viven los endpoints /webhooks/*). DEBE ser la URL real del backend.
-# Los webhooks de Mercado Pago y PayPal se configuran usando esta URL.
+# Los webhooks de Mercado Pago se configuran usando esta URL.
 BACKEND_PUBLIC_URL = os.environ.get("BACKEND_PUBLIC_URL", "https://avanza-digital.onrender.com")
 # URL del portal del aliado (para links en emails). Si backend y portal viven en el mismo dominio, coinciden.
 PORTAL_URL      = os.environ.get("PORTAL_URL", BACKEND_PUBLIC_URL)
 
-# ─── PAYPAL ───────────────────────────────────────────────────────────────────
-PAYPAL_CLIENT_ID     = os.environ.get("PAYPAL_CLIENT_ID", "")
-PAYPAL_CLIENT_SECRET = os.environ.get("PAYPAL_CLIENT_SECRET", "")
-PAYPAL_WEBHOOK_ID    = os.environ.get("PAYPAL_WEBHOOK_ID", "")
-PAYPAL_BASE_URL      = os.environ.get("PAYPAL_BASE_URL", "https://api-m.paypal.com")  # sandbox: https://api-m.sandbox.paypal.com
+# ─── USDT TRC20 (TronGrid HD Wallet) ─────────────────────────────────────────
+TRON_MNEMONIC       = os.environ.get("TRON_MNEMONIC", "")
+USDT_CONTRACT       = os.environ.get("USDT_CONTRACT", "TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t")
+TRONGRID_API_KEY    = os.environ.get("TRONGRID_API_KEY", "")
+USDT_TOLERANCIA_PCT = float(os.environ.get("USDT_TOLERANCIA_PCT", "0.01"))
+USDT_CONFIRMACIONES = int(os.environ.get("USDT_CONFIRMACIONES_MIN", "19"))
 
 # ─── RESEND (fallback de emails) ─────────────────────────────────────────────
 RESEND_API_KEY = os.environ.get("RESEND_API_KEY", "")
@@ -213,12 +214,12 @@ SOLICITUD_CREDITOS_EXPIRACION_HS = int(os.environ.get("SOLICITUD_CREDITOS_EXPIRA
 # ─── DATOS DE PAGO EN USD PARA ALIADOS INTERNACIONALES (v1.9) ────────────────
 # Para aliados de otros países que no pueden transferir en pesos.
 # Configurable por env vars para no tocar código si cambia el método.
-# El método puede ser PayPal, Wise, USDT (TRC20/ERC20), banco USD, etc.
+# El método puede ser USDT (TRC20), Wise, banco USD, etc.
 # La verificación sigue siendo manual (admin confirma cuando llega el pago).
 DATOS_USD = {
-    "metodo":         os.environ.get("USD_METODO",       "PayPal"),
+    "metodo":         os.environ.get("USD_METODO",       "USDT"),
     "destinatario":   os.environ.get("USD_DESTINATARIO", "avanzadigital4@gmail.com"),
-    "etiqueta_dest":  os.environ.get("USD_ETIQUETA",     "Email PayPal"),
+    "etiqueta_dest":  os.environ.get("USD_ETIQUETA",     "Dirección USDT (TRC20)"),
     "red":            os.environ.get("USD_RED",          ""),  # ej: "TRC20" para USDT
     "notas":          os.environ.get("USD_NOTAS",        "Enviá el monto exacto en USD. Recibís los créditos cuando confirmamos el pago (24hs hábiles)."),
 }
@@ -340,35 +341,6 @@ async def obtener_tipo_de_cambio() -> float:
     return float(os.environ.get("DOLAR_FALLBACK", "1250"))
 
 
-# ─── PAYPAL: obtención de access token (se cachea mientras no expire) ────────
-_paypal_token_cache = {"access_token": None, "expires_at": None}
-
-async def obtener_paypal_token() -> str:
-    """Obtiene un access_token de PayPal. Cachea hasta expiración."""
-    global _paypal_token_cache
-    now = datetime.now()
-    if _paypal_token_cache["access_token"] and _paypal_token_cache["expires_at"] and now < _paypal_token_cache["expires_at"]:
-        return _paypal_token_cache["access_token"]
-
-    if not PAYPAL_CLIENT_ID or not PAYPAL_CLIENT_SECRET:
-        raise HTTPException(503, "PayPal no está configurado (faltan credenciales).")
-
-    basic = base64.b64encode(f"{PAYPAL_CLIENT_ID}:{PAYPAL_CLIENT_SECRET}".encode()).decode()
-    async with httpx.AsyncClient(timeout=12.0) as client:
-        r = await client.post(
-            f"{PAYPAL_BASE_URL}/v1/oauth2/token",
-            headers={"Authorization": f"Basic {basic}",
-                     "Content-Type": "application/x-www-form-urlencoded"},
-            content="grant_type=client_credentials"
-        )
-        if r.status_code != 200:
-            raise HTTPException(502, f"PayPal token error: {r.text[:200]}")
-        data = r.json()
-        _paypal_token_cache["access_token"] = data["access_token"]
-        # Renovamos 60s antes del vencimiento real por margen de seguridad
-        _paypal_token_cache["expires_at"] = now + timedelta(seconds=max(60, int(data.get("expires_in", 3600)) - 60))
-        return data["access_token"]
-
 
 # ─── VERIFICACIÓN DE FIRMA HMAC EN WEBHOOK DE MERCADOPAGO ────────────────────
 def verificar_firma_mp(raw_body: bytes, headers, query_params) -> bool:
@@ -425,45 +397,6 @@ def verificar_firma_mp(raw_body: bytes, headers, query_params) -> bool:
         print(f"[MP WEBHOOK] Firma inválida. Calc: {hash_calc[:16]}… Recibido: {v1[:16]}…")
         return False
     return True
-
-
-# ─── VERIFICACIÓN DE FIRMA DE WEBHOOK DE PAYPAL ──────────────────────────────
-async def verificar_firma_paypal(headers, body_json) -> bool:
-    """Verifica el webhook de PayPal llamando a su endpoint de verificación.
-
-    FAIL-CLOSED: si PAYPAL_WEBHOOK_ID no está seteado, devuelve False salvo
-    que AVANZA_INSECURE_WEBHOOKS=1 (modo dev local).
-    """
-    if not PAYPAL_WEBHOOK_ID:
-        if os.environ.get("AVANZA_INSECURE_WEBHOOKS") == "1":
-            print("[PAYPAL WEBHOOK] AVANZA_INSECURE_WEBHOOKS=1 — validación desactivada (SOLO DEV)")
-            return True
-        print("[PAYPAL WEBHOOK] ❌ PAYPAL_WEBHOOK_ID no seteada — rechazando webhook (fail-closed)")
-        return False
-    try:
-        token = await obtener_paypal_token()
-        payload = {
-            "auth_algo":         headers.get("paypal-auth-algo") or headers.get("PAYPAL-AUTH-ALGO", ""),
-            "cert_url":          headers.get("paypal-cert-url")  or headers.get("PAYPAL-CERT-URL", ""),
-            "transmission_id":   headers.get("paypal-transmission-id") or headers.get("PAYPAL-TRANSMISSION-ID", ""),
-            "transmission_sig":  headers.get("paypal-transmission-sig") or headers.get("PAYPAL-TRANSMISSION-SIG", ""),
-            "transmission_time": headers.get("paypal-transmission-time") or headers.get("PAYPAL-TRANSMISSION-TIME", ""),
-            "webhook_id":        PAYPAL_WEBHOOK_ID,
-            "webhook_event":     body_json,
-        }
-        async with httpx.AsyncClient(timeout=10.0) as client:
-            r = await client.post(
-                f"{PAYPAL_BASE_URL}/v1/notifications/verify-webhook-signature",
-                headers={"Authorization": f"Bearer {token}", "Content-Type": "application/json"},
-                json=payload
-            )
-            if r.status_code != 200:
-                print(f"[PAYPAL WEBHOOK] Error API verify: {r.text[:200]}")
-                return False
-            return r.json().get("verification_status") == "SUCCESS"
-    except Exception as e:
-        print(f"[PAYPAL WEBHOOK] Excepción verify: {e}")
-        return False
 
 
 # ─── SCHEDULER: NOTIFICACIÓN 24HS ────────────────────────────────────────────
@@ -623,8 +556,81 @@ def job_expirar_links_pago():
         db.close()
 
 
+
+# ─── SCHEDULER: VERIFICACIÓN DE PAGOS USDT (TronGrid polling) ────────────────
+def _verificar_link_usdt(db, lp):
+    """Consulta TronGrid por transferencias TRC20 confirmadas a lp.usdt_address."""
+    url     = f"https://api.trongrid.io/v1/accounts/{lp.usdt_address}/transactions/trc20"
+    headers = {"TRON-PRO-API-KEY": TRONGRID_API_KEY} if TRONGRID_API_KEY else {}
+    params  = {"contract_address": USDT_CONTRACT, "limit": 10, "only_confirmed": "true"}
+    try:
+        resp = __import__('httpx').get(url, headers=headers, params=params, timeout=10)
+    except Exception as e:
+        print(f"[USDT POLL] Timeout/error TronGrid link {lp.id}: {e}")
+        return
+    if resp.status_code != 200:
+        print(f"[USDT POLL] TronGrid HTTP {resp.status_code} link {lp.id}")
+        return
+
+    for tx in resp.json().get("data", []):
+        if tx.get("to") != lp.usdt_address:
+            continue
+        token_info = tx.get("token_info", {})
+        if token_info.get("address") != USDT_CONTRACT:
+            continue
+        decimals   = int(token_info.get("decimals", 6))
+        valor_usdt = int(tx.get("value", 0)) / (10 ** decimals)
+        monto_min  = lp.usdt_monto_exp * (1 - USDT_TOLERANCIA_PCT)
+        if valor_usdt < monto_min:
+            continue
+        # Verificar que la tx es posterior a la creación del link
+        ts_ms = tx.get("block_timestamp", 0)
+        if ts_ms:
+            from datetime import timezone
+            ts = __import__('datetime').datetime.utcfromtimestamp(ts_ms / 1000)
+            if lp.created_at and ts < lp.created_at:
+                continue
+        tx_hash = tx.get("transaction_id", "unknown")
+        print(f"[USDT POLL] ✅ Pago detectado: link {lp.id} | tx {tx_hash} | {valor_usdt:.2f} USDT")
+        partes         = (lp.external_ref or "").split("|")
+        ref_code       = partes[0] if len(partes) > 0 else ""
+        plan           = partes[1] if len(partes) > 1 else lp.plan
+        nombre_cliente = partes[2] if len(partes) > 2 else "Cliente"
+        lp.usdt_tx_hash = tx_hash
+        db.commit()
+        _procesar_pago_confirmado(db, ref_code=ref_code, plan=plan,
+                                  nombre_cliente=nombre_cliente,
+                                  processor="usdt", payment_id=tx_hash,
+                                  link_pago_id=lp.id)
+        return
+
+
+def job_verificar_pagos_usdt():
+    """Corre cada 30s. Verifica pagos USDT pendientes consultando TronGrid."""
+    from database import SessionLocal
+    db = SessionLocal()
+    try:
+        ahora      = datetime.now()
+        pendientes = db.query(LinkPago).filter(
+            LinkPago.processor == "usdt",
+            LinkPago.estado    == "activo",
+            LinkPago.expires_at > ahora,
+        ).all()
+        if pendientes:
+            print(f"[USDT POLL] Revisando {len(pendientes)} links activos...")
+        for lp in pendientes:
+            if lp.usdt_address:
+                try:
+                    _verificar_link_usdt(db, lp)
+                except Exception as e:
+                    print(f"[USDT POLL] Error link {lp.id}: {e}")
+    finally:
+        db.close()
+
+
 scheduler.add_job(job_liberar_leads_48h, "interval", minutes=30)
 scheduler.add_job(job_expirar_links_pago, "interval", hours=1)
+scheduler.add_job(job_verificar_pagos_usdt, "interval", seconds=30)
 
 
 # ─── SCHEDULER: NOTIFICACIONES DE INACTIVIDAD ────────────────────────────────
@@ -2786,9 +2792,9 @@ def obtener_leaderboard(db: Session = Depends(get_db)):
     return completo
 
 
-# ─── CHECKOUT: MP (ARS) + PAYPAL (USD) ───────────────────────────────────────
+# ─── CHECKOUT: MP (ARS) + USDT TRC20 (USD) ───────────────────────────────────
 # Spec §2, §3, §4, §5: el aliado elige moneda. MP usa conversión blue en tiempo real.
-# PayPal cobra en USD fijo. Ambos links expiran en 48hs.
+# USDT cobra en USD fijo. Ambos links expiran en 48hs.
 
 LINK_EXPIRATION_HOURS = 48
 
@@ -2891,71 +2897,67 @@ async def _crear_link_mp(a: Aliado, plan: str, nombre_cliente: str, db: Session)
     }
 
 
-async def _crear_link_paypal(a: Aliado, plan: str, nombre_cliente: str, db: Session):
-    """Crea una orden de PayPal en USD para pago directo en dólares."""
-    valor_usd = _precio_de_plan(plan)
+async def _crear_link_usdt(a, plan: str, nombre_cliente: str, db):
+    """Crea un LinkPago USDT con dirección HD única derivada del ID del registro."""
+    from tronpy.keys import PrivateKey
+    from hdwallet import HDWallet
+    from hdwallet.symbols import TRX
+
+    valor_usd    = _precio_de_plan(plan)
     external_ref = f"{a.ref_code}|{plan}|{nombre_cliente}"
-    expires_at = datetime.now() + timedelta(hours=LINK_EXPIRATION_HOURS)
+    expires_at   = datetime.now() + timedelta(hours=LINK_EXPIRATION_HOURS)
 
-    token = await obtener_paypal_token()
-    body = {
-        "intent": "CAPTURE",
-        "purchase_units": [{
-            "amount": {"currency_code": "USD", "value": f"{valor_usd:.2f}"},
-            "description": f"Avanza Digital — {plan}",
-            "custom_id": external_ref[:127],  # PayPal limita a 127 chars
-        }],
-        "application_context": {
-            "return_url":  SUCCESS_URL,
-            "cancel_url":  FAILURE_URL,
-            "brand_name":  "Avanza Digital",
-            "user_action": "PAY_NOW",
-        },
-    }
-
-    async with httpx.AsyncClient() as client:
-        resp = await client.post(
-            f"{PAYPAL_BASE_URL}/v2/checkout/orders",
-            headers={"Authorization": f"Bearer {token}",
-                     "Content-Type": "application/json"},
-            json=body,
-            timeout=15.0,
-        )
-        if resp.status_code not in (200, 201):
-            raise HTTPException(502, f"Error PayPal: {resp.text[:200]}")
-        orden = resp.json()
-
-    approve = next((l["href"] for l in orden.get("links", []) if l.get("rel") == "approve"), None)
-    if not approve:
-        raise HTTPException(502, "PayPal no devolvió link de aprobación.")
-
-    link = LinkPago(
+    # Crear registro primero para obtener el ID (índice HD único)
+    lp = LinkPago(
         aliado_id    = a.id,
         plan         = plan,
         moneda       = "usd",
         precio_usd   = valor_usd,
-        precio_ars   = None,
-        tipo_cambio  = None,
-        checkout_url = approve,
-        processor    = "paypal",
-        external_ref = orden.get("id") or external_ref,  # el order_id de PayPal es lo que usa el webhook
+        checkout_url = "",
+        processor    = "usdt",
+        external_ref = external_ref,
         expires_at   = expires_at,
         estado       = "activo",
     )
-    db.add(link); db.commit(); db.refresh(link)
+    db.add(lp)
+    db.flush()  # obtener lp.id sin commit
+
+    if not TRON_MNEMONIC:
+        db.rollback()
+        raise HTTPException(503, "TRON_MNEMONIC no configurado.")
+
+    try:
+        hw = HDWallet(symbol=TRX)
+        hw.from_mnemonic(mnemonic=TRON_MNEMONIC, language="english")
+        hw.from_path(f"m/44'/195'/0'/0/{lp.id}")
+        privkey_hex  = hw.private_key()
+        usdt_address = PrivateKey(bytes.fromhex(privkey_hex)).public_key.to_base58check_address()
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(503, f"Error generando dirección TRON: {e}")
+
+    lp.usdt_address   = usdt_address
+    lp.usdt_monto_exp = valor_usd
+    lp.checkout_url   = f"tron:{usdt_address}?amount={valor_usd}"
+    db.commit()
+    db.refresh(lp)
 
     return {
-        "checkout_url": approve,
-        "link_id":      link.id,
+        "tipo":         "usdt",
+        "link_id":      lp.id,
+        "checkout_url": lp.checkout_url,
+        "direccion":    usdt_address,
+        "red":          USDT_RED or "TRC20",
+        "monto_usdt":   valor_usd,
         "moneda":       "usd",
         "plan":         plan,
         "precio_usd":   valor_usd,
-        "processor":    "paypal",
-        "paypal_order_id": orden.get("id"),
+        "processor":    "usdt",
         "expires_at":   expires_at.isoformat(),
         "aliado":       a.nombre,
         "fallback":     False,
     }
+
 
 
 @app.post("/checkout/crear")
@@ -2967,7 +2969,7 @@ async def crear_checkout(request: Request, plan: str,
                          cliente_whatsapp: str = "",
                          moneda: str = "ars",
                          db: Session = Depends(get_db)):
-    """Crea un link de pago. `moneda` = 'ars' (MP) o 'usd' (PayPal).
+    """Crea un link de pago. `moneda` = 'ars' (MercadoPago) o 'usd' (USDT TRC20).
     Spec §5: ambos flujos generan registros en links_pago con expiración a 48hs."""
     a = db.query(Aliado).filter(Aliado.ref_code == ref_code).first()
     if not a:
@@ -3006,17 +3008,17 @@ async def crear_checkout(request: Request, plan: str,
             "fallback": True,
             "mensaje": "MercadoPago no activado. Configurar MP_ACCESS_TOKEN.",
         }
-    if moneda == "usd" and (not PAYPAL_CLIENT_ID or not PAYPAL_CLIENT_SECRET):
+    if moneda == "usd" and not TRON_MNEMONIC:
         return {
             "checkout_url": f"https://avanzadigital.digital/contratar?plan={plan}&ref={ref_code}",
             "fallback": True,
-            "mensaje": "PayPal no activado. Configurar PAYPAL_CLIENT_ID / PAYPAL_CLIENT_SECRET.",
+            "mensaje": "USDT no activado. Configurar TRON_MNEMONIC.",
         }
 
     if moneda == "ars":
         resultado = await _crear_link_mp(a, plan, nombre_cliente, db)
     else:
-        resultado = await _crear_link_paypal(a, plan, nombre_cliente, db)
+        resultado = await _crear_link_usdt(a, plan, nombre_cliente, db)
 
     # Guardar email y whatsapp del cliente en el LinkPago para recuperarlos
     # cuando llegue el webhook de pago confirmado y mandar el Tally correcto.
@@ -3058,7 +3060,7 @@ def checkout_exitoso(ref: str = "", plan: str = "", payment_id: str = "", db: Se
     return RedirectResponse(f"{PORTAL_URL}/portal.html?pago=ok&plan={plan}&ref={ref}")
 
 
-# ─── HELPER COMÚN: procesar pago confirmado (MP o PayPal) ────────────────────
+# ─── HELPER COMÚN: procesar pago confirmado (MP o USDT) ─────────────────────
 def _procesar_pago_continuidad_confirmado(db: Session,
                                           a: Aliado,
                                           plan: str,
@@ -3087,7 +3089,12 @@ def _procesar_pago_continuidad_confirmado(db: Session,
         return {"status": "already_processed", "plan_continuidad_id": existing.id}
 
     precio = float(PLANES_CONTINUIDAD[plan])
-    modalidad = "MercadoPago" if processor == "mercadopago" else "PayPal"
+    if processor == "mercadopago":
+        modalidad = "MercadoPago"
+    elif processor == "usdt":
+        modalidad = "USDT (TRC20)"
+    else:
+        modalidad = processor.capitalize()
     notas = f"Alta automática vía {modalidad} {pid_token}"
 
     p = PlanContinuidadActivo(
@@ -3186,7 +3193,12 @@ def _procesar_pago_confirmado(db: Session,
     comision_pct = a.comision_pct
     comision_usd = round(valor_usd * comision_pct, 2)
     fecha_venta = datetime.now()
-    modalidad = "MercadoPago" if processor == "mercadopago" else "PayPal"
+    if processor == "mercadopago":
+        modalidad = "MercadoPago"
+    elif processor == "usdt":
+        modalidad = "USDT (TRC20)"
+    else:
+        modalidad = processor.capitalize()
 
     # Detectar primera venta ANTES de crear la nueva (para no contarla a sí misma).
     es_primera_venta_aliado = db.query(Venta).filter(
@@ -3449,56 +3461,6 @@ async def webhook_mercadopago(request: Request, db: Session = Depends(get_db)):
                                      link_pago_id=lp.id if lp else None)
 
 
-# ─── WEBHOOK PAYPAL (con verificación de firma — spec §6) ────────────────────
-@app.post("/webhooks/paypal")
-async def webhook_paypal(request: Request, db: Session = Depends(get_db)):
-    """Recibe eventos de PayPal. Valida contra PayPal antes de procesar."""
-    raw = await request.body()
-    try:
-        body = json.loads(raw) if raw else {}
-    except Exception:
-        return {"status": "invalid_json"}
-
-    # --- 1. Verificar firma llamando a la API de PayPal ---
-    if not await verificar_firma_paypal(request.headers, body):
-        return JSONResponse(status_code=401, content={"status": "invalid_signature"})
-
-    event_type = body.get("event_type", "")
-    if event_type not in ("PAYMENT.CAPTURE.COMPLETED", "CHECKOUT.ORDER.APPROVED"):
-        return {"status": "ignored", "event": event_type}
-
-    # --- 2. Extraer datos del pago ---
-    resource = body.get("resource", {}) or {}
-    payment_id = resource.get("id", "")
-    # El custom_id puede estar en distintos lugares dependiendo del evento
-    custom_id = (resource.get("custom_id")
-                 or (resource.get("purchase_units", [{}])[0].get("custom_id") if resource.get("purchase_units") else None)
-                 or "")
-    order_id = (resource.get("supplementary_data", {}).get("related_ids", {}).get("order_id")
-                or resource.get("id", ""))
-
-    if not custom_id:
-        return {"status": "no_custom_id"}
-
-    parts = custom_id.split("|", 2)
-    if len(parts) < 2:
-        return {"status": "invalid_ref"}
-    ref_code, plan = parts[0], parts[1]
-    nombre_cliente = parts[2] if len(parts) > 2 else "Cliente Web"
-
-    # --- 3. Buscar el LinkPago asociado por order_id ---
-    lp = db.query(LinkPago).filter(
-        LinkPago.external_ref == order_id,
-        LinkPago.processor == "paypal",
-    ).first()
-
-    # --- 4. Procesar ---
-    return _procesar_pago_confirmado(db, ref_code, plan, nombre_cliente,
-                                     processor="paypal",
-                                     payment_id=str(payment_id),
-                                     link_pago_id=lp.id if lp else None)
-
-
 # ─── LEGACY: /checkout/webhook (MP viejo) → delega en /webhooks/mercadopago ─
 @app.post("/checkout/webhook")
 async def checkout_webhook_legacy(request: Request, db: Session = Depends(get_db)):
@@ -3539,7 +3501,7 @@ async def regenerar_link(link_id: int, db: Session = Depends(get_db)):
 
     if lp_viejo.moneda == "ars":
         return await _crear_link_mp(a, lp_viejo.plan, nombre_cliente, db)
-    return await _crear_link_paypal(a, lp_viejo.plan, nombre_cliente, db)
+    return await _crear_link_usdt(a, lp_viejo.plan, nombre_cliente, db)
 
 
 # ─── HISTORIAL DE LINKS DE PAGO DEL ALIADO ───────────────────────────────────
@@ -5985,7 +5947,7 @@ async def solicitar_creditos(codigo: str,
 
     Soporta dos monedas (v1.9):
       - 'ars': transferencia bancaria en pesos (cambio blue del momento, vigente 48hs).
-      - 'usd': pago en dólares (PayPal/Wise/USDT/banco USD). Sin conversión.
+      - 'usd': pago en dólares (USDT TRC20). Sin conversión.
     """
     a = _get_aliado(codigo, db)
 
@@ -6690,11 +6652,7 @@ def portal_publico_aliado(ref_code: str, db: Session = Depends(get_db)):
         </div>
         """
 
-    paypal_activo = bool(PAYPAL_CLIENT_ID and PAYPAL_CLIENT_SECRET)
-
-    _btn_usd_activo = '<button class="moneda-btn paypal" id="opt-usd" onclick="seleccionarMoneda(\'usd\')"><div class="icon">💵</div><div class="label">Dólares USD</div><div class="sublabel">PayPal</div></button>'
-    _btn_usd_inactivo = '<button class="moneda-btn" style="opacity:.35;cursor:not-allowed;" disabled><div class="icon">💵</div><div class="label">USD no disponible</div><div class="sublabel">Próximamente</div></button>'
-    _btn_usd = _btn_usd_activo if paypal_activo else _btn_usd_inactivo
+    usdt_activo = bool(USDT_DIRECCION or TRON_MNEMONIC)
 
     usdt_activo = bool(USDT_DIRECCION)
     _btn_usdt = (
@@ -6780,7 +6738,7 @@ body{{font-family:Inter,sans-serif;background:#050505;color:#e2e8f0;line-height:
 .moneda-btn .icon{{font-size:1.6rem;margin-bottom:6px;}}
 .moneda-btn .label{{font-weight:800;font-size:.9rem;}}
 .moneda-btn .sublabel{{font-size:.72rem;color:#a1a1aa;margin-top:2px;}}
-.moneda-btn.paypal .icon{{color:#009cde;}}
+.moneda-btn.usdt .icon{{color:#26a17b;}}
 .moneda-btn.usdt .icon{{color:#26a17b;}}
 .moneda-btn.usdt.selected{{border-color:#26a17b;background:rgba(38,161,123,0.12);}}
 .btn-cancel{{flex:1;padding:12px;border-radius:8px;border:1px solid #444;background:transparent;color:#aaa;cursor:pointer;font-size:.95rem;font-family:Inter,sans-serif;}}
@@ -7031,7 +6989,7 @@ input[type=text]:focus{{outline:none;border-color:#3b82f6;}}
       info.innerHTML = \'🏦 Pagarás en <strong>pesos argentinos</strong> a través de <strong>MercadoPago</strong>.\';
     }} else if (m === \'usd\') {{
       info.style.background = \'rgba(0,156,222,0.08)\'; info.style.borderColor = \'rgba(0,156,222,0.25)\'; info.style.color = \'#7dd3fc\';
-      info.innerHTML = \'💵 Pagarás en <strong>dólares USD</strong> a través de <strong>PayPal</strong>.\';
+      info.innerHTML = \'🪙 Pagarás en <strong>USDT</strong> (red <strong>TRC20</strong>). Te damos una dirección única para tu orden.\';
     }} else {{
       info.style.background = \'rgba(38,161,123,0.08)\'; info.style.borderColor = \'rgba(38,161,123,0.25)\'; info.style.color = \'#6ee7b7\';
       info.innerHTML = \'🪙 Pagarás en <strong>USDT/USDC</strong>. Transferencia directa a billetera cripto (confirmación manual en 24hs hábiles).\';

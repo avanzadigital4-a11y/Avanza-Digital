@@ -379,8 +379,11 @@ class LinkPago(Base):
     precio_ars = Column(Float, nullable=True)
     tipo_cambio = Column(Float, nullable=True)
     checkout_url = Column(Text, nullable=False)
-    processor = Column(String, nullable=False)        # 'mercadopago' | 'paypal'
-    external_ref = Column(String, nullable=True, index=True)
+    processor = Column(String, nullable=False)        # 'mercadopago' | 'usdt'
+    external_ref   = Column(String, nullable=True, index=True)
+    usdt_address   = Column(String, nullable=True)            # dirección HD derivada para esta orden
+    usdt_monto_exp = Column(Float,  nullable=True)            # monto USDT exacto esperado
+    usdt_tx_hash   = Column(String, nullable=True, index=True) # txid cuando se confirma
     created_at = Column(DateTime, default=func.now())
     expires_at = Column(DateTime, nullable=True)
     estado = Column(String, default="activo")         # 'activo' | 'vencido' | 'pagado'
@@ -403,7 +406,7 @@ class Comision(Base):
     comision_usd = Column(Float, nullable=False)
     nombre_cliente = Column(String, nullable=True)
     estado = Column(String, default="pendiente")      # 'pendiente' | 'abonada'
-    processor = Column(String, nullable=True)         # 'mercadopago' | 'paypal'
+    processor = Column(String, nullable=True)         # 'mercadopago' | 'usdt'
     fecha_pago = Column(DateTime, nullable=True)
     fecha_abono = Column(DateTime, nullable=True)
     creado_en = Column(DateTime, default=func.now())
