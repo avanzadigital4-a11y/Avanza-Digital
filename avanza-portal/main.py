@@ -6753,11 +6753,7 @@ def portal_publico_aliado(ref_code: str, db: Session = Depends(get_db)):
     usdt_activo = bool(USDT_DIRECCION or TRON_MNEMONIC)
 
     usdt_activo = bool(USDT_DIRECCION)
-    _btn_usd = (
-        '<button class="moneda-btn" id="opt-usd" onclick="seleccionarMoneda(\'usd\')">'
-        '<div class="icon">💵</div><div class="label">USD</div>'
-        '<div class="sublabel">Transferencia</div></button>'
-    )
+    _btn_usd = ''  # Eliminado: el flujo USD cripto se maneja con el botón USDT/TRC20
     _btn_usdt = (
         '<button class="moneda-btn usdt" id="opt-usdt" onclick="seleccionarMoneda(\'usdt\')">'
         '<div class="icon">🪙</div><div class="label">USDT / USDC</div>'
@@ -6840,7 +6836,7 @@ body{{font-family:Inter,sans-serif;background:#050505;color:#e2e8f0;line-height:
 .modal-box{{background:#111;border:1px solid #2a2a2a;border-radius:16px;padding:28px;width:100%;max-width:420px;}}
 .step{{display:none;}}
 .step.active{{display:block;}}
-.moneda-options{{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin:16px 0;}}
+.moneda-options{{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:16px 0;}}
 @media(max-width:420px){{.moneda-options{{grid-template-columns:1fr;}}}}
 .moneda-btn{{padding:16px 12px;border-radius:10px;border:2px solid #2a2a2a;background:#1a1a1a;color:#e2e8f0;cursor:pointer;text-align:center;transition:all .2s;font-family:Inter,sans-serif;}}
 .moneda-btn:hover{{border-color:#3b82f6;background:rgba(59,130,246,0.08);}}
@@ -7099,17 +7095,12 @@ input[type=text]:focus{{outline:none;border-color:#3b82f6;}}
   function seleccionarMoneda(m) {{
     _moneda = m;
     document.getElementById(\'opt-ars\').classList.toggle(\'selected\', m === \'ars\');
-    const optUsd = document.getElementById(\'opt-usd\');
-    if (optUsd) optUsd.classList.toggle(\'selected\', m === \'usd\');
     const optUsdt = document.getElementById(\'opt-usdt\');
     if (optUsdt) optUsdt.classList.toggle(\'selected\', m === \'usdt\');
     const info = document.getElementById(\'moneda-info\');
     if (m === \'ars\') {{
       info.style.background = \'rgba(59,130,246,0.08)\'; info.style.borderColor = \'rgba(59,130,246,0.2)\'; info.style.color = \'#93c5fd\';
       info.innerHTML = \'🏦 Pagarás en <strong>pesos argentinos</strong> a través de <strong>MercadoPago</strong>.\';
-    }} else if (m === \'usd\') {{
-      info.style.background = \'rgba(0,156,222,0.08)\'; info.style.borderColor = \'rgba(0,156,222,0.25)\'; info.style.color = \'#7dd3fc\';
-      info.innerHTML = \'🪙 Pagarás en <strong>USDT</strong> (red <strong>TRC20</strong>). Te damos una dirección única para tu orden.\';
     }} else {{
       info.style.background = \'rgba(38,161,123,0.08)\'; info.style.borderColor = \'rgba(38,161,123,0.25)\'; info.style.color = \'#6ee7b7\';
       info.innerHTML = \'🪙 Pagarás en <strong>USDT/USDC</strong>. Transferencia directa a billetera cripto (confirmación manual en 24hs hábiles).\';
