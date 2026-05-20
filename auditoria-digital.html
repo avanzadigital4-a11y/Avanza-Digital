@@ -884,7 +884,7 @@ async function submitEmailGate(){
     try {
         const score = pendingReportData ? pendingReportData.overall_score : 0;
         const ref = window._auditRef || '';
-        await fetch(`https://avanza-digital-production.up.railway.app/auditorias/log?dominio=${encodeURIComponent(currentDomain)}&score=${score}&ref_code=${encodeURIComponent(ref)}&email=${encodeURIComponent(email)}`, { method: 'POST' });
+        await fetch(`/auditorias/log?dominio=${encodeURIComponent(currentDomain)}&score=${score}&ref_code=${encodeURIComponent(ref)}&email=${encodeURIComponent(email)}`, { method: 'POST' });
     } catch(e) { console.warn('Error logging audit:', e); }
 
     window.emailGatePassed = true;
@@ -913,7 +913,7 @@ function skipEmailGate(){
         try {
             const score = pendingReportData.overall_score;
             const ref = window._auditRef || '';
-            fetch(`https://avanza-digital-production.up.railway.app/auditorias/log?dominio=${encodeURIComponent(currentDomain)}&score=${score}&ref_code=${encodeURIComponent(ref)}`, { method: 'POST' }).catch(e=>console.warn(e));
+            fetch(`/auditorias/log?dominio=${encodeURIComponent(currentDomain)}&score=${score}&ref_code=${encodeURIComponent(ref)}`, { method: 'POST' }).catch(e=>console.warn(e));
         } catch(e) { console.warn('Error logging audit:', e); }
         
         renderReport(pendingReportData, pendingReportMx);
@@ -931,7 +931,7 @@ document.getElementById('domain-input').addEventListener('keydown',e=>{if(e.key=
         window._auditRef = ref; // guardamos el aliado para mandarlo con el lead
 
         // Actualizar el botón "Hablar con un especialista" con el WA del aliado
-        fetch(`https://avanza-digital-production.up.railway.app/aliados/wa-publica/${encodeURIComponent(ref)}`)
+        fetch(`/aliados/wa-publica/${encodeURIComponent(ref)}`)
             .then(r => r.json())
             .then(data => {
                 const btn = document.getElementById('btn-especialista');

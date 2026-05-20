@@ -7125,6 +7125,13 @@ def configurar_portal_publico(codigo: str,
             a.portal_publico_titular = body.portal_publico_titular[:120] or None
         if body.portal_publico_bio is not None:
             a.portal_publico_bio = body.portal_publico_bio[:500] or None
+        if body.portal_publico_foto_url is not None:
+            # Aceptar solo URLs https:// para evitar XSS
+            url = body.portal_publico_foto_url.strip()
+            if url.startswith("https://"):
+                a.portal_publico_foto_url = url
+            else:
+                a.portal_publico_foto_url = None
     else:
         a.portal_publico_activo = activo
         if titular: a.portal_publico_titular = titular[:120]
@@ -7136,6 +7143,7 @@ def configurar_portal_publico(codigo: str,
         "titular": a.portal_publico_titular,
         "bio": a.portal_publico_bio,
         "activo": a.portal_publico_activo,
+        "foto_url": a.portal_publico_foto_url,
     }
 
 # ═════════════════════════════════════════════════════════════════════════════
