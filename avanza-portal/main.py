@@ -2900,9 +2900,6 @@ async def _crear_link_mp(a: Aliado, plan: str, nombre_cliente: str, db: Session)
 async def _crear_link_usdt(a, plan: str, nombre_cliente: str, db):
     """Crea un LinkPago USDT con dirección HD única derivada del ID del registro."""
     from tronpy.keys import PrivateKey
-    from hdwallet import HDWallet
-    from hdwallet.symbols import TRX
-
     valor_usd    = _precio_de_plan(plan)
     external_ref = f"{a.ref_code}|{plan}|{nombre_cliente}"
     expires_at   = datetime.now() + timedelta(hours=LINK_EXPIRATION_HOURS)
@@ -2927,10 +2924,32 @@ async def _crear_link_usdt(a, plan: str, nombre_cliente: str, db):
         raise HTTPException(503, "TRON_MNEMONIC no configurado.")
 
     try:
-        hw = HDWallet(symbol=TRX)
-        hw.from_mnemonic(mnemonic=TRON_MNEMONIC, language="english")
-        hw.from_path(f"m/44'/195'/0'/0/{lp.id}")
-        privkey_hex  = hw.private_key()
+        import hmac as _hmac, hashlib as _hashlib, struct as _struct
+        from mnemonic import Mnemonic as _Mnemonic
+        import ecdsa as _ecdsa
+
+        _ORDER = 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEBAAEDCE6AF48A03BBFD25E8CD0364141
+
+        def _bip32_child(key_b, chain_b, idx, hardened):
+            i = idx + (0x80000000 if hardened else 0)
+            if hardened:
+                data = b'\x00' + key_b + _struct.pack('>I', i)
+            else:
+                sk = _ecdsa.SigningKey.from_string(key_b, curve=_ecdsa.SECP256k1)
+                vk = sk.get_verifying_key().to_string()
+                prefix = b'\x02' if int.from_bytes(vk[32:], 'big') % 2 == 0 else b'\x03'
+                data = prefix + vk[:32] + _struct.pack('>I', i)
+            Il = _hmac.new(chain_b, data, _hashlib.sha512).digest()
+            child_key = (int.from_bytes(Il[:32], 'big') + int.from_bytes(key_b, 'big')) % _ORDER
+            return child_key.to_bytes(32, 'big'), Il[32:]
+
+        _seed  = _Mnemonic("english").to_seed(TRON_MNEMONIC)
+        _I     = _hmac.new(b"Bitcoin seed", _seed, _hashlib.sha512).digest()
+        _key, _chain = _I[:32], _I[32:]
+        for _si, _sh in [(44, True), (195, True), (0, True), (0, False), (lp.id, False)]:
+            _key, _chain = _bip32_child(_key, _chain, _si, _sh)
+
+        privkey_hex  = _key.hex()
         usdt_address = PrivateKey(bytes.fromhex(privkey_hex)).public_key.to_base58check_address()
     except Exception as e:
         db.rollback()
