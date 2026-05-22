@@ -76,6 +76,18 @@ class Aliado(Base):
     notif_inact_20d_en = Column(DateTime, nullable=True)
     notif_inact_30d_en = Column(DateTime, nullable=True)
 
+    # --- SUSPENSIÓN Y ELIMINACIÓN AUTOMÁTICA POR INACTIVIDAD ---
+    # Día 30 sin login → cuenta suspendida (activo=False) + este campo se setea.
+    # Día 60 sin login  (= fecha_suspension_auto + 30d) → eliminación definitiva.
+    fecha_suspension_auto     = Column(DateTime, nullable=True)
+    fecha_eliminacion_programada = Column(DateTime, nullable=True)
+
+    # --- BAJA VOLUNTARIA ---
+    # El aliado pidió la baja desde el portal. La cuenta se suspende en el momento
+    # y se elimina definitivamente a los 30 días (tiempo de gracia / arrepentimiento).
+    baja_voluntaria_solicitada_en = Column(DateTime, nullable=True)
+    baja_voluntaria_motivo        = Column(Text, nullable=True)
+
     ventas = relationship("Venta", back_populates="aliado")
     referidos = relationship("Referido", back_populates="aliado")
     prospectos = relationship("Prospecto", back_populates="aliado")

@@ -121,6 +121,11 @@ for col_sql in [
     # v1.7 — Notificaciones de inactividad
     "ALTER TABLE aliados ADD COLUMN notif_inact_20d_en TIMESTAMP",
     "ALTER TABLE aliados ADD COLUMN notif_inact_30d_en TIMESTAMP",
+    # v1.8 — Suspensión / eliminación automática + baja voluntaria
+    "ALTER TABLE aliados ADD COLUMN fecha_suspension_auto TIMESTAMP",
+    "ALTER TABLE aliados ADD COLUMN fecha_eliminacion_programada TIMESTAMP",
+    "ALTER TABLE aliados ADD COLUMN baja_voluntaria_solicitada_en TIMESTAMP",
+    "ALTER TABLE aliados ADD COLUMN baja_voluntaria_motivo TEXT",
     # v1.8 — País de lead (multi-país)
     "ALTER TABLE bolsa_leads ADD COLUMN pais VARCHAR DEFAULT 'AR'",
     # v1.9 — Compra de créditos en USD (aliados internacionales)
@@ -681,7 +686,7 @@ def job_notificaciones_inactividad():
 
             dias_inactivo = (ahora - ultimo).days
 
-            # ── AVISO 30 DÍAS: cuenta en riesgo + créditos de reactivación ──
+            # ── AVISO 30 DÍAS: suspender cuenta + créditos de reactivación ──
             if dias_inactivo >= 30:
                 notif_30d = getattr(a, "notif_inact_30d_en", None)
                 # Evitar reenvío hasta 25 días después del último aviso
@@ -704,33 +709,40 @@ def job_notificaciones_inactividad():
                     print(f"[REACTIVACIÓN ERROR] {a.codigo}: {e}")
                     saldo_nuevo = saldo_previo
 
+                # ── SUSPENDER + programar eliminación a 30 días ──────────────
+                fecha_elim = ahora + timedelta(days=30)
+                a.activo = False
+                try:
+                    a.fecha_suspension_auto        = ahora
+                    a.fecha_eliminacion_programada = fecha_elim
+                except Exception:
+                    pass
+
+                fecha_elim_str = fecha_elim.strftime("%d/%m/%Y")
+
                 html = f"""
                 <div style="font-family:Inter,sans-serif;background:#050505;color:#e2e8f0;padding:40px;max-width:600px;margin:0 auto;border-radius:12px;border:1px solid #1e1e1e;">
                   <div style="margin-bottom:24px;">
-                    <span style="background:#7f1d1d;color:#fca5a5;font-size:.75rem;font-weight:700;padding:4px 10px;border-radius:99px;letter-spacing:.5px;text-transform:uppercase;">⚠️ Cuenta en riesgo</span>
+                    <span style="background:#7f1d1d;color:#fca5a5;font-size:.75rem;font-weight:700;padding:4px 10px;border-radius:99px;letter-spacing:.5px;text-transform:uppercase;">⚠️ Cuenta suspendida</span>
                   </div>
-                  <h2 style="margin:0 0 12px;font-size:1.4rem;color:#f87171;">Hace {dias_inactivo} días que no entrás al portal</h2>
-                  <p style="color:#a1a1aa;line-height:1.6;">Hola <strong style="color:#fff;">{nombre_corto}</strong>, notamos que tu cuenta en Avanza Digital lleva más de un mes sin actividad.</p>
+                  <h2 style="margin:0 0 12px;font-size:1.4rem;color:#f87171;">Hace {dias_inactivo} días que no entrás — suspendimos tu cuenta</h2>
+                  <p style="color:#a1a1aa;line-height:1.6;">Hola <strong style="color:#fff;">{nombre_corto}</strong>, como llevás más de 30 días sin actividad, tu cuenta quedó suspendida temporalmente.</p>
 
                   <div style="background:rgba(168,85,247,0.08);border:1px solid rgba(168,85,247,0.25);border-radius:8px;padding:18px;margin:20px 0;">
                     <p style="margin:0 0 6px;color:#c084fc;font-weight:700;font-size:1rem;">🎁 Te regalamos {BONUS_REACTIVACION} créditos para que vuelvas</p>
                     <p style="margin:0;color:#a1a1aa;font-size:.9rem;line-height:1.5;">Saldo nuevo: <strong style="color:#fff;">{saldo_nuevo} créditos</strong>. Usalos en el marketplace de leads premium del portal.</p>
                   </div>
 
-                  <div style="background:#111;border:1px solid #2a2a2a;border-radius:8px;padding:20px;margin:20px 0;">
-                    <p style="margin:0 0 8px;font-weight:600;color:#f87171;">¿Qué puede pasar si no ingresás?</p>
-                    <ul style="margin:0;padding-left:18px;color:#a1a1aa;line-height:1.8;">
-                      <li>Los leads que tengas reclamados pueden liberarse automáticamente</li>
-                      <li>Tu cuenta puede marcarse como inactiva y dejar de recibir nuevos leads</li>
-                      <li>Podrías perder tu posición en la red de aliados</li>
-                    </ul>
+                  <div style="background:rgba(248,113,113,0.06);border:1px solid rgba(248,113,113,0.2);border-radius:8px;padding:18px;margin:20px 0;">
+                    <p style="margin:0 0 6px;color:#f87171;font-weight:700;">📅 Tenés tiempo hasta el {fecha_elim_str}</p>
+                    <p style="margin:0;color:#a1a1aa;font-size:.88rem;line-height:1.5;">Si no reactivás tu cuenta antes de esa fecha, será eliminada definitivamente junto a tu código de aliado y todo el historial. Respondé este email o escribinos por WhatsApp para reactivarla gratis.</p>
                   </div>
-                  <p style="color:#a1a1aa;">Si estás pasando por un momento difícil o necesitás ayuda, respondé este email y te ayudamos.</p>
+
                   <a href="{PORTAL_URL}/portal.html" style="display:inline-block;padding:14px 28px;background:#f97316;color:#000;border-radius:8px;text-decoration:none;font-weight:800;font-size:1rem;margin-top:8px;">Reactivar mi cuenta →</a>
-                  <p style="margin-top:28px;font-size:.75rem;color:#3f3f46;">Avanza Digital · Partner Network · Para darte de baja respondé este email con "baja".</p>
+                  <p style="margin-top:28px;font-size:.75rem;color:#3f3f46;">Avanza Digital · Partner Network · ¿No recordás tu contraseña? Usá el enlace de recuperación en el portal.</p>
                 </div>
                 """
-                enviar_email(a.email, f"🎁 {nombre_corto}, te dejamos {BONUS_REACTIVACION} créditos para que vuelvas", html)
+                enviar_email(a.email, f"⚠️ {nombre_corto}, suspendimos tu cuenta — reactivala antes del {fecha_elim_str}", html)
                 try:
                     a.notif_inact_30d_en = ahora
                 except Exception:
@@ -1040,6 +1052,106 @@ def job_generar_comisiones_recurrentes_mensual():
 
 scheduler.add_job(job_notificaciones_inactividad, "interval", hours=24)
 scheduler.add_job(job_estipendio_mensual, "interval", hours=24)
+
+
+# ─── SCHEDULER: ELIMINACIÓN DEFINITIVA (bajas voluntarias + inactividad) ──────
+def job_eliminacion_definitiva():
+    """Corre 1x/día. Elimina definitivamente cuentas que alcanzaron su fecha
+    programada de eliminación, ya sea por:
+      a) Baja voluntaria (baja_voluntaria_solicitada_en + 30d).
+      b) Suspensión automática por inactividad (fecha_eliminacion_programada).
+
+    Solo actúa si activo=False (la cuenta debe estar suspendida previamente).
+    Usa el mismo flujo de eliminación en cascada que el endpoint admin DELETE.
+    """
+    from database import SessionLocal
+    db = SessionLocal()
+    try:
+        ahora = datetime.now()
+        eliminados = 0
+
+        candidatos = (
+            db.query(Aliado)
+            .filter(
+                Aliado.activo == False,
+                Aliado.fecha_eliminacion_programada != None,
+                Aliado.fecha_eliminacion_programada <= ahora,
+            )
+            .all()
+        )
+
+        for a in candidatos:
+            codigo = a.codigo
+            nombre = a.nombre
+            try:
+                # Reutilizar la lógica de eliminación en cascada
+                from main import eliminar_aliado  # misma sesión no aplica; llamamos directo
+            except Exception:
+                pass
+
+            # Eliminación en cascada inline (misma lógica que el endpoint admin)
+            aid = a.id
+            def _sp(fn):
+                sp = db.begin_nested()
+                try:
+                    fn()
+                    sp.commit()
+                except Exception as e:
+                    sp.rollback()
+                    print(f"[job_eliminacion] SKIP — {type(e).__name__}: {e}", file=sys.stderr)
+
+            try:
+                prospecto_ids = [r[0] for r in db.query(Prospecto.id).filter(Prospecto.aliado_id == aid).all()]
+                post_ids      = [r[0] for r in db.query(PostComunidad.id).filter(PostComunidad.aliado_id == aid).all()]
+
+                if post_ids:
+                    _sp(lambda: db.query(ComentarioComunidad).filter(ComentarioComunidad.post_id.in_(post_ids)).delete(synchronize_session=False))
+                _sp(lambda: db.query(ComentarioComunidad).filter(ComentarioComunidad.aliado_id == aid).delete(synchronize_session=False))
+                _sp(lambda: db.query(PostComunidad).filter(PostComunidad.aliado_id == aid).delete(synchronize_session=False))
+                _sp(lambda: db.query(Comision).filter(Comision.aliado_id == aid).delete(synchronize_session=False))
+                if prospecto_ids:
+                    _sp(lambda: db.query(Comision).filter(Comision.prospecto_id.in_(prospecto_ids)).delete(synchronize_session=False))
+                _sp(lambda: db.query(LinkPago).filter(LinkPago.aliado_id == aid).delete(synchronize_session=False))
+                if prospecto_ids:
+                    _sp(lambda: db.query(LinkPago).filter(LinkPago.prospecto_id.in_(prospecto_ids)).delete(synchronize_session=False))
+                _sp(lambda: db.query(AutomationLog).filter(AutomationLog.aliado_id == aid).delete(synchronize_session=False))
+                if prospecto_ids:
+                    _sp(lambda: db.query(AutomationLog).filter(AutomationLog.prospecto_id.in_(prospecto_ids)).delete(synchronize_session=False))
+                _sp(lambda: db.query(Venta).filter(Venta.aliado_id == aid).delete(synchronize_session=False))
+                _sp(lambda: db.query(Referido).filter(Referido.aliado_id == aid).delete(synchronize_session=False))
+                _sp(lambda: db.query(Prospecto).filter(Prospecto.aliado_id == aid).delete(synchronize_session=False))
+                _sp(lambda: db.query(TransaccionCredito).filter(TransaccionCredito.aliado_id == aid).delete(synchronize_session=False))
+                _sp(lambda: db.query(AuditoriaLog).filter(AuditoriaLog.aliado_id == aid).update({AuditoriaLog.aliado_id: None}, synchronize_session=False))
+                _sp(lambda: db.query(LeadBolsa).filter(LeadBolsa.aliado_id == aid).update({LeadBolsa.aliado_id: None, LeadBolsa.estado: "disponible", LeadBolsa.fecha_reclamo: None}, synchronize_session=False))
+                _sp(lambda: db.query(Aliado).filter(Aliado.sponsor_id == aid).update({Aliado.sponsor_id: None}, synchronize_session=False))
+
+                db.delete(a)
+                db.commit()
+                eliminados += 1
+                print(f"[job_eliminacion] ✅ Eliminado: {codigo} ({nombre})")
+
+                # Notificar al admin
+                try:
+                    enviar_email(
+                        ADMIN_EMAIL,
+                        f"🗑️ Cuenta eliminada automáticamente: {nombre} ({codigo})",
+                        f"<p style='font-family:sans-serif;'>La cuenta <strong>{nombre}</strong> ({codigo}) fue eliminada definitivamente por el job automático de eliminación.</p>"
+                    )
+                except Exception:
+                    pass
+
+            except Exception as e:
+                db.rollback()
+                print(f"[job_eliminacion] ERROR eliminando {codigo}: {type(e).__name__}: {e}", file=sys.stderr)
+
+        print(f"[job_eliminacion] Cuentas eliminadas hoy: {eliminados}")
+    except Exception as e:
+        print(f"[job_eliminacion] ERROR general: {type(e).__name__}: {e}", file=sys.stderr)
+    finally:
+        db.close()
+
+
+scheduler.add_job(job_eliminacion_definitiva, "interval", hours=24)
 scheduler.add_job(job_onboarding_sequence, "interval", hours=24)
 scheduler.add_job(job_generar_comisiones_recurrentes_mensual, "interval", hours=24)
 scheduler.start()
@@ -1146,6 +1258,8 @@ RUTAS_ADMIN = {
     ("GET",    "/admin/reportes-mal-contacto"),
     ("POST",   "/admin/reportes-mal-contacto/{id}/aprobar"),
     ("POST",   "/admin/reportes-mal-contacto/{id}/rechazar"),
+    # v1.8 — bajas voluntarias pendientes de eliminación definitiva
+    ("GET",    "/admin/bajas-voluntarias"),
     # v2.0 — métricas de cohorte de fuga
     ("GET",    "/admin/cohorte-fuga"),
     ("GET",    "/admin/uso-creditos"),
@@ -2026,6 +2140,35 @@ def listar_suspendidos(db: Session = Depends(get_db)):
     return [_aliado_row(a) for a in db.query(Aliado).filter(Aliado.activo == False).all()]
 
 
+@app.get("/admin/bajas-voluntarias")
+def listar_bajas_voluntarias(db: Session = Depends(get_db)):
+    """Lista aliados que solicitaron baja voluntaria y aún no fueron eliminados.
+    Muestra los días restantes para la eliminación definitiva.
+    Solo accesible para admins.
+    """
+    ahora = datetime.now()
+    aliados = (
+        db.query(Aliado)
+        .filter(
+            Aliado.baja_voluntaria_solicitada_en != None,
+            Aliado.fecha_eliminacion_programada != None,
+            Aliado.fecha_eliminacion_programada > ahora,
+        )
+        .order_by(Aliado.fecha_eliminacion_programada)
+        .all()
+    )
+    result = []
+    for a in aliados:
+        dias_restantes = (a.fecha_eliminacion_programada - ahora).days
+        row = _aliado_row(a)
+        row["baja_voluntaria_solicitada_en"] = a.baja_voluntaria_solicitada_en.isoformat() if a.baja_voluntaria_solicitada_en else None
+        row["fecha_eliminacion_programada"]  = a.fecha_eliminacion_programada.isoformat() if a.fecha_eliminacion_programada else None
+        row["baja_voluntaria_motivo"]        = a.baja_voluntaria_motivo
+        row["dias_restantes_para_eliminar"]  = dias_restantes
+        result.append(row)
+    return result
+
+
 @app.get("/aliados/inactivos")
 def aliados_inactivos(dias: int = 30, db: Session = Depends(get_db)):
     """Aliados sin actividad en los últimos N días. Para sistema de reactivación."""
@@ -2143,6 +2286,99 @@ def crear_aliado(background_tasks: BackgroundTasks,
 def aliado_me(aliado: Aliado = Depends(current_aliado_required), db: Session = Depends(get_db)):
     """Devuelve los datos del aliado autenticado via JWT. Usado para auto-login."""
     return _aliado_detalle(aliado)
+
+
+@app.post("/aliados/me/solicitar-baja")
+def solicitar_baja_voluntaria(
+    body: schemas.SolicitarBajaVoluntariaIn,
+    aliado: Aliado = Depends(current_aliado_required),
+    db: Session  = Depends(get_db),
+):
+    """El aliado pide la baja de su propia cuenta desde el portal.
+
+    Flujo:
+      - La cuenta se suspende de inmediato (activo=False).
+      - Se guarda la fecha de solicitud y el motivo opcional.
+      - En 30 días, job_eliminacion_bajas_voluntarias la elimina definitivamente.
+      - El aliado recibe un email de confirmación con instrucciones para cancelar.
+      - El admin recibe un email con los datos del aliado + motivo.
+
+    No se borra nada en este momento: el aliado tiene 30 días para arrepentirse
+    contactando a soporte. Pasado ese plazo, la eliminación es irreversible.
+    """
+    if not aliado.activo:
+        raise HTTPException(400, "Tu cuenta ya está suspendida o dada de baja.")
+
+    ahora = datetime.now()
+    aliado.activo                       = False
+    aliado.baja_voluntaria_solicitada_en = ahora
+    aliado.baja_voluntaria_motivo       = (body.motivo or "").strip() or None
+    aliado.fecha_eliminacion_programada = ahora + timedelta(days=30)
+    db.commit()
+
+    nombre_corto = aliado.nombre.split()[0]
+    motivo_txt   = aliado.baja_voluntaria_motivo or "No especificado"
+    fecha_elim   = aliado.fecha_eliminacion_programada.strftime("%d/%m/%Y")
+
+    # ── Email al aliado ──
+    html_aliado = f"""
+    <div style="font-family:'Inter',sans-serif;max-width:560px;margin:0 auto;background:#0a0a0a;color:#e4e4e7;padding:32px;border-radius:12px;">
+      <h2 style="margin:0 0 16px;font-size:1.3rem;color:#f87171;">
+        ⚠️ Solicitud de baja recibida, {nombre_corto}
+      </h2>
+      <p style="color:#a1a1aa;line-height:1.6;margin-bottom:16px;">
+        Recibimos tu solicitud para darte de baja del programa de aliados de Avanza Digital.
+        Tu acceso al portal ha sido <strong style="color:#f87171;">suspendido de inmediato</strong>.
+      </p>
+      <div style="background:rgba(248,113,113,0.08);border:1px solid rgba(248,113,113,0.25);border-radius:8px;padding:16px;margin-bottom:20px;">
+        <p style="margin:0;font-size:.9rem;line-height:1.6;">
+          📅 <strong>Tu cuenta será eliminada definitivamente el {fecha_elim}.</strong><br>
+          Hasta esa fecha, si te arrepentís, escribinos a 
+          <a href="mailto:avanzadigital4@gmail.com" style="color:var(--primary,#3b82f6);">avanzadigital4@gmail.com</a>
+          o por WhatsApp y reactivamos tu cuenta sin perder nada.
+        </p>
+      </div>
+      <p style="font-size:.8rem;color:#52525b;margin-top:24px;">
+        Avanza Digital · Partner Network · Si no fuiste vos quien solicitó esto, 
+        respondé este email urgente.
+      </p>
+    </div>
+    """
+    try:
+        enviar_email(aliado.email, f"Solicitud de baja recibida — tu cuenta se eliminará el {fecha_elim}", html_aliado)
+    except Exception as e:
+        print(f"[BAJA_VOLUNTARIA] No se pudo enviar email al aliado {aliado.codigo}: {e}", file=sys.stderr)
+
+    # ── Email al admin ──
+    html_admin = f"""
+    <div style="font-family:'Inter',sans-serif;max-width:560px;margin:0 auto;background:#0a0a0a;color:#e4e4e7;padding:32px;border-radius:12px;">
+      <h2 style="margin:0 0 16px;font-size:1.2rem;color:#fb923c;">
+        🚪 Aliado solicitó baja voluntaria
+      </h2>
+      <table style="width:100%;font-size:.88rem;border-collapse:collapse;">
+        <tr><td style="padding:6px 0;color:#a1a1aa;">Nombre:</td><td style="padding:6px 0;font-weight:700;">{aliado.nombre}</td></tr>
+        <tr><td style="padding:6px 0;color:#a1a1aa;">Código:</td><td style="padding:6px 0;">{aliado.codigo}</td></tr>
+        <tr><td style="padding:6px 0;color:#a1a1aa;">Email:</td><td style="padding:6px 0;">{aliado.email}</td></tr>
+        <tr><td style="padding:6px 0;color:#a1a1aa;">WhatsApp:</td><td style="padding:6px 0;">{aliado.whatsapp or '—'}</td></tr>
+        <tr><td style="padding:6px 0;color:#a1a1aa;">Nivel:</td><td style="padding:6px 0;">{aliado.nivel}</td></tr>
+        <tr><td style="padding:6px 0;color:#a1a1aa;">Motivo:</td><td style="padding:6px 0;font-style:italic;">{motivo_txt}</td></tr>
+        <tr><td style="padding:6px 0;color:#a1a1aa;">Eliminar el:</td><td style="padding:6px 0;color:#f87171;font-weight:700;">{fecha_elim}</td></tr>
+      </table>
+      <p style="font-size:.78rem;color:#52525b;margin-top:20px;">
+        Para cancelar la baja, reactivá la cuenta desde el panel admin antes del {fecha_elim}.
+      </p>
+    </div>
+    """
+    try:
+        enviar_email(ADMIN_EMAIL, f"🚪 Baja voluntaria: {aliado.nombre} ({aliado.codigo})", html_admin)
+    except Exception as e:
+        print(f"[BAJA_VOLUNTARIA] No se pudo enviar email admin: {e}", file=sys.stderr)
+
+    return {
+        "ok": True,
+        "mensaje": f"Baja solicitada. Tu cuenta fue suspendida y será eliminada definitivamente el {fecha_elim}. Podés cancelar escribiéndonos antes de esa fecha.",
+        "fecha_eliminacion": fecha_elim,
+    }
 
 
 @app.get("/aliados/{codigo}")

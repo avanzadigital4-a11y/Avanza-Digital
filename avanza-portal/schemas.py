@@ -227,3 +227,21 @@ class RegistrarComprobanteIn(_Base):
 class RechazarSolicitudIn(_Base):
     """Admin marca la solicitud como rechazada con un motivo visible al aliado."""
     motivo: str = Field(..., min_length=3, max_length=500)
+
+
+# ─── BAJA VOLUNTARIA ─────────────────────────────────────────────────────────
+class SolicitarBajaVoluntariaIn(_Base):
+    """El aliado pide la baja desde su perfil en el portal.
+
+    El campo `motivo` es opcional — sirve como feedback interno para el equipo.
+    No se muestra en ningún lugar público; queda guardado en la DB y se incluye
+    en el email de notificación al admin.
+
+    Flujo:
+        1. Aliado confirma la acción en el modal de portal.html.
+        2. POST /aliados/me/solicitar-baja → activo=False + timestamps.
+        3. Admin recibe email con los datos + motivo (si vino).
+        4. job_eliminacion_bajas_voluntarias corre 1×/día:
+           si baja_voluntaria_solicitada_en + 30d <= ahora → eliminar definitivamente.
+    """
+    motivo: Optional[str] = Field(default=None, max_length=1000)

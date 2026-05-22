@@ -2597,6 +2597,23 @@
         </div>
         <div id="perfil-cbu-estado" style="font-size:0.78rem; margin-top:10px;"></div>
       </div>
+
+      <!-- ── ZONA DE PELIGRO: baja voluntaria ── -->
+      <div class="bento-box" style="margin-top:24px; border-color:rgba(239,68,68,0.25); background:rgba(239,68,68,0.03);">
+        <h3 style="font-size:0.95rem; font-weight:700; margin-bottom:4px; color:#f87171;">
+          <i class="fa-solid fa-triangle-exclamation" style="color:#ef4444;"></i>
+          &nbsp;Zona de peligro
+        </h3>
+        <p style="font-size:0.82rem; color:var(--text-muted); margin-bottom:16px; line-height:1.6;">
+          Si querés salir del programa, podés solicitar la baja desde acá. Tu cuenta se suspende de inmediato
+          y se elimina definitivamente a los <strong>30 días</strong>. Tenés ese plazo para arrepentirte
+          escribiéndonos.
+        </p>
+        <button onclick="document.getElementById('modal-baja-voluntaria').classList.add('open')"
+          style="background:transparent; border:1px solid rgba(239,68,68,0.5); color:#f87171; border-radius:8px; padding:10px 20px; font-weight:700; cursor:pointer; font-size:.85rem; display:inline-flex; align-items:center; gap:8px;">
+          <i class="fa-solid fa-right-from-bracket"></i> Solicitar baja de mi cuenta
+        </button>
+      </div>
     </div>
 
     <div id="tab-prospectos" class="tab-panel">
@@ -3124,6 +3141,46 @@
      MODAL COMPRA DE CRÉDITOS (v1.7)
      Dos vistas: paso 1 (elegir paquete) y paso 2 (instrucciones de transferencia).
      ════════════════════════════════════════════════════════════════════════ -->
+<!-- ══════════════════════════════════════════════════════════════════════
+     MODAL — BAJA VOLUNTARIA
+     ══════════════════════════════════════════════════════════════════════ -->
+<div class="modal-overlay" id="modal-baja-voluntaria">
+  <div class="onboarding-box" style="max-width:500px;padding:0;">
+    <div style="background:rgba(239,68,68,0.08);border-bottom:1px solid rgba(239,68,68,0.25);padding:18px 24px;display:flex;justify-content:space-between;align-items:center;">
+      <h3 style="font-size:1rem;font-weight:800;margin:0;color:#f87171;">
+        <i class="fa-solid fa-triangle-exclamation"></i> &nbsp;Solicitar baja de cuenta
+      </h3>
+      <button onclick="document.getElementById('modal-baja-voluntaria').classList.remove('open')" style="background:transparent;border:none;color:var(--text-muted);font-size:1.4rem;cursor:pointer;">&times;</button>
+    </div>
+
+    <div style="padding:24px;">
+      <div style="background:rgba(239,68,68,0.06);border:1px solid rgba(239,68,68,0.2);border-radius:8px;padding:16px;margin-bottom:20px;">
+        <p style="margin:0 0 8px;font-weight:700;color:#f87171;font-size:.92rem;">⚠️ Esta acción suspende tu cuenta de inmediato</p>
+        <p style="margin:0;font-size:.83rem;color:var(--text-muted);line-height:1.6;">Tu código de aliado, historial de comisiones y créditos se conservan durante <strong style="color:var(--text);">30 días</strong>. Si te arrepentís, escribinos antes de ese plazo y reactivamos tu cuenta sin perder nada. Pasados los 30 días, la eliminación es <strong style="color:#f87171;">irreversible</strong>.</p>
+      </div>
+
+      <div style="margin-bottom:18px;">
+        <label style="font-size:.75rem;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.8px;display:block;margin-bottom:8px;">¿Por qué te vas? <span style="font-weight:400;text-transform:none;letter-spacing:0;">(opcional — nos ayuda a mejorar)</span></label>
+        <textarea id="baja-motivo" rows="3" placeholder="Ej: No pude dedicarle tiempo, encontré otra forma de generar ingresos, el modelo no se adaptó a mi zona..."
+          style="width:100%;box-sizing:border-box;background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:8px;padding:12px 14px;color:var(--text);font-size:.88rem;font-family:'Inter',sans-serif;resize:vertical;outline:none;"></textarea>
+      </div>
+
+      <div id="baja-voluntaria-estado" style="font-size:.82rem;margin-bottom:14px;min-height:20px;"></div>
+
+      <div style="display:flex;gap:10px;flex-wrap:wrap;">
+        <button onclick="document.getElementById('modal-baja-voluntaria').classList.remove('open')"
+          style="flex:1;background:rgba(255,255,255,0.06);border:1px solid var(--border);border-radius:8px;padding:12px;color:var(--text);font-weight:700;cursor:pointer;font-size:.88rem;">
+          Cancelar
+        </button>
+        <button id="btn-confirmar-baja" onclick="confirmarBajaVoluntaria()"
+          style="flex:2;background:#ef4444;color:#fff;border:none;border-radius:8px;padding:12px;font-weight:800;cursor:pointer;font-size:.88rem;">
+          <i class="fa-solid fa-right-from-bracket"></i> Confirmar baja definitiva
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <div class="modal-overlay" id="modal-comprar-creditos">
   <div class="onboarding-box" style="max-width:680px; max-height:92vh; overflow-y:auto; padding:0;">
 
@@ -5144,6 +5201,51 @@ async function darDeBajaContinuidad(id, cliente, plan) {
   } catch (e) {
     console.error('[CONTINUIDAD BAJA]', e);
     mostrarToast('No pude dar de baja: ' + e.message, 'red');
+  }
+}
+
+// ── BAJA VOLUNTARIA (v1.8) ────────────────────────────────────────────────────
+async function confirmarBajaVoluntaria() {
+  if (!aliado) return;
+  const btn    = document.getElementById('btn-confirmar-baja');
+  const estado = document.getElementById('baja-voluntaria-estado');
+  const motivo = (document.getElementById('baja-motivo').value || '').trim();
+
+  btn.disabled  = true;
+  btn.innerHTML = '<span class="spinner"></span> Procesando...';
+  estado.style.color = 'var(--text-muted)';
+  estado.textContent = '';
+
+  try {
+    const res = await fetch(`/aliados/me/solicitar-baja`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+      body: JSON.stringify({ motivo: motivo || null }),
+    });
+    const data = await res.json();
+
+    if (!res.ok) {
+      estado.style.color = '#f87171';
+      estado.textContent = data.detail || 'Ocurrió un error. Intentá de nuevo.';
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fa-solid fa-right-from-bracket"></i> Confirmar baja definitiva';
+      return;
+    }
+
+    // Éxito: mostrar mensaje y cerrar sesión
+    document.getElementById('modal-baja-voluntaria').classList.remove('open');
+    alert(`✅ ${data.mensaje}`);
+    // Cerrar sesión (la cuenta está suspendida)
+    token = null; aliado = null;
+    localStorage.removeItem('avanza_token');
+    document.getElementById('app-shell').style.display = 'none';
+    document.getElementById('login-section').style.display = 'flex';
+
+  } catch (err) {
+    estado.style.color = '#f87171';
+    estado.textContent = 'Error de conexión. Intentá de nuevo.';
+    btn.disabled = false;
+    btn.innerHTML = '<i class="fa-solid fa-right-from-bracket"></i> Confirmar baja definitiva';
   }
 }
 
