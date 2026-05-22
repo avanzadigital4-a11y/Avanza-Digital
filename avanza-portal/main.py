@@ -132,6 +132,18 @@ for col_sql in [
     # Marca si el aliado ya personalizó su slug una vez. Si está NULL,
     # significa que el ref_code es autogenerado y todavía puede reclamarlo.
     "ALTER TABLE aliados ADD COLUMN username_personalizado_en TIMESTAMP",
+    # v2.1 — Slug personalizado y foto de perfil del aliado
+    # SIN ESTAS DOS LÍNEAS el checkout tira HTTP 500: SQLAlchemy hace SELECT *
+    # y PostgreSQL responde UndefinedColumn porque el modelo las declara
+    # pero la tabla no las tiene todavía.
+    "ALTER TABLE aliados ADD COLUMN username VARCHAR UNIQUE",
+    "ALTER TABLE aliados ADD COLUMN portal_publico_foto_url VARCHAR",
+    # v2.2 — País del aliado (expansión Latam: AR, MX, CO, CL, PE…)
+    # Separado de bolsa_leads (que ya tiene su pais desde v1.8).
+    "ALTER TABLE aliados ADD COLUMN pais VARCHAR DEFAULT 'AR'",
+    # v2.3 — Rubros de especialidad para SEO local por país y ciudad
+    # JSON array: ["metalurgica","agro","logistica","clinica","tecnico"]
+    "ALTER TABLE aliados ADD COLUMN rubros_especialidad TEXT DEFAULT '[]'",
 ]:
     _aplicar_migracion(col_sql)
 
@@ -6678,6 +6690,37 @@ def portal_publico_aliado(ref_code: str, db: Session = Depends(get_db)):
     foto_url = getattr(a, 'portal_publico_foto_url', None)
     avatar_html = f'<img src="{foto_url}" alt="{titular}" style="width:54px;height:54px;border-radius:50%;object-fit:cover;">' if foto_url else '👤'
 
+    # ── Rubros y país para SEO ──────────────────────────────────────────────
+    import json as _json
+    _pais = getattr(a, 'pais', None) or 'AR'
+    _pais_nombres = {
+        'AR':'Argentina','MX':'México','CO':'Colombia','CL':'Chile',
+        'PE':'Perú','UY':'Uruguay','PY':'Paraguay','BO':'Bolivia',
+        'EC':'Ecuador','VE':'Venezuela',
+    }
+    _pais_nombre = _pais_nombres.get(_pais, _pais)
+    _rubros_raw = getattr(a, 'rubros_especialidad', '[]') or '[]'
+    try:
+        _rubros = _json.loads(_rubros_raw)
+    except Exception:
+        _rubros = []
+    _rubros_labels = {
+        'metalurgica':'Metalúrgica','agro':'Agroindustria','logistica':'Logística',
+        'clinica':'Clínicas y Salud','tecnico':'Servicios Técnicos','construccion':'Construcción',
+        'transporte':'Transporte','alimentos':'Alimentos','textil':'Textil','otro':'Otros rubros',
+    }
+    _rubros_display = [_rubros_labels.get(r, r.title()) for r in _rubros]
+    _rubros_seo = ', '.join(_rubros_display) if _rubros_display else 'PYMEs industriales'
+    _ciudad = getattr(a, 'ciudad', None) or ''
+    # Título SEO: "Gonzalo García · Asesor digital en metalúrgica y agro · Rosario, Argentina"
+    _seo_title = f"{titular} · Asesor digital en {_rubros_seo} · {_ciudad + ', ' if _ciudad else ''}{_pais_nombre} | Avanza Digital"[:120]
+    _seo_desc = f"{titular} es partner oficial de Avanza Digital en {_pais_nombre}. Especialista en digitalización de {_rubros_seo}. Contactalo para implementar tu sistema de ventas B2B."[:160]
+    # Badges de rubros para mostrar en el portal
+    _rubros_badges_html = ''.join(
+        f'<span style="display:inline-block;background:rgba(59,130,246,0.12);color:#93c5fd;border:1px solid rgba(59,130,246,0.2);padding:3px 10px;border-radius:20px;font-size:.72rem;font-weight:600;margin:3px 3px 3px 0;">{r}</span>'
+        for r in _rubros_display
+    ) if _rubros_display else ''
+
     # WhatsApp de contacto: del aliado si tiene, si no el de Avanza
     _wa_raw = (a.whatsapp or "").strip().replace("+", "").replace(" ", "").replace("-", "").replace("(", "").replace(")", "")
     _wa_avanza = "5493424392759"
@@ -6771,7 +6814,11 @@ def portal_publico_aliado(ref_code: str, db: Session = Depends(get_db)):
     html = f"""<!DOCTYPE html>
 <html lang="es"><head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>{titular} · Sistema de ventas para tu empresa · Avanza Digital</title>
+<title>{_seo_title}</title>
+<meta name="description" content="{_seo_desc}">
+<meta property="og:title" content="{_seo_title}">
+<meta property="og:description" content="{_seo_desc}">
+<meta name="robots" content="index, follow">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
 <style>
 *{{box-sizing:border-box;margin:0;padding:0;}}
@@ -6873,6 +6920,7 @@ input[type=text]:focus{{outline:none;border-color:#3b82f6;}}
     <div class="hero-badge">Sistema de ventas B2B</div>
     <h1>Tu empresa merece <span>conseguir clientes</span> de forma sistemática</h1>
     <p class="hero-sub">Implementamos tu sistema digital de ventas en 30 días. Más presupuestos, más respuestas rápidas, más clientes. Sin depender de la suerte ni del boca a boca.</p>
+    {f'<div style="margin:0 auto 20px;max-width:480px;text-align:center;">{_rubros_badges_html}</div>' if _rubros_badges_html else ''}
     <a href="#planes" class="hero-cta">Elegir mi plan →</a>
     <p class="hero-social">Más de <span>40 PYMEs industriales</span> ya tienen su sistema funcionando</p>
   </section>

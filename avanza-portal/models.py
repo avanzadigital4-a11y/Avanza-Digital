@@ -55,6 +55,13 @@ class Aliado(Base):
     portal_publico_bio = Column(Text, nullable=True)
     portal_publico_foto_url = Column(String, nullable=True)  # URL de foto de perfil del aliado
 
+    # --- EXPANSIÓN LATAM ---
+    # ISO 3166-1 alpha-2: AR, MX, CO, CL, PE, UY, PY, BO, EC, VE...
+    pais = Column(String, default="AR", index=True)
+    # JSON array de strings: ["metalurgica","agro","logistica","clinica","tecnico"]
+    # Permite posicionar el portal /p/{ref_code} en búsquedas por rubro y ciudad.
+    rubros_especialidad = Column(Text, default="[]")
+
     # --- CANAL DE ALIADO ---
     tipo_aliado = Column(String, default="canal1")
 

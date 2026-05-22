@@ -99,13 +99,31 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
-    // 4. TRACKING WHATSAPP
+    // 4. TRACKING WHATSAPP (qualify_lead — intención de contacto general)
     document.querySelectorAll('a[href*="wa.me"]').forEach(function (btn) {
         btn.addEventListener('click', function () {
             var parent    = this.closest('[class*="plan"], [class*="card"], section');
             var titleEl   = parent ? parent.querySelector('h2, h3, h4') : null;
             var planTitle = titleEl ? titleEl.innerText.trim().substring(0, 50) : 'sin_identificar';
             trackEvent('qualify_lead', { method: 'whatsapp', plan: planTitle });
+        });
+    });
+
+    // 4b. TRACKING CONTRATAR (close_convert_lead — intención de compra directa)
+    // Dispara en todos los botones .btn-contract que llevan a contratar.html
+    document.querySelectorAll('a.btn-contract[href*="contratar"]').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+            // Extraer nombre del plan desde el href: contratar.html?plan=Plan+Base+(...)
+            var href  = this.getAttribute('href') || '';
+            var match = href.match(/[?&]plan=([^&]+)/);
+            var plan  = match ? decodeURIComponent(match[1].replace(/\+/g, ' ')) : 'sin_identificar';
+            // Detectar si es pago único o suscripción
+            var modalidad = /mensual/i.test(plan) ? 'suscripcion' : 'pago_unico';
+            trackEvent('close_convert_lead', {
+                method:    'btn_contratar',
+                plan:      plan,
+                modalidad: modalidad,
+            });
         });
     });
 
@@ -150,7 +168,8 @@ document.addEventListener('DOMContentLoaded', function () {
             })
             .then(function (res) {
                 if (!res.ok) throw new Error('HS ' + res.status);
-                trackEvent('qualify_lead', { method: 'formulario' });
+                // close_convert_lead: el lead completó el formulario de contacto (conversión final)
+                trackEvent('close_convert_lead', { method: 'formulario', plan: 'sin_plan' });
                 formStatus.style.cssText = 'display:block;padding:12px;border-radius:8px;color:#065f46;background:#d1fae5;';
                 formStatus.innerHTML = '✅ ¡Mensaje recibido! Te contactamos en menos de 24 hs.';
                 contactForm.reset();
@@ -198,3 +217,33 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 
 }); // fin DOMContentLoaded
+
+// ============================================================
+// DEBUG HELPER — activo solo con ?debug_ga4=1 en la URL
+// Muestra en consola cada push al dataLayer para verificar
+// que qualify_lead y close_convert_lead llegan a GTM/GA4.
+// Uso: abrir index.html?debug_ga4=1 y reproducir el evento.
+// ============================================================
+(function () {
+    if (!/[?&]debug_ga4=1/.test(window.location.search)) return;
+    window.dataLayer = window.dataLayer || [];
+    var _push = Array.prototype.push;
+    window.dataLayer.push = function () {
+        var args = Array.prototype.slice.call(arguments);
+        args.forEach(function (obj) {
+            if (obj && obj.event) {
+                console.group(
+                    '%c[GA4 dataLayer] ' + obj.event,
+                    'background:#1a1a2e;color:#4ade80;font-weight:bold;padding:2px 6px;border-radius:3px;'
+                );
+                console.table(obj);
+                console.groupEnd();
+            }
+        });
+        return _push.apply(window.dataLayer, args);
+    };
+    console.info(
+        '%c[Avanza GA4 debug] Modo debug activo — todos los eventos aparecerán arriba.',
+        'color:#60a5fa;font-weight:bold;'
+    );
+})();

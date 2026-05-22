@@ -5,3 +5,23 @@
 /admin/*      https://avanza-digital.onrender.com/admin/:splat      200
 /:ref_code    https://avanza-digital.onrender.com/alias/:ref_code   301
 /auditoria-digital  /auditoria-digital.html  200
+
+# LATAM country hubs
+/mexico/           /mexico/index.html        200
+/colombia/         /colombia/index.html      200
+/chile/            /chile/index.html         200
+/peru/             /peru/index.html          200
+
+# LATAM rubro+país
+/mexico/metalurgica/    /mexico/metalurgica/index.html    200
+/mexico/agro/           /mexico/agro/index.html           200
+/mexico/logistica/      /mexico/logistica/index.html      200
+/colombia/agro/         /colombia/agro/index.html         200
+/colombia/metalurgica/  /colombia/metalurgica/index.html  200
+/colombia/logistica/    /colombia/logistica/index.html    200
+/chile/logistica/       /chile/logistica/index.html       200
+/chile/metalurgica/     /chile/metalurgica/index.html     200
+/chile/agro/            /chile/agro/index.html            200
+/peru/agro/             /peru/agro/index.html             200
+/peru/metalurgica/      /peru/metalurgica/index.html      200
+/peru/logistica/        /peru/logistica/index.html        200

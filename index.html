@@ -124,7 +124,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="google-site-verification" content="UfawvkIWoSGObC3xVvpPSRfnZsLW8chqHLq7hgWWOF4">
-    <title>Marketing Industrial B2B para Latam | Sistemas de Ventas para PYMEs | Avanza Digital</title>
+    <title>Sistemas de Ventas B2B para PYMEs Industriales | Avanza Digital</title>
     <meta name="description" content="Agencia de marketing industrial B2B para PYMEs de Latinoamérica. Especialistas en embudos de venta, automatización comercial y generación de leads para empresas industriales.">
     <!-- OpenGraph / Social cards (auto-generado) -->
     <meta property="og:type" content="website">
@@ -155,18 +155,15 @@
     <link rel="canonical" href="https://avanzadigital.digital/">
 
     <!-- Preconexiones a dominios externos críticos -->
-    <link rel="preconnect" href="https://images.unsplash.com">
     <link rel="dns-prefetch" href="//js.hs-scripts.com">
 
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <!-- Fuentes: precarga sin bloquear render -->
-    <link rel="preload" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'">
-    <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap"></noscript>
+    <!-- Fuentes Inter autoalojadas: elimina request externo a Google Fonts -->
+    <link rel="preload" href="/fonts/inter-400.woff2" as="font" type="font/woff2" crossorigin>
+    <link rel="preload" href="/fonts/inter-600.woff2" as="font" type="font/woff2" crossorigin>
+    <link rel="stylesheet" href="/fonts.css">
 
-    <!-- Font Awesome con carga diferida para no bloquear el render en mobile -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" media="print" onload="this.media='all'">
-    <noscript><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"></noscript>
+    <!-- Preload del LCP -->
+    <link rel="preload" as="image" href="/demo-tecnico.webp" fetchpriority="high">
     
     <link rel="stylesheet" href="style.min.css">
 
@@ -371,13 +368,52 @@
         }
     }
     </style>
+    <!-- MailerLite: deferred to body -->
 </head>
 <body>
+<!-- SVG icon sprite — replaces Font Awesome CDN (-390 KB) -->
+<svg xmlns="http://www.w3.org/2000/svg" style="display:none" aria-hidden="true">
+<symbol id="ico-globe" viewBox="0 0 512 512"><path d="M352 256c0 22.2-1.2 43.6-3.3 64H163.3C161.2 299.6 160 278.2 160 256s1.2-43.6 3.3-64H348.7c2.1 20.4 3.3 41.8 3.3 64zm28.8-64l123.1 0c5.3 20.5 8.1 41.9 8.1 64s-2.8 43.5-8.1 64l-123.1 0c2.1-20.6 3.2-42 3.2-64s-1.1-43.4-3.2-64zm112.6-32H375.7c-10-63.9-29.8-117.4-55.3-151.6C398.3 28.5 462 85.3 493.4 160zM344.3 160H167.7c6.1-36.4 15.5-68.6 27-94.7 10.5-23.6 22.2-40.7 33.5-51.5C239.4 3.2 248.7 0 256 0s16.6 3.2 27.8 13.8c11.3 10.8 23 27.9 33.5 51.5 11.5 26 20.9 58.2 27 94.7zm-216.7 0H19.2C50.6 85.3 114.3 28.5 191.6 8.4 166.1 42.6 146.3 96.1 136.3 160zM8.1 192h123.1c-2.1 20.6-3.2 42-3.2 64s1.1 43.4 3.2 64H8.1C2.8 299.5 0 278.1 0 256s2.8-43.5 8.1-64zm186.6 254.6c-11.5-26-20.9-58.2-27-94.6h176.6c-6.1 36.4-15.5 68.6-27 94.6-10.5 23.6-22.2 40.7-33.5 51.5C272.6 508.8 263.3 512 256 512s-16.6-3.2-27.8-13.8c-11.3-10.8-23-27.9-33.5-51.5zm-56.6-94.6c10 63.9 29.8 117.4 55.3 151.6C115.6 483.5 51.9 426.7 19.2 352zm272.4 0h116.7c-32.7 74.7-96.4 131.5-173.9 151.6 25.5-34.2 45.3-87.7 55.3-151.6z"/></symbol>
+<symbol id="ico-globe-americas" viewBox="0 0 512 512"><path d="M57.7 193l9.4 18.8c4 8.1 12.7 12.2 21.4 10.2l8.6-2.1c-2.2 11.4-.8 23.3 4.5 33.8l.5 1 0 .1c7.6 15.2 22.4 25.2 39.1 26.7l2.8.2c5.8.4 9.7 5.9 8.4 11.6L148 346.2l9.9 2.6c12.2 3.2 22.5 11.3 28.7 22.3l8.7 15.7c2.1 3.7 6 6 10.3 6l2.6 0c6.1 0 11-4.9 11-11l0-5.5c0-10.2 5.2-19.7 13.7-25.2l2.5-1.6c8.8-5.7 19.8-6.5 29.3-2.2l3.5 1.6c13.7 6.2 28.8 7.8 43.4 4.4l9.2-2.2c5.5-1.3 11 1.2 13.7 6.2l1.5 2.7c7.6 13.9 7.6 30.8 0 44.7l-6.6 12.1c-3.8 6.9-9.4 12.6-16.3 16.3l-7.6 4.1-.9.5c-24 13.4-51.5 18.1-78.3 13.2l-4.7-.9c-2.8-.5-5.6-1.2-8.4-2l-3.8-1.1c-6.4-1.9-13.2-.4-18.2 4L128.4 460.6c-5.4 4.9-7.9 12.3-6.6 19.5l.9 5c.8 4.4 3 8.5 6.2 11.7l.5.5c-24.5-8.5-47.5-20.7-68.2-36.5c-.5-.4-1-1-1.5-1.4c-5.4-5.4-10.5-11.2-15.3-17.2l1.9-1.6c6.7-5.7 9.9-14.5 8.5-23.1l-3.3-19.5c-1.2-7.2 3-14.2 9.8-16.7l4.1-1.5c12.6-4.7 21-16.6 21-30v-5.6c0-10.9-5.6-21-14.8-26.7l-2.1-1.3c-4.8-2.9-10.3-4.6-15.9-5L60 322.6c-7.5-.5-14.5-3.8-19.7-9.1l-2.7-2.7c-8.3-8.3-15.1-17.9-20-28.5l0-.1-1.5-3.4c-5.3-12-6.2-25.5-2.7-38.1l10.3-37.4c1.7-6.2 6.2-11.1 12.1-13.3l17.9-6.6c3.8-1.4 7.4-3.3 10.7-5.6l5.3-3.7c3.6-2.5 7.8-3.9 12.2-4l22.5-.2c4.3 0 8.5-1.1 12.2-3.2l8.4-4.8c5.8-3.3 10.1-8.9 11.5-15.4l4.9-23.2c1.3-6.2 6.8-10.6 13.1-10.6c5.5 0 10.5 3.3 12.8 8.4l12 27c3.3 7.3 10.6 12 18.6 12l4.4 0c8.7 0 16.9-4.4 21.7-11.8l1.4-2.1c3.6-5.5 9.2-9.3 15.5-10.4l9.4-1.7c9-1.6 14.9-10.2 13.3-19.2l-3.4-18.6c-.6-3.3-2.4-6.3-5-8.4l-11.8-9.4c-9.4-7.5-14.8-19-14.8-31V45.7c13.5-1.2 27-1.6 40.6-1.2l10.4.3c4.5.1 8.9 2 12.1 5.2l3.2 3.2c3.8 3.8 8.9 6 14.2 6c5.6 0 10.9-2.3 14.7-6.4l1.7-1.8c5.9-6.3 14.3-9.9 23-9.9c0 0 .1 0 .1 0c5.7 0 11.3 1.6 16.2 4.7l1.1.7c9.6 6.2 12.7 18.5 7.1 28.5L384.8 83.4c-3.3 5.9-3.8 13-1.2 19.3L390.8 120c2 4.8 4.9 9.2 8.7 12.9l1.7 1.7c4.3 4.2 6.7 10 6.7 16l0 4.8c0 11.5-7.8 21.4-18.9 23.9l-13.1 3c-12.3 2.8-21.2 13.5-21.6 26.1L354 214.8c-.3 11.2 8 20.8 19.2 21.5l25.2 1.6c5.7.4 11.1 2.6 15.4 6.4l5.7 5.1c9.2 8.2 14.4 20 14.4 32.3l0 3.2c0 7.8-3.1 15.2-8.6 20.7L411.8 319c-4.9 4.9-7.6 11.6-7.6 18.5l0 1.4c0 6.1 1.5 12.1 4.3 17.5l0 .1 0 .1c5.5 10.9 4 24-3.8 33.4l-11.9 14.6c-5 6.1-7.7 13.8-7.7 21.7l0 1.1c0 7.9 2.7 15.5 7.7 21.6l16.4 20.2c3.4 4.1 8.4 6.6 13.7 6.7l1.6 0c5.4.1 10.5 2.3 14.1 6.2l3.4 3.8c.6.6 1.1 1.3 1.6 2c-3.7 2.4-7.5 4.7-11.3 6.8l-14.4 7.8c-11.3 6.1-23 11.5-35 16l-.2.1-3.7 1.3c-4.8 1.7-9.6 3.2-14.5 4.6l-1.2.3c.2-2.8.3-5.5.3-8.3l0-2.4c0-12.3-3.7-24.2-10.5-34.3l-23.4-34.1C347.6 510 334 512 320 512c-7.1 0-14.2-.4-21.2-1.2l0-1c0-13.9 3.5-27.6 10.2-39.8l1-1.8c6.7-12.2 6.7-27 0-39.2l-9.5-17.3c-4-7.2-5.9-15.3-5.7-23.5c.4-13.4-4.5-26.5-13.6-36.2l-3.8-4.1c-11-11.8-26.2-18.4-42.1-18.4H212c-15.6 0-30.6-5.2-42.6-14.7L158.5 308c-1.6-1.3-3.8-1.5-5.7-.8c-1.9.8-3.3 2.5-3.4 4.6l-.9 20.5c-.5 11.6-9.9 20.7-21.5 20.7l-5.8 0c-6.8 0-13.2-3.3-17.2-8.8c-7.4-10.4-11.5-22.9-11.5-35.7l0-3.2c0-8.1 3-15.9 8.4-21.9l4.3-4.9c6.5-7.3 9.9-16.9 9.6-26.7l-.4-11.5c-.2-6.3 1.7-12.4 5.4-17.5l2-2.7c5-6.9 12.9-10.9 21.2-10.9l17.4 0c5.6 0 10.3-4.5 10.5-10.1l.2-6.5c.2-7.4 4.7-14 11.4-17l20.8-9.2c5.2-2.3 8.9-7.1 9.6-12.7l.4-2.9c1.2-8.9-3.6-17.7-11.8-21.3l-6.5-2.9c-6.8-3-14.6-2.5-20.9 1.4L127 176.7c-6.6 4.1-14.8 4.5-21.8 1.1l-6.5-3.1c-9.9-4.7-17.3-13.3-20.2-23.8l0 0L57.7 193z"/></symbol>
+<symbol id="ico-arrow-right" viewBox="0 0 448 512"><path d="M438.6 278.6c12.5-12.5 12.5-32.8 0-45.3l-160-160c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3L338.8 224H32c-17.7 0-32 14.3-32 32s14.3 32 32 32h306.7L233.4 393.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0l160-160z"/></symbol>
+<symbol id="ico-check-circle" viewBox="0 0 512 512"><path d="M256 512A256 256 0 1 0 256 0a256 256 0 1 0 0 512zM369 209L241 337c-9.4 9.4-24.6 9.4-33.9 0l-64-64c-9.4-9.4-9.4-24.6 0-33.9s24.6-9.4 33.9 0l47 47L335 175c9.4-9.4 24.6-9.4 33.9 0s9.4 24.6 0 33.9z"/></symbol>
+<symbol id="ico-check" viewBox="0 0 448 512"><path d="M438.6 105.4c12.5 12.5 12.5 32.8 0 45.3l-256 256c-12.5 12.5-32.8 12.5-45.3 0l-128-128c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0L160 338.7l233.4-233.3c12.5-12.5 32.8-12.5 45.3 0z"/></symbol>
+<symbol id="ico-filter" viewBox="0 0 512 512"><path d="M3.9 54.9C10.5 40.9 24.5 32 40 32H472c15.5 0 29.5 8.9 36.1 22.9s4.6 30.5-5.2 42.5L320 320.9V448c0 12.1-6.8 23.2-17.7 28.6s-23.8 4.3-33.5-3l-64-48c-8.1-6-12.8-15.5-12.8-25.6V320.9L9 97.3C-.7 85.4-2.8 68.8 3.9 54.9z"/></symbol>
+<symbol id="ico-robot" viewBox="0 0 640 512"><path d="M320 0c17.7 0 32 14.3 32 32V96H472c39.8 0 72 32.2 72 72V440c0 39.8-32.2 72-72 72H168c-39.8 0-72-32.2-72-72V168c0-39.8 32.2-72 72-72H288V32c0-17.7 14.3-32 32-32zM208 384c-8.8 0-16 7.2-16 16s7.2 16 16 16H432c8.8 0 16-7.2 16-16s-7.2-16-16-16H208zM208 272c-17.7 0-32 14.3-32 32s14.3 32 32 32s32-14.3 32-32s-14.3-32-32-32zm192 32c0 17.7 14.3 32 32 32s32-14.3 32-32s-14.3-32-32-32s-32 14.3-32 32zM0 336c0-26.5 21.5-48 48-48s48 21.5 48 48v64c0 26.5-21.5 48-48 48s-48-21.5-48-48V336zm544-48c26.5 0 48 21.5 48 48v64c0 26.5-21.5 48-48 48s-48-21.5-48-48V336c0-26.5 21.5-48 48-48z"/></symbol>
+<symbol id="ico-pen-to-square" viewBox="0 0 512 512"><path d="M471.6 21.7c-21.9-21.9-57.3-21.9-79.2 0L362.3 51.7l97.9 97.9 30.1-30.1c21.9-21.9 21.9-57.3 0-79.2L471.6 21.7zm-299.2 220c-6.1 6.1-10.8 13.6-13.5 21.9l-29.6 88.8c-2.9 8.6-.6 18.1 5.8 24.6s15.9 8.7 24.6 5.8l88.8-29.6c8.2-2.7 15.7-7.4 21.9-13.5L437.7 172.3 339.7 74.3 172.4 241.7zM96 64C43 64 0 107 0 160V416c0 53 43 96 96 96H352c53 0 96-43 96-96V320c0-17.7-14.3-32-32-32s-32 14.3-32 32V416c0 17.7-14.3 32-32 32H96c-17.7 0-32-14.3-32-32V160c0-17.7 14.3-32 32-32h96c17.7 0 32-14.3 32-32s-14.3-32-32-32H96z"/></symbol>
+<symbol id="ico-chart-line" viewBox="0 0 512 512"><path d="M64 64c0-17.7-14.3-32-32-32S0 46.3 0 64V400c0 44.2 35.8 80 80 80H480c17.7 0 32-14.3 32-32s-14.3-32-32-32H80c-8.8 0-16-7.2-16-16V64zm406.6 86.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L320 210.7l-57.4-57.4c-12.5-12.5-32.8-12.5-45.3 0l-112 112c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0L240 221.3l57.4 57.4c12.5 12.5 32.8 12.5 45.3 0l128-128z"/></symbol>
+<symbol id="ico-layer-group" viewBox="0 0 512 512"><path d="M232 0c-6 0-12 1.4-17.4 4.2l-192 96C8.2 106.7 0 120.7 0 136s8.2 29.3 22.6 35.8l192 96c5.4 2.7 11.4 4.2 17.4 4.2s12-1.4 17.4-4.2l192-96C455.8 165.3 464 151.3 464 136s-8.2-29.3-22.6-35.8l-192-96C244 1.4 238 0 232 0zM45.5 227.3L22.6 238.2C8.2 244.7 0 258.7 0 274s8.2 29.3 22.6 35.8l192 96c5.4 2.7 11.4 4.2 17.4 4.2s12-1.4 17.4-4.2l192-96C455.8 303.3 464 289.3 464 274s-8.2-29.3-22.6-35.8l-22.9-11.4-160 80c-10.9 5.4-23 8.2-35.5 8.2s-24.6-2.8-35.5-8.2l-160-80zM0 412c0 15.3 8.2 29.3 22.6 35.8l192 96c5.4 2.7 11.4 4.2 17.4 4.2s12-1.4 17.4-4.2l192-96C455.8 441.3 464 427.3 464 412c0-.7 0-1.4-.1-2.1l-22.3 11.2-160 80c-10.9 5.4-23 8.2-35.5 8.2s-24.6-2.8-35.5-8.2l-160-80L22.1 409.9c0 .7-.1 1.4-.1 2.1z"/></symbol>
+<symbol id="ico-envelope" viewBox="0 0 512 512"><path d="M48 64C21.5 64 0 85.5 0 112c0 15.1 7.1 29.3 19.2 38.4L236.8 313.6c11.4 8.5 27 8.5 38.4 0L492.8 150.4c12.1-9.1 19.2-23.3 19.2-38.4c0-26.5-21.5-48-48-48H48zM0 176V384c0 35.3 28.7 64 64 64H448c35.3 0 64-28.7 64-64V176L294.4 339.2c-22.8 17.1-54 17.1-76.8 0L0 176z"/></symbol>
+<symbol id="ico-code" viewBox="0 0 640 512"><path d="M392.8 1.2c-17-4.9-34.7 5-39.6 22l-128 448c-4.9 17 5 34.7 22 39.6s34.7-5 39.6-22l128-448c4.9-17-5-34.7-22-39.6zm80.6 120.1c-12.5 12.5-12.5 32.8 0 45.3L562.7 256l-89.4 89.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0l112-112c12.5-12.5 12.5-32.8 0-45.3l-112-112c-12.5-12.5-32.8-12.5-45.3 0zm-306.7 0c-12.5-12.5-32.8-12.5-45.3 0l-112 112c-12.5 12.5-12.5 32.8 0 45.3l112 112c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L77.3 256l89.4-89.4c12.5-12.5 12.5-32.8 0-45.3z"/></symbol>
+<symbol id="ico-network-wired" viewBox="0 0 640 512"><path d="M256 64H384v64H256V64zM240 0c-26.5 0-48 21.5-48 48v96c0 26.5 21.5 48 48 48h48v32H32c-17.7 0-32 14.3-32 32s14.3 32 32 32h96v32H80c-26.5 0-48 21.5-48 48v96c0 26.5 21.5 48 48 48H240c26.5 0 48-21.5 48-48V368c0-26.5-21.5-48-48-48H192V288H448v32H400c-26.5 0-48 21.5-48 48v96c0 26.5 21.5 48 48 48H560c26.5 0 48-21.5 48-48V368c0-26.5-21.5-48-48-48H512V288h96c17.7 0 32-14.3 32-32s-14.3-32-32-32H352V192h48c26.5 0 48-21.5 48-48V48c0-26.5-21.5-48-48-48H240zM96 384H224v64H96V384zm320 0H544v64H416V384z"/></symbol>
+<symbol id="ico-bolt" viewBox="0 0 448 512"><path d="M349.4 44.6c5.9-13.7 1.5-29.7-10.6-38.5s-28.6-8-39.9 1.8l-256 224c-10 8.8-13.6 22.9-8.9 35.3S50.7 288 64 288H175.5L98.6 467.4c-5.9 13.7-1.5 29.7 10.6 38.5s28.6 8 39.9-1.8l256-224c10-8.8 13.6-22.9 8.9-35.3s-17.6-20.9-31-20.9H272.5L349.4 44.6z"/></symbol>
+<symbol id="ico-hammer" viewBox="0 0 576 512"><path d="M554.5 153.7c17.9-17.9 17.9-47 0-64.9L467.1 1.5C449.2-16.4 420.1-16.4 402.2 1.5l-45.3 45.3c-.5.5-.9 1-1.4 1.5l-55.4 55.4-33.9-33.9c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3l168 168c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3l-33.9-33.9 55.4-55.4 1.5-1.4 45.3-45.3zm-234 108.7l-11.3 11.3c-12.5 12.5-12.5 32.8 0 45.3l128 128c12.5 12.5 32.8 12.5 45.3 0l11.3-11.3c12.5-12.5 12.5-32.8 0-45.3L365.5 262.4c-12.5-12.5-32.8-12.5-45.3 0zM12.7 444.3c-17.9 17.9-17.9 47 0 64.9s47 17.9 64.9 0l130.1-130.1c-1.7-2.8-3.4-5.6-4.8-8.7l-11.3-22.6-34.1 34.1c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3l34.1-34.1-19.5-9.7c-3.6-1.8-7.1-4-10.3-6.5L12.7 444.3z"/></symbol>
+<symbol id="ico-arrows-rotate" viewBox="0 0 512 512"><path d="M463.5 224H472c13.3 0 24-10.7 24-24V72c0-9.7-5.8-18.5-14.8-22.2s-19.3-1.7-26.2 5.2L413.4 96.6c-87.6-86.5-228.7-86.2-315.8 1c-87.5 87.5-87.5 229.3 0 316.8s229.3 87.5 316.8 0c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0c-62.5 62.5-163.8 62.5-226.3 0s-62.5-163.8 0-226.3c62.2-62.2 162.7-62.5 225.3-1L327 183c-6.9 6.9-8.9 17.2-5.2 26.2s12.5 14.8 22.2 14.8H463.5z"/></symbol>
+<symbol id="ico-industry" viewBox="0 0 576 512"><path d="M64 32C28.7 32 0 60.7 0 96V416c0 35.3 28.7 64 64 64H512c35.3 0 64-28.7 64-64V96c0-35.3-28.7-64-64-64H64zm48 160v64H80c-8.8 0-16 7.2-16 16v64c0 8.8 7.2 16 16 16h32v32H64V128l96 64v32H112zm128 0v64H208c-8.8 0-16 7.2-16 16v64c0 8.8 7.2 16 16 16h32v32H192V192l96 64v32H240zm192-32v256H320V160l112 0z"/></symbol>
+<symbol id="ico-truck-fast" viewBox="0 0 640 512"><path d="M0 48C0 21.5 21.5 0 48 0H368c26.5 0 48 21.5 48 48V96h50.7c17 0 33.3 6.7 45.3 18.7L589.3 192c12 12 18.7 28.3 18.7 45.3V256v32 64c17.7 0 32 14.3 32 32s-14.3 32-32 32H576c0 53-43 96-96 96s-96-43-96-96H256c0 53-43 96-96 96s-96-43-96-96H48c-26.5 0-48-21.5-48-48V48zM416 256H544V237.3L493.3 186.7c-3-3-7.1-4.7-11.3-4.7H416v74zM160 464a48 48 0 1 0 0-96 48 48 0 1 0 0 96zm368-48a48 48 0 1 0 -96 0 48 48 0 1 0 96 0z"/></symbol>
+<symbol id="ico-gears" viewBox="0 0 640 512"><path d="M308.5 135.3c7.1-6.3 9.9-16.2 6.2-25c-2.3-5.3-4.8-10.5-7.6-15.5L304 89.4c-3-5-6.3-9.9-9.8-14.6c-5.9-7.9-16.8-9.4-25.7-4.4l-22.3 12.9c-10.8-8.7-23-16-36.2-21.4V39.7c0-9.8-7.2-18.3-17-19.4C189 19.1 184.6 19 180 19s-9 .1-13.4.3c-9.8 1.1-17 9.6-17 19.4V62c-13.2 5.4-25.3 12.6-36.2 21.4L91.1 70.6c-8.9-5.1-19.9-3.5-25.7 4.4c-3.5 4.7-6.8 9.6-9.8 14.6l-3.1 5.4c-2.8 4.9-5.3 10.1-7.6 15.5c-3.7 8.8-.9 18.7 6.2 25l17.3 15.3C67.1 156.8 67 162.4 67 168s.1 11.2 .6 16.7L50.2 200c-7.1 6.3-9.9 16.2-6.2 25c2.3 5.5 4.8 10.7 7.6 15.6l3.1 5.4c3 5 6.3 9.9 9.8 14.6c5.9 7.9 16.8 9.4 25.7 4.4l22.3-12.9c10.8 8.7 23 16 36.2 21.4v22.3c0 9.8 7.2 18.3 17 19.4c4.4 .3 8.8 .4 13.4 .4s9-.1 13.4-.4c9.8-1.1 17-9.6 17-19.4V273.9c13.2-5.4 25.3-12.6 36.2-21.4L269 265.4c8.9 5.1 19.9 3.5 25.7-4.4c3.5-4.7 6.8-9.6 9.8-14.6l3.1-5.4c2.8-5 5.3-10.1 7.6-15.6c3.7-8.8 .9-18.7-6.2-25l-17.3-15.3c.5-5.5 .6-11.1 .6-16.7s-.1-11.2-.6-16.7l17.3-15.3zM180 200a32 32 0 1 1 0-64 32 32 0 1 1 0 64zM465.1 384c.3 2.6 .5 5.3 .5 8s-.2 5.4-.5 8h14.9c10.2 0 18.5 8.3 18.5 18.5c0 2-.3 3.9-.9 5.8l-6.2 18.5c-1.8 5.5-7 9.2-12.8 9.2H462.4c-4.3 7.1-9.4 13.7-15.2 19.6l5.4 13.4c3.8 9.5-.8 20.3-10.3 24.1c-1.7.7-3.5 1.1-5.3 1.2l-19.4 .6c-5.7 .2-10.8-3.2-13-8.4l-5.5-12.9c-7.9 1.9-16.1 2.9-24.6 2.9s-16.7-1-24.6-2.9l-5.5 12.9c-2.2 5.2-7.3 8.6-13 8.4l-19.4-.6c-1.8-.1-3.6-.5-5.3-1.2c-9.5-3.8-14.1-14.6-10.3-24.1l5.4-13.4c-5.8-5.9-10.8-12.5-15.2-19.6H311.2c-5.8 0-11-3.7-12.8-9.2l-6.2-18.5c-.6-1.9-.9-3.8-.9-5.8c0-10.2 8.3-18.5 18.5-18.5h14.9c-.3-2.6-.5-5.3-.5-8s.2-5.4 .5-8H310.2c-5.9 0-11.1-3.8-12.9-9.4l-5.7-18.6c-.5-1.8-.8-3.6-.8-5.5c0-10.2 8.3-18.5 18.5-18.5h21.6c2.7-4.4 5.7-8.6 9-12.6l-10.3-17.4c-5.2-8.7-2.4-19.9 6.2-25.3c1.4-.9 2.9-1.5 4.5-2l18.6-6.2c5.7-1.9 11.9 .4 15 5.5l10.7 17.9c5.2-.9 10.5-1.3 16-1.3s10.8 .4 16 1.3l10.7-17.9c3.1-5.1 9.3-7.4 15-5.5l18.6 6.2c1.6 .5 3.1 1.2 4.5 2c8.6 5.4 11.4 16.6 6.2 25.3L463.3 361.4c3.3 4 6.3 8.2 9 12.6h21.6c10.2 0 18.5 8.3 18.5 18.5c0 1.9-.3 3.7-.8 5.5L505.9 374.6c-1.8 5.6-7 9.4-12.9 9.4H465.1zM424 400a24 24 0 1 0 -48 0 24 24 0 1 0 48 0z"/></symbol>
+<symbol id="ico-arrow-trend-up" viewBox="0 0 576 512"><path d="M384 160c-17.7 0-32-14.3-32-32s14.3-32 32-32H544c17.7 0 32 14.3 32 32V288c0 17.7-14.3 32-32 32s-32-14.3-32-32V205.3L342.6 374.6c-12.5 12.5-32.8 12.5-45.3 0L192 269.3 54.6 406.6c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3l160-160c12.5-12.5 32.8-12.5 45.3 0L320 306.7 466.7 160H384z"/></symbol>
+<symbol id="ico-motorcycle" viewBox="0 0 640 512"><path d="M280 32c-13.3 0-24 10.7-24 24s10.7 24 24 24h57.7l16.4 30.3L256 192H176v-32c0-17.7-14.3-32-32-32H96c-17.7 0-32 14.3-32 32v32H48c-26.5 0-48 21.5-48 48v128c0 26.5 21.5 48 48 48h19.1C88.3 439.4 122.4 464 162 464s73.7-24.6 94.9-64H383.1c21.2 39.4 55.3 64 94.9 64s73.7-24.6 94.9-64H608c17.7 0 32-14.3 32-32V336l0-.7v-5.8c0-69.9-50.5-129.1-119.4-140l-81.5-13.4-69.5-88c-18.2-23-45.8-36.1-74.9-36.1H280zm16 192l64 0 .5 0L272 313.5 226.7 246.2c9.4-13.9 22.8-26.4 38.3-22.2H296zm-100.8 80c8.9-10 24-16 38.8-16l88 0c8.4 0 16.5 2.6 23.2 7.4L359.6 336H214.7l-19.5-32zM162 432c-26.5 0-48-21.5-48-48s21.5-48 48-48s48 21.5 48 48s-21.5 48-48 48zm316-48c0 26.5-21.5 48-48 48s-48-21.5-48-48s21.5-48 48-48s48 21.5 48 48z"/></symbol>
+<symbol id="ico-file-code" viewBox="0 0 384 512"><path d="M64 0C28.7 0 0 28.7 0 64V448c0 35.3 28.7 64 64 64H320c35.3 0 64-28.7 64-64V160H256c-17.7 0-32-14.3-32-32V0H64zM256 0V128H384L256 0zM153 289l-31 31 31 31c9.4 9.4 9.4 24.6 0 33.9s-24.6 9.4-33.9 0L71 337c-9.4-9.4-9.4-24.6 0-33.9l48-48c9.4-9.4 24.6-9.4 33.9 0s9.4 24.6 0 33.9zM265 255l48 48c9.4 9.4 9.4 24.6 0 33.9l-48 48c-9.4 9.4-24.6 9.4-33.9 0s-9.4-24.6 0-33.9l31-31-31-31c-9.4-9.4-9.4-24.6 0-33.9s24.6-9.4 33.9 0z"/></symbol>
+<symbol id="ico-unlock" viewBox="0 0 448 512"><path d="M144 144c0-44.2 35.8-80 80-80c31.9 0 59.4 18.6 72.3 45.7c7.6 16 26.7 22.8 42.6 15.2s22.8-26.7 15.2-42.6C331 33.7 281.5 0 224 0C144.5 0 80 64.5 80 144v48H64c-35.3 0-64 28.7-64 64V448c0 35.3 28.7 64 64 64H384c35.3 0 64-28.7 64-64V256c0-35.3-28.7-64-64-64H144V144z"/></symbol>
+<symbol id="ico-calendar-xmark" viewBox="0 0 448 512"><path d="M128 0c17.7 0 32 14.3 32 32V64H288V32c0-17.7 14.3-32 32-32s32 14.3 32 32V64h48c26.5 0 48 21.5 48 48v48H0V112C0 85.5 21.5 64 48 64H96V32c0-17.7 14.3-32 32-32zM0 192H448V464c0 26.5-21.5 48-48 48H48c-26.5 0-48-21.5-48-48V192zm166.6 86.6c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3l57.4 57.4-57.4 57.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0L224 426.7l57.4 57.4c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L269.3 381.3l57.4-57.4c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L224 336l-57.4-57.4z"/></symbol>
+<symbol id="ico-server" viewBox="0 0 512 512"><path d="M64 32C28.7 32 0 60.7 0 96v64c0 35.3 28.7 64 64 64H448c35.3 0 64-28.7 64-64V96c0-35.3-28.7-64-64-64H64zm280 72a24 24 0 1 1 0 48 24 24 0 1 1 0-48zm48 24a24 24 0 1 1 48 0 24 24 0 1 1 -48 0zM64 288c-35.3 0-64 28.7-64 64v64c0 35.3 28.7 64 64 64H448c35.3 0 64-28.7 64-64V352c0-35.3-28.7-64-64-64H64zm280 72a24 24 0 1 1 0 48 24 24 0 1 1 0-48zm56 24a24 24 0 1 1 48 0 24 24 0 1 1 -48 0z"/></symbol>
+<!-- BRAND ICONS -->
+<symbol id="ico-whatsapp" viewBox="0 0 448 512"><path d="M380.9 97.1C339 55.1 283.2 32 223.9 32c-122.4 0-222 99.6-222 222 0 39.1 10.2 77.3 29.6 111L0 480l117.7-30.9c32.4 17.7 68.9 27 106.1 27h.1c122.3 0 224.1-99.6 224.1-222 0-59.3-25.2-115-67.1-157zm-157 341.6c-33.2 0-65.7-8.9-94-25.7l-6.7-4-69.8 18.3L72 359.2l-4.4-7c-18.5-29.4-28.2-63.3-28.2-98.2 0-101.7 82.8-184.5 184.6-184.5 49.3 0 95.6 19.2 130.4 54.1 34.8 34.9 56.2 81.2 56.1 130.5 0 101.8-84.9 184.6-186.6 184.6zm101.2-138.2c-5.5-2.8-32.8-16.2-37.9-18-5.1-1.9-8.8-2.8-12.5 2.8-3.7 5.6-14.3 18-17.6 21.8-3.2 3.7-6.5 4.2-12 1.4-32.6-16.3-54-29.1-75.5-66-5.7-9.8 5.7-9.1 16.3-30.3 1.8-3.7.9-6.9-.5-9.7-1.4-2.8-12.5-30.1-17.1-41.2-4.5-10.8-9.1-9.3-12.5-9.5-3.2-.2-6.9-.2-10.6-.2-3.7 0-9.7 1.4-14.8 6.9-5.1 5.6-19.4 19-19.4 46.3 0 27.3 19.9 53.7 22.6 57.4 2.8 3.7 39.1 59.7 94.8 83.8 35.2 15.2 49 16.5 66.6 13.9 10.7-1.6 32.8-13.4 37.4-26.4 4.6-13 4.6-24.1 3.2-26.4-1.3-2.5-5-3.9-10.5-6.6z"/></symbol>
+<symbol id="ico-linkedin" viewBox="0 0 448 512"><path d="M416 32H31.9C14.3 32 0 46.5 0 64.3v383.4C0 465.5 14.3 480 31.9 480H416c17.6 0 32-14.5 32-32.3V64.3c0-17.8-14.4-32.3-32-32.3zM135.4 416H69V202.2h66.5V416zm-33.2-243c-21.3 0-38.5-17.3-38.5-38.5S80.9 96 102.2 96c21.2 0 38.5 17.3 38.5 38.5 0 21.3-17.2 38.5-38.5 38.5zm282.1 243h-66.4V312c0-24.8-.5-56.7-34.5-56.7-34.6 0-39.9 27-39.9 54.9V416h-66.4V202.2h63.7v29.2h.9c8.9-16.8 30.6-34.5 62.9-34.5 67.2 0 79.7 44.3 79.7 101.9V416z"/></symbol>
+<symbol id="ico-instagram" viewBox="0 0 448 512"><path d="M224.1 141c-63.6 0-114.9 51.3-114.9 114.9s51.3 114.9 114.9 114.9S339 319.5 339 255.9 287.7 141 224.1 141zm0 189.6c-41.1 0-74.7-33.5-74.7-74.7s33.5-74.7 74.7-74.7 74.7 33.5 74.7 74.7-33.6 74.7-74.7 74.7zm146.4-194.3c0 14.9-12 26.8-26.8 26.8-14.9 0-26.8-12-26.8-26.8s12-26.8 26.8-26.8 26.8 12 26.8 26.8zm76.1 27.2c-1.7-35.9-9.9-67.7-36.2-93.9-26.2-26.2-58-34.4-93.9-36.2-37-2.1-147.9-2.1-184.9 0-35.8 1.7-67.6 9.9-93.9 36.1s-34.4 58-36.2 93.9c-2.1 37-2.1 147.9 0 184.9 1.7 35.9 9.9 67.7 36.2 93.9s58 34.4 93.9 36.2c37 2.1 147.9 2.1 184.9 0 35.9-1.7 67.7-9.9 93.9-36.2 26.2-26.2 34.4-58 36.2-93.9 2.1-37 2.1-147.8 0-184.8zM398.8 388c-7.8 19.6-22.9 34.7-42.6 42.6-29.5 11.7-99.5 9-132.1 9s-102.7 2.6-132.1-9c-19.6-7.8-34.7-22.9-42.6-42.6-11.7-29.5-9-99.5-9-132.1s-2.6-102.7 9-132.1c7.8-19.6 22.9-34.7 42.6-42.6 29.5-11.7 99.5-9 132.1-9s102.7-2.6 132.1 9c19.6 7.8 34.7 22.9 42.6 42.6 11.7 29.5 9 99.5 9 132.1s2.7 102.7-9 132.1z"/></symbol>
+<symbol id="ico-tiktok" viewBox="0 0 448 512"><path d="M448 209.9a210.1 210.1 0 0 1 -122.8-39.3V349.4A162.6 162.6 0 1 1 185 188.3V278.2a74.6 74.6 0 1 0 52.2 71.2V0l88 0a121.2 121.2 0 0 0 1.9 22.2h0A122.2 122.2 0 0 0 381 102.4a121.4 121.4 0 0 0 67 20.1z"/></symbol>
+<symbol id="ico-facebook" viewBox="0 0 512 512"><path d="M512 256C512 114.6 397.4 0 256 0S0 114.6 0 256C0 376 82.7 476.8 194.2 504.5V334.2H141.4V256h52.8V222.3c0-87.1 39.4-127.5 125-127.5c16.2 0 44.2 3.2 55.7 6.4V172c-6-.6-16.5-1-29.6-1c-42 0-58.2 15.9-58.2 57.2V256h83.6l-14.4 78.2H287V510.1C413.8 494.8 512 386.9 512 256h0z"/></symbol>
+<symbol id="ico-google" viewBox="0 0 488 512"><path d="M488 261.8C488 403.3 391.1 504 248 504 110.8 504 0 393.2 0 256S110.8 8 248 8c66.8 0 123 24.5 166.3 64.9l-67.5 64.9C258.5 52.6 94.3 116.6 94.3 256c0 86.5 69.1 156.6 153.7 156.6 98.2 0 135-70.4 140.8-106.9H248v-85.3h236.1c2.3 12.7 3.9 24.9 3.9 41.4z"/></symbol>
+</svg>
+<style>
+.icon{display:inline-block;width:1em;height:1em;vertical-align:-.125em;fill:currentColor}
+.icon-stat.icon{font-size:2.5rem;display:block;margin-bottom:10px}
+</style>
+
     <!-- Google Tag Manager (noscript) -->
     <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-P499M76P" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     <!-- End Google Tag Manager (noscript) -->
-    <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-P499M76P"
-height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 
 <nav class="navbar-floating">
     <div class="logo">
@@ -393,6 +429,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         <li><a href="#servicios">Planes</a></li>
         <li><a href="#casos-exito">Casos</a></li>
         <li><a href="#portafolio">Demos</a></li>
+        <li><a href="#rubros">Rubros</a></li>
         <li><a href="blog.html">Blog</a></li>
         <li><a href="alianzas.html" style="color:#4ade80;font-weight:600;">Aliados</a></li>
         <li><a href="auditoria-digital.html" style="color:#4ade80;font-weight:700;background:rgba(74,222,128,0.08);padding:5px 12px;border-radius:50px;border:1px solid rgba(74,222,128,0.25);white-space:nowrap;">⚡ Auditoría</a></li>
@@ -408,14 +445,38 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         <div class="container">
             <div class="hero-grid">
                 <div class="bento-box hero-text">
+                    <div id="hero-h1-ab">
                     <h1>Sistemas de automatización para <br> <span class="highlight">PYMEs B2B en Latinoamérica.</span></h1>
+                </div>
+                <script>
+                /* A/B test hero H1 — 3 variantes, asignación sincrónica (sin flash) */
+                (function(){
+                  var KEY = 'adab_hero_h1';
+                  var v = sessionStorage.getItem(KEY);
+                  if (!v) {
+                    var r = Math.random();
+                    v = r < 0.34 ? 'A' : r < 0.67 ? 'B' : 'C';
+                    sessionStorage.setItem(KEY, v);
+                  }
+                  var el = document.getElementById('hero-h1-ab');
+                  if (el) {
+                    if (v === 'B') {
+                      el.innerHTML = '<h1>Tu PYME B2B genera <span class="highlight">leads calificados.</span><br>El canal de ventas que trabaja mientras dormís.</h1>';
+                    } else if (v === 'C') {
+                      el.innerHTML = '<h1>¿Conseguís clientes solo por recomendación?<br><span class="highlight">Hay un sistema más predecible.</span></h1>';
+                    }
+                  }
+                  window.dataLayer = window.dataLayer || [];
+                  window.dataLayer.push({event:'ab_test', experiment:'hero_h1', variant:v});
+                })();
+                </script>
                     
                     <p style="font-size: 1.1rem; line-height: 1.6;">
                         No vendemos "webs atractivas". Implementamos sistemas de <strong>generación de leads</strong>, automatización de contactos y herramientas de <strong>soporte al equipo comercial</strong>. Tu canal de ventas operativo en 72hs.
                     </p>
 
                     <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; margin-top: 14px; margin-bottom: 22px; padding: 10px 14px; background: rgba(74, 222, 128, 0.06); border: 1px solid rgba(74, 222, 128, 0.18); border-radius: 8px; font-size: 0.78rem; color: #a1a1aa;">
-                        <i class="fa-solid fa-globe-americas" style="color: #4ade80; font-size: 0.85rem;"></i>
+                        <svg class="icon" aria-hidden="true" style="color: #4ade80; font-size: 0.85rem;"><use href="#ico-globe-americas"/></svg>
                         <span style="font-weight: 500;">Operamos en</span>
                         <span style="color: #e4e4e7; font-weight: 700;">Argentina</span>
                         <span style="color: #52525b;">·</span>
@@ -434,7 +495,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                     </p>
                     <div class="hero-audit-wrap">
                         <div class="hero-audit-input">
-                            <i class="fa-solid fa-globe" style="color: #71717a; font-size: 0.9rem; flex-shrink:0;"></i>
+                            <svg class="icon" aria-hidden="true" style="color: #71717a; font-size: 0.9rem; flex-shrink:0;"><use href="#ico-globe"/></svg>
                             <span style="color:#71717a; font-family: monospace; font-size: 0.85rem; flex-shrink:0;">https://</span>
                             <input type="text" id="hero-domain" placeholder="tuempresa.com.ar"
                                 style="flex:1; background:transparent; border:none; outline:none; color:white; font-size:0.95rem; font-family:monospace; min-width:0;"
@@ -446,29 +507,103 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                             </button>
                         </div>
                         <p style="font-size: 0.75rem; color: #52525b; margin-top: 8px;">
-                            <i class="fa-solid fa-check-circle" style="color:#4ade80; margin-right:4px;"></i>Sin registro &nbsp;·&nbsp;
-                            <i class="fa-solid fa-check-circle" style="color:#4ade80; margin-right:4px;"></i>Datos reales de Google &nbsp;·&nbsp;
-                            <i class="fa-solid fa-check-circle" style="color:#4ade80; margin-right:4px;"></i>Resultado en 30 segundos
+                            <svg class="icon" aria-hidden="true" style="color:#4ade80; margin-right:4px;"><use href="#ico-check-circle"/></svg>Sin registro &nbsp;·&nbsp;
+                            <svg class="icon" aria-hidden="true" style="color:#4ade80; margin-right:4px;"><use href="#ico-check-circle"/></svg>Datos reales de Google &nbsp;·&nbsp;
+                            <svg class="icon" aria-hidden="true" style="color:#4ade80; margin-right:4px;"><use href="#ico-check-circle"/></svg>Resultado en 30 segundos
                         </p>
                     </div>
                     <div class="hero-actions" style="margin-top: 16px;">
                         <a href="#comparativa" class="btn-primary">Ver Planes</a>
-                        <a href="#casos-exito" class="btn-text">Ver Casos de Éxito <i class="fa-solid fa-arrow-right"></i></a>
+                        <a href="#casos-exito" class="btn-text">Ver Casos de Éxito <svg class="icon" aria-hidden="true"><use href="#ico-arrow-right"/></svg></a>
                     </div>
                 </div>
     
                 <div class="bento-box hero-stat-1">
-                    <i class="fa-solid fa-filter icon-stat"></i> 
+                    <svg class="icon icon-stat" aria-hidden="true"><use href="#ico-filter"/></svg> 
                     <h3>LEADS</h3>
                     <p>Calificados</p>
                 </div>
     
                 <div class="bento-box hero-stat-2">
-                    <i class="fa-solid fa-robot icon-stat"></i> 
+                    <svg class="icon icon-stat" aria-hidden="true"><use href="#ico-robot"/></svg> 
                     <h3>AUTO</h3>
                     <p>Matización</p>
                 </div>
             </div>
+        </div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════════
+         SOCIAL PROOF STRIP — visible antes del fold
+         ═══════════════════════════════════════════════ -->
+    <section id="social-proof" style="background:#050505;padding:56px 0;border-bottom:1px solid rgba(255,255,255,0.05);">
+        <div class="container">
+
+            <!-- Métricas concretas -->
+            <div style="text-align:center;margin-bottom:44px;">
+                <p style="font-size:.78rem;font-weight:700;text-transform:uppercase;letter-spacing:2px;color:#555;margin-bottom:28px;">Resultados verificados en clientes reales</p>
+                <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:20px;max-width:860px;margin:0 auto;">
+                    <div style="text-align:center;padding:24px 12px;background:rgba(59,130,246,0.05);border:1px solid rgba(59,130,246,0.12);border-radius:12px;">
+                        <div style="font-size:2.2rem;font-weight:800;color:#60a5fa;line-height:1;">+340%</div>
+                        <div style="font-size:.8rem;color:#555;margin-top:8px;line-height:1.4;">Consultas B2B<br>en 90 días</div>
+                    </div>
+                    <div style="text-align:center;padding:24px 12px;background:rgba(74,222,128,0.05);border:1px solid rgba(74,222,128,0.12);border-radius:12px;">
+                        <div style="font-size:2.2rem;font-weight:800;color:#4ade80;line-height:1;">72hs</div>
+                        <div style="font-size:.8rem;color:#555;margin-top:8px;line-height:1.4;">Sistema online<br>desde el primer día</div>
+                    </div>
+                    <div style="text-align:center;padding:24px 12px;background:rgba(251,146,60,0.05);border:1px solid rgba(251,146,60,0.12);border-radius:12px;">
+                        <div style="font-size:2.2rem;font-weight:800;color:#fb923c;line-height:1;">+50</div>
+                        <div style="font-size:.8rem;color:#555;margin-top:8px;line-height:1.4;">Empresas PYME<br>industriales activas</div>
+                    </div>
+                    <div style="text-align:center;padding:24px 12px;background:rgba(167,139,250,0.05);border:1px solid rgba(167,139,250,0.12);border-radius:12px;">
+                        <div style="font-size:2.2rem;font-weight:800;color:#a78bfa;line-height:1;">7</div>
+                        <div style="font-size:.8rem;color:#555;margin-top:8px;line-height:1.4;">Países LATAM<br>con clientes activos</div>
+                    </div>
+                    <div style="text-align:center;padding:24px 12px;background:rgba(34,211,238,0.05);border:1px solid rgba(34,211,238,0.12);border-radius:12px;">
+                        <div style="font-size:2.2rem;font-weight:800;color:#22d3ee;line-height:1;">USD 0</div>
+                        <div style="font-size:.8rem;color:#555;margin-top:8px;line-height:1.4;">Costo de lock-in<br>código 100% tuyo</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Logos de clientes -->
+            <div style="text-align:center;margin-bottom:40px;">
+                <p style="font-size:.75rem;font-weight:700;text-transform:uppercase;letter-spacing:2px;color:#333;margin-bottom:24px;">Empresas que ya trabajan con Avanza Digital</p>
+                <div style="display:flex;flex-wrap:wrap;gap:12px;justify-content:center;align-items:center;">
+                    <div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:10px;padding:14px 22px;font-size:.85rem;font-weight:700;color:#444;letter-spacing:.5px;white-space:nowrap;">BALCONI S.A. <span style="color:#2d2d2d;font-weight:400;font-size:.75rem;margin-left:4px;">Metalúrgica · AR</span></div>
+                    <div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:10px;padding:14px 22px;font-size:.85rem;font-weight:700;color:#444;letter-spacing:.5px;white-space:nowrap;">PLI CONSTRUCTORA <span style="color:#2d2d2d;font-weight:400;font-size:.75rem;margin-left:4px;">Construcción · AR</span></div>
+                    <div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:10px;padding:14px 22px;font-size:.85rem;font-weight:700;color:#444;letter-spacing:.5px;white-space:nowrap;">AGROSUR DIST. <span style="color:#2d2d2d;font-weight:400;font-size:.75rem;margin-left:4px;">Agropecuario · AR</span></div>
+                    <div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:10px;padding:14px 22px;font-size:.85rem;font-weight:700;color:#444;letter-spacing:.5px;white-space:nowrap;">OÑATE TRANSPORTE <span style="color:#2d2d2d;font-weight:400;font-size:.75rem;margin-left:4px;">Logística · AR</span></div>
+                    <div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:10px;padding:14px 22px;font-size:.85rem;font-weight:700;color:#444;letter-spacing:.5px;white-space:nowrap;">TECNOFRÍO IND. <span style="color:#2d2d2d;font-weight:400;font-size:.75rem;margin-left:4px;">Técnico · AR</span></div>
+                    <div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:10px;padding:14px 22px;font-size:.85rem;font-weight:700;color:#444;letter-spacing:.5px;white-space:nowrap;">FRIG. SAN CARLOS <span style="color:#2d2d2d;font-weight:400;font-size:.75rem;margin-left:4px;">Alimenticio · AR</span></div>
+                </div>
+            </div>
+
+            <!-- Testimonios antes del fold -->
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px;max-width:960px;margin:0 auto;">
+                <div style="background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.07);border-radius:14px;padding:24px;">
+                    <div style="display:flex;gap:4px;margin-bottom:12px;">
+                        <span style="color:#eab308;font-size:.9rem;">★★★★★</span>
+                    </div>
+                    <p style="color:#aaa;font-size:.9rem;line-height:1.65;margin-bottom:14px;font-style:italic;">"Triplicamos las consultas online en tres meses sin sumar vendedores. El sistema trabaja solo."</p>
+                    <div style="font-size:.8rem;color:#555;font-weight:600;">Gerencia Comercial · Metalúrgica Balconi S.A. · Rafaela, AR</div>
+                </div>
+                <div style="background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.07);border-radius:14px;padding:24px;">
+                    <div style="display:flex;gap:4px;margin-bottom:12px;">
+                        <span style="color:#eab308;font-size:.9rem;">★★★★★</span>
+                    </div>
+                    <p style="color:#aaa;font-size:.9rem;line-height:1.65;margin-bottom:14px;font-style:italic;">"El portfolio digital nos abrió puertas a licitaciones industriales que ni sabíamos que existían."</p>
+                    <div style="font-size:.8rem;color:#555;font-weight:600;">Dirección Comercial · Constructora PLI S.A. · Rosario, AR</div>
+                </div>
+                <div style="background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.07);border-radius:14px;padding:24px;">
+                    <div style="display:flex;gap:4px;margin-bottom:12px;">
+                        <span style="color:#eab308;font-size:.9rem;">★★★★★</span>
+                    </div>
+                    <p style="color:#aaa;font-size:.9rem;line-height:1.65;margin-bottom:14px;font-style:italic;">"El cotizador online cambió el proceso comercial. Las cotizaciones se triplicaron en 60 días."</p>
+                    <div style="font-size:.8rem;color:#555;font-weight:600;">Gerencia Comercial · Transporte Oñate S.R.L. · Argentina</div>
+                </div>
+            </div>
+
         </div>
     </section>
 
@@ -543,10 +678,10 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                         </ul>
                         <div class="plan-actions">
                             <a href="https://wa.me/5493424392759" target="_blank" class="btn-action btn-whatsapp">
-                                <i class="fa-brands fa-whatsapp"></i> Consultar
+                                <svg class="icon" aria-hidden="true"><use href="#ico-whatsapp"/></svg> Consultar
                             </a>
                             <a href="contratar.html?plan=Plan%20Cuidado%20(USD80%20mensual)" class="btn-action btn-contract">
-                                <i class="fa-solid fa-bolt"></i> Contratar
+                                <svg class="icon" aria-hidden="true"><use href="#ico-bolt"/></svg> Contratar
                             </a>
                         </div>
                     </div>
@@ -570,10 +705,10 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                         </ul>
                         <div class="plan-actions">
                             <a href="https://wa.me/5493424392759" target="_blank" class="btn-action btn-whatsapp">
-                                <i class="fa-brands fa-whatsapp"></i> Consultar
+                                <svg class="icon" aria-hidden="true"><use href="#ico-whatsapp"/></svg> Consultar
                             </a>
                             <a href="contratar.html?plan=Plan%20Base%20(USD1050%20unico)" class="btn-action btn-contract">
-                                <i class="fa-solid fa-bolt"></i> Contratar
+                                <svg class="icon" aria-hidden="true"><use href="#ico-bolt"/></svg> Contratar
                             </a>
                         </div>
                     </div>
@@ -588,8 +723,8 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                             <p class="desc">Para empresas que quieren más consultas calificadas.</p>
                         </div>
                         <div class="features-grid">
-                            <div class="mini-feature"><i class="fa-solid fa-pen-to-square"></i> Contenido</div>
-                            <div class="mini-feature"><i class="fa-solid fa-chart-line"></i> Métricas</div>
+                            <div class="mini-feature"><svg class="icon" aria-hidden="true"><use href="#ico-pen-to-square"/></svg> Contenido</div>
+                            <div class="mini-feature"><svg class="icon" aria-hidden="true"><use href="#ico-chart-line"/></svg> Métricas</div>
                         </div>
                         <ul class="check-list">
                             <li><strong>Todo lo del Plan Cuidado, más:</strong></li>
@@ -601,10 +736,10 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                         </ul>
                         <div class="plan-actions">
                             <a href="https://wa.me/5493424392759" target="_blank" class="btn-action btn-whatsapp">
-                                <i class="fa-brands fa-whatsapp"></i> Consultar
+                                <svg class="icon" aria-hidden="true"><use href="#ico-whatsapp"/></svg> Consultar
                             </a>
                             <a href="contratar.html?plan=Plan%20Crecimiento%20(USD170%20mensual)" class="btn-action btn-contract">
-                                <i class="fa-solid fa-bolt"></i> Contratar
+                                <svg class="icon" aria-hidden="true"><use href="#ico-bolt"/></svg> Contratar
                             </a>
                         </div>
                     </div>
@@ -617,8 +752,8 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                             <p class="desc">Para empresas que quieren un canal comercial.</p>
                         </div>
                         <div class="features-grid">
-                            <div class="mini-feature"><i class="fa-solid fa-layer-group"></i> Multi-sección</div>
-                            <div class="mini-feature"><i class="fa-solid fa-envelope"></i> Email Integ.</div>
+                            <div class="mini-feature"><svg class="icon" aria-hidden="true"><use href="#ico-layer-group"/></svg> Multi-sección</div>
+                            <div class="mini-feature"><svg class="icon" aria-hidden="true"><use href="#ico-envelope"/></svg> Email Integ.</div>
                         </div>
                         <ul class="check-list">
                             <li><strong>Todo lo del Plan Base, más:</strong></li>
@@ -631,10 +766,10 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                         </ul>
                         <div class="plan-actions">
                             <a href="https://wa.me/5493424392759" target="_blank" class="btn-action btn-whatsapp">
-                                <i class="fa-brands fa-whatsapp"></i> Consultar
+                                <svg class="icon" aria-hidden="true"><use href="#ico-whatsapp"/></svg> Consultar
                             </a>
                             <a href="contratar.html?plan=Plan%20Pro%20(USD2900%20unico)" class="btn-action btn-contract">
-                                <i class="fa-solid fa-bolt"></i> Contratar
+                                <svg class="icon" aria-hidden="true"><use href="#ico-bolt"/></svg> Contratar
                             </a>
                         </div>
                     </div>
@@ -659,10 +794,10 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                         </ul>
                         <div class="plan-actions">
                             <a href="https://wa.me/5493424392759" target="_blank" class="btn-action btn-whatsapp">
-                                <i class="fa-brands fa-whatsapp"></i> Consultar
+                                <svg class="icon" aria-hidden="true"><use href="#ico-whatsapp"/></svg> Consultar
                             </a>
                             <a href="contratar.html?plan=Plan%20Escala%20(USD280%20mensual)" class="btn-action btn-contract">
-                                <i class="fa-solid fa-bolt"></i> Contratar
+                                <svg class="icon" aria-hidden="true"><use href="#ico-bolt"/></svg> Contratar
                             </a>
                         </div>
                     </div>
@@ -686,10 +821,10 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                         </ul>
                         <div class="plan-actions">
                             <a href="https://wa.me/5493424392759" target="_blank" class="btn-action btn-whatsapp">
-                                <i class="fa-brands fa-whatsapp"></i> Consultar
+                                <svg class="icon" aria-hidden="true"><use href="#ico-whatsapp"/></svg> Consultar
                             </a>
                             <a href="contratar.html?plan=Plan%20Industrial%20(USD4900%20unico)" class="btn-action btn-contract">
-                                <i class="fa-solid fa-bolt"></i> Contratar
+                                <svg class="icon" aria-hidden="true"><use href="#ico-bolt"/></svg> Contratar
                             </a>
                         </div>
                     </div>
@@ -714,10 +849,10 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                         </ul>
                         <div class="plan-actions">
                             <a href="https://wa.me/5493424392759" target="_blank" class="btn-action btn-whatsapp">
-                                <i class="fa-brands fa-whatsapp"></i> Consultar
+                                <svg class="icon" aria-hidden="true"><use href="#ico-whatsapp"/></svg> Consultar
                             </a>
                             <a href="contratar.html?plan=Plan%20Liderazgo%20(USD450%20mensual)" class="btn-action btn-contract" style="background: #a855f7; box-shadow: 0 4px 15px rgba(168, 85, 247, 0.3);">
-                                <i class="fa-solid fa-bolt"></i> Contratar
+                                <svg class="icon" aria-hidden="true"><use href="#ico-bolt"/></svg> Contratar
                             </a>
                         </div>
                     </div>
@@ -730,8 +865,8 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                             <p class="desc">Para empresas complejas con visión de liderazgo.</p>
                         </div>
                         <div class="features-grid">
-                            <div class="mini-feature" style="color: #a855f7; background: rgba(168, 85, 247, 0.1);"><i class="fa-solid fa-code"></i> A Medida</div>
-                            <div class="mini-feature" style="color: #a855f7; background: rgba(168, 85, 247, 0.1);"><i class="fa-solid fa-network-wired"></i> ERP Integ.</div>
+                            <div class="mini-feature" style="color: #a855f7; background: rgba(168, 85, 247, 0.1);"><svg class="icon" aria-hidden="true"><use href="#ico-code"/></svg> A Medida</div>
+                            <div class="mini-feature" style="color: #a855f7; background: rgba(168, 85, 247, 0.1);"><svg class="icon" aria-hidden="true"><use href="#ico-network-wired"/></svg> ERP Integ.</div>
                         </div>
                         <ul class="check-list">
                             <li><strong>Todo lo del Plan Industrial, más:</strong></li>
@@ -745,10 +880,10 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                         </ul>
                         <div class="plan-actions">
                             <a href="https://wa.me/5493424392759" target="_blank" class="btn-action btn-whatsapp">
-                                <i class="fa-brands fa-whatsapp"></i> Consultar
+                                <svg class="icon" aria-hidden="true"><use href="#ico-whatsapp"/></svg> Consultar
                             </a>
                             <a href="contratar.html?plan=Plan%20Estrategico%20360%20(USD7500%20unico)" class="btn-action btn-contract" style="background: #a855f7; box-shadow: 0 4px 15px rgba(168, 85, 247, 0.3);">
-                                <i class="fa-solid fa-bolt"></i> Contratar
+                                <svg class="icon" aria-hidden="true"><use href="#ico-bolt"/></svg> Contratar
                             </a>
                         </div>
                     </div>
@@ -799,11 +934,11 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                         </tr>
                     </thead>
                     <tbody>
-                        <tr class="table-section-header" style="background: rgba(59,130,246,0.12) !important;"><td colspan="5"><i class="fa-solid fa-hammer" style="color:#3b82f6;"></i> <span style="color:#3b82f6;">Bloque A — Implementación (Pago Único)</span></td></tr>
+                        <tr class="table-section-header" style="background: rgba(59,130,246,0.12) !important;"><td colspan="5"><svg class="icon" aria-hidden="true" style="color:#3b82f6;"><use href="#ico-hammer"/></svg> <span style="color:#3b82f6;">Bloque A — Implementación (Pago Único)</span></td></tr>
                         <tr><td class="feature-label">Alcance Web</td><td>Landing Page</td><td class="highlight-col"><strong>Multi-Sección</strong></td><td>Embudo Complejo</td><td style="color:#e9d5ff;">Desarrollo a Medida</td></tr>
                         <tr><td class="feature-label">Objetivo</td><td>Presencia</td><td class="highlight-col"><strong>Leads / Crecimiento</strong></td><td>Sistema / Escala</td><td style="color:#e9d5ff;"><strong>Liderazgo 360</strong></td></tr>
                         <tr><td class="feature-label">Integración CRM</td><td>-</td><td class="highlight-col">Email Marketing</td><td><strong>CRM Avanzado</strong></td><td style="color:#e9d5ff;">ERP / SAP / Tango</td></tr>
-                        <tr class="table-section-header" style="background: rgba(74,222,128,0.10) !important;"><td colspan="5"><i class="fa-solid fa-arrows-rotate" style="color:#4ade80;"></i> <span style="color:#4ade80;">Bloque B — Continuidad Mensual</span></td></tr>
+                        <tr class="table-section-header" style="background: rgba(74,222,128,0.10) !important;"><td colspan="5"><svg class="icon" aria-hidden="true" style="color:#4ade80;"><use href="#ico-arrows-rotate"/></svg> <span style="color:#4ade80;">Bloque B — Continuidad Mensual</span></td></tr>
                         <tr><td class="feature-label">Optimización mensual incluida</td><td>Sin optimización</td><td class="highlight-col"><strong>1 optimización</strong></td><td>2 optimizaciones</td><td style="color:#e9d5ff;"><strong>4 optimizaciones</strong></td></tr>
                         <tr><td class="feature-label">Reportes</td><td>Básico</td><td class="highlight-col">Mensual + Estrategia</td><td>Tablero Avanzado</td><td style="color:#e9d5ff;">Auditoría Continua</td></tr>
                         <tr><td class="feature-label">Automatización</td><td>-</td><td class="highlight-col">Respuesta Auto</td><td><strong>Seguimiento Full</strong></td><td style="color:#e9d5ff;"><strong>Ecosistema Autónomo</strong></td></tr>
@@ -983,7 +1118,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
             <div style="background: #121212; border: 1px solid rgba(255,255,255,0.08); border-radius: 20px; padding: 28px; display: flex; flex-direction: column;">
                 <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; margin-bottom: 14px; flex-wrap: wrap;">
                     <span style="background: rgba(249,115,22,0.15); color: #f97316; border: 1px solid rgba(249,115,22,0.3); padding: 4px 12px; border-radius: 20px; font-size: 0.7rem; font-weight: 700; letter-spacing: 0.5px;">
-                        <i class="fa-solid fa-industry" style="margin-right: 4px;"></i> METALÚRGICA
+                        <svg class="icon" aria-hidden="true" style="margin-right: 4px;"><use href="#ico-industry"/></svg> METALÚRGICA
                     </span>
                     <span style="color: #fff; font-size: 0.85rem; font-weight: 700;">
                         Plan Industrial · USD 4.900
@@ -1030,7 +1165,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
             <div style="background: #121212; border: 1px solid rgba(255,255,255,0.08); border-radius: 20px; padding: 28px; display: flex; flex-direction: column;">
                 <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; margin-bottom: 14px; flex-wrap: wrap;">
                     <span style="background: rgba(251,191,36,0.15); color: #fbbf24; border: 1px solid rgba(251,191,36,0.3); padding: 4px 12px; border-radius: 20px; font-size: 0.7rem; font-weight: 700; letter-spacing: 0.5px;">
-                        <i class="fa-solid fa-truck-fast" style="margin-right: 4px;"></i> LOGÍSTICA
+                        <svg class="icon" aria-hidden="true" style="margin-right: 4px;"><use href="#ico-truck-fast"/></svg> LOGÍSTICA
                     </span>
                     <span style="color: #fff; font-size: 0.85rem; font-weight: 700;">
                         Plan Pro · USD 2.900
@@ -1077,7 +1212,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
             <div style="background: #121212; border: 1px solid rgba(255,255,255,0.08); border-radius: 20px; padding: 28px; display: flex; flex-direction: column;">
                 <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; margin-bottom: 14px; flex-wrap: wrap;">
                     <span style="background: rgba(56,189,248,0.15); color: #38bdf8; border: 1px solid rgba(56,189,248,0.3); padding: 4px 12px; border-radius: 20px; font-size: 0.7rem; font-weight: 700; letter-spacing: 0.5px;">
-                        <i class="fa-solid fa-gears" style="margin-right: 4px;"></i> SERVICIO TÉCNICO
+                        <svg class="icon" aria-hidden="true" style="margin-right: 4px;"><use href="#ico-gears"/></svg> SERVICIO TÉCNICO
                     </span>
                     <span style="color: #fff; font-size: 0.85rem; font-weight: 700;">
                         Plan Base · USD 1.050
@@ -1128,7 +1263,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                 ¿Querés ver un caso de tu rubro?
             </p>
             <a href="#contacto" style="display: inline-block; background: #f97316; color: #000; padding: 14px 32px; border-radius: 50px; font-weight: 800; font-size: 0.95rem; text-decoration: none; transition: all 0.2s;">
-                Pedí tu diagnóstico gratis <i class="fa-solid fa-arrow-right" style="margin-left: 6px;"></i>
+                Pedí tu diagnóstico gratis <svg class="icon" aria-hidden="true" style="margin-left: 6px;"><use href="#ico-arrow-right"/></svg>
             </a>
         </div>
 
@@ -1136,6 +1271,84 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 </section>
 <!-- ============================================================ -->
 <!-- FIN — SECCIÓN CASOS DE ÉXITO (copiar hasta acá)               -->
+<!-- ============================================================ -->
+
+<!-- ============================================================ -->
+<!-- SECCIÓN RUBROS                                               -->
+<!-- ============================================================ -->
+    <section id="rubros" class="section-padding">
+        <div class="container">
+            <div class="section-header" data-aos="fade-up">
+                <h2>Soluciones por rubro</h2>
+                <p>Sistemas de captación de leads adaptados a cada industria B2B.</p>
+            </div>
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px;margin-top:32px;">
+
+                <a href="metalurgica.html" style="text-decoration:none;" data-aos="fade-up" data-aos-delay="0">
+                    <div class="bento-box" style="display:flex;align-items:flex-start;gap:16px;padding:22px 24px;transition:border-color 0.2s,transform 0.2s;" onmouseover="this.style.borderColor='rgba(255,255,255,0.18)';this.style.transform='translateY(-3px)'" onmouseout="this.style.borderColor='';this.style.transform=''">
+                        <span style="font-size:2rem;line-height:1;">⚙️</span>
+                        <div>
+                            <h3 style="font-size:1rem;margin:0 0 6px;color:#fff;">Metalúrgicas</h3>
+                            <p style="font-size:0.82rem;color:#71717a;margin:0;line-height:1.5;">Cotizadores técnicos y portfolios de capacidad industrial.</p>
+                        </div>
+                    </div>
+                </a>
+
+                <a href="agro.html" style="text-decoration:none;" data-aos="fade-up" data-aos-delay="50">
+                    <div class="bento-box" style="display:flex;align-items:flex-start;gap:16px;padding:22px 24px;transition:border-color 0.2s,transform 0.2s;" onmouseover="this.style.borderColor='rgba(255,255,255,0.18)';this.style.transform='translateY(-3px)'" onmouseout="this.style.borderColor='';this.style.transform=''">
+                        <span style="font-size:2rem;line-height:1;">🌾</span>
+                        <div>
+                            <h3 style="font-size:1rem;margin:0 0 6px;color:#fff;">Agro</h3>
+                            <p style="font-size:0.82rem;color:#71717a;margin:0;line-height:1.5;">Catálogos B2B y formularios de pedidos para agroindustria.</p>
+                        </div>
+                    </div>
+                </a>
+
+                <a href="logistica.html" style="text-decoration:none;" data-aos="fade-up" data-aos-delay="100">
+                    <div class="bento-box" style="display:flex;align-items:flex-start;gap:16px;padding:22px 24px;transition:border-color 0.2s,transform 0.2s;" onmouseover="this.style.borderColor='rgba(255,255,255,0.18)';this.style.transform='translateY(-3px)'" onmouseout="this.style.borderColor='';this.style.transform=''">
+                        <span style="font-size:2rem;line-height:1;">🚛</span>
+                        <div>
+                            <h3 style="font-size:1rem;margin:0 0 6px;color:#fff;">Logística</h3>
+                            <p style="font-size:0.82rem;color:#71717a;margin:0;line-height:1.5;">Cotizadores de cargas y captación de clientes en tránsito.</p>
+                        </div>
+                    </div>
+                </a>
+
+                <a href="tecnico.html" style="text-decoration:none;" data-aos="fade-up" data-aos-delay="150">
+                    <div class="bento-box" style="display:flex;align-items:flex-start;gap:16px;padding:22px 24px;transition:border-color 0.2s,transform 0.2s;" onmouseover="this.style.borderColor='rgba(255,255,255,0.18)';this.style.transform='translateY(-3px)'" onmouseout="this.style.borderColor='';this.style.transform=''">
+                        <span style="font-size:2rem;line-height:1;">🔧</span>
+                        <div>
+                            <h3 style="font-size:1rem;margin:0 0 6px;color:#fff;">Servicios Técnicos</h3>
+                            <p style="font-size:0.82rem;color:#71717a;margin:0;line-height:1.5;">Agendamiento automático y botones de contacto inmediato.</p>
+                        </div>
+                    </div>
+                </a>
+
+                <a href="construccion.html" style="text-decoration:none;" data-aos="fade-up" data-aos-delay="200">
+                    <div class="bento-box" style="display:flex;align-items:flex-start;gap:16px;padding:22px 24px;transition:border-color 0.2s,transform 0.2s;" onmouseover="this.style.borderColor='rgba(255,255,255,0.18)';this.style.transform='translateY(-3px)'" onmouseout="this.style.borderColor='';this.style.transform=''">
+                        <span style="font-size:2rem;line-height:1;">🏗️</span>
+                        <div>
+                            <h3 style="font-size:1rem;margin:0 0 6px;color:#fff;">Construcción</h3>
+                            <p style="font-size:0.82rem;color:#71717a;margin:0;line-height:1.5;">Portfolios de obra y captación de licitaciones en LATAM.</p>
+                        </div>
+                    </div>
+                </a>
+
+                <a href="frigorificoalimenticio.html" style="text-decoration:none;" data-aos="fade-up" data-aos-delay="250">
+                    <div class="bento-box" style="display:flex;align-items:flex-start;gap:16px;padding:22px 24px;transition:border-color 0.2s,transform 0.2s;" onmouseover="this.style.borderColor='rgba(255,255,255,0.18)';this.style.transform='translateY(-3px)'" onmouseout="this.style.borderColor='';this.style.transform=''">
+                        <span style="font-size:2rem;line-height:1;">🥩</span>
+                        <div>
+                            <h3 style="font-size:1rem;margin:0 0 6px;color:#fff;">Frigorífico / Alimentos</h3>
+                            <p style="font-size:0.82rem;color:#71717a;margin:0;line-height:1.5;">Captación de compradores institucionales y exportadores B2B.</p>
+                        </div>
+                    </div>
+                </a>
+
+            </div>
+        </div>
+    </section>
+<!-- ============================================================ -->
+<!-- FIN SECCIÓN RUBROS                                           -->
 <!-- ============================================================ -->
 
     <section id="portafolio" class="section-padding">
@@ -1155,10 +1368,10 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                         <div class="badge-fill" style="background: #ff6600; color: white;">Industria Pesada</div>
                         <h3>Ferrum S.A. ⚙️</h3>
                         <p style="font-size: 0.85rem; color: #ddd; margin-top: 5px; line-height: 1.4;">
-                            <i class="fa-solid fa-check" style="color: var(--primary-color);"></i> <strong>Reto:</strong> Recibir planos técnicos.<br>
-                            <i class="fa-solid fa-arrow-trend-up" style="color: #4ade80;"></i> <strong>Resultado:</strong> Cotizador de piezas online.
+                            <svg class="icon" aria-hidden="true" style="color: var(--primary-color);"><use href="#ico-check"/></svg> <strong>Reto:</strong> Recibir planos técnicos.<br>
+                            <svg class="icon" aria-hidden="true" style="color: #4ade80;"><use href="#ico-arrow-trend-up"/></svg> <strong>Resultado:</strong> Cotizador de piezas online.
                         </p>
-                        <span class="btn-text" style="margin-top: 10px; display: block;">Ver Demo <i class="fa-solid fa-arrow-right"></i></span>
+                        <span class="btn-text" style="margin-top: 10px; display: block;">Ver Demo <svg class="icon" aria-hidden="true"><use href="#ico-arrow-right"/></svg></span>
                     </div>
                 </a>
     
@@ -1170,10 +1383,10 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                         <div class="badge-fill" style="background: #ea580c; color: white;">Logística & Transporte</div>
                         <h3>Expreso Litoral 🚛</h3>
                         <p style="font-size: 0.85rem; color: #ddd; margin-top: 5px; line-height: 1.4;">
-                            <i class="fa-solid fa-check" style="color: var(--primary-color);"></i> <strong>Reto:</strong> Cotizaciones manuales por WhatsApp.<br>
-                            <i class="fa-solid fa-arrow-trend-up" style="color: #4ade80;"></i> <strong>Resultado:</strong> Cotizador de cargas online.
+                            <svg class="icon" aria-hidden="true" style="color: var(--primary-color);"><use href="#ico-check"/></svg> <strong>Reto:</strong> Cotizaciones manuales por WhatsApp.<br>
+                            <svg class="icon" aria-hidden="true" style="color: #4ade80;"><use href="#ico-arrow-trend-up"/></svg> <strong>Resultado:</strong> Cotizador de cargas online.
                         </p>
-                        <span class="btn-text" style="margin-top: 10px; display: block;">Ver Demo <i class="fa-solid fa-arrow-right"></i></span>
+                        <span class="btn-text" style="margin-top: 10px; display: block;">Ver Demo <svg class="icon" aria-hidden="true"><use href="#ico-arrow-right"/></svg></span>
                     </div>
                 </a>
             
@@ -1185,25 +1398,33 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                         <div class="badge-fill" style="background: #16a34a; color: white;">Agroindustria</div>
                         <h3>Agro Litoral 🌾</h3>
                         <p style="font-size: 0.85rem; color: #ddd; margin-top: 5px; line-height: 1.4;">
-                            <i class="fa-solid fa-check" style="color: var(--primary-color);"></i> <strong>Reto:</strong> Sin presencia digital en zona productora.<br>
-                            <i class="fa-solid fa-arrow-trend-up" style="color: #4ade80;"></i> <strong>Resultado:</strong> Catálogo B2B + formulario de pedidos.
+                            <svg class="icon" aria-hidden="true" style="color: var(--primary-color);"><use href="#ico-check"/></svg> <strong>Reto:</strong> Sin presencia digital en zona productora.<br>
+                            <svg class="icon" aria-hidden="true" style="color: #4ade80;"><use href="#ico-arrow-trend-up"/></svg> <strong>Resultado:</strong> Catálogo B2B + formulario de pedidos.
                         </p>
-                        <span class="btn-text" style="margin-top: 10px; display: block;">Ver Demo <i class="fa-solid fa-arrow-right"></i></span>
+                        <span class="btn-text" style="margin-top: 10px; display: block;">Ver Demo <svg class="icon" aria-hidden="true"><use href="#ico-arrow-right"/></svg></span>
                     </div>
                 </a>
 
                 <a href="demos/PolarTech/index.html" target="_blank" class="bento-box project-card" data-aos="fade-up" data-aos-delay="300">
-                    <img src="demo-tecnico.jpg" 
-                         alt="Marketing para servicios técnicos de aire acondicionado y refrigeración"
-                         width="800" height="500" loading="lazy" style="aspect-ratio: 16/10; object-fit: cover;">
+                    <picture>
+                        <source
+                            srcset="/demo-tecnico-400.webp 400w, /demo-tecnico.webp 800w"
+                            sizes="(max-width: 600px) 400px, 800px"
+                            type="image/webp">
+                        <img src="demo-tecnico.jpg"
+                             alt="Marketing para servicios técnicos de aire acondicionado y refrigeración"
+                             width="800" height="500"
+                             fetchpriority="high" decoding="async"
+                             style="aspect-ratio: 16/10; object-fit: cover;">
+                    </picture>
                     <div class="project-info">
                         <div class="badge-fill">Servicios Técnicos</div>
                         <h3>Polar Tech ❄️</h3>
                         <p style="font-size: 0.85rem; color: #ddd; margin-top: 5px; line-height: 1.4;">
-                            <i class="fa-solid fa-check" style="color: var(--primary-color);"></i> <strong>Reto:</strong> Velocidad de respuesta.<br>
-                            <i class="fa-solid fa-arrow-trend-up" style="color: #4ade80;"></i> <strong>Resultado:</strong> Botones de "Llamada Ya".
+                            <svg class="icon" aria-hidden="true" style="color: var(--primary-color);"><use href="#ico-check"/></svg> <strong>Reto:</strong> Velocidad de respuesta.<br>
+                            <svg class="icon" aria-hidden="true" style="color: #4ade80;"><use href="#ico-arrow-trend-up"/></svg> <strong>Resultado:</strong> Botones de "Llamada Ya".
                         </p>
-                        <span class="btn-text" style="margin-top: 10px; display: block;">Ver Demo <i class="fa-solid fa-arrow-right"></i></span>
+                        <span class="btn-text" style="margin-top: 10px; display: block;">Ver Demo <svg class="icon" aria-hidden="true"><use href="#ico-arrow-right"/></svg></span>
                     </div>
                 </a>
     
@@ -1255,7 +1476,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                 <div class="bento-box testimonial-card">
                     <div class="testimonial-header">
                         <div class="stars">★★★★★</div>
-                        <div class="metric-badge"><i class="fa-solid fa-arrow-trend-up"></i> +45% Consultas</div>
+                        <div class="metric-badge"><svg class="icon" aria-hidden="true"><use href="#ico-arrow-trend-up"/></svg> +45% Consultas</div>
                     </div>
                     <p class="quote">"Tenía una web vieja que nadie visitaba. Con el nuevo enfoque industrial, la imagen de la empresa cambió radicalmente. Ahora los presupuestos llegan mejor filtrados."</p>
                     <div class="author">
@@ -1266,7 +1487,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                 <div class="bento-box testimonial-card">
                     <div class="testimonial-header">
                         <div class="stars">★★★★★</div>
-                        <div class="metric-badge" style="color: #fbbf24; background: rgba(251, 191, 36, 0.15); border-color: rgba(251, 191, 36, 0.3);"><i class="fa-solid fa-motorcycle"></i> x2 Pedidos</div>
+                        <div class="metric-badge" style="color: #fbbf24; background: rgba(251, 191, 36, 0.15); border-color: rgba(251, 191, 36, 0.3);"><svg class="icon" aria-hidden="true"><use href="#ico-motorcycle"/></svg> x2 Pedidos</div>
                     </div>
                     <p class="quote">"El catálogo técnico digital nos salvó la vida. Antes enviábamos PDFs pesados por mail. Ahora el cliente entra, busca el repuesto y pide cotización. Simple y rápido."</p>
                     <div class="author">
@@ -1277,7 +1498,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                 <div class="bento-box testimonial-card">
                     <div class="testimonial-header">
                         <div class="stars">★★★★★</div>
-                        <div class="metric-badge" style="color: #38bdf8; background: rgba(56, 189, 248, 0.15); border-color: rgba(56, 189, 248, 0.3);"><i class="fa-brands fa-google"></i> Top 1 Google</div>
+                        <div class="metric-badge" style="color: #38bdf8; background: rgba(56, 189, 248, 0.15); border-color: rgba(56, 189, 248, 0.3);"><svg class="icon" aria-hidden="true"><use href="#ico-google"/></svg> Top 1 Google</div>
                     </div>
                     <p class="quote">"Lo mejor es no tener que descapitalizarnos pagando millones por una web. La suscripción mensual nos permite tener soporte técnico continuo como si tuviéramos un departamento de IT."</p>
                     <div class="author">
@@ -1304,11 +1525,11 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
             <div class="bento-box trust-bar">
                 <h3>¿Por qué elegir Avanza Digital?</h3>
                 <div class="trust-icons">
-                    <div class="trust-item"><i class="fa-solid fa-file-code"></i><span>Entregables Claros</span></div>
-                    <div class="trust-item"><i class="fa-solid fa-unlock"></i><span>Propiedad Intelectual</span></div>
-                    <div class="trust-item"><i class="fa-regular fa-calendar-xmark"></i><span>Sin contratos forzosos</span></div>
-                    <div class="trust-item"><i class="fa-solid fa-server"></i><span>Infraestructura Incluida</span></div>
-                    <div class="trust-item"><i class="fa-brands fa-whatsapp"></i><span>Soporte Gerencial</span></div>
+                    <div class="trust-item"><svg class="icon" aria-hidden="true"><use href="#ico-file-code"/></svg><span>Entregables Claros</span></div>
+                    <div class="trust-item"><svg class="icon" aria-hidden="true"><use href="#ico-unlock"/></svg><span>Propiedad Intelectual</span></div>
+                    <div class="trust-item"><svg class="icon" aria-hidden="true"><use href="#ico-calendar-xmark"/></svg><span>Sin contratos forzosos</span></div>
+                    <div class="trust-item"><svg class="icon" aria-hidden="true"><use href="#ico-server"/></svg><span>Infraestructura Incluida</span></div>
+                    <div class="trust-item"><svg class="icon" aria-hidden="true"><use href="#ico-whatsapp"/></svg><span>Soporte Gerencial</span></div>
                 </div>
             </div>
         </div>
@@ -1397,7 +1618,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
             <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px;">
                 
                 <a href="blog.html" class="bento-box" style="text-decoration: none; display: flex; flex-direction: column; justify-content: center; min-height: 200px;">
-                    <div style="font-size: 2rem; color: var(--primary-color); margin-bottom: 15px;"><i class="fa-solid fa-layer-group"></i></div>
+                    <div style="font-size: 2rem; color: var(--primary-color); margin-bottom: 15px;"><svg class="icon" aria-hidden="true"><use href="#ico-layer-group"/></svg></div>
                     <h3 style="color: white; margin-bottom: 10px;">Biblioteca de Estrategia</h3>
                     <p style="color: #a1a1aa; font-size: 0.9rem;">Artículos sobre marketing industrial, SEO local y ventas.</p>
                     <span style="color: var(--primary-color); font-weight: 600; margin-top: auto;">Ver todos los artículos &rarr;</span>
@@ -1406,6 +1627,83 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
             </div>
         </div>
     </section>
+
+    <!-- ══════════════════════════════════════════
+         NEWSLETTER MENSUAL — MailerLite
+    ══════════════════════════════════════════ -->
+    <section id="newsletter" class="section-padding" style="background:#0a0a0a;border-top:1px solid #1a1a1a;border-bottom:1px solid #1a1a1a;">
+        <div class="container">
+            <div style="max-width:640px;margin:0 auto;text-align:center;">
+                <span style="display:inline-flex;align-items:center;gap:8px;background:rgba(74,222,128,0.08);border:1px solid rgba(74,222,128,0.2);border-radius:50px;padding:6px 16px;margin-bottom:24px;">
+                    <svg style="width:14px;height:14px;fill:#4ade80;" viewBox="0 0 512 512"><path d="M48 64C21.5 64 0 85.5 0 112c0 15.1 7.1 29.3 19.2 38.4L236.8 313.6c11.4 8.5 27 8.5 38.4 0L492.8 150.4c12.1-9.1 19.2-23.3 19.2-38.4c0-26.5-21.5-48-48-48L48 64zM0 176L0 384c0 35.3 28.7 64 64 64l384 0c35.3 0 64-28.7 64-64l0-208L294.4 339.2c-22.8 17.1-54 17.1-76.8 0L0 176z"/></svg>
+                    <span style="color:#4ade80;font-size:0.78rem;font-weight:700;text-transform:uppercase;letter-spacing:1px;">Newsletter Mensual Gratuito</span>
+                </span>
+                <h2 style="color:white;font-size:clamp(1.5rem,3.5vw,2.2rem);font-weight:800;line-height:1.2;margin-bottom:14px;">
+                    Marketing industrial B2B:<br>lo que funciona en LATAM este mes
+                </h2>
+                <p style="color:#888;font-size:1rem;line-height:1.65;margin-bottom:32px;">
+                    Un email al mes. Sin relleno. Casos reales de PYMEs industriales que mejoraron su captación de clientes, con números concretos.
+                </p>
+                <!-- MailerLite embedded form (form ID: LX1nNV — mismo grupo que auditoría) -->
+                <div id="nl-form" style="display:flex;flex-direction:column;gap:12px;max-width:400px;margin:0 auto;">
+                    <input type="text" id="nl-name" placeholder="Tu nombre"
+                        style="width:100%;padding:14px 18px;background:#111;border:1px solid #333;border-radius:10px;color:white;font-size:1rem;font-family:Inter,sans-serif;outline:none;box-sizing:border-box;"
+                        onfocus="this.style.borderColor='#4ade80'" onblur="this.style.borderColor='#333'">
+                    <input type="email" id="nl-email" placeholder="Tu email corporativo"
+                        style="width:100%;padding:14px 18px;background:#111;border:1px solid #333;border-radius:10px;color:white;font-size:1rem;font-family:Inter,sans-serif;outline:none;box-sizing:border-box;"
+                        onfocus="this.style.borderColor='#4ade80'" onblur="this.style.borderColor='#333'"
+                        onkeydown="if(event.key==='Enter')submitNewsletter()">
+                    <button onclick="submitNewsletter()"
+                        style="width:100%;padding:15px;background:#16a34a;color:white;border:none;border-radius:10px;font-weight:700;font-size:1rem;cursor:pointer;font-family:Inter,sans-serif;display:flex;align-items:center;justify-content:center;gap:8px;"
+                        onmouseover="this.style.background='#15803d'" onmouseout="this.style.background='#16a34a'">
+                        <svg style="width:16px;height:16px;fill:white;" viewBox="0 0 512 512"><path d="M48 64C21.5 64 0 85.5 0 112c0 15.1 7.1 29.3 19.2 38.4L236.8 313.6c11.4 8.5 27 8.5 38.4 0L492.8 150.4c12.1-9.1 19.2-23.3 19.2-38.4c0-26.5-21.5-48-48-48L48 64zM0 176L0 384c0 35.3 28.7 64 64 64l384 0c35.3 0 64-28.7 64-64l0-208L294.4 339.2c-22.8 17.1-54 17.1-76.8 0L0 176z"/></svg>
+                        Suscribirme gratis
+                    </button>
+                    <p style="color:#444;font-size:0.75rem;margin:0;">
+                        <svg style="width:11px;height:11px;fill:#555;vertical-align:middle;" viewBox="0 0 448 512"><path d="M144 144c0-44.2 35.8-80 80-80c31.9 0 59.4 18.6 72.3 45.7c7.6 16 26.7 22.8 42.6 15.2s22.8-26.7 15.2-42.6C331 33.7 281.5 0 224 0C144.5 0 80 64.5 80 144v48H64c-35.3 0-64 28.7-64 64V448c0 35.3 28.7 64 64 64H384c35.3 0 64-28.7 64-64V256c0-35.3-28.7-64-64-64H144V144z"/></svg>
+                        1 email por mes. Sin spam. Cancelás cuando querés.
+                    </p>
+                </div>
+                <div id="nl-ok" style="display:none;padding:28px 0;">
+                    <div style="font-size:3rem;margin-bottom:12px;">✅</div>
+                    <p style="color:white;font-weight:700;font-size:1.1rem;margin-bottom:6px;">¡Bienvenido/a al newsletter!</p>
+                    <p style="color:#888;font-size:0.88rem;">El próximo número llega el primer martes del mes.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+    <!-- MailerLite: formulario oculto para suscripción newsletter -->
+    <div id="ml-nl-hidden" style="display:none;position:absolute;pointer-events:none;opacity:0;">
+        <div class="ml-embedded" data-form="LX1nNV"></div>
+    </div>
+    <script>
+    function submitNewsletter() {
+        var name  = document.getElementById('nl-name').value.trim();
+        var email = document.getElementById('nl-email').value.trim();
+        if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+            document.getElementById('nl-email').style.borderColor = '#ef4444';
+            document.getElementById('nl-email').placeholder = 'Ingresá un email válido';
+            return;
+        }
+        /* Suscribir vía MailerLite hidden form */
+        try {
+            var mlEmail = document.querySelector('#ml-nl-hidden input[type="email"]');
+            var mlName  = document.querySelector('#ml-nl-hidden input[name="fields[name]"]');
+            var mlBtn   = document.querySelector('#ml-nl-hidden button[type="submit"]');
+            if (mlEmail && mlBtn) {
+                mlEmail.value = email;
+                if (mlName) mlName.value = name;
+                mlBtn.click();
+            }
+        } catch(e) { console.warn('MailerLite newsletter error:', e); }
+        /* Feedback visual */
+        document.getElementById('nl-form').style.display = 'none';
+        document.getElementById('nl-ok').style.display   = 'block';
+        /* GA4 */
+        window.dataLayer = window.dataLayer || [];
+        window.dataLayer.push({event:'newsletter_subscribe', method:'index_section'});
+    }
+    </script>
 
     <section id="contacto" class="section-padding">
         <div class="container">
@@ -1432,12 +1730,12 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
             <div class="socials">
                 
 
-                <a href="https://www.linkedin.com/in/ivan-galarza-365064205/" aria-label="LinkedIn" target="_blank"><i class="fa-brands fa-linkedin"></i></a>
+                <a href="https://www.linkedin.com/in/ivan-galarza-365064205/" aria-label="LinkedIn" target="_blank"><svg class="icon" aria-hidden="true"><use href="#ico-linkedin"/></svg></a>
                 
-                <a href="https://www.instagram.com/avanzadigital4/" aria-label="Instagram" target="_blank"><i class="fa-brands fa-instagram"></i></a>
-                <a href="https://wa.me/5493424392759" aria-label="WhatsApp" target="_blank"><i class="fa-brands fa-whatsapp"></i></a>
-                <a href="https://www.tiktok.com/@avanzadigital4" aria-label="TikTok" target="_blank"><i class="fa-brands fa-tiktok"></i></a>
-                <a href="https://www.facebook.com/profile.php?id=61585557767645" aria-label="Facebook" target="_blank"><i class="fa-brands fa-facebook"></i></a>
+                <a href="https://www.instagram.com/avanzadigital4/" aria-label="Instagram" target="_blank"><svg class="icon" aria-hidden="true"><use href="#ico-instagram"/></svg></a>
+                <a href="https://wa.me/5493424392759" aria-label="WhatsApp" target="_blank"><svg class="icon" aria-hidden="true"><use href="#ico-whatsapp"/></svg></a>
+                <a href="https://www.tiktok.com/@avanzadigital4" aria-label="TikTok" target="_blank"><svg class="icon" aria-hidden="true"><use href="#ico-tiktok"/></svg></a>
+                <a href="https://www.facebook.com/profile.php?id=61585557767645" aria-label="Facebook" target="_blank"><svg class="icon" aria-hidden="true"><use href="#ico-facebook"/></svg></a>
             </div>
 
             <div style="margin-bottom: 20px; border-bottom: 1px solid #222; padding-bottom: 20px; width: 100%;">
@@ -1460,6 +1758,8 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                             <a href="agro.html" style="color: #aaa; text-decoration: none;" onmouseover="this.style.color='white'" onmouseout="this.style.color='#aaa'">Agro</a>
                             <a href="logistica.html" style="color: #aaa; text-decoration: none;" onmouseover="this.style.color='white'" onmouseout="this.style.color='#aaa'">Logística</a>
                             <a href="tecnico.html" style="color: #aaa; text-decoration: none;" onmouseover="this.style.color='white'" onmouseout="this.style.color='#aaa'">Servicios Técnicos</a>
+                            <a href="construccion.html" style="color: #aaa; text-decoration: none;" onmouseover="this.style.color='white'" onmouseout="this.style.color='#aaa'">Construcción</a>
+                            <a href="frigorificoalimenticio.html" style="color: #aaa; text-decoration: none;" onmouseover="this.style.color='white'" onmouseout="this.style.color='#aaa'">Frigorífico / Alimentos</a>
                         </div>
                     </div>
 
@@ -1635,7 +1935,29 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         }
     </script>
     <script src="script.js" defer></script>
-    <script type="text/javascript" id="hs-script-loader" async defer src="//js.hs-scripts.com/51067454.js"></script>
+    <!-- HubSpot: se carga sólo tras la primera interacción del usuario (scroll/click/touch/key).
+         Esto elimina su impacto en el FID/INP sin perder ningún tracking real. -->
+    <script>
+    (function(){
+        var loaded = false;
+        function loadHubspot(){
+            if(loaded) return;
+            loaded = true;
+            var s = document.createElement('script');
+            s.type = 'text/javascript';
+            s.id = 'hs-script-loader';
+            s.async = true;
+            s.defer = true;
+            s.src = '//js.hs-scripts.com/51067454.js';
+            document.body.appendChild(s);
+        }
+        ['scroll','click','touchstart','keydown','mousemove'].forEach(function(ev){
+            window.addEventListener(ev, loadHubspot, {once: true, passive: true});
+        });
+        // Fallback: si el usuario no interactuó en 5s, cargar igual
+        setTimeout(loadHubspot, 5000);
+    })();
+    </script>
 <script>
 function heroAudit(){
     const domain = document.getElementById('hero-domain').value.trim();
@@ -1759,5 +2081,25 @@ document.querySelectorAll('#nav-links a').forEach(a => {
     });
     </script>
     <!-- End Google Tag Manager -->
+    <!-- MailerLite Universal — deferred (no bloquea FID/TBT) -->
+    <script>
+    (function() {
+        function loadMailerLite() {
+            if (window._mlLoaded) return;
+            window._mlLoaded = true;
+            (function(w,d,e,u,f,l,n){w[f]=w[f]||function(){(w[f].q=w[f].q||[])
+            .push(arguments);},l=d.createElement(e),l.async=1,l.src=u,
+            n=d.getElementsByTagName(e)[0],n.parentNode.insertBefore(l,n);}
+            )(window,document,'script','https://assets.mailerlite.com/js/universal.js','ml');
+            ml('account', '2246059');
+        }
+        // Cargar tras primera interacción del usuario (igual que HubSpot)
+        ['scroll','click','touchstart','keydown','mousemove'].forEach(function(ev){
+            window.addEventListener(ev, loadMailerLite, {once:true, passive:true});
+        });
+        // Fallback: si no hay interacción en 4s, cargar igual
+        setTimeout(loadMailerLite, 4000);
+    })();
+    </script>
+    <!-- End MailerLite Universal -->
 </body>
-</html>
