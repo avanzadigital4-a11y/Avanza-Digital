@@ -924,6 +924,11 @@
         <i class="fa-solid fa-arrow-right-to-bracket"></i> Ingresar al portal
       </button>
       <div class="login-error" id="login-error"><i class="fa-solid fa-circle-exclamation"></i> &nbsp;Código no encontrado o contraseña incorrecta.</div>
+      <div style="text-align:center; margin-top:12px;">
+        <a href="#" onclick="abrirModalRecuperarPass(); return false;" style="font-size:0.8rem; color:var(--text-dim); text-decoration:none; transition:color .2s;" onmouseover="this.style.color='var(--primary)'" onmouseout="this.style.color='var(--text-dim)'">
+          <i class="fa-solid fa-key" style="margin-right:4px;"></i> Olvidé mi contraseña
+        </a>
+      </div>
       <div class="login-footer">¿Todavía no sos aliado? <a href="#" onclick="mostrarRegistro()">Registrate gratis →</a></div>
     </div>
   </div>
@@ -1165,6 +1170,7 @@
       <!-- Ambos: Comisiones -->
       <button class="tab-btn" onclick="cambiarTab('comisiones',this)"><i class="fa-solid fa-dollar-sign"></i> Comisiones</button>
       <!-- Toggle herramientas secundarias -->
+      <button class="tab-btn" onclick="cambiarTab('mi-cuenta',this)" id="btn-tab-mi-cuenta" title="Mi Cuenta"><i class="fa-solid fa-gear"></i> Mi Cuenta</button>
       <button class="tab-btn tab-btn-mas" id="btn-mas-tabs" onclick="toggleMasTabsRow()" title="Más herramientas"><i class="fa-solid fa-grid-2"></i> Herramientas</button>
     </div>
 
@@ -2576,44 +2582,7 @@
         <div id="tabla-recurrentes-activos"></div>
       </div>
 
-      <!-- v1.4: Perfil de cobro (CBU/alias) (spec §11) -->
-      <div class="bento-box" style="margin-top:24px;">
-        <h3 style="font-size:0.95rem; font-weight:700; margin-bottom:4px;">
-          <i class="fa-solid fa-building-columns" style="color:var(--primary);"></i>
-          &nbsp;Datos de cobro
-        </h3>
-        <p style="font-size:0.82rem; color:var(--text-muted); margin-bottom:16px;">
-          El CBU o alias donde te transferimos las comisiones. <strong>Sin esto cargado, el admin no puede abonarte.</strong>
-        </p>
-        <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:flex-end;">
-          <div style="flex:1; min-width:220px;">
-            <label style="font-size:.75rem; font-weight:600; color:var(--text-muted); text-transform:uppercase; letter-spacing:1px; display:block; margin-bottom:6px;">CBU o alias de Mercado Pago</label>
-            <input type="text" id="perfil-cbu" placeholder="Ej: mi.alias.mp  o  0000003100000000000000"
-                   style="width:100%; background:rgba(255,255,255,0.04); border:1px solid var(--border); border-radius:var(--radius-sm); padding:12px 14px; color:var(--text); font-size:.9rem; font-family:'Inter',sans-serif; outline:none;">
-          </div>
-          <button onclick="guardarCBU()" id="btn-guardar-cbu" style="background:var(--primary); color:white; border:none; border-radius:8px; padding:12px 22px; font-weight:800; cursor:pointer; font-size:.88rem;">
-            <i class="fa-solid fa-floppy-disk"></i> Guardar
-          </button>
-        </div>
-        <div id="perfil-cbu-estado" style="font-size:0.78rem; margin-top:10px;"></div>
-      </div>
-
-      <!-- ── ZONA DE PELIGRO: baja voluntaria ── -->
-      <div class="bento-box" style="margin-top:24px; border-color:rgba(239,68,68,0.25); background:rgba(239,68,68,0.03);">
-        <h3 style="font-size:0.95rem; font-weight:700; margin-bottom:4px; color:#f87171;">
-          <i class="fa-solid fa-triangle-exclamation" style="color:#ef4444;"></i>
-          &nbsp;Zona de peligro
-        </h3>
-        <p style="font-size:0.82rem; color:var(--text-muted); margin-bottom:16px; line-height:1.6;">
-          Si querés salir del programa, podés solicitar la baja desde acá. Tu cuenta se suspende de inmediato
-          y se elimina definitivamente a los <strong>30 días</strong>. Tenés ese plazo para arrepentirte
-          escribiéndonos.
-        </p>
-        <button onclick="document.getElementById('modal-baja-voluntaria').classList.add('open')"
-          style="background:transparent; border:1px solid rgba(239,68,68,0.5); color:#f87171; border-radius:8px; padding:10px 20px; font-weight:700; cursor:pointer; font-size:.85rem; display:inline-flex; align-items:center; gap:8px;">
-          <i class="fa-solid fa-right-from-bracket"></i> Solicitar baja de mi cuenta
-        </button>
-      </div>
+      <!-- CBU y Zona de Peligro movidos a ⚙️ Mi Cuenta -->
     </div>
 
     <div id="tab-prospectos" class="tab-panel">
@@ -3142,6 +3111,71 @@
      Dos vistas: paso 1 (elegir paquete) y paso 2 (instrucciones de transferencia).
      ════════════════════════════════════════════════════════════════════════ -->
 <!-- ══════════════════════════════════════════════════════════════════════
+     MODAL — RECUPERAR CONTRASEÑA (solicitar email)
+     ══════════════════════════════════════════════════════════════════════ -->
+<div class="modal-overlay" id="modal-recuperar-pass">
+  <div class="onboarding-box" style="max-width:460px;padding:0;">
+    <div style="border-bottom:1px solid var(--border);padding:18px 24px;display:flex;justify-content:space-between;align-items:center;">
+      <h3 style="font-size:1rem;font-weight:800;margin:0;">
+        <i class="fa-solid fa-key" style="color:var(--primary);"></i> &nbsp;Recuperar contraseña
+      </h3>
+      <button onclick="document.getElementById('modal-recuperar-pass').classList.remove('open')" style="background:transparent;border:none;color:var(--text-muted);font-size:1.4rem;cursor:pointer;">&times;</button>
+    </div>
+    <div style="padding:24px;">
+      <p style="font-size:.88rem;color:var(--text-muted);margin-bottom:18px;line-height:1.6;">
+        Ingresá el email de tu cuenta. Si existe, te mandamos un link para crear una nueva contraseña. El link vence en <strong>1 hora</strong>.
+      </p>
+      <label style="font-size:.75rem;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;display:block;margin-bottom:6px;">Email</label>
+      <input type="email" id="rec-pass-email" placeholder="tu@email.com"
+             style="width:100%;background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:var(--radius-sm);padding:11px 14px;color:var(--text);font-size:.9rem;font-family:'Inter',sans-serif;outline:none;margin-bottom:14px;"
+             onkeydown="if(event.key==='Enter')enviarRecuperacionPass()">
+      <div id="rec-pass-estado" style="font-size:.82rem;min-height:20px;margin-bottom:14px;"></div>
+      <div style="display:flex;gap:10px;justify-content:flex-end;">
+        <button onclick="document.getElementById('modal-recuperar-pass').classList.remove('open')"
+                style="background:transparent;border:1px solid var(--border);color:var(--text-muted);border-radius:8px;padding:10px 18px;font-weight:600;cursor:pointer;font-size:.85rem;">
+          Cancelar
+        </button>
+        <button onclick="enviarRecuperacionPass()" id="btn-enviar-rec"
+                style="background:var(--primary);color:white;border:none;border-radius:8px;padding:10px 20px;font-weight:800;cursor:pointer;font-size:.85rem;">
+          <i class="fa-solid fa-paper-plane"></i> Enviar link
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════════════
+     MODAL — NUEVA CONTRASEÑA (después de click en el link del email)
+     ══════════════════════════════════════════════════════════════════════ -->
+<div class="modal-overlay" id="modal-nueva-pass">
+  <div class="onboarding-box" style="max-width:460px;padding:0;">
+    <div style="border-bottom:1px solid var(--border);padding:18px 24px;">
+      <h3 style="font-size:1rem;font-weight:800;margin:0;">
+        <i class="fa-solid fa-lock" style="color:var(--primary);"></i> &nbsp;Crear nueva contraseña
+      </h3>
+    </div>
+    <div style="padding:24px;">
+      <p style="font-size:.88rem;color:var(--text-muted);margin-bottom:18px;line-height:1.6;">
+        Elegí una nueva contraseña para tu cuenta. Mínimo 6 caracteres.
+      </p>
+      <label style="font-size:.75rem;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;display:block;margin-bottom:6px;">Nueva contraseña</label>
+      <input type="password" id="nueva-pass-input" placeholder="••••••••"
+             style="width:100%;background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:var(--radius-sm);padding:11px 14px;color:var(--text);font-size:.9rem;font-family:'Inter',sans-serif;outline:none;margin-bottom:10px;"
+             onkeydown="if(event.key==='Enter')confirmarNuevaPass()">
+      <label style="font-size:.75rem;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;display:block;margin-bottom:6px;">Confirmá la contraseña</label>
+      <input type="password" id="nueva-pass-confirm" placeholder="••••••••"
+             style="width:100%;background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:var(--radius-sm);padding:11px 14px;color:var(--text);font-size:.9rem;font-family:'Inter',sans-serif;outline:none;margin-bottom:14px;"
+             onkeydown="if(event.key==='Enter')confirmarNuevaPass()">
+      <div id="nueva-pass-estado" style="font-size:.82rem;min-height:20px;margin-bottom:14px;"></div>
+      <button onclick="confirmarNuevaPass()" id="btn-confirmar-nueva-pass"
+              style="width:100%;background:var(--primary);color:white;border:none;border-radius:8px;padding:12px;font-weight:800;cursor:pointer;font-size:.9rem;">
+        <i class="fa-solid fa-check"></i> Guardar contraseña
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════════════
      MODAL — BAJA VOLUNTARIA
      ══════════════════════════════════════════════════════════════════════ -->
 <div class="modal-overlay" id="modal-baja-voluntaria">
@@ -3598,6 +3632,133 @@
 <!-- ═══════════════════════════════════════════════════════════════════
      ACADEMIA DEL ALIADO · 8 módulos de formación para cerrar ventas
      ═══════════════════════════════════════════════════════════════════ -->
+    <!-- ══════════════════════════════════════════════════════════════════
+         TAB MI CUENTA ⚙️
+    ══════════════════════════════════════════════════════════════════ -->
+    <div id="tab-mi-cuenta" class="tab-panel">
+
+      <!-- DATOS PERSONALES -->
+      <div class="bento-box" style="margin-bottom:20px;">
+        <h3 style="font-size:0.95rem; font-weight:700; margin-bottom:4px;">
+          <i class="fa-solid fa-user" style="color:var(--primary);"></i>
+          &nbsp;Datos personales
+        </h3>
+        <p style="font-size:0.82rem; color:var(--text-muted); margin-bottom:18px;">Tu info de aliado en el sistema. Para cambiar nombre o perfil, contactá al equipo.</p>
+        <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:14px;">
+          <div>
+            <div style="font-size:.72rem; font-weight:700; color:var(--text-dim); text-transform:uppercase; letter-spacing:1.2px; margin-bottom:4px;">Nombre</div>
+            <div id="mc-nombre" style="font-size:.95rem; font-weight:600; color:var(--text);">—</div>
+          </div>
+          <div>
+            <div style="font-size:.72rem; font-weight:700; color:var(--text-dim); text-transform:uppercase; letter-spacing:1.2px; margin-bottom:4px;">Email</div>
+            <div id="mc-email" style="font-size:.95rem; color:var(--text);">—</div>
+          </div>
+          <div>
+            <div style="font-size:.72rem; font-weight:700; color:var(--text-dim); text-transform:uppercase; letter-spacing:1.2px; margin-bottom:4px;">Ciudad</div>
+            <div id="mc-ciudad" style="font-size:.95rem; color:var(--text);">—</div>
+          </div>
+          <div>
+            <div style="font-size:.72rem; font-weight:700; color:var(--text-dim); text-transform:uppercase; letter-spacing:1.2px; margin-bottom:4px;">Perfil</div>
+            <div id="mc-perfil" style="font-size:.95rem; color:var(--text);">—</div>
+          </div>
+          <div>
+            <div style="font-size:.72rem; font-weight:700; color:var(--text-dim); text-transform:uppercase; letter-spacing:1.2px; margin-bottom:4px;">Nivel actual</div>
+            <div id="mc-nivel" style="font-size:.95rem; font-weight:700; color:var(--primary);">—</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- LINK DE ALIADO -->
+      <div class="bento-box" style="margin-bottom:20px;">
+        <h3 style="font-size:0.95rem; font-weight:700; margin-bottom:4px;">
+          <i class="fa-solid fa-link" style="color:var(--amber);"></i>
+          &nbsp;Tu link de aliado
+        </h3>
+        <p style="font-size:0.82rem; color:var(--text-muted); margin-bottom:14px;">Compartí este link para trackear referidos. Usalo en LinkedIn, WhatsApp o email.</p>
+        <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
+          <div id="mc-link-aliado" style="flex:1; min-width:200px; font-size:.88rem; font-family:'Courier New',monospace; background:rgba(255,255,255,0.04); border:1px solid var(--border); border-radius:8px; padding:10px 14px; color:var(--text); word-break:break-all;">—</div>
+          <button onclick="copiarLinkAliado()" style="background:rgba(249,115,22,0.12); color:var(--amber); border:1px solid rgba(249,115,22,0.3); border-radius:8px; padding:10px 16px; font-weight:700; cursor:pointer; font-size:.85rem; white-space:nowrap;">
+            <i class="fa-solid fa-copy"></i> Copiar
+          </button>
+        </div>
+        <div style="font-size:.75rem; color:var(--text-dim); margin-top:8px;">Código: <span id="mc-ref-code" style="font-family:'Courier New',monospace; color:var(--text);">—</span></div>
+      </div>
+
+      <!-- CBU / ALIAS DE COBRO -->
+      <div class="bento-box" style="margin-bottom:20px;">
+        <h3 style="font-size:0.95rem; font-weight:700; margin-bottom:4px;">
+          <i class="fa-solid fa-building-columns" style="color:var(--primary);"></i>
+          &nbsp;Datos de cobro
+        </h3>
+        <p style="font-size:0.82rem; color:var(--text-muted); margin-bottom:16px;">
+          El CBU o alias donde te transferimos las comisiones. <strong>Sin esto cargado, el admin no puede abonarte.</strong>
+        </p>
+        <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:flex-end;">
+          <div style="flex:1; min-width:220px;">
+            <label style="font-size:.75rem; font-weight:600; color:var(--text-muted); text-transform:uppercase; letter-spacing:1px; display:block; margin-bottom:6px;">CBU o alias de Mercado Pago</label>
+            <input type="text" id="perfil-cbu" placeholder="Ej: mi.alias.mp  o  0000003100000000000000"
+                   style="width:100%; background:rgba(255,255,255,0.04); border:1px solid var(--border); border-radius:var(--radius-sm); padding:12px 14px; color:var(--text); font-size:.9rem; font-family:'Inter',sans-serif; outline:none;">
+          </div>
+          <button onclick="guardarCBU()" id="btn-guardar-cbu" style="background:var(--primary); color:white; border:none; border-radius:8px; padding:12px 22px; font-weight:800; cursor:pointer; font-size:.88rem;">
+            <i class="fa-solid fa-floppy-disk"></i> Guardar
+          </button>
+        </div>
+        <div id="perfil-cbu-estado" style="font-size:0.78rem; margin-top:10px;"></div>
+      </div>
+
+      <!-- CAMBIAR CONTRASEÑA -->
+      <div class="bento-box" style="margin-bottom:20px;">
+        <h3 style="font-size:0.95rem; font-weight:700; margin-bottom:4px;">
+          <i class="fa-solid fa-lock" style="color:var(--primary);"></i>
+          &nbsp;Cambiar contraseña
+        </h3>
+        <p style="font-size:0.82rem; color:var(--text-muted); margin-bottom:16px;">Mínimo 6 caracteres. Vas a tener que volver a iniciar sesión después del cambio.</p>
+        <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:12px; margin-bottom:14px;">
+          <div>
+            <label style="font-size:.75rem; font-weight:600; color:var(--text-muted); text-transform:uppercase; letter-spacing:1px; display:block; margin-bottom:6px;">Contraseña actual</label>
+            <input type="password" id="mc-pass-actual" placeholder="••••••••"
+                   style="width:100%; background:rgba(255,255,255,0.04); border:1px solid var(--border); border-radius:var(--radius-sm); padding:10px 14px; color:var(--text); font-size:.9rem; font-family:'Inter',sans-serif; outline:none;">
+          </div>
+          <div>
+            <label style="font-size:.75rem; font-weight:600; color:var(--text-muted); text-transform:uppercase; letter-spacing:1px; display:block; margin-bottom:6px;">Nueva contraseña</label>
+            <input type="password" id="mc-pass-nueva" placeholder="••••••••"
+                   style="width:100%; background:rgba(255,255,255,0.04); border:1px solid var(--border); border-radius:var(--radius-sm); padding:10px 14px; color:var(--text); font-size:.9rem; font-family:'Inter',sans-serif; outline:none;">
+          </div>
+          <div>
+            <label style="font-size:.75rem; font-weight:600; color:var(--text-muted); text-transform:uppercase; letter-spacing:1px; display:block; margin-bottom:6px;">Confirmá la nueva</label>
+            <input type="password" id="mc-pass-confirm" placeholder="••••••••"
+                   style="width:100%; background:rgba(255,255,255,0.04); border:1px solid var(--border); border-radius:var(--radius-sm); padding:10px 14px; color:var(--text); font-size:.9rem; font-family:'Inter',sans-serif; outline:none;">
+          </div>
+        </div>
+        <div style="display:flex; gap:12px; align-items:center; flex-wrap:wrap;">
+          <button onclick="cambiarPasswordAliado()" id="btn-cambiar-pass"
+                  style="background:var(--primary); color:white; border:none; border-radius:8px; padding:11px 22px; font-weight:800; cursor:pointer; font-size:.88rem;">
+            <i class="fa-solid fa-floppy-disk"></i> Guardar nueva contraseña
+          </button>
+          <div id="mc-pass-estado" style="font-size:.82rem; color:var(--text-muted);"></div>
+        </div>
+      </div>
+
+      <!-- ZONA DE PELIGRO -->
+      <div class="bento-box" style="margin-top:8px; border-color:rgba(239,68,68,0.25); background:rgba(239,68,68,0.03);">
+        <h3 style="font-size:0.95rem; font-weight:700; margin-bottom:4px; color:#f87171;">
+          <i class="fa-solid fa-triangle-exclamation" style="color:#ef4444;"></i>
+          &nbsp;Zona de peligro
+        </h3>
+        <p style="font-size:0.82rem; color:var(--text-muted); margin-bottom:16px; line-height:1.6;">
+          Si querés salir del programa, podés solicitar la baja desde acá. Tu cuenta se suspende de inmediato
+          y se elimina definitivamente a los <strong>30 días</strong>. Tenés ese plazo para arrepentirte
+          escribiéndonos.
+        </p>
+        <button onclick="document.getElementById('modal-baja-voluntaria').classList.add('open')"
+          style="background:transparent; border:1px solid rgba(239,68,68,0.5); color:#f87171; border-radius:8px; padding:10px 20px; font-weight:700; cursor:pointer; font-size:.85rem; display:inline-flex; align-items:center; gap:8px;">
+          <i class="fa-solid fa-right-from-bracket"></i> Solicitar baja de mi cuenta
+        </button>
+      </div>
+
+    </div>
+    <!-- /tab-mi-cuenta -->
+
 <div id="tab-academia" class="tab-panel">
       <style>
         .aca-hero { background: linear-gradient(135deg, rgba(249,115,22,0.12), rgba(249,115,22,0.02)); border: 1px solid rgba(249,115,22,0.3); border-radius: 16px; padding: 28px; margin-bottom: 24px; }
@@ -4371,6 +4532,7 @@ function cambiarTab(tab, btn) {
   // v1.4: refrescar TC al entrar al cotizador y comisiones al entrar a su tab
   if(tab==='cotizador') { cargarTipoDeCambio(); recuperarUltimoLinkActivo(); }
   if(tab==='comisiones') renderComisiones();
+  if(tab==='mi-cuenta') poblarMiCuenta();
 }
 
 // ── Toggle fila de herramientas secundarias ──────────────────────────────────
@@ -5282,6 +5444,166 @@ async function guardarCBU() {
     mostrarToast('No se pudo guardar. Intentá de nuevo.', 'red');
   } finally {
     btn.innerHTML = '<i class="fa-solid fa-floppy-disk"></i> Guardar';
+    btn.disabled  = false;
+  }
+}
+
+// ─── MI CUENTA: poblar datos ──────────────────────────────────────────────────
+function poblarMiCuenta() {
+  if(!aliado) return;
+  const set = (id, val) => { const el = document.getElementById(id); if(el) el.textContent = val || '—'; };
+  set('mc-nombre',  aliado.nombre);
+  set('mc-email',   aliado.email);
+  set('mc-ciudad',  aliado.ciudad);
+  set('mc-perfil',  aliado.perfil);
+  set('mc-nivel',   aliado.nivel);
+  set('mc-ref-code', aliado.ref_code);
+  const linkEl = document.getElementById('mc-link-aliado');
+  if(linkEl) linkEl.textContent = aliado.link_perfil || `${window.location.origin}/p/${aliado.ref_code}`;
+  // También pre-poblar CBU si ya tiene
+  const cbuInput = document.getElementById('perfil-cbu');
+  const cbuEstado = document.getElementById('perfil-cbu-estado');
+  if(cbuInput) cbuInput.value = aliado.cbu_alias || '';
+  if(cbuEstado) {
+    if(aliado.cbu_alias) {
+      cbuEstado.innerHTML = `<span style="color:var(--green);"><i class="fa-solid fa-circle-check"></i> CBU/alias cargado.</span>`;
+    } else {
+      cbuEstado.innerHTML = `<span style="color:var(--amber);"><i class="fa-solid fa-triangle-exclamation"></i> Cargá tu CBU/alias para poder cobrar.</span>`;
+    }
+  }
+}
+
+function copiarLinkAliado() {
+  const link = aliado?.link_perfil || document.getElementById('mc-link-aliado')?.textContent || '';
+  if(!link || link==='—') return;
+  navigator.clipboard.writeText(link).then(() => mostrarToast('Link copiado al portapapeles.', 'green'));
+}
+
+// ─── CAMBIAR CONTRASEÑA (self-service) ───────────────────────────────────────
+async function cambiarPasswordAliado() {
+  const actual   = (document.getElementById('mc-pass-actual')?.value   || '').trim();
+  const nueva    = (document.getElementById('mc-pass-nueva')?.value    || '').trim();
+  const confirm  = (document.getElementById('mc-pass-confirm')?.value  || '').trim();
+  const estado   = document.getElementById('mc-pass-estado');
+  const btn      = document.getElementById('btn-cambiar-pass');
+
+  if(!actual || !nueva || !confirm) {
+    estado.innerHTML = `<span style="color:var(--amber);">Completá los tres campos.</span>`; return;
+  }
+  if(nueva.length < 6) {
+    estado.innerHTML = `<span style="color:var(--amber);">La nueva contraseña debe tener al menos 6 caracteres.</span>`; return;
+  }
+  if(nueva !== confirm) {
+    estado.innerHTML = `<span style="color:var(--amber);">Las contraseñas no coinciden.</span>`; return;
+  }
+
+  btn.innerHTML = '<span class="spinner"></span> Guardando...';
+  btn.disabled  = true;
+
+  try {
+    const res = await apiFetch(`${API}/aliado/cambiar-password`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ password_actual: actual, nueva_password: nueva }),
+    });
+    const data = await res.json();
+    if(!res.ok) throw new Error(data.detail || 'Error');
+
+    estado.innerHTML = `<span style="color:var(--green);"><i class="fa-solid fa-circle-check"></i> Contraseña actualizada. Volvé a iniciar sesión.</span>`;
+    mostrarToast('Contraseña cambiada. Iniciá sesión de nuevo.', 'green');
+    // Limpiar campos
+    ['mc-pass-actual','mc-pass-nueva','mc-pass-confirm'].forEach(id => {
+      const el = document.getElementById(id); if(el) el.value = '';
+    });
+    // Logout suave tras 2s
+    setTimeout(() => cerrarSesion(), 2500);
+  } catch(e) {
+    estado.innerHTML = `<span style="color:var(--red);"><i class="fa-solid fa-circle-xmark"></i> ${e.message}</span>`;
+  } finally {
+    btn.innerHTML = '<i class="fa-solid fa-floppy-disk"></i> Guardar nueva contraseña';
+    btn.disabled  = false;
+  }
+}
+
+// ─── RECUPERAR CONTRASEÑA: abrir modal ───────────────────────────────────────
+function abrirModalRecuperarPass() {
+  document.getElementById('rec-pass-email').value = '';
+  document.getElementById('rec-pass-estado').innerHTML = '';
+  document.getElementById('modal-recuperar-pass').classList.add('open');
+  setTimeout(() => document.getElementById('rec-pass-email').focus(), 150);
+}
+
+async function enviarRecuperacionPass() {
+  const email  = (document.getElementById('rec-pass-email').value || '').trim();
+  const estado = document.getElementById('rec-pass-estado');
+  const btn    = document.getElementById('btn-enviar-rec');
+
+  if(!email) { estado.innerHTML = `<span style="color:var(--amber);">Ingresá tu email.</span>`; return; }
+
+  btn.innerHTML = '<span class="spinner"></span> Enviando...';
+  btn.disabled  = true;
+
+  try {
+    const res = await fetch(`${API}/auth/recuperar`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email }),
+    });
+    const data = await res.json();
+    estado.innerHTML = `<span style="color:var(--green);"><i class="fa-solid fa-circle-check"></i> ${data.mensaje || 'Revisá tu casilla de correo.'}</span>`;
+    btn.innerHTML = '<i class="fa-solid fa-check"></i> Enviado';
+  } catch(e) {
+    estado.innerHTML = `<span style="color:var(--red);">Error al enviar. Intentá de nuevo.</span>`;
+    btn.innerHTML = '<i class="fa-solid fa-paper-plane"></i> Enviar link';
+    btn.disabled = false;
+  }
+}
+
+// ─── MODAL NUEVA CONTRASEÑA (desde ?reset_token=) ────────────────────────────
+let _resetToken = null;
+
+function checkResetToken() {
+  const params = new URLSearchParams(window.location.search);
+  const token  = params.get('reset_token');
+  if(!token) return;
+  _resetToken = token;
+  // Limpiar la URL sin recargar
+  window.history.replaceState({}, document.title, window.location.pathname);
+  // Abrir modal
+  document.getElementById('nueva-pass-input').value   = '';
+  document.getElementById('nueva-pass-confirm').value = '';
+  document.getElementById('nueva-pass-estado').innerHTML = '';
+  document.getElementById('modal-nueva-pass').classList.add('open');
+}
+
+async function confirmarNuevaPass() {
+  const nueva   = (document.getElementById('nueva-pass-input').value   || '').trim();
+  const confirm = (document.getElementById('nueva-pass-confirm').value || '').trim();
+  const estado  = document.getElementById('nueva-pass-estado');
+  const btn     = document.getElementById('btn-confirmar-nueva-pass');
+
+  if(!nueva || !confirm) { estado.innerHTML = `<span style="color:var(--amber);">Completá ambos campos.</span>`; return; }
+  if(nueva.length < 6)   { estado.innerHTML = `<span style="color:var(--amber);">Mínimo 6 caracteres.</span>`; return; }
+  if(nueva !== confirm)  { estado.innerHTML = `<span style="color:var(--amber);">Las contraseñas no coinciden.</span>`; return; }
+
+  btn.innerHTML = '<span class="spinner"></span> Guardando...';
+  btn.disabled  = true;
+
+  try {
+    const res = await fetch(`${API}/auth/resetear`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ token: _resetToken, nueva_password: nueva }),
+    });
+    const data = await res.json();
+    if(!res.ok) throw new Error(data.detail || 'Token inválido o expirado.');
+
+    estado.innerHTML = `<span style="color:var(--green);"><i class="fa-solid fa-circle-check"></i> ¡Contraseña actualizada! Ya podés iniciar sesión.</span>`;
+    btn.innerHTML = '<i class="fa-solid fa-check"></i> ¡Listo!';
+    setTimeout(() => document.getElementById('modal-nueva-pass').classList.remove('open'), 2500);
+  } catch(e) {
+    estado.innerHTML = `<span style="color:var(--red);"><i class="fa-solid fa-circle-xmark"></i> ${e.message}</span>`;
+    btn.innerHTML = '<i class="fa-solid fa-check"></i> Guardar contraseña';
     btn.disabled  = false;
   }
 }
@@ -7987,6 +8309,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Auto-login con sesión guardada (30 días)
   intentarAutoLogin();
+
+  // Detectar ?reset_token= en la URL y abrir modal de nueva contraseña
+  checkResetToken();
 });
 
 // ═══════════════════════════════════════════════════════════════════════

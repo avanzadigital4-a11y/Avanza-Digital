@@ -7690,7 +7690,32 @@ def actualizar_cbu(codigo: str,
     return {"mensaje": "CBU/alias guardado.", "cbu_alias": a.cbu_alias}
 
 
-# ─── PANEL DE COMISIONES POR ALIADO (spec §9, §16) ──────────────────────────
+@app.post("/aliado/cambiar-password")
+@limiter.limit("10/minute")
+def cambiar_password_aliado(
+    request: Request,
+    body: dict = Body(...),
+    aliado: Aliado = Depends(current_aliado_required),
+    db: Session = Depends(get_db),
+):
+    """Permite al aliado autenticado cambiar su propia contraseña.
+
+    Acepta { "password_actual": "...", "nueva_password": "..." }.
+    Verifica la contraseña actual antes de permitir el cambio.
+    """
+    actual = (body.get("password_actual") or "").strip()
+    nueva  = (body.get("nueva_password")  or "").strip()
+
+    if not actual or not nueva:
+        raise HTTPException(400, "Faltan 'password_actual' y/o 'nueva_password'.")
+    if len(nueva) < 6:
+        raise HTTPException(400, "La nueva contraseña debe tener al menos 6 caracteres.")
+    if not verify_password(actual, aliado.password_hash):
+        raise HTTPException(400, "La contraseña actual es incorrecta.")
+
+    aliado.password_hash = hash_password(nueva)
+    db.commit()
+    return {"mensaje": "Contraseña actualizada correctamente."}
 
 def _comision_row(c: Comision, cliente_fallback: str = ""):
     return {
