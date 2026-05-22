@@ -13,11 +13,11 @@ from models import (
     TransaccionCredito, PostComunidad, ComentarioComunidad, AutomationLog,
     LinkPago, Comision, AcademiaModulo, AliadoModuloCompletado,
     SolicitudCompraCreditos, ReporteMalContacto,
-    PlanContinuidadActivo,
+    PlanContinuidadActivo, PasswordResetToken,
     PLANES, PAQUETES_CREDITOS, NIVELES, CUOTAS_RECARGO, REPUTACION_BADGES,
     PLANES_CONTINUIDAD, COMISION_RECURRENTE_PCT,
 )
-import random, string, os, smtplib, httpx, json, hmac as hmac_lib, hashlib, base64, sys
+import random, string, os, smtplib, httpx, json, hmac as hmac_lib, hashlib, base64, sys, secrets
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from apscheduler.schedulers.background import BackgroundScheduler
@@ -437,7 +437,7 @@ def job_notificaciones_24h():
                   <p>Hola <strong>{lead.aliado.nombre}</strong>,</p>
                   <p>Reclamaste el lead <strong>{lead.empresa}</strong> hace 24 horas y todavía no lo marcaste como contactado.</p>
                   <p style="color:#f87171;">Si no actualizás su estado en las próximas <strong>{horas_rest} horas</strong>, el sistema lo devolverá a la bolsa pública automáticamente.</p>
-                  <a href="https://avanza-digital-production.up.railway.app/portal.html" style="display:inline-block;margin-top:16px;padding:12px 24px;background:#3b82f6;color:#fff;border-radius:8px;text-decoration:none;font-weight:700;">Ir al Portal →</a>
+                  <a href="{PORTAL_URL}/portal.html" style="display:inline-block;margin-top:16px;padding:12px 24px;background:#3b82f6;color:#fff;border-radius:8px;text-decoration:none;font-weight:700;">Ir al Portal →</a>
                   <p style="margin-top:24px;font-size:.8rem;color:#64748b;">Avanza Digital · Partner Network</p>
                 </div>
                 """
@@ -1073,7 +1073,6 @@ _default_origins = ",".join([
     "https://avanzadigital.digital",
     "https://www.avanzadigital.digital",
     "https://avanza-digital.onrender.com",
-    "https://avanza-digital-production.up.railway.app",
 ])
 _cors_env = os.environ.get("CORS_ORIGINS", _default_origins)
 CORS_ORIGINS = [o.strip() for o in _cors_env.split(",") if o.strip()]
@@ -1725,7 +1724,7 @@ def auto_registro(request: Request,
           <p style="color:#a1a1aa;margin-bottom:8px;font-size:.9rem;font-weight:700;">Tu link de ventas (para clientes):</p>
           <p style="margin-bottom:28px;font-size:.9rem;"><a href="{PORTAL_URL}/p/{a.ref_code}" style="color:#3b82f6;">{PORTAL_URL}/p/{a.ref_code}</a></p>
 
-          <a href="https://avanza-digital-production.up.railway.app/portal.html#bolsa" style="display:inline-block;padding:14px 28px;background:#f97316;color:#000;border-radius:8px;text-decoration:none;font-weight:800;font-size:1rem;">Ver leads disponibles →</a>
+          <a href="{PORTAL_URL}/portal.html#bolsa" style="display:inline-block;padding:14px 28px;background:#f97316;color:#000;border-radius:8px;text-decoration:none;font-weight:800;font-size:1rem;">Ver leads disponibles →</a>
 
           <p style="margin-top:32px;font-size:.8rem;color:#71717a;">Avanza Digital · Partner Network · Santa Fe, Argentina</p>
         </div>
@@ -1912,7 +1911,115 @@ def refresh_token(request: Request, db: Session = Depends(get_db)):
     return {"token": nuevo, "tipo": tipo}
 
 
-# ─── ALIADOS — RUTAS FIJAS (deben ir ANTES de /{codigo}) ─────────────────────
+@app.post("/auth/recuperar")
+@limiter.limit("5/minute")
+def solicitar_reset_contrasena(
+    request: Request,
+    background_tasks: BackgroundTasks,
+    body: dict = Body(...),
+    db: Session = Depends(get_db),
+):
+    """Solicita recuperación de contraseña. Envía un email con un link de un solo uso.
+
+    Acepta { "email": "..." }
+    Siempre devuelve 200 aunque el email no exista (evita enumeración de usuarios).
+    El link expira en 1 hora.
+    """
+    email = (body.get("email") or "").strip().lower()
+    if not email:
+        raise HTTPException(400, "Falta el campo 'email'.")
+
+    aliado = db.query(Aliado).filter(Aliado.email == email, Aliado.activo == True).first()
+    if aliado:
+        # Invalidar tokens anteriores pendientes para este aliado
+        db.query(PasswordResetToken).filter(
+            PasswordResetToken.aliado_id == aliado.id,
+            PasswordResetToken.usado == False,
+        ).update({"usado": True})
+        db.commit()
+
+        token_raw = secrets.token_urlsafe(32)
+        expira = datetime.now(timezone.utc) + timedelta(hours=1)
+        prt = PasswordResetToken(
+            aliado_id=aliado.id,
+            token=token_raw,
+            expira_en=expira,
+        )
+        db.add(prt)
+        db.commit()
+
+        nombre_corto = aliado.nombre.split()[0] if aliado.nombre else "Aliado"
+        link = f"{PORTAL_URL}/portal.html?reset_token={token_raw}"
+        background_tasks.add_task(
+            enviar_email,
+            aliado.email,
+            "🔑 Avanza — Recuperá tu contraseña",
+            f"""
+            <div style="font-family:Inter,sans-serif;background:#050505;color:#fff;padding:40px;max-width:600px;margin:0 auto;border-radius:12px;">
+              <h1 style="color:#f97316;font-size:1.4rem;margin-bottom:8px;">Recuperar contraseña</h1>
+              <p style="color:#a1a1aa;margin-bottom:24px;">Hola <strong style="color:#fff;">{nombre_corto}</strong>, recibimos tu solicitud para resetear la contraseña de tu cuenta.</p>
+              <p style="color:#a1a1aa;margin-bottom:24px;">Hacé clic en el botón para crear una nueva contraseña. El link es válido por <strong style="color:#fff;">1 hora</strong>.</p>
+              <a href="{link}" style="display:inline-block;padding:14px 28px;background:#f97316;color:#000;border-radius:8px;text-decoration:none;font-weight:800;font-size:1rem;">Resetear mi contraseña →</a>
+              <p style="margin-top:28px;color:#71717a;font-size:.85rem;">Si no pediste esto, ignorá este email. Tu contraseña no cambia hasta que uses el link.</p>
+              <p style="margin-top:24px;font-size:.8rem;color:#71717a;">Avanza Digital · Partner Network · Santa Fe, Argentina</p>
+            </div>
+            """
+        )
+
+    # Siempre 200 — no revelar si el email existe o no
+    return {"mensaje": "Si ese email corresponde a una cuenta activa, vas a recibir las instrucciones en los próximos minutos."}
+
+
+@app.post("/auth/resetear")
+@limiter.limit("10/minute")
+def resetear_contrasena(
+    request: Request,
+    body: dict = Body(...),
+    db: Session = Depends(get_db),
+):
+    """Resetea la contraseña usando el token de recuperación.
+
+    Acepta { "token": "...", "nueva_password": "..." }
+    El token es de un solo uso y expira en 1 hora.
+    """
+    token_raw = (body.get("token") or "").strip()
+    nueva = (body.get("nueva_password") or "").strip()
+
+    if not token_raw or not nueva:
+        raise HTTPException(400, "Faltan 'token' y/o 'nueva_password'.")
+    if len(nueva) < 6:
+        raise HTTPException(400, "La nueva contraseña debe tener al menos 6 caracteres.")
+
+    prt = db.query(PasswordResetToken).filter(
+        PasswordResetToken.token == token_raw,
+        PasswordResetToken.usado == False,
+    ).first()
+
+    if not prt:
+        raise HTTPException(400, "Token inválido o ya utilizado.")
+
+    # Comparar con datetime naive/aware correctamente
+    ahora = datetime.now(timezone.utc)
+    expira = prt.expira_en
+    if expira.tzinfo is None:
+        expira = expira.replace(tzinfo=timezone.utc)
+    if ahora > expira:
+        prt.usado = True
+        db.commit()
+        raise HTTPException(400, "El link de recuperación expiró. Solicitá uno nuevo.")
+
+    aliado = db.query(Aliado).filter(Aliado.id == prt.aliado_id, Aliado.activo == True).first()
+    if not aliado:
+        raise HTTPException(400, "Cuenta no encontrada o inactiva.")
+
+    aliado.password_hash = hash_password(nueva)
+    prt.usado = True
+    db.commit()
+
+    return {"mensaje": "Contraseña actualizada correctamente. Ya podés iniciar sesión con tu nueva contraseña."}
+
+
+
 
 @app.get("/aliados/suspendidos")
 def listar_suspendidos(db: Session = Depends(get_db)):
@@ -1958,7 +2065,8 @@ def listar_aliados(db: Session = Depends(get_db)):
 
 
 @app.post("/aliados/crear")
-def crear_aliado(body: schemas.CrearAliadoIn | None = Body(default=None),
+def crear_aliado(background_tasks: BackgroundTasks,
+                 body: schemas.CrearAliadoIn | None = Body(default=None),
                  nombre: str = "", email: str = "", whatsapp: str = "", ciudad: str = "",
                  dni: str = "", perfil: str = "", fecha_firma: str = "",
                  password: str = "avanza2026", db: Session = Depends(get_db)):
@@ -1979,12 +2087,53 @@ def crear_aliado(body: schemas.CrearAliadoIn | None = Body(default=None),
         ref_code=generar_ref_code(nombre), password_hash=hash_password(password),
     )
     db.add(a); db.commit(); db.refresh(a)
+    _ajustar_creditos(db, a, 100, "bienvenida", "creacion_admin")
+    db.commit()
+
+    # ── Email de bienvenida al aliado con sus credenciales ─────────────────
+    # El admin crea la cuenta pero el aliado nunca sabía que existía.
+    # Este email le avisa que tiene acceso y le da sus datos de ingreso.
+    _nombre_corto_adm = a.nombre.split()[0] if a.nombre else "Aliado"
+    background_tasks.add_task(
+        enviar_email,
+        a.email,
+        f"¡Tu cuenta Avanza Partner Network está lista, {_nombre_corto_adm}!",
+        f"""
+        <div style="font-family:Inter,sans-serif;background:#050505;color:#fff;padding:40px;max-width:600px;margin:0 auto;border-radius:12px;">
+          <h1 style="color:#f97316;font-size:1.6rem;margin-bottom:8px;">¡Ya sos Aliado Avanza! 🎉</h1>
+          <p style="color:#a1a1aa;margin-bottom:28px;">Tu cuenta fue creada. A continuación tus datos de acceso al portal.</p>
+
+          <div style="background:#111;border:1px solid #222;border-radius:8px;padding:20px;margin-bottom:16px;">
+            <p style="margin:0 0 4px;font-size:.85rem;color:#71717a;text-transform:uppercase;letter-spacing:1px;">Tu código de aliado</p>
+            <p style="margin:0;font-size:2rem;font-weight:900;color:#f97316;letter-spacing:2px;">{a.codigo}</p>
+          </div>
+
+          <div style="background:#111;border:1px solid #222;border-radius:8px;padding:20px;margin-bottom:24px;">
+            <p style="margin:0 0 4px;font-size:.85rem;color:#71717a;text-transform:uppercase;letter-spacing:1px;">Email de acceso</p>
+            <p style="margin:0 0 12px;font-size:1rem;color:#fff;">{a.email}</p>
+            <p style="margin:0 0 4px;font-size:.85rem;color:#71717a;text-transform:uppercase;letter-spacing:1px;">Contraseña inicial</p>
+            <p style="margin:0;font-size:1.2rem;font-weight:700;color:#86efac;letter-spacing:1px;">{password}</p>
+            <p style="margin:8px 0 0;font-size:.8rem;color:#71717a;">Podés cambiarla desde tu perfil una vez que ingreses.</p>
+          </div>
+
+          <p style="color:#a1a1aa;margin-bottom:8px;">Tu comisión arranca en <strong style="color:#fff;">10% (BASIC)</strong> y sube automáticamente con cada venta.</p>
+
+          <p style="color:#a1a1aa;margin-bottom:8px;font-size:.9rem;font-weight:700;">Tu link de ventas (para clientes):</p>
+          <p style="margin-bottom:28px;font-size:.9rem;"><a href="{PORTAL_URL}/p/{a.ref_code}" style="color:#3b82f6;">{PORTAL_URL}/p/{a.ref_code}</a></p>
+
+          <a href="{PORTAL_URL}/portal.html" style="display:inline-block;padding:14px 28px;background:#f97316;color:#000;border-radius:8px;text-decoration:none;font-weight:800;font-size:1rem;">Ingresar al portal →</a>
+
+          <p style="margin-top:32px;font-size:.8rem;color:#71717a;">Avanza Digital · Partner Network · Santa Fe, Argentina</p>
+        </div>
+        """
+    )
+
     return {
         "mensaje": f"Aliado {a.codigo} creado", "codigo": a.codigo,
         "ref_code": a.ref_code, "password_inicial": password,
-        "ref_code": a.ref_code,
         "link_ref": f"{PORTAL_URL}/p/{a.ref_code}",
         "link_perfil": f"{PORTAL_URL}/p/{a.ref_code}",
+        "email_enviado": True,
     }
 
 

@@ -544,6 +544,30 @@ class PlanContinuidadActivo(Base):
         return round(float(self.precio_mensual_usd) * float(self.comision_pct), 2)
 
 
+# ─── RESET DE CONTRASEÑA ─────────────────────────────────────────────────────
+class PasswordResetToken(Base):
+    """Token de un solo uso para recuperación de contraseña de aliados.
+
+    Flujo:
+        1. POST /auth/recuperar  → genera token, lo guarda acá, envía email.
+        2. El aliado abre el link con ?token=XXX en portal.html.
+        3. POST /auth/resetear   → valida token (no usado, no expirado), cambia hash.
+
+    El token se invalida en cuanto se usa (usado=True). No se borra físicamente
+    para mantener trazabilidad de cuándo se usó cada reset.
+    """
+    __tablename__ = "password_reset_tokens"
+
+    id        = Column(Integer, primary_key=True, index=True)
+    aliado_id = Column(Integer, ForeignKey("aliados.id"), nullable=False, index=True)
+    token     = Column(String, unique=True, index=True, nullable=False)  # secrets.token_urlsafe(32)
+    expira_en = Column(DateTime, nullable=False)   # creado_en + 1 hora
+    usado     = Column(Boolean, default=False)
+    creado_en = Column(DateTime, default=func.now())
+
+    aliado = relationship("Aliado")
+
+
 # ─── CONSTANTES DE NEGOCIO ───────────────────────────────────────────────────
 PLANES = {
     "Plan Base":         1050.0,
