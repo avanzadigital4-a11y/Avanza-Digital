@@ -35,11 +35,6 @@ import jarvis_routes  # JARVIS — motor de inteligencia comercial con Claude (A
 
 Base.metadata.create_all(bind=engine)
 
-# ─── JARVIS — Registrar rutas de inteligencia comercial ──────────────────────
-# Los endpoints viven en /jarvis/* y corren en paralelo al resto del portal.
-# Si ANTHROPIC_API_KEY no está configurada, los endpoints devuelven fallback.
-jarvis_routes.register(app, get_db, current_aliado_required)
-
 
 # ─── MIGRACIONES IDEMPOTENTES ────────────────────────────────────────────────
 # Helper que solo traga errores de "columna ya existe" / "tabla no existe en
@@ -1222,6 +1217,11 @@ else:
     )
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+
+# ─── JARVIS — Registrar rutas de inteligencia comercial ──────────────────────
+# Los endpoints viven en /jarvis/* y corren en paralelo al resto del portal.
+# Si ANTHROPIC_API_KEY no está configurada, los endpoints devuelven fallback.
+jarvis_routes.register(app, get_db, current_aliado_required)
 
 # ─── RUTAS ADMIN ─────────────────────────────────────────────────────────────
 # Solo se usan para el middleware de fallback con X-API-Key (legacy).
