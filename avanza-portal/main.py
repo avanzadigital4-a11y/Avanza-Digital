@@ -31,8 +31,14 @@ from auth import (
 )
 import schemas
 import groq_ai  # IA opcional — si GROQ_API_KEY no está, todo cae a fallback heurístico
+import jarvis_routes  # JARVIS — motor de inteligencia comercial con Claude (Anthropic)
 
 Base.metadata.create_all(bind=engine)
+
+# ─── JARVIS — Registrar rutas de inteligencia comercial ──────────────────────
+# Los endpoints viven en /jarvis/* y corren en paralelo al resto del portal.
+# Si ANTHROPIC_API_KEY no está configurada, los endpoints devuelven fallback.
+jarvis_routes.register(app, get_db, current_aliado_required)
 
 
 # ─── MIGRACIONES IDEMPOTENTES ────────────────────────────────────────────────
