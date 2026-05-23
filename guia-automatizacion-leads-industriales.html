@@ -844,6 +844,27 @@
         <span style="font-size:0.75rem; font-weight:700; letter-spacing:2px; text-transform:uppercase; color:#4ade80; display:block; margin-bottom:16px;">Avanza Digital</span>
         <h2>Tu web puede (y debe) ser tu mejor vendedor</h2>
         <p>Automatizar la generación de leads no es "comprar tecnología" — es una estrategia comercial. En Avanza Digital construimos este sistema completo para PYMES industriales con un pago único, sin alquiler mensual.</p>
+
+        <!-- Email capture inline -->
+        <div id="guia-form-wrap" style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);border-radius:14px;padding:24px 22px;margin:28px 0 20px;text-align:left;">
+            <p style="font-size:0.8rem;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:#4ade80;margin-bottom:8px;">📋 Checklist gratuito</p>
+            <p style="font-size:1rem;font-weight:700;color:#f1f5f9;margin-bottom:6px;">Recibí el checklist de implementación paso a paso</p>
+            <p style="font-size:0.85rem;color:#94a3b8;margin-bottom:16px;line-height:1.55;">Los 12 pasos concretos para implementar lo que explicamos en esta guía. Lo mandamos por email, sin spam.</p>
+            <div style="display:flex;gap:10px;flex-wrap:wrap;">
+                <input type="email" id="guia-email" placeholder="tu@empresa.com"
+                    style="flex:1;min-width:200px;padding:12px 16px;background:#0f172a;border:1px solid rgba(255,255,255,0.15);border-radius:8px;color:#f1f5f9;font-size:0.9rem;font-family:inherit;outline:none;">
+                <button onclick="submitGuiaLead()" id="guia-btn"
+                    style="padding:12px 22px;background:#3b82f6;color:#fff;border:none;border-radius:8px;font-weight:700;font-size:0.9rem;cursor:pointer;font-family:inherit;white-space:nowrap;">
+                    Quiero el checklist →
+                </button>
+            </div>
+        </div>
+        <div id="guia-form-ok" style="display:none;background:rgba(74,222,128,0.08);border:1px solid rgba(74,222,128,0.2);border-radius:14px;padding:20px 22px;margin:28px 0 20px;text-align:center;">
+            <span style="font-size:1.6rem;">✅</span>
+            <p style="color:#4ade80;font-weight:700;margin:8px 0 4px;">¡Listo! Revisá tu email.</p>
+            <p style="color:#94a3b8;font-size:0.85rem;">Te mandamos el checklist. Si no llega en 5 min, revisá spam.</p>
+        </div>
+
         <div class="cta-btns">
             <a href="index.html#contacto" class="btn-primary-guia">Solicitar Diagnóstico Gratuito</a>
             <a href="https://wa.me/5493424392759" target="_blank" class="btn-wa">
@@ -919,6 +940,35 @@
 
     function submitDemo() {
         alert('✅ Este es un formulario de demo. En tu web real, este envío crea un contacto en tu CRM y dispara una respuesta automática por WhatsApp en menos de 60 segundos.');
+    }
+
+    function submitGuiaLead() {
+        const email = document.getElementById('guia-email').value.trim();
+        if (!email || !email.includes('@')) {
+            document.getElementById('guia-email').style.borderColor = '#f97316';
+            document.getElementById('guia-email').focus();
+            return;
+        }
+        const btn = document.getElementById('guia-btn');
+        btn.disabled = true;
+        btn.textContent = 'Enviando...';
+
+        const ref = new URLSearchParams(window.location.search).get('ref') || '';
+        const params = new URLSearchParams({
+            fuente: 'guia',
+            email,
+            recurso: 'Checklist implementación guía automatización leads',
+            ref_code: ref,
+        });
+
+        fetch(`/leads/capturar?${params}`, { method: 'POST' })
+            .catch(e => console.warn('Lead capture error:', e))
+            .finally(() => {
+                document.getElementById('guia-form-wrap').style.display = 'none';
+                document.getElementById('guia-form-ok').style.display   = 'block';
+                btn.disabled = false;
+                btn.textContent = 'Quiero el checklist →';
+            });
     }
 </script>
 <script src="script.js"></script>

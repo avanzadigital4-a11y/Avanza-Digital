@@ -908,16 +908,18 @@ async function submitEmailGate(){
     window.emailGatePassed = true;
     if(pendingReportData) renderReport(pendingReportData, pendingReportMx);
 
-    // ── MailerLite: suscribir al lead automáticamente ──
+    // ── MailerLite: suscribir al lead vía endpoint propio (más confiable que form oculto) ──
     try {
-        const mlEmailInput = document.querySelector('#ml-hidden-form input[type="email"]');
-        const mlNameInput  = document.querySelector('#ml-hidden-form input[name="fields[name]"]');
-        const mlSubmitBtn  = document.querySelector('#ml-hidden-form button[type="submit"]');
-        if(mlEmailInput && mlSubmitBtn){
-            mlEmailInput.value = email;
-            if(mlNameInput) mlNameInput.value = name || '';
-            mlSubmitBtn.click();
-        }
+        const ref = window._auditRef || '';
+        const mlParams = new URLSearchParams({
+            fuente: 'auditoria',
+            email,
+            nombre: name || '',
+            recurso: currentDomain,
+            ref_code: ref,
+        });
+        fetch(`/leads/capturar?${mlParams}`, { method: 'POST' })
+            .catch(e => console.warn('MailerLite subscribe error:', e));
     } catch(e){ console.warn('MailerLite subscribe error:', e); }
 }
 

@@ -1164,7 +1164,7 @@
       <!-- C2: Kit de Ventas (primer tab al entrar) -->
       <button class="tab-btn tab-canal2" onclick="cambiarTab('kit-ventas',this)" style="display:none;background:rgba(74,222,128,0.12);border-color:rgba(74,222,128,0.3);color:#4ade80;"><i class="fa-solid fa-briefcase"></i> Kit de Ventas <span style="background:#4ade80;color:#000;font-size:.6rem;font-weight:800;padding:2px 6px;border-radius:4px;margin-left:4px;">C2</span></button>
       <!-- C1: Referidos → redirige al Pipeline unificado -->
-      <button class="tab-btn tab-canal1" onclick="cambiarTab('pipeline',document.getElementById('btn-tab-pipeline'))"><i class="fa-solid fa-user-plus"></i> Prospectos</button>
+      <button class="tab-btn tab-canal1" onclick="cambiarTab('prospectos',this)"><i class="fa-solid fa-user-plus"></i> Prospectos</button>
       <!-- Pipeline unificado (ambos canales) -->
       <button class="tab-btn" id="btn-tab-pipeline" onclick="cambiarTab('pipeline',this)"><i class="fa-solid fa-bars-progress"></i> Pipeline</button>
       <!-- Ambos: Comisiones -->
@@ -1184,6 +1184,7 @@
       <button class="tab-btn" onclick="cambiarTab('herramientas',this)"><i class="fa-solid fa-magnifying-glass"></i> Auditoría</button>
       <button class="tab-btn" onclick="cambiarTab('red',this)"><i class="fa-solid fa-users-rays" style="color:var(--amber);"></i> Mi Red</button>
       <button class="tab-btn" onclick="cambiarTab('comunidad',this)"><i class="fa-solid fa-comments" style="color:#c084fc;"></i> Comunidad <span style="background:#c084fc;color:#000;font-size:.6rem;font-weight:800;padding:2px 6px;border-radius:4px;margin-left:4px;">NUEVO</span></button>
+      <button class="tab-btn" id="btn-tab-jarvis" onclick="cambiarTab('jarvis',this)" style="background:linear-gradient(135deg,rgba(139,92,246,0.15),rgba(59,130,246,0.08));border-color:rgba(139,92,246,0.4);color:#a78bfa;"><i class="fa-solid fa-bolt"></i> JARVIS IA <span style="background:linear-gradient(135deg,#7c3aed,#2563eb);color:#fff;font-size:.6rem;font-weight:800;padding:2px 6px;border-radius:4px;margin-left:4px;">BETA</span></button>
     </div>
 
     <div id="tab-dashboard" class="tab-panel active">
@@ -3672,16 +3673,16 @@
       <div class="bento-box" style="margin-bottom:20px;">
         <h3 style="font-size:0.95rem; font-weight:700; margin-bottom:4px;">
           <i class="fa-solid fa-link" style="color:var(--amber);"></i>
-          &nbsp;Tu link de aliado
+          &nbsp;Tu link de referido
         </h3>
-        <p style="font-size:0.82rem; color:var(--text-muted); margin-bottom:14px;">Compartí este link para trackear referidos. Usalo en LinkedIn, WhatsApp o email.</p>
+        <p style="font-size:0.82rem; color:var(--text-muted); margin-bottom:14px;">Usalo para invitar a otros aliados al programa. <strong style="color:var(--text);">No lo uses con clientes finales</strong> — para clientes usá tu página de ventas del Dashboard.</p>
         <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
           <div id="mc-link-aliado" style="flex:1; min-width:200px; font-size:.88rem; font-family:'Courier New',monospace; background:rgba(255,255,255,0.04); border:1px solid var(--border); border-radius:8px; padding:10px 14px; color:var(--text); word-break:break-all;">—</div>
           <button onclick="copiarLinkAliado()" style="background:rgba(249,115,22,0.12); color:var(--amber); border:1px solid rgba(249,115,22,0.3); border-radius:8px; padding:10px 16px; font-weight:700; cursor:pointer; font-size:.85rem; white-space:nowrap;">
             <i class="fa-solid fa-copy"></i> Copiar
           </button>
         </div>
-        <div style="font-size:.75rem; color:var(--text-dim); margin-top:8px;">Código: <span id="mc-ref-code" style="font-family:'Courier New',monospace; color:var(--text);">—</span></div>
+        <div style="font-size:.75rem; color:var(--text-dim); margin-top:8px;">Código de aliado: <span id="mc-ref-code" style="font-family:'Courier New',monospace; color:var(--text);">—</span></div>
       </div>
 
       <!-- CBU / ALIAS DE COBRO -->
@@ -4511,7 +4512,7 @@ function cambiarTab(tab, btn) {
   if (btn) btn.classList.add('active');
 
   // Gestionar estado del botón "Herramientas" y visibilidad de fila secundaria
-  const TABS_SEC = ['academia','selector-rubro','cotizador','herramientas','prospectos','ventas','red','comunidad'];
+  const TABS_SEC = ['academia','selector-rubro','cotizador','herramientas','prospectos','ventas','red','comunidad','jarvis'];
   const extraRow = document.getElementById('tabs-extra-row');
   const btnMas   = document.getElementById('btn-mas-tabs');
   if (TABS_SEC.includes(tab)) {
@@ -4533,6 +4534,7 @@ function cambiarTab(tab, btn) {
   if(tab==='cotizador') { cargarTipoDeCambio(); recuperarUltimoLinkActivo(); }
   if(tab==='comisiones') renderComisiones();
   if(tab==='mi-cuenta') poblarMiCuenta();
+  if(tab==='jarvis') inicializarJarvis();
 }
 
 // ── Toggle fila de herramientas secundarias ──────────────────────────────────
@@ -4546,7 +4548,7 @@ function toggleMasTabsRow() {
   if (!visible) btn.classList.remove('active');
   else {
     // Verificar si el tab activo actual es secundario
-    const TABS_SEC = ['academia','selector-rubro','cotizador','herramientas','prospectos','ventas','red','comunidad'];
+    const TABS_SEC = ['academia','selector-rubro','cotizador','herramientas','prospectos','ventas','red','comunidad','jarvis'];
     const panelActivo = document.querySelector('.tab-panel.active');
     const tabId = panelActivo ? panelActivo.id.replace('tab-','') : '';
     if (TABS_SEC.includes(tabId)) btn.classList.add('active');
@@ -5459,7 +5461,7 @@ function poblarMiCuenta() {
   set('mc-nivel',   aliado.nivel);
   set('mc-ref-code', aliado.ref_code);
   const linkEl = document.getElementById('mc-link-aliado');
-  if(linkEl) linkEl.textContent = aliado.link_perfil || `${window.location.origin}/p/${aliado.ref_code}`;
+  if(linkEl) linkEl.textContent = `https://avanzadigital.digital/alianzas?ref=${aliado.ref_code}`;
   // También pre-poblar CBU si ya tiene
   const cbuInput = document.getElementById('perfil-cbu');
   const cbuEstado = document.getElementById('perfil-cbu-estado');
@@ -5474,9 +5476,11 @@ function poblarMiCuenta() {
 }
 
 function copiarLinkAliado() {
-  const link = aliado?.link_perfil || document.getElementById('mc-link-aliado')?.textContent || '';
+  const link = aliado?.ref_code
+    ? `https://avanzadigital.digital/alianzas?ref=${aliado.ref_code}`
+    : (document.getElementById('mc-link-aliado')?.textContent || '');
   if(!link || link==='—') return;
-  navigator.clipboard.writeText(link).then(() => mostrarToast('Link copiado al portapapeles.', 'green'));
+  navigator.clipboard.writeText(link).then(() => mostrarToast('Link de referido copiado.', 'green'));
 }
 
 // ─── CAMBIAR CONTRASEÑA (self-service) ───────────────────────────────────────
@@ -9445,5 +9449,530 @@ function descargarPDF(url, filename) {
 }
 </script>
 
+<!-- ═══════════════════════════════════════════════════════════════════════ -->
+<!-- TAB JARVIS IA                                                           -->
+<!-- ═══════════════════════════════════════════════════════════════════════ -->
+<div id="tab-jarvis" class="tab-panel">
+<style>
+  /* ── JARVIS: variables y base ── */
+  .jarvis-purple { color: #a78bfa; }
+  .jarvis-gradient { background: linear-gradient(135deg, #7c3aed, #2563eb); }
+
+  /* ── Hero banner ── */
+  .jarvis-hero {
+    background: linear-gradient(135deg, rgba(139,92,246,0.12), rgba(59,130,246,0.06));
+    border: 1px solid rgba(139,92,246,0.3);
+    border-radius: 16px;
+    padding: 24px 28px;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+  }
+  .jarvis-hero-icon {
+    width: 52px; height: 52px; border-radius: 14px; flex-shrink: 0;
+    background: linear-gradient(135deg,#7c3aed,#2563eb);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.5rem; color: #fff;
+  }
+  .jarvis-hero-title { font-size: 1.4rem; font-weight: 800; color: #fff; margin-bottom: 4px; }
+  .jarvis-hero-sub { font-size: 0.85rem; color: var(--text-muted); line-height: 1.5; }
+  .jarvis-status-dot {
+    display: inline-block; width: 8px; height: 8px; border-radius: 50%;
+    background: #4ade80; margin-right: 6px;
+    box-shadow: 0 0 6px rgba(74,222,128,0.6);
+  }
+  .jarvis-status-dot.off { background: #ef4444; box-shadow: 0 0 6px rgba(239,68,68,0.6); }
+
+  /* ── Quick actions ── */
+  .jarvis-quick-grid {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 10px; margin-bottom: 20px;
+  }
+  .jarvis-quick-btn {
+    background: rgba(255,255,255,0.03); border: 1px solid var(--border);
+    border-radius: 12px; padding: 14px 16px; cursor: pointer;
+    transition: all 0.2s; text-align: left; color: var(--text);
+  }
+  .jarvis-quick-btn:hover {
+    background: rgba(139,92,246,0.08); border-color: rgba(139,92,246,0.4);
+    transform: translateY(-1px);
+  }
+  .jarvis-quick-btn i { font-size: 1.1rem; margin-bottom: 6px; display: block; color: #a78bfa; }
+  .jarvis-quick-btn .qb-title { font-size: 0.85rem; font-weight: 700; color: #fff; margin-bottom: 2px; }
+  .jarvis-quick-btn .qb-sub { font-size: 0.75rem; color: var(--text-muted); }
+
+  /* ── Chat wrapper ── */
+  .jarvis-chat-wrap {
+    border: 1px solid rgba(139,92,246,0.25);
+    border-radius: 16px;
+    overflow: hidden;
+    background: rgba(255,255,255,0.01);
+  }
+  .jarvis-chat-header {
+    background: rgba(139,92,246,0.08);
+    padding: 12px 18px;
+    border-bottom: 1px solid rgba(139,92,246,0.2);
+    display: flex; align-items: center; gap: 10px;
+    font-size: 0.85rem; font-weight: 700; color: #a78bfa;
+  }
+  .jarvis-messages {
+    height: 380px; overflow-y: auto; padding: 16px;
+    display: flex; flex-direction: column; gap: 12px;
+  }
+  .jarvis-messages::-webkit-scrollbar { width: 4px; }
+  .jarvis-messages::-webkit-scrollbar-thumb { background: rgba(139,92,246,0.3); border-radius: 2px; }
+
+  /* Burbujas */
+  .jarvis-msg { display: flex; gap: 10px; max-width: 88%; }
+  .jarvis-msg.user { align-self: flex-end; flex-direction: row-reverse; }
+  .jarvis-msg.bot  { align-self: flex-start; }
+  .jarvis-msg-avatar {
+    width: 32px; height: 32px; border-radius: 10px; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center; font-size: 0.85rem;
+  }
+  .jarvis-msg.bot  .jarvis-msg-avatar { background: linear-gradient(135deg,#7c3aed,#2563eb); color: #fff; }
+  .jarvis-msg.user .jarvis-msg-avatar { background: rgba(255,255,255,0.07); color: var(--text-muted); }
+  .jarvis-msg-bubble {
+    padding: 10px 14px; border-radius: 12px; font-size: 0.85rem; line-height: 1.55;
+  }
+  .jarvis-msg.bot  .jarvis-msg-bubble { background: rgba(139,92,246,0.1); border: 1px solid rgba(139,92,246,0.2); color: var(--text); border-top-left-radius: 4px; }
+  .jarvis-msg.user .jarvis-msg-bubble { background: rgba(255,255,255,0.06); border: 1px solid var(--border); color: var(--text); border-top-right-radius: 4px; }
+  .jarvis-msg-meta { font-size: 0.7rem; color: var(--text-dim); margin-top: 4px; }
+
+  /* Confidence badge */
+  .jarvis-conf {
+    display: inline-block; font-size: 0.65rem; font-weight: 700; padding: 2px 7px;
+    border-radius: 20px; margin-top: 5px;
+  }
+  .jarvis-conf.propio    { background: rgba(74,222,128,0.15); color: #4ade80; border: 1px solid rgba(74,222,128,0.3); }
+  .jarvis-conf.sectorial { background: rgba(251,191,36,0.15); color: #fbbf24; border: 1px solid rgba(251,191,36,0.3); }
+  .jarvis-conf.general   { background: rgba(148,163,184,0.15); color: #94a3b8; border: 1px solid rgba(148,163,184,0.3); }
+
+  /* Accion sugerida */
+  .jarvis-accion {
+    margin-top: 8px; padding: 8px 12px;
+    background: rgba(59,130,246,0.08); border: 1px solid rgba(59,130,246,0.2);
+    border-radius: 8px; font-size: 0.78rem; color: #93c5fd;
+  }
+  .jarvis-accion i { margin-right: 5px; }
+
+  /* Input */
+  .jarvis-input-row {
+    display: flex; gap: 8px; padding: 12px 16px;
+    border-top: 1px solid rgba(139,92,246,0.2);
+    background: rgba(0,0,0,0.15);
+  }
+  .jarvis-input {
+    flex: 1; background: rgba(255,255,255,0.04); border: 1px solid var(--border);
+    border-radius: 10px; padding: 10px 14px; color: var(--text); font-size: 0.88rem;
+    resize: none; height: 44px; font-family: inherit; transition: border-color 0.2s;
+  }
+  .jarvis-input:focus { outline: none; border-color: rgba(139,92,246,0.5); }
+  .jarvis-input::placeholder { color: var(--text-dim); }
+  .jarvis-send-btn {
+    background: linear-gradient(135deg,#7c3aed,#2563eb); border: none;
+    border-radius: 10px; width: 44px; height: 44px; cursor: pointer;
+    color: #fff; font-size: 1rem; flex-shrink: 0; transition: opacity 0.2s;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .jarvis-send-btn:hover { opacity: 0.85; }
+  .jarvis-send-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  /* Typing indicator */
+  .jarvis-typing { display: flex; gap: 5px; align-items: center; padding: 4px 0; }
+  .jarvis-typing span {
+    width: 7px; height: 7px; border-radius: 50%; background: #a78bfa;
+    animation: jTyping 1.2s infinite;
+  }
+  .jarvis-typing span:nth-child(2) { animation-delay: 0.2s; }
+  .jarvis-typing span:nth-child(3) { animation-delay: 0.4s; }
+  @keyframes jTyping { 0%,60%,100% { opacity: 0.2; transform: scale(0.8); } 30% { opacity: 1; transform: scale(1.1); } }
+
+  /* Análisis de Lead card */
+  .jarvis-lead-card {
+    background: rgba(255,255,255,0.02); border: 1px solid var(--border);
+    border-radius: 14px; padding: 20px; margin-bottom: 20px;
+  }
+  .jarvis-lead-card h3 { font-size: 1rem; font-weight: 700; color: #fff; margin-bottom: 14px; }
+  .jarvis-lead-form { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  @media(max-width:600px) { .jarvis-lead-form { grid-template-columns: 1fr; } }
+  .jarvis-lead-result {
+    margin-top: 16px; display: none;
+    background: rgba(139,92,246,0.06); border: 1px solid rgba(139,92,246,0.25);
+    border-radius: 12px; padding: 18px;
+  }
+  .jarvis-score-badge {
+    display: inline-flex; align-items: center; gap: 8px;
+    font-size: 1.8rem; font-weight: 900; color: #fff;
+    margin-bottom: 12px;
+  }
+  .jarvis-score-badge .label { font-size: 0.75rem; font-weight: 600; color: var(--text-muted); }
+  .jarvis-objeciones { margin-top: 14px; display: flex; flex-direction: column; gap: 10px; }
+  .jarvis-obj-item { background: rgba(255,255,255,0.03); border: 1px solid var(--border); border-radius: 10px; padding: 12px; }
+  .jarvis-obj-q { font-size: 0.8rem; font-weight: 700; color: #fbbf24; margin-bottom: 5px; }
+  .jarvis-obj-a { font-size: 0.82rem; color: var(--text-muted); line-height: 1.5; }
+  .jarvis-script-box {
+    background: rgba(74,222,128,0.06); border: 1px solid rgba(74,222,128,0.2);
+    border-radius: 10px; padding: 14px; margin-top: 12px; position: relative;
+  }
+  .jarvis-script-box .label { font-size: 0.7rem; font-weight: 700; color: #4ade80; margin-bottom: 6px; }
+  .jarvis-script-box p { font-size: 0.85rem; color: var(--text); line-height: 1.6; margin: 0; }
+  .jarvis-copy-btn {
+    position: absolute; top: 10px; right: 10px; background: rgba(74,222,128,0.15);
+    border: 1px solid rgba(74,222,128,0.3); color: #4ade80; border-radius: 6px;
+    padding: 3px 10px; font-size: 0.72rem; cursor: pointer; font-weight: 700;
+  }
+</style>
+
+  <!-- Hero -->
+  <div class="jarvis-hero">
+    <div class="jarvis-hero-icon"><i class="fa-solid fa-bolt"></i></div>
+    <div>
+      <div class="jarvis-hero-title">JARVIS <span style="font-size:0.75rem;background:linear-gradient(135deg,#7c3aed,#2563eb);-webkit-background-clip:text;-webkit-text-fill-color:transparent;font-weight:800;">BETA</span></div>
+      <div class="jarvis-hero-sub">
+        <span class="jarvis-status-dot" id="jarvis-status-dot"></span>
+        <span id="jarvis-status-text">Verificando conexión...</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Quick actions -->
+  <div class="jarvis-quick-grid" id="jarvis-quick-grid">
+    <button class="jarvis-quick-btn" onclick="jarvisQuickAction('analizar-lead')">
+      <i class="fa-solid fa-crosshairs"></i>
+      <div class="qb-title">Analizar Lead</div>
+      <div class="qb-sub">Score + script de contacto</div>
+    </button>
+    <button class="jarvis-quick-btn" onclick="jarvisQuickAction('propuesta')">
+      <i class="fa-solid fa-file-lines"></i>
+      <div class="qb-title">Generar Propuesta</div>
+      <div class="qb-sub">Lista para enviar en minutos</div>
+    </button>
+    <button class="jarvis-quick-btn" onclick="jarvisQuickAction('followup')">
+      <i class="fa-solid fa-reply"></i>
+      <div class="qb-title">Follow-up</div>
+      <div class="qb-sub">Para prospectos sin respuesta</div>
+    </button>
+    <button class="jarvis-quick-btn" onclick="jarvisQuickAction('objecion')">
+      <i class="fa-solid fa-shield-halved"></i>
+      <div class="qb-title">Manejar Objeción</div>
+      <div class="qb-sub">Respuesta lista al instante</div>
+    </button>
+  </div>
+
+  <!-- Panel: Analizar Lead desde Bolsa -->
+  <div class="jarvis-lead-card" id="jarvis-panel-analizar-lead" style="display:none;">
+    <h3><i class="fa-solid fa-crosshairs" style="color:#a78bfa;margin-right:8px;"></i>Analizar Lead de la Bolsa</h3>
+    <div class="jarvis-lead-form">
+      <input id="jl-empresa" class="input-field" placeholder="Nombre de la empresa *" style="background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:8px;padding:10px 14px;color:var(--text);font-size:0.85rem;">
+      <input id="jl-rubro" class="input-field" placeholder="Rubro / Sector *" style="background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:8px;padding:10px 14px;color:var(--text);font-size:0.85rem;">
+      <input id="jl-ciudad" class="input-field" placeholder="Ciudad" style="background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:8px;padding:10px 14px;color:var(--text);font-size:0.85rem;">
+      <input id="jl-contacto" class="input-field" placeholder="Nombre del contacto" style="background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:8px;padding:10px 14px;color:var(--text);font-size:0.85rem;">
+    </div>
+    <div style="margin-top:10px;display:flex;gap:12px;align-items:center;flex-wrap:wrap;">
+      <label style="display:flex;align-items:center;gap:6px;font-size:0.82rem;color:var(--text-muted);cursor:pointer;">
+        <input type="checkbox" id="jl-tiene-web"> Tiene web
+      </label>
+      <label style="display:flex;align-items:center;gap:6px;font-size:0.82rem;color:var(--text-muted);cursor:pointer;">
+        <input type="checkbox" id="jl-tiene-redes"> Tiene redes sociales
+      </label>
+      <input id="jl-observacion" class="input-field" placeholder="Observación adicional (opcional)" style="flex:1;min-width:200px;background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:8px;padding:10px 14px;color:var(--text);font-size:0.85rem;">
+    </div>
+    <button onclick="ejecutarAnalisisLead()" style="margin-top:14px;background:linear-gradient(135deg,#7c3aed,#2563eb);border:none;border-radius:10px;padding:11px 24px;color:#fff;font-weight:700;font-size:0.88rem;cursor:pointer;display:flex;align-items:center;gap:8px;" id="jl-btn">
+      <i class="fa-solid fa-bolt"></i> Analizar con JARVIS
+    </button>
+
+    <!-- Resultado -->
+    <div id="jl-resultado" class="jarvis-lead-result">
+      <div style="display:flex;align-items:center;gap:16px;margin-bottom:14px;flex-wrap:wrap;">
+        <div class="jarvis-score-badge">
+          <span id="jl-score">–</span>
+          <span class="label">/ 100<br>Score</span>
+        </div>
+        <div>
+          <div style="font-size:1rem;font-weight:800;color:#fff;" id="jl-temperatura">–</div>
+          <div style="font-size:0.8rem;color:var(--text-muted);" id="jl-plan">–</div>
+          <div style="font-size:0.8rem;color:var(--text-muted);" id="jl-razon">–</div>
+        </div>
+      </div>
+
+      <div style="font-size:0.8rem;font-weight:700;color:var(--text-muted);margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px;">Perfil del comprador</div>
+      <div id="jl-perfil" style="font-size:0.85rem;color:var(--text);line-height:1.6;margin-bottom:14px;"></div>
+
+      <div class="jarvis-script-box">
+        <div class="label"><i class="fa-brands fa-whatsapp"></i> Script WhatsApp listo</div>
+        <button class="jarvis-copy-btn" onclick="copiarScript()">Copiar</button>
+        <p id="jl-script"></p>
+      </div>
+
+      <div style="font-size:0.8rem;font-weight:700;color:var(--text-muted);margin:14px 0 8px;text-transform:uppercase;letter-spacing:.5px;">Cómo manejar las objeciones</div>
+      <div class="jarvis-objeciones" id="jl-objeciones"></div>
+
+      <div style="margin-top:14px;display:flex;gap:10px;flex-wrap:wrap;">
+        <div style="background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:8px;padding:8px 14px;font-size:0.8rem;color:var(--text-muted);">
+          <i class="fa-solid fa-route" style="color:#a78bfa;margin-right:5px;"></i>
+          <strong style="color:var(--text);">Canal: </strong><span id="jl-canal">–</span>
+        </div>
+        <div style="background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:8px;padding:8px 14px;font-size:0.8rem;color:var(--text-muted);">
+          <i class="fa-solid fa-clock" style="color:#fbbf24;margin-right:5px;"></i>
+          <strong style="color:var(--text);">Cuándo: </strong><span id="jl-momento">–</span>
+        </div>
+      </div>
+
+      <div class="jarvis-accion" id="jl-accion" style="display:none;">
+        <i class="fa-solid fa-arrow-right"></i><span id="jl-accion-txt"></span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Chat principal -->
+  <div class="jarvis-chat-wrap">
+    <div class="jarvis-chat-header">
+      <i class="fa-solid fa-bolt"></i> Chat con JARVIS
+      <span style="margin-left:auto;font-size:0.72rem;font-weight:400;color:var(--text-dim);">contexto cargado de tu perfil</span>
+    </div>
+    <div class="jarvis-messages" id="jarvis-messages">
+      <!-- mensajes se insertan aquí -->
+    </div>
+    <div class="jarvis-input-row">
+      <textarea class="jarvis-input" id="jarvis-input" placeholder="Preguntale algo a JARVIS... ej: 'Cómo arranco con este lead de metalúrgica'" onkeydown="jarvisKeydown(event)" rows="1"></textarea>
+      <button class="jarvis-send-btn" id="jarvis-send-btn" onclick="enviarMensajeJarvis()">
+        <i class="fa-solid fa-paper-plane"></i>
+      </button>
+    </div>
+  </div>
+
+</div>
+<!-- /tab-jarvis -->
+
+<script>
+// ═══════════════════════════════════════════════════════════════════════
+// JARVIS IA — Lógica del portal
+// ═══════════════════════════════════════════════════════════════════════
+
+const JARVIS_HISTORIAL = [];  // historial de la sesión actual
+let jarvisActivo = false;
+
+// ── Inicializar JARVIS al abrir el tab ──────────────────────────────────
+async function inicializarJarvis() {
+  await verificarEstadoJarvis();
+  if (JARVIS_HISTORIAL.length === 0) {
+    const aliadoNombre = document.getElementById('nav-nombre')?.textContent?.trim() || 'aliado';
+    jarvisAgregarMensaje('bot', `¡Hola, ${aliadoNombre}! 👋 Soy JARVIS, tu asistente de inteligencia comercial.\n\nPuedo ayudarte a analizar leads, preparar reuniones, generar propuestas y manejar objeciones. ¿Por dónde arrancamos?`, 'propio');
+  }
+}
+
+// ── Verificar estado de la API ──────────────────────────────────────────
+async function verificarEstadoJarvis() {
+  const dot  = document.getElementById('jarvis-status-dot');
+  const txt  = document.getElementById('jarvis-status-text');
+  try {
+    const r = await fetch(`${API_BASE}/jarvis/estado`, { headers: authHeaders() });
+    const data = await r.json();
+    jarvisActivo = data.activo === true;
+    if (jarvisActivo) {
+      dot.classList.remove('off');
+      txt.textContent = 'JARVIS operativo · Claude Sonnet';
+    } else {
+      dot.classList.add('off');
+      txt.textContent = 'JARVIS no configurado — contactá soporte';
+    }
+  } catch(e) {
+    dot.classList.add('off');
+    txt.textContent = 'No se pudo conectar con el servidor';
+  }
+}
+
+// ── Enviar mensaje al chat ──────────────────────────────────────────────
+async function enviarMensajeJarvis() {
+  const input = document.getElementById('jarvis-input');
+  const btn   = document.getElementById('jarvis-send-btn');
+  const msg   = input.value.trim();
+  if (!msg) return;
+
+  input.value = '';
+  btn.disabled = true;
+
+  // Mensaje del usuario
+  jarvisAgregarMensaje('user', msg);
+  JARVIS_HISTORIAL.push({ role: 'user', content: msg });
+
+  // Indicador de typing
+  const typingId = jarvisAgregarTyping();
+
+  try {
+    const r = await fetch(`${API_BASE}/jarvis/chat`, {
+      method: 'POST',
+      headers: { ...authHeaders(), 'Content-Type': 'application/json' },
+      body: JSON.stringify({ mensaje: msg, historial: JARVIS_HISTORIAL.slice(-8) }),
+    });
+    const data = await r.json();
+    jarvisRemoverTyping(typingId);
+
+    const respuesta  = data.respuesta || 'Sin respuesta.';
+    const confianza  = data.confianza || 'general';
+    const accion     = data.accion_sugerida || null;
+
+    jarvisAgregarMensaje('bot', respuesta, confianza, accion);
+    JARVIS_HISTORIAL.push({ role: 'assistant', content: respuesta });
+
+  } catch(e) {
+    jarvisRemoverTyping(typingId);
+    jarvisAgregarMensaje('bot', 'Hubo un error al conectar con JARVIS. Revisá tu conexión e intentá de nuevo.', 'general');
+  }
+
+  btn.disabled = false;
+  input.focus();
+}
+
+// ── Agregar mensaje al chat ─────────────────────────────────────────────
+function jarvisAgregarMensaje(rol, texto, confianza, accionSugerida) {
+  const container = document.getElementById('jarvis-messages');
+  const el = document.createElement('div');
+  el.className = `jarvis-msg ${rol}`;
+
+  const avatarIcon = rol === 'bot' ? 'fa-bolt' : 'fa-user';
+  const confBadge  = rol === 'bot' && confianza
+    ? `<div><span class="jarvis-conf ${confianza}">${
+        confianza === 'propio' ? '🟢 Tu contexto' :
+        confianza === 'sectorial' ? '🟡 Contexto sectorial' : '⚪ Contexto general'
+      }</span></div>`
+    : '';
+  const accionHTML = accionSugerida
+    ? `<div class="jarvis-accion"><i class="fa-solid fa-arrow-right"></i> ${accionSugerida}</div>`
+    : '';
+  const textoHTML = texto.replace(/\n/g, '<br>');
+
+  el.innerHTML = `
+    <div class="jarvis-msg-avatar"><i class="fa-solid ${avatarIcon}"></i></div>
+    <div>
+      <div class="jarvis-msg-bubble">${textoHTML}</div>
+      ${confBadge}
+      ${accionHTML}
+    </div>`;
+
+  container.appendChild(el);
+  container.scrollTop = container.scrollHeight;
+}
+
+// ── Typing indicator ────────────────────────────────────────────────────
+function jarvisAgregarTyping() {
+  const container = document.getElementById('jarvis-messages');
+  const id = 'jtyping-' + Date.now();
+  const el = document.createElement('div');
+  el.id = id;
+  el.className = 'jarvis-msg bot';
+  el.innerHTML = `
+    <div class="jarvis-msg-avatar"><i class="fa-solid fa-bolt"></i></div>
+    <div class="jarvis-msg-bubble">
+      <div class="jarvis-typing"><span></span><span></span><span></span></div>
+    </div>`;
+  container.appendChild(el);
+  container.scrollTop = container.scrollHeight;
+  return id;
+}
+function jarvisRemoverTyping(id) {
+  const el = document.getElementById(id);
+  if (el) el.remove();
+}
+
+// ── Enter para enviar ───────────────────────────────────────────────────
+function jarvisKeydown(e) {
+  if (e.key === 'Enter' && !e.shiftKey) {
+    e.preventDefault();
+    enviarMensajeJarvis();
+  }
+}
+
+// ── Quick actions ───────────────────────────────────────────────────────
+function jarvisQuickAction(tipo) {
+  const panelLead = document.getElementById('jarvis-panel-analizar-lead');
+
+  // Ocultar todos los paneles extra
+  panelLead.style.display = 'none';
+
+  if (tipo === 'analizar-lead') {
+    panelLead.style.display = 'block';
+    panelLead.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    return;
+  }
+
+  // Para los demás, inyectar el prompt en el chat
+  const prompts = {
+    'propuesta':  'Necesito generar una propuesta. Empresa: [nombre], rubro: [rubro], plan: [Plan Pro/Industrial]. ¿Me ayudás?',
+    'followup':   'Tengo un prospecto que no responde desde hace [X días]. Empresa: [nombre], rubro: [rubro]. Generame un mensaje de seguimiento.',
+    'objecion':   'Un prospecto me dijo: "[pegá la objeción acá]". ¿Cómo respondo?',
+  };
+
+  const input = document.getElementById('jarvis-input');
+  input.value = prompts[tipo] || '';
+  input.focus();
+  // Seleccionar el primer placeholder para fácil edición
+  const start = input.value.indexOf('[');
+  const end   = input.value.indexOf(']') + 1;
+  if (start !== -1) input.setSelectionRange(start, end);
+}
+
+// ── Análisis de Lead desde formulario ──────────────────────────────────
+async function ejecutarAnalisisLead() {
+  const empresa  = document.getElementById('jl-empresa').value.trim();
+  const rubro    = document.getElementById('jl-rubro').value.trim();
+  if (!empresa || !rubro) {
+    alert('Completá al menos empresa y rubro.');
+    return;
+  }
+
+  const btn = document.getElementById('jl-btn');
+  btn.disabled = true;
+  btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Analizando...';
+
+  const payload = {
+    empresa, rubro,
+    ciudad:        document.getElementById('jl-ciudad').value.trim(),
+    nombre_contacto: document.getElementById('jl-contacto').value.trim(),
+    tiene_web:     document.getElementById('jl-tiene-web').checked,
+    tiene_redes:   document.getElementById('jl-tiene-redes').checked,
+    observacion:   document.getElementById('jl-observacion').value.trim(),
+  };
+
+  try {
+    // Endpoint directo de análisis sin lead_id (modo libre)
+    const r = await fetch(`${API_BASE}/jarvis/chat`, {
+      method: 'POST',
+      headers: { ...authHeaders(), 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        mensaje: `Analizá este lead completo:\nEmpresa: ${payload.empresa}\nRubro: ${payload.rubro}\nCiudad: ${payload.ciudad || 'no especificada'}\nContacto: ${payload.nombre_contacto || 'no especificado'}\nTiene web: ${payload.tiene_web ? 'sí' : 'no'}\nTiene redes: ${payload.tiene_redes ? 'sí' : 'no'}\nObservación: ${payload.observacion || 'ninguna'}\n\nNecesito: score 0-100, plan recomendado, perfil del comprador, script de WhatsApp (máx 60 palabras) y 3 objeciones probables con sus respuestas.`,
+      }),
+    });
+    const data = await r.json();
+    btn.disabled = false;
+    btn.innerHTML = '<i class="fa-solid fa-bolt"></i> Analizar con JARVIS';
+
+    // Mostrar respuesta en el chat
+    if (data.respuesta) {
+      document.getElementById('jl-resultado').style.display = 'none';
+      jarvisAgregarMensaje('bot', `📊 **Análisis de ${empresa}:**\n\n${data.respuesta}`, data.confianza || 'sectorial', data.accion_sugerida);
+      JARVIS_HISTORIAL.push({ role: 'user', content: `Análisis de lead: ${empresa} (${rubro})` });
+      JARVIS_HISTORIAL.push({ role: 'assistant', content: data.respuesta });
+      document.getElementById('jarvis-messages').scrollIntoView({ behavior: 'smooth', block: 'end' });
+    }
+
+  } catch(e) {
+    btn.disabled = false;
+    btn.innerHTML = '<i class="fa-solid fa-bolt"></i> Analizar con JARVIS';
+    alert('Error al conectar con JARVIS. Intentá de nuevo.');
+  }
+}
+
+// ── Copiar script de WhatsApp ───────────────────────────────────────────
+function copiarScript() {
+  const txt = document.getElementById('jl-script').textContent;
+  navigator.clipboard.writeText(txt).then(() => {
+    const btn = document.querySelector('.jarvis-copy-btn');
+    if (btn) { btn.textContent = '✓ Copiado'; setTimeout(() => btn.textContent = 'Copiar', 2000); }
+  });
+}
+</script>
 </body>
 </html>

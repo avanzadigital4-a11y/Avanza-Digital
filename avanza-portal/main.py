@@ -161,6 +161,14 @@ SMTP_PASS     = os.environ.get("SMTP_PASS", "")
 EMAIL_FROM    = os.environ.get("EMAIL_FROM", SMTP_USER)
 ADMIN_EMAIL   = os.environ.get("ADMIN_EMAIL", "avanzadigital4@gmail.com")
 
+# ─── MAILERLITE ───────────────────────────────────────────────────────────────
+# API key v2: https://app.mailerlite.com/integrations/api/
+MAILERLITE_API_KEY = os.environ.get("MAILERLITE_API_KEY", "")
+# Group IDs por fuente de captura (crear en MailerLite → Subscribers → Groups)
+ML_GROUP_AUDITORIA = os.environ.get("ML_GROUP_AUDITORIA", "")   # leads de la herramienta de auditoría
+ML_GROUP_RECURSOS   = os.environ.get("ML_GROUP_RECURSOS",   "")  # leads de la biblioteca de recursos
+ML_GROUP_GUIA       = os.environ.get("ML_GROUP_GUIA",       "")  # leads de la guía de automatización
+
 # ─── MERCADOPAGO ──────────────────────────────────────────────────────────────
 MP_ACCESS_TOKEN = os.environ.get("MP_ACCESS_TOKEN", "")
 MP_WEBHOOK_SECRET = os.environ.get("MP_WEBHOOK_SECRET", "")
@@ -2979,6 +2987,97 @@ def log_auditoria(request: Request, dominio: str, score: int, ref_code: str = ""
     db.add(log)
     db.commit()
     return {"status": "ok"}
+
+
+@app.post("/leads/capturar")
+@limiter.limit("30/hour")
+async def capturar_lead(
+    request: Request,
+    fuente: str,          # "auditoria" | "recursos" | "guia"
+    email: str,
+    nombre: str = "",
+    telefono: str = "",
+    recurso: str = "",    # nombre del recurso descargado (solo para fuente=recursos)
+    ref_code: str = "",
+    db: Session = Depends(get_db),
+):
+    """
+    Endpoint centralizado de captura de leads desde los lead magnets del sitio.
+    1. Loguea en la BD.
+    2. Suscribe en MailerLite al grupo correspondiente a la fuente.
+    3. Devuelve {ok: true} siempre (los errores de ML no bloquean al usuario).
+    """
+    import httpx
+
+    # ── 1. Registrar en BD ────────────────────────────────────────────────────
+    aliado_id = None
+    if ref_code:
+        a = db.query(Aliado).filter(Aliado.ref_code == ref_code).first()
+        if a:
+            aliado_id = a.id
+
+    log = AuditoriaLog(
+        aliado_id=aliado_id,
+        ref_code=ref_code,
+        dominio=fuente,          # reutilizamos AuditoriaLog; 'dominio' = fuente para leads no-auditoria
+        score=0,
+        email_capturado=email,
+    )
+    db.add(log)
+    db.commit()
+
+    # ── 2. Suscribir en MailerLite ────────────────────────────────────────────
+    if MAILERLITE_API_KEY:
+        group_map = {
+            "auditoria": ML_GROUP_AUDITORIA,
+            "recursos":  ML_GROUP_RECURSOS,
+            "guia":      ML_GROUP_GUIA,
+        }
+        group_id = group_map.get(fuente, "")
+
+        ml_payload: dict = {
+            "email": email,
+            "resubscribe": True,
+            "fields": {},
+        }
+        if nombre:
+            ml_payload["fields"]["name"] = nombre
+        if telefono:
+            ml_payload["fields"]["phone"] = telefono
+        if recurso:
+            ml_payload["fields"]["last_resource"] = recurso
+
+        try:
+            async with httpx.AsyncClient(timeout=8) as client:
+                # Primero crear/actualizar el suscriptor
+                r = await client.post(
+                    "https://connect.mailerlite.com/api/subscribers",
+                    headers={
+                        "Authorization": f"Bearer {MAILERLITE_API_KEY}",
+                        "Content-Type": "application/json",
+                        "Accept": "application/json",
+                    },
+                    json=ml_payload,
+                )
+                subscriber_id = None
+                if r.status_code in (200, 201):
+                    data = r.json()
+                    subscriber_id = data.get("data", {}).get("id")
+
+                # Luego asignar al grupo si hay group_id
+                if subscriber_id and group_id:
+                    await client.post(
+                        f"https://connect.mailerlite.com/api/subscribers/{subscriber_id}/groups/{group_id}",
+                        headers={
+                            "Authorization": f"Bearer {MAILERLITE_API_KEY}",
+                            "Content-Type": "application/json",
+                            "Accept": "application/json",
+                        },
+                    )
+        except Exception as e:
+            print(f"[MailerLite] Error suscribiendo {email}: {e}")
+
+    return {"ok": True}
 
 
 @app.get("/admin/auditorias")
@@ -7196,14 +7295,60 @@ def portal_publico_aliado(ref_code: str, db: Session = Depends(get_db)):
     _usdt_dir_js = USDT_DIRECCION.replace("'", "\\'")
     _usdt_red_js = (USDT_RED or "TRC20").replace("'", "\\'")
 
+    # ── URLs canónicas y Open Graph ────────────────────────────────────────
+    SITE_BASE = "https://avanzadigital.digital"
+    _canonical_url = f"{SITE_BASE}/p/{ref_code}"
+    _og_image = foto_url if foto_url else f"{SITE_BASE}/og-default.png"
+
+    # ── JSON-LD: LocalBusiness para rich snippets de Google ─────────────
+    import json as _json_ld
+    _ld_address = {}
+    if _ciudad:
+        _ld_address["addressLocality"] = _ciudad
+    if _pais:
+        _ld_address["addressCountry"] = _pais
+    _ld_same_as = []
+    if _wa_raw:
+        _ld_same_as.append(f"https://wa.me/{_wa_raw}")
+    _ld_data = {
+        "@context": "https://schema.org",
+        "@type": "LocalBusiness",
+        "name": titular,
+        "description": _seo_desc,
+        "url": _canonical_url,
+        "image": _og_image,
+        "areaServed": _pais_nombre,
+        "knowsAbout": _rubros_display if _rubros_display else ["Digitalización de PYMEs", "Marketing B2B"],
+        "memberOf": {
+            "@type": "Organization",
+            "name": "Avanza Digital",
+            "url": SITE_BASE
+        },
+    }
+    if _ld_address:
+        _ld_data["address"] = {"@type": "PostalAddress", **_ld_address}
+    if _ld_same_as:
+        _ld_data["sameAs"] = _ld_same_as
+    _ld_json = _json_ld.dumps(_ld_data, ensure_ascii=False)
+
     html = f"""<!DOCTYPE html>
 <html lang="es"><head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>{_seo_title}</title>
 <meta name="description" content="{_seo_desc}">
+<link rel="canonical" href="{_canonical_url}">
+<meta property="og:type" content="website">
+<meta property="og:url" content="{_canonical_url}">
 <meta property="og:title" content="{_seo_title}">
 <meta property="og:description" content="{_seo_desc}">
+<meta property="og:image" content="{_og_image}">
+<meta property="og:locale" content="es_AR">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="{_seo_title}">
+<meta name="twitter:description" content="{_seo_desc}">
+<meta name="twitter:image" content="{_og_image}">
 <meta name="robots" content="index, follow">
+<script type="application/ld+json">{_ld_json}</script>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
 <style>
 *{{box-sizing:border-box;margin:0;padding:0;}}

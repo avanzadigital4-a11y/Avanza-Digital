@@ -14,3 +14,4 @@ slowapi==0.1.9
 email-validator==2.2.0
 tronpy>=0.4.0
 mnemonic>=0.20
+anthropic==0.30.0
