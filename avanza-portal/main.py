@@ -31,9 +31,11 @@ from auth import (
 )
 import schemas
 import groq_ai  # IA opcional — si GROQ_API_KEY no está, todo cae a fallback heurístico
-import jarvis_routes    # JARVIS — motor de inteligencia comercial con Claude (Anthropic)
-import jarvis_flywheel  # Motor del Flywheel Colectivo (Sección 6)
-import jarvis_whatsapp  # Integración WhatsApp con Twilio (Sección 8)
+import jarvis_routes         # JARVIS — motor de inteligencia comercial con Claude (Anthropic)
+import jarvis_flywheel       # Motor del Flywheel Colectivo (Sección 6)
+import jarvis_whatsapp       # Integración WhatsApp con Twilio (Sección 8)
+import jarvis_api_publica    # JARVIS API pública v1 — autenticación por API key (Sección 9)
+import jarvis_integraciones  # Integraciones CRM/Gmail/Calendar/Slack (Sección 10)
 
 Base.metadata.create_all(bind=engine)
 
@@ -1229,6 +1231,8 @@ pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 jarvis_routes.register(app, get_db, current_aliado_required)
 jarvis_flywheel.register(app, get_db, current_aliado_required)
 jarvis_whatsapp.register(app, get_db, current_aliado_required)
+jarvis_api_publica.register(app, get_db, current_aliado_required, engine=engine)
+jarvis_integraciones.register_integration_routes(app, get_db, current_aliado_required)  # Fix: integraciones/estado
 
 # ─── RUTAS ADMIN ─────────────────────────────────────────────────────────────
 # Solo se usan para el middleware de fallback con X-API-Key (legacy).

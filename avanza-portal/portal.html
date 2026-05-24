@@ -10432,7 +10432,7 @@ function inicializarJarvisV2() {
 // ── Datos del aliado ──────────────────────────────────────
 async function jCargarAliado() {
   try {
-    const r = await fetch('/api/me', { credentials: 'include' });
+    const r = await fetch('/aliados/me', { credentials: 'include' });
     if (r.ok) {
       const d = await r.json();
       const nombre = d.nombre || 'Aliado';
