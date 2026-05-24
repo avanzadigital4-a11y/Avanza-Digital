@@ -31,7 +31,9 @@ from auth import (
 )
 import schemas
 import groq_ai  # IA opcional — si GROQ_API_KEY no está, todo cae a fallback heurístico
-import jarvis_routes  # JARVIS — motor de inteligencia comercial con Claude (Anthropic)
+import jarvis_routes    # JARVIS — motor de inteligencia comercial con Claude (Anthropic)
+import jarvis_flywheel  # Motor del Flywheel Colectivo (Sección 6)
+import jarvis_whatsapp  # Integración WhatsApp con Twilio (Sección 8)
 
 Base.metadata.create_all(bind=engine)
 
@@ -150,6 +152,8 @@ for col_sql in [
     # v2.3 — Rubros de especialidad para SEO local por país y ciudad
     # JSON array: ["metalurgica","agro","logistica","clinica","tecnico"]
     "ALTER TABLE aliados ADD COLUMN rubros_especialidad TEXT DEFAULT '[]'",
+    # v2.4 — WhatsApp Business (Twilio) + Flywheel colectivo
+    "ALTER TABLE aliados ADD COLUMN whatsapp_numero VARCHAR",
 ]:
     _aplicar_migracion(col_sql)
 
@@ -1164,6 +1168,7 @@ scheduler.add_job(job_eliminacion_definitiva, "interval", hours=24)
 scheduler.add_job(job_onboarding_sequence, "interval", hours=24)
 scheduler.add_job(job_generar_comisiones_recurrentes_mensual, "interval", hours=24)
 scheduler.start()
+jarvis_flywheel.agregar_insights_flywheel_al_scheduler(scheduler, get_db)
 
 
 def _tier_badge(tier: str) -> str:
@@ -1222,6 +1227,8 @@ pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 # Los endpoints viven en /jarvis/* y corren en paralelo al resto del portal.
 # Si ANTHROPIC_API_KEY no está configurada, los endpoints devuelven fallback.
 jarvis_routes.register(app, get_db, current_aliado_required)
+jarvis_flywheel.register(app, get_db, current_aliado_required)
+jarvis_whatsapp.register(app, get_db, current_aliado_required)
 
 # ─── RUTAS ADMIN ─────────────────────────────────────────────────────────────
 # Solo se usan para el middleware de fallback con X-API-Key (legacy).

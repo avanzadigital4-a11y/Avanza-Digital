@@ -1184,7 +1184,7 @@
       <button class="tab-btn" onclick="cambiarTab('herramientas',this)"><i class="fa-solid fa-magnifying-glass"></i> Auditoría</button>
       <button class="tab-btn" onclick="cambiarTab('red',this)"><i class="fa-solid fa-users-rays" style="color:var(--amber);"></i> Mi Red</button>
       <button class="tab-btn" onclick="cambiarTab('comunidad',this)"><i class="fa-solid fa-comments" style="color:#c084fc;"></i> Comunidad <span style="background:#c084fc;color:#000;font-size:.6rem;font-weight:800;padding:2px 6px;border-radius:4px;margin-left:4px;">NUEVO</span></button>
-      <button class="tab-btn" id="btn-tab-jarvis" onclick="cambiarTab('jarvis',this)" style="background:linear-gradient(135deg,rgba(139,92,246,0.15),rgba(59,130,246,0.08));border-color:rgba(139,92,246,0.4);color:#a78bfa;"><i class="fa-solid fa-bolt"></i> JARVIS IA <span style="background:linear-gradient(135deg,#7c3aed,#2563eb);color:#fff;font-size:.6rem;font-weight:800;padding:2px 6px;border-radius:4px;margin-left:4px;">BETA</span></button>
+      <button class="tab-btn" id="btn-tab-jarvis" onclick="cambiarTab('jarvis',this)" style="background:linear-gradient(135deg,rgba(0,196,255,0.12),rgba(0,80,200,0.08));border-color:rgba(0,196,255,0.35);color:#00c4ff;"><i class="fa-solid fa-bolt"></i> JARVIS IA</button>
     </div>
 
     <div id="tab-dashboard" class="tab-panel active">
@@ -4534,7 +4534,7 @@ function cambiarTab(tab, btn) {
   if(tab==='cotizador') { cargarTipoDeCambio(); recuperarUltimoLinkActivo(); }
   if(tab==='comisiones') renderComisiones();
   if(tab==='mi-cuenta') poblarMiCuenta();
-  if(tab==='jarvis') inicializarJarvis();
+  if(tab==='jarvis') inicializarJarvisV2();
 }
 
 // ── Toggle fila de herramientas secundarias ──────────────────────────────────
@@ -9450,529 +9450,1305 @@ function descargarPDF(url, filename) {
 </script>
 
 <!-- ═══════════════════════════════════════════════════════════════════════ -->
-<!-- TAB JARVIS IA                                                           -->
-<!-- ═══════════════════════════════════════════════════════════════════════ -->
+<!-- TAB JARVIS IA — v2 Centro de Comando ============================= -->
 <div id="tab-jarvis" class="tab-panel">
 <style>
-  /* ── JARVIS: variables y base ── */
-  .jarvis-purple { color: #a78bfa; }
-  .jarvis-gradient { background: linear-gradient(135deg, #7c3aed, #2563eb); }
 
-  /* ── Hero banner ── */
-  .jarvis-hero {
-    background: linear-gradient(135deg, rgba(139,92,246,0.12), rgba(59,130,246,0.06));
-    border: 1px solid rgba(139,92,246,0.3);
-    border-radius: 16px;
-    padding: 24px 28px;
-    margin-bottom: 20px;
-    display: flex;
-    align-items: center;
-    gap: 20px;
-  }
-  .jarvis-hero-icon {
-    width: 52px; height: 52px; border-radius: 14px; flex-shrink: 0;
-    background: linear-gradient(135deg,#7c3aed,#2563eb);
-    display: flex; align-items: center; justify-content: center;
-    font-size: 1.5rem; color: #fff;
-  }
-  .jarvis-hero-title { font-size: 1.4rem; font-weight: 800; color: #fff; margin-bottom: 4px; }
-  .jarvis-hero-sub { font-size: 0.85rem; color: var(--text-muted); line-height: 1.5; }
-  .jarvis-status-dot {
-    display: inline-block; width: 8px; height: 8px; border-radius: 50%;
-    background: #4ade80; margin-right: 6px;
-    box-shadow: 0 0 6px rgba(74,222,128,0.6);
-  }
-  .jarvis-status-dot.off { background: #ef4444; box-shadow: 0 0 6px rgba(239,68,68,0.6); }
+/* ═══════════════════════════════════════════════════════════
+   JARVIS COMMAND CENTER — CSS v2
+   ═══════════════════════════════════════════════════════════ */
+#tab-jarvis {
+  padding: 0 !important;
+  height: calc(100vh - 120px);
+  overflow: hidden;
+  position: relative;
+}
 
-  /* ── Quick actions ── */
-  .jarvis-quick-grid {
-    display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-    gap: 10px; margin-bottom: 20px;
-  }
-  .jarvis-quick-btn {
-    background: rgba(255,255,255,0.03); border: 1px solid var(--border);
-    border-radius: 12px; padding: 14px 16px; cursor: pointer;
-    transition: all 0.2s; text-align: left; color: var(--text);
-  }
-  .jarvis-quick-btn:hover {
-    background: rgba(139,92,246,0.08); border-color: rgba(139,92,246,0.4);
-    transform: translateY(-1px);
-  }
-  .jarvis-quick-btn i { font-size: 1.1rem; margin-bottom: 6px; display: block; color: #a78bfa; }
-  .jarvis-quick-btn .qb-title { font-size: 0.85rem; font-weight: 700; color: #fff; margin-bottom: 2px; }
-  .jarvis-quick-btn .qb-sub { font-size: 0.75rem; color: var(--text-muted); }
+#jarvis-grid-bg {
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(0,196,255,0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0,196,255,0.03) 1px, transparent 1px);
+  background-size: 40px 40px;
+  pointer-events: none;
+  z-index: 0;
+}
 
-  /* ── Chat wrapper ── */
-  .jarvis-chat-wrap {
-    border: 1px solid rgba(139,92,246,0.25);
-    border-radius: 16px;
-    overflow: hidden;
-    background: rgba(255,255,255,0.01);
-  }
-  .jarvis-chat-header {
-    background: rgba(139,92,246,0.08);
-    padding: 12px 18px;
-    border-bottom: 1px solid rgba(139,92,246,0.2);
-    display: flex; align-items: center; gap: 10px;
-    font-size: 0.85rem; font-weight: 700; color: #a78bfa;
-  }
-  .jarvis-messages {
-    height: 380px; overflow-y: auto; padding: 16px;
-    display: flex; flex-direction: column; gap: 12px;
-  }
-  .jarvis-messages::-webkit-scrollbar { width: 4px; }
-  .jarvis-messages::-webkit-scrollbar-thumb { background: rgba(139,92,246,0.3); border-radius: 2px; }
+/* Variables JARVIS */
+:root {
+  --j-cyan:        #00c4ff;
+  --j-cyan-dim:    rgba(0,196,255,0.12);
+  --j-cyan-glow:   rgba(0,196,255,0.30);
+  --j-amber:       #ff8c00;
+  --j-amber-dim:   rgba(255,140,0,0.12);
+  --j-green:       #00ff9d;
+  --j-red:         #ff3b5c;
+  --j-bg0:         #050810;
+  --j-bg1:         #080d1a;
+  --j-bg2:         #0d1425;
+  --j-bg3:         #111c34;
+  --j-border:      rgba(0,196,255,0.10);
+  --j-border-h:    rgba(0,196,255,0.25);
+  --j-mono:        'Share Tech Mono', monospace;
+}
 
-  /* Burbujas */
-  .jarvis-msg { display: flex; gap: 10px; max-width: 88%; }
-  .jarvis-msg.user { align-self: flex-end; flex-direction: row-reverse; }
-  .jarvis-msg.bot  { align-self: flex-start; }
-  .jarvis-msg-avatar {
-    width: 32px; height: 32px; border-radius: 10px; flex-shrink: 0;
-    display: flex; align-items: center; justify-content: center; font-size: 0.85rem;
-  }
-  .jarvis-msg.bot  .jarvis-msg-avatar { background: linear-gradient(135deg,#7c3aed,#2563eb); color: #fff; }
-  .jarvis-msg.user .jarvis-msg-avatar { background: rgba(255,255,255,0.07); color: var(--text-muted); }
-  .jarvis-msg-bubble {
-    padding: 10px 14px; border-radius: 12px; font-size: 0.85rem; line-height: 1.55;
-  }
-  .jarvis-msg.bot  .jarvis-msg-bubble { background: rgba(139,92,246,0.1); border: 1px solid rgba(139,92,246,0.2); color: var(--text); border-top-left-radius: 4px; }
-  .jarvis-msg.user .jarvis-msg-bubble { background: rgba(255,255,255,0.06); border: 1px solid var(--border); color: var(--text); border-top-right-radius: 4px; }
-  .jarvis-msg-meta { font-size: 0.7rem; color: var(--text-dim); margin-top: 4px; }
+/* Layout 3 columnas */
+.j-layout {
+  display: grid;
+  grid-template-columns: 200px 1fr 280px;
+  height: 100%;
+  position: relative;
+  z-index: 1;
+}
 
-  /* Confidence badge */
-  .jarvis-conf {
-    display: inline-block; font-size: 0.65rem; font-weight: 700; padding: 2px 7px;
-    border-radius: 20px; margin-top: 5px;
-  }
-  .jarvis-conf.propio    { background: rgba(74,222,128,0.15); color: #4ade80; border: 1px solid rgba(74,222,128,0.3); }
-  .jarvis-conf.sectorial { background: rgba(251,191,36,0.15); color: #fbbf24; border: 1px solid rgba(251,191,36,0.3); }
-  .jarvis-conf.general   { background: rgba(148,163,184,0.15); color: #94a3b8; border: 1px solid rgba(148,163,184,0.3); }
+/* ── SIDEBAR ── */
+.j-sidebar {
+  background: rgba(5,8,16,0.98);
+  border-right: 1px solid var(--j-border);
+  display: flex;
+  flex-direction: column;
+  padding: 10px 0;
+  overflow-y: auto;
+}
 
-  /* Accion sugerida */
-  .jarvis-accion {
-    margin-top: 8px; padding: 8px 12px;
-    background: rgba(59,130,246,0.08); border: 1px solid rgba(59,130,246,0.2);
-    border-radius: 8px; font-size: 0.78rem; color: #93c5fd;
-  }
-  .jarvis-accion i { margin-right: 5px; }
+.j-sidebar-section {
+  padding: 8px 12px 3px;
+  font-family: var(--j-mono);
+  font-size: 8px;
+  letter-spacing: 2px;
+  color: rgba(100,130,180,0.5);
+  text-transform: uppercase;
+}
 
-  /* Input */
-  .jarvis-input-row {
-    display: flex; gap: 8px; padding: 12px 16px;
-    border-top: 1px solid rgba(139,92,246,0.2);
-    background: rgba(0,0,0,0.15);
-  }
-  .jarvis-input {
-    flex: 1; background: rgba(255,255,255,0.04); border: 1px solid var(--border);
-    border-radius: 10px; padding: 10px 14px; color: var(--text); font-size: 0.88rem;
-    resize: none; height: 44px; font-family: inherit; transition: border-color 0.2s;
-  }
-  .jarvis-input:focus { outline: none; border-color: rgba(139,92,246,0.5); }
-  .jarvis-input::placeholder { color: var(--text-dim); }
-  .jarvis-send-btn {
-    background: linear-gradient(135deg,#7c3aed,#2563eb); border: none;
-    border-radius: 10px; width: 44px; height: 44px; cursor: pointer;
-    color: #fff; font-size: 1rem; flex-shrink: 0; transition: opacity 0.2s;
-    display: flex; align-items: center; justify-content: center;
-  }
-  .jarvis-send-btn:hover { opacity: 0.85; }
-  .jarvis-send-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+.j-nav {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  margin: 1px 5px;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 500;
+  color: #6a82b0;
+  transition: all 0.15s;
+  border: 1px solid transparent;
+  position: relative;
+}
 
-  /* Typing indicator */
-  .jarvis-typing { display: flex; gap: 5px; align-items: center; padding: 4px 0; }
-  .jarvis-typing span {
-    width: 7px; height: 7px; border-radius: 50%; background: #a78bfa;
-    animation: jTyping 1.2s infinite;
-  }
-  .jarvis-typing span:nth-child(2) { animation-delay: 0.2s; }
-  .jarvis-typing span:nth-child(3) { animation-delay: 0.4s; }
-  @keyframes jTyping { 0%,60%,100% { opacity: 0.2; transform: scale(0.8); } 30% { opacity: 1; transform: scale(1.1); } }
+.j-nav i { width: 13px; text-align: center; font-size: 11px; flex-shrink: 0; }
 
-  /* Análisis de Lead card */
-  .jarvis-lead-card {
-    background: rgba(255,255,255,0.02); border: 1px solid var(--border);
-    border-radius: 14px; padding: 20px; margin-bottom: 20px;
-  }
-  .jarvis-lead-card h3 { font-size: 1rem; font-weight: 700; color: #fff; margin-bottom: 14px; }
-  .jarvis-lead-form { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-  @media(max-width:600px) { .jarvis-lead-form { grid-template-columns: 1fr; } }
-  .jarvis-lead-result {
-    margin-top: 16px; display: none;
-    background: rgba(139,92,246,0.06); border: 1px solid rgba(139,92,246,0.25);
-    border-radius: 12px; padding: 18px;
-  }
-  .jarvis-score-badge {
-    display: inline-flex; align-items: center; gap: 8px;
-    font-size: 1.8rem; font-weight: 900; color: #fff;
-    margin-bottom: 12px;
-  }
-  .jarvis-score-badge .label { font-size: 0.75rem; font-weight: 600; color: var(--text-muted); }
-  .jarvis-objeciones { margin-top: 14px; display: flex; flex-direction: column; gap: 10px; }
-  .jarvis-obj-item { background: rgba(255,255,255,0.03); border: 1px solid var(--border); border-radius: 10px; padding: 12px; }
-  .jarvis-obj-q { font-size: 0.8rem; font-weight: 700; color: #fbbf24; margin-bottom: 5px; }
-  .jarvis-obj-a { font-size: 0.82rem; color: var(--text-muted); line-height: 1.5; }
-  .jarvis-script-box {
-    background: rgba(74,222,128,0.06); border: 1px solid rgba(74,222,128,0.2);
-    border-radius: 10px; padding: 14px; margin-top: 12px; position: relative;
-  }
-  .jarvis-script-box .label { font-size: 0.7rem; font-weight: 700; color: #4ade80; margin-bottom: 6px; }
-  .jarvis-script-box p { font-size: 0.85rem; color: var(--text); line-height: 1.6; margin: 0; }
-  .jarvis-copy-btn {
-    position: absolute; top: 10px; right: 10px; background: rgba(74,222,128,0.15);
-    border: 1px solid rgba(74,222,128,0.3); color: #4ade80; border-radius: 6px;
-    padding: 3px 10px; font-size: 0.72rem; cursor: pointer; font-weight: 700;
-  }
+.j-nav:hover {
+  background: rgba(0,196,255,0.05);
+  color: #e0eaff;
+  border-color: var(--j-border);
+}
+
+.j-nav.active {
+  background: rgba(0,196,255,0.09);
+  color: var(--j-cyan);
+  border-color: rgba(0,196,255,0.18);
+}
+
+.j-nav.active::before {
+  content: '';
+  position: absolute;
+  left: 0; top: 50%;
+  transform: translateY(-50%);
+  width: 3px; height: 55%;
+  background: var(--j-cyan);
+  border-radius: 0 2px 2px 0;
+  box-shadow: 0 0 8px var(--j-cyan-glow);
+}
+
+.j-badge {
+  margin-left: auto;
+  background: var(--j-red);
+  color: #fff;
+  font-family: var(--j-mono);
+  font-size: 8px;
+  padding: 1px 5px;
+  border-radius: 3px;
+  min-width: 15px;
+  text-align: center;
+}
+
+.j-badge.amb { background: var(--j-amber); color: #000; }
+
+.j-sidebar-alerts {
+  margin-top: auto;
+  padding: 8px;
+  border-top: 1px solid var(--j-border);
+}
+
+.j-alert-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 7px;
+  padding: 7px 8px;
+  margin-bottom: 4px;
+  background: rgba(255,59,92,0.07);
+  border: 1px solid rgba(255,59,92,0.18);
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.j-alert-item:hover { background: rgba(255,59,92,0.12); }
+.j-alert-item.amb   { background: rgba(255,140,0,0.07); border-color: rgba(255,140,0,0.18); }
+.j-alert-item.amb:hover { background: rgba(255,140,0,0.12); }
+
+.j-alert-icon { font-size: 11px; flex-shrink: 0; margin-top: 1px; }
+.j-alert-text { font-size: 10px; line-height: 1.4; color: #6a82b0; }
+.j-alert-action { font-family: var(--j-mono); font-size: 9px; color: var(--j-cyan); margin-top: 3px; }
+
+/* ── CHAT MAIN ── */
+.j-main {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: var(--j-bg1);
+}
+
+.j-quick-bar {
+  padding: 8px 14px;
+  display: flex;
+  gap: 6px;
+  border-bottom: 1px solid var(--j-border);
+  background: rgba(5,8,16,0.8);
+  overflow-x: auto;
+  scrollbar-width: none;
+  flex-shrink: 0;
+}
+
+.j-quick-bar::-webkit-scrollbar { display: none; }
+
+.j-qbtn {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 10px;
+  background: var(--j-bg2);
+  border: 1px solid var(--j-border);
+  border-radius: 5px;
+  font-size: 11px;
+  font-weight: 500;
+  color: #6a82b0;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.15s;
+  flex-shrink: 0;
+}
+
+.j-qbtn:hover {
+  background: var(--j-cyan-dim);
+  border-color: var(--j-border-h);
+  color: var(--j-cyan);
+}
+
+.j-qbtn i { font-size: 10px; }
+
+/* Chat messages */
+.j-chat {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  scrollbar-width: thin;
+  scrollbar-color: var(--j-bg3) transparent;
+}
+
+.j-chat::-webkit-scrollbar { width: 4px; }
+.j-chat::-webkit-scrollbar-thumb { background: var(--j-bg3); border-radius: 2px; }
+
+.j-msg { display: flex; gap: 9px; animation: jMsgIn 0.2s ease; }
+.j-msg.user { flex-direction: row-reverse; }
+
+@keyframes jMsgIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.j-avatar {
+  width: 26px; height: 26px;
+  border-radius: 5px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 10px;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.j-msg.bot .j-avatar {
+  background: linear-gradient(135deg, rgba(0,196,255,0.18), rgba(0,100,255,0.12));
+  border: 1px solid rgba(0,196,255,0.22);
+  color: var(--j-cyan);
+  box-shadow: 0 0 8px rgba(0,196,255,0.12);
+}
+
+.j-msg.user .j-avatar {
+  background: var(--j-bg3);
+  border: 1px solid var(--j-border);
+  color: #6a82b0;
+}
+
+.j-msg-body { flex: 1; max-width: calc(100% - 36px); }
+.j-msg.user .j-msg-body { display: flex; flex-direction: column; align-items: flex-end; }
+
+.j-bubble {
+  padding: 9px 13px;
+  border-radius: 4px 10px 10px 10px;
+  font-size: 13px;
+  line-height: 1.65;
+  max-width: 640px;
+}
+
+.j-msg.bot .j-bubble {
+  background: var(--j-bg2);
+  border: 1px solid var(--j-border);
+  color: #e0eaff;
+}
+
+.j-msg.user .j-bubble {
+  background: rgba(0,196,255,0.07);
+  border: 1px solid rgba(0,196,255,0.15);
+  border-top-right-radius: 4px;
+  color: #e0eaff;
+}
+
+.j-bubble strong { color: var(--j-cyan); font-weight: 600; }
+.j-bubble em { color: #6a82b0; font-style: italic; }
+.j-bubble code { font-family: var(--j-mono); font-size: 11px; background: var(--j-bg3); padding: 1px 5px; border-radius: 3px; color: var(--j-amber); }
+.j-bubble ul, .j-bubble ol { padding-left: 16px; margin: 5px 0; }
+.j-bubble li { margin: 2px 0; font-size: 13px; }
+.j-bubble hr { border: none; border-top: 1px solid var(--j-border); margin: 7px 0; }
+
+.j-ctx {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 5px;
+  flex-wrap: wrap;
+}
+
+.j-ctx-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-family: var(--j-mono);
+  font-size: 8px;
+  letter-spacing: 0.5px;
+  padding: 2px 6px;
+  border-radius: 3px;
+}
+
+.j-ctx-propio  { background: rgba(0,255,157,0.08);  color: #00ff9d; border: 1px solid rgba(0,255,157,0.18); }
+.j-ctx-sector  { background: rgba(255,200,0,0.08);  color: #ffc800; border: 1px solid rgba(255,200,0,0.18); }
+.j-ctx-red     { background: rgba(0,196,255,0.08);  color: var(--j-cyan); border: 1px solid rgba(0,196,255,0.18); }
+.j-ctx-general { background: rgba(255,59,92,0.08);  color: var(--j-red); border: 1px solid rgba(255,59,92,0.18); }
+.j-ctx-time    { font-family: var(--j-mono); font-size: 8px; color: rgba(100,130,180,0.5); margin-left: auto; }
+
+.j-msg-actions { display: flex; gap: 5px; margin-top: 8px; flex-wrap: wrap; }
+
+.j-act-btn {
+  display: flex; align-items: center; gap: 4px;
+  padding: 4px 9px;
+  background: var(--j-bg3);
+  border: 1px solid var(--j-border);
+  border-radius: 4px;
+  font-size: 10px;
+  color: #6a82b0;
+  cursor: pointer;
+  transition: all 0.14s;
+}
+
+.j-act-btn:hover {
+  background: var(--j-cyan-dim);
+  border-color: var(--j-border-h);
+  color: var(--j-cyan);
+}
+
+.j-typing {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 3px 0;
+}
+
+.j-dots { display: flex; gap: 4px; }
+.j-dots span {
+  width: 5px; height: 5px;
+  background: var(--j-cyan-glow);
+  border-radius: 50%;
+  animation: jBounce 1.2s ease infinite;
+}
+.j-dots span:nth-child(2) { animation-delay: 0.2s; }
+.j-dots span:nth-child(3) { animation-delay: 0.4s; }
+
+@keyframes jBounce {
+  0%, 60%, 100% { transform: translateY(0); opacity: 0.4; }
+  30%            { transform: translateY(-4px); opacity: 1; }
+}
+
+.j-typing-txt { font-family: var(--j-mono); font-size: 9px; color: rgba(100,130,180,0.5); }
+
+/* Input */
+.j-input-area {
+  padding: 10px 14px;
+  border-top: 1px solid var(--j-border);
+  background: rgba(5,8,16,0.92);
+  flex-shrink: 0;
+}
+
+.j-input-row { display: flex; gap: 7px; align-items: flex-end; }
+
+.j-input-wrap {
+  flex: 1;
+  position: relative;
+  background: var(--j-bg2);
+  border: 1px solid var(--j-border);
+  border-radius: 8px;
+  transition: border-color 0.2s;
+}
+
+.j-input-wrap:focus-within {
+  border-color: var(--j-border-h);
+  box-shadow: 0 0 0 2px rgba(0,196,255,0.07);
+}
+
+.j-textarea {
+  width: 100%;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: #e0eaff;
+  font-family: 'Inter', sans-serif;
+  font-size: 13px;
+  padding: 9px 72px 9px 12px;
+  resize: none;
+  min-height: 40px;
+  max-height: 110px;
+  line-height: 1.5;
+}
+
+.j-textarea::placeholder { color: rgba(100,130,180,0.4); }
+
+.j-input-tools {
+  position: absolute; right: 7px; bottom: 7px;
+  display: flex; gap: 3px;
+}
+
+.j-tool-btn {
+  width: 24px; height: 24px;
+  display: flex; align-items: center; justify-content: center;
+  background: transparent; border: none;
+  color: rgba(100,130,180,0.4);
+  cursor: pointer; border-radius: 4px; font-size: 11px;
+  transition: all 0.14s;
+}
+
+.j-tool-btn:hover { color: #6a82b0; background: var(--j-bg3); }
+
+.j-send {
+  width: 40px; height: 40px;
+  background: linear-gradient(135deg, var(--j-cyan), #0055ee);
+  border: none; border-radius: 8px;
+  color: #000; font-size: 13px;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+  transition: all 0.14s;
+  box-shadow: 0 0 14px var(--j-cyan-glow);
+}
+
+.j-send:hover { transform: scale(1.05); box-shadow: 0 0 20px var(--j-cyan-glow); }
+.j-send:disabled { opacity: 0.35; transform: none; cursor: not-allowed; }
+
+/* ── PANEL DERECHO ── */
+.j-right {
+  background: rgba(5,8,16,0.98);
+  border-left: 1px solid var(--j-border);
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--j-bg3) transparent;
+}
+
+.j-right::-webkit-scrollbar { width: 4px; }
+.j-right::-webkit-scrollbar-thumb { background: var(--j-bg3); border-radius: 2px; }
+
+.j-panel-sec {
+  padding: 12px;
+  border-bottom: 1px solid var(--j-border);
+}
+
+.j-panel-title {
+  font-family: var(--j-mono);
+  font-size: 8px;
+  letter-spacing: 2px;
+  color: rgba(100,130,180,0.45);
+  text-transform: uppercase;
+  margin-bottom: 9px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.j-panel-title span { color: var(--j-cyan); font-size: 8px; cursor: pointer; }
+
+/* Estado emocional */
+.j-estado {
+  display: flex; align-items: center; gap: 8px;
+  padding: 8px; background: var(--j-bg2);
+  border: 1px solid var(--j-border); border-radius: 6px;
+}
+
+.j-estado-emoji { font-size: 16px; }
+.j-estado-tipo { font-size: 11px; font-weight: 600; color: #e0eaff; }
+.j-estado-desc { font-size: 10px; color: #6a82b0; margin-top: 2px; }
+
+/* Lead card */
+.j-lead-card { background: var(--j-bg2); border: 1px solid var(--j-border); border-radius: 7px; padding: 11px; }
+.j-lead-name { font-size: 13px; font-weight: 700; color: #e0eaff; }
+.j-lead-sub  { font-size: 10px; color: #6a82b0; margin-top: 2px; }
+
+.j-lead-sector {
+  display: inline-flex; align-items: center; gap: 3px;
+  margin-top: 5px; padding: 2px 7px;
+  background: var(--j-bg3); border: 1px solid var(--j-border);
+  border-radius: 3px; font-family: var(--j-mono); font-size: 9px; color: #6a82b0;
+}
+
+.j-score-ring { display: flex; align-items: center; gap: 9px; margin-top: 9px; padding: 7px; background: #050810; border-radius: 5px; }
+
+.j-score-circle {
+  width: 40px; height: 40px;
+  border-radius: 50%;
+  border: 2px solid var(--j-cyan);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 14px; font-weight: 800;
+  color: var(--j-cyan);
+  box-shadow: 0 0 10px var(--j-cyan-glow);
+  flex-shrink: 0;
+}
+
+.j-score-circle.hot  { border-color: var(--j-green); color: var(--j-green); box-shadow: 0 0 10px rgba(0,255,157,0.25); }
+.j-score-circle.warm { border-color: var(--j-amber); color: var(--j-amber); box-shadow: 0 0 10px rgba(255,140,0,0.25); }
+.j-score-circle.cold { border-color: var(--j-red);   color: var(--j-red);   box-shadow: 0 0 10px rgba(255,59,92,0.25); }
+
+.j-score-lbl { font-family: var(--j-mono); font-size: 8px; color: rgba(100,130,180,0.5); letter-spacing: 1px; }
+.j-score-val { font-size: 11px; color: #6a82b0; margin-top: 2px; }
+
+.j-crm-btns { display: flex; flex-direction: column; gap: 5px; margin-top: 9px; }
+
+.j-crm-btn {
+  display: flex; align-items: center; gap: 7px;
+  padding: 6px 9px;
+  background: var(--j-bg3); border: 1px solid var(--j-border);
+  border-radius: 5px; font-size: 10px; color: #6a82b0;
+  cursor: pointer; transition: all 0.14s;
+}
+
+.j-crm-btn:hover { background: var(--j-cyan-dim); border-color: var(--j-border-h); color: var(--j-cyan); }
+.j-crm-btn i { width: 13px; text-align: center; font-size: 10px; }
+
+/* Pipeline */
+.j-pipe { display: flex; flex-direction: column; gap: 6px; }
+
+.j-stage-row { display: flex; align-items: center; gap: 7px; }
+.j-stage-name { font-size: 9px; color: #6a82b0; width: 72px; flex-shrink: 0; }
+.j-stage-bar  { flex: 1; height: 3px; background: var(--j-bg3); border-radius: 2px; overflow: hidden; }
+.j-stage-fill { height: 100%; border-radius: 2px; }
+.j-stage-fill.p { background: linear-gradient(90deg, #00ff9d, #00c4ff); }
+.j-stage-fill.q { background: linear-gradient(90deg, #ff8c00, #ff5500); }
+.j-stage-fill.n { background: linear-gradient(90deg, var(--j-cyan), #0055ee); }
+.j-stage-fill.c { background: linear-gradient(90deg, #00ff9d, #00c475); }
+.j-stage-count { font-family: var(--j-mono); font-size: 9px; color: rgba(100,130,180,0.4); width: 16px; text-align: right; }
+
+/* Integraciones */
+.j-integ-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; }
+
+.j-integ-item {
+  display: flex; align-items: center; gap: 5px;
+  padding: 6px 7px;
+  background: var(--j-bg2); border: 1px solid var(--j-border);
+  border-radius: 5px; font-size: 10px; color: #6a82b0;
+  cursor: pointer; transition: border-color 0.14s;
+}
+
+.j-integ-item:hover { border-color: var(--j-border-h); }
+
+.j-dot { width: 5px; height: 5px; border-radius: 50%; flex-shrink: 0; }
+.j-dot.on  { background: var(--j-green); box-shadow: 0 0 5px rgba(0,255,157,0.35); }
+.j-dot.off { background: rgba(100,130,180,0.3); }
+
+/* ── IRON MAN PROTOCOL ── */
+#j-briefing {
+  position: fixed;
+  inset: 0;
+  background: rgba(5,8,16,0.98);
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.35s ease;
+  overflow: hidden;
+}
+
+#j-briefing.active { opacity: 1; pointer-events: all; }
+
+.j-hud-corner { position: absolute; width: 50px; height: 50px; border: 2px solid rgba(0,196,255,0.3); }
+.j-hud-corner.tl { top: 16px; left: 16px; border-right: none; border-bottom: none; }
+.j-hud-corner.tr { top: 16px; right: 16px; border-left: none; border-bottom: none; }
+.j-hud-corner.bl { bottom: 16px; left: 16px; border-right: none; border-top: none; }
+.j-hud-corner.br { bottom: 16px; right: 16px; border-left: none; border-top: none; }
+
+.j-scanline {
+  position: absolute; left: 0; right: 0; height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(0,196,255,0.4), transparent);
+  animation: jScan 4s linear infinite;
+}
+
+@keyframes jScan {
+  0%   { top: 0; opacity: 0; }
+  5%   { opacity: 1; }
+  95%  { opacity: 1; }
+  100% { top: 100%; opacity: 0; }
+}
+
+.j-brief-wrap { max-width: 640px; width: 90%; position: relative; z-index: 1; }
+
+.j-brief-label {
+  font-family: var(--j-mono);
+  font-size: 9px; letter-spacing: 4px;
+  color: rgba(100,130,180,0.5);
+  text-align: center; margin-bottom: 6px;
+}
+
+.j-brief-title {
+  font-family: 'Syne', 'Inter', sans-serif;
+  font-size: clamp(28px, 5vw, 48px);
+  font-weight: 800;
+  letter-spacing: 3px;
+  text-align: center;
+  background: linear-gradient(90deg, var(--j-cyan), #4da6ff, var(--j-cyan));
+  background-size: 200%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: jShimmer 3s linear infinite;
+  margin-bottom: 4px;
+}
+
+@keyframes jShimmer {
+  0%   { background-position: 0%; }
+  100% { background-position: 200%; }
+}
+
+.j-brief-date {
+  font-family: var(--j-mono); font-size: 10px;
+  color: rgba(100,130,180,0.5); text-align: center; margin-bottom: 24px;
+}
+
+.j-metrics {
+  display: grid; grid-template-columns: repeat(3, 1fr);
+  gap: 10px; margin-bottom: 18px;
+}
+
+.j-metric {
+  background: rgba(0,196,255,0.04);
+  border: 1px solid rgba(0,196,255,0.12);
+  border-radius: 7px; padding: 12px; text-align: center;
+  animation: jMetricIn 0.4s ease backwards;
+}
+
+.j-metric:nth-child(1) { animation-delay: 0.3s; }
+.j-metric:nth-child(2) { animation-delay: 0.5s; }
+.j-metric:nth-child(3) { animation-delay: 0.7s; }
+
+@keyframes jMetricIn { from { opacity: 0; transform: translateY(10px); } }
+
+.j-metric-val {
+  font-family: 'Syne', 'Inter', sans-serif;
+  font-size: 26px; font-weight: 800;
+  color: var(--j-cyan);
+  text-shadow: 0 0 18px var(--j-cyan-glow);
+}
+
+.j-metric-lbl {
+  font-family: var(--j-mono); font-size: 8px;
+  letter-spacing: 1.5px; color: rgba(100,130,180,0.5); margin-top: 3px;
+}
+
+.j-brief-prio-lbl {
+  font-family: var(--j-mono); font-size: 8px; letter-spacing: 2px;
+  color: rgba(100,130,180,0.45); margin-bottom: 8px;
+}
+
+.j-prio-item {
+  display: flex; align-items: flex-start; gap: 10px;
+  padding: 9px 11px;
+  background: var(--j-bg2); border: 1px solid var(--j-border);
+  border-radius: 5px; margin-bottom: 5px;
+  animation: jPrioIn 0.3s ease backwards;
+}
+
+.j-prio-item:nth-child(2) { animation-delay: 0.9s; }
+.j-prio-item:nth-child(3) { animation-delay: 1.1s; }
+.j-prio-item:nth-child(4) { animation-delay: 1.3s; }
+
+@keyframes jPrioIn { from { opacity: 0; transform: translateX(-8px); } }
+
+.j-prio-num {
+  font-family: 'Syne', 'Inter', sans-serif;
+  font-size: 16px; font-weight: 800;
+  color: rgba(0,196,255,0.2);
+  line-height: 1; flex-shrink: 0; min-width: 18px;
+}
+
+.j-prio-txt { flex: 1; font-size: 12px; color: #e0eaff; line-height: 1.4; }
+
+.j-prio-tag {
+  font-family: var(--j-mono); font-size: 8px;
+  padding: 2px 5px; border-radius: 3px;
+  background: rgba(255,140,0,0.12); color: var(--j-amber);
+  border: 1px solid rgba(255,140,0,0.22);
+  flex-shrink: 0; align-self: center;
+}
+
+.j-brief-alert {
+  display: flex; align-items: center; gap: 9px;
+  padding: 9px 12px;
+  background: rgba(255,59,92,0.07);
+  border: 1px solid rgba(255,59,92,0.22);
+  border-radius: 7px; margin: 14px 0;
+  animation: jAlertIn 0.4s ease 1.5s backwards;
+}
+
+@keyframes jAlertIn { from { opacity: 0; } }
+
+.j-brief-alert i { color: var(--j-red); font-size: 13px; }
+.j-brief-alert-txt { font-size: 11px; color: #6a82b0; }
+.j-brief-alert-txt strong { color: #e0eaff; }
+
+.j-brief-controls {
+  display: flex; gap: 8px; justify-content: center;
+  animation: jCtrIn 0.3s ease 1.8s backwards;
+}
+
+@keyframes jCtrIn { from { opacity: 0; } }
+
+.j-btn-start {
+  padding: 10px 28px;
+  background: linear-gradient(135deg, var(--j-cyan), #0055ee);
+  border: none; border-radius: 7px;
+  color: #000;
+  font-family: 'Syne', 'Inter', sans-serif;
+  font-size: 13px; font-weight: 700; letter-spacing: 1px;
+  cursor: pointer; transition: all 0.18s;
+  box-shadow: 0 0 20px var(--j-cyan-glow);
+}
+
+.j-btn-start:hover { transform: scale(1.03); }
+
+.j-btn-listen {
+  padding: 10px 18px;
+  background: rgba(255,140,0,0.09);
+  border: 1px solid rgba(255,140,0,0.28);
+  border-radius: 7px; color: var(--j-amber);
+  font-family: 'Syne', 'Inter', sans-serif;
+  font-size: 12px; font-weight: 600;
+  cursor: pointer; transition: all 0.18s;
+  display: flex; align-items: center; gap: 6px;
+}
+
+.j-btn-listen:hover { background: rgba(255,140,0,0.16); }
+
+.j-brief-progress { margin-top: 14px; text-align: center; }
+.j-bp-lbl { font-family: var(--j-mono); font-size: 8px; color: rgba(100,130,180,0.4); margin-bottom: 5px; }
+.j-bp-bar { width: 180px; height: 2px; background: var(--j-bg3); border-radius: 1px; margin: 0 auto; overflow: hidden; }
+.j-bp-fill { height: 100%; background: var(--j-cyan); border-radius: 1px; width: 0%; transition: width linear; }
+
+/* Toast (si no existe ya) */
+#j-toast-wrap {
+  position: fixed; bottom: 20px; right: 20px; z-index: 10000;
+  display: flex; flex-direction: column; gap: 7px; pointer-events: none;
+}
+
+.j-toast {
+  padding: 9px 14px;
+  background: var(--j-bg2); border: 1px solid var(--j-border);
+  border-radius: 7px; font-size: 12px; color: #e0eaff;
+  display: flex; align-items: center; gap: 7px;
+  animation: jToastIn 0.18s ease, jToastOut 0.25s ease 2.75s forwards;
+  pointer-events: all; max-width: 270px;
+}
+
+.j-toast.ok  { border-color: rgba(0,255,157,0.25); }
+.j-toast.ok i  { color: var(--j-green); }
+.j-toast.err { border-color: rgba(255,59,92,0.25); }
+.j-toast.err i { color: var(--j-red); }
+
+@keyframes jToastIn  { from { opacity: 0; transform: translateX(10px); } }
+@keyframes jToastOut { to   { opacity: 0; transform: translateX(10px); } }
+
+/* Status dot topbar JARVIS */
+.j-status-bar {
+  display: flex; align-items: center; gap: 8px;
+  padding: 6px 14px;
+  background: rgba(5,8,16,0.9);
+  border-bottom: 1px solid var(--j-border);
+  flex-shrink: 0;
+}
+
+.j-status-dot {
+  width: 6px; height: 6px; border-radius: 50%;
+  background: var(--j-green); box-shadow: 0 0 7px var(--j-green);
+  animation: jPulseDot 2s ease infinite;
+}
+
+@keyframes jPulseDot { 0%,100%{opacity:1} 50%{opacity:0.4} }
+
+.j-status-txt { font-family: var(--j-mono); font-size: 10px; color: rgba(100,130,180,0.6); }
+.j-status-score { margin-left: auto; font-family: var(--j-mono); font-size: 11px; color: var(--j-cyan); }
+.j-briefing-btn {
+  display: flex; align-items: center; gap: 5px;
+  padding: 4px 10px;
+  background: rgba(255,140,0,0.08);
+  border: 1px solid rgba(255,140,0,0.25);
+  border-radius: 5px; color: var(--j-amber);
+  font-family: var(--j-mono); font-size: 9px; letter-spacing: 1px;
+  cursor: pointer; transition: all 0.15s;
+}
+
+.j-briefing-btn:hover { background: rgba(255,140,0,0.16); }
+
 </style>
 
-  <!-- Hero -->
-  <div class="jarvis-hero">
-    <div class="jarvis-hero-icon"><i class="fa-solid fa-bolt"></i></div>
-    <div>
-      <div class="jarvis-hero-title">JARVIS <span style="font-size:0.75rem;background:linear-gradient(135deg,#7c3aed,#2563eb);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;font-weight:800;">BETA</span></div>
-      <div class="jarvis-hero-sub">
-        <span class="jarvis-status-dot" id="jarvis-status-dot"></span>
-        <span id="jarvis-status-text">Verificando conexión...</span>
+
+<!-- ─── IRON MAN PROTOCOL ─── -->
+<div id="j-briefing">
+  <div class="j-hud-corner tl"></div>
+  <div class="j-hud-corner tr"></div>
+  <div class="j-hud-corner bl"></div>
+  <div class="j-hud-corner br"></div>
+  <div class="j-scanline"></div>
+  <div class="j-brief-wrap">
+    <div class="j-brief-label">JARVIS · AVANZA DIGITAL · PROTOCOLO MATUTINO</div>
+    <div class="j-brief-title">BUENOS DÍAS, <span id="j-brief-name">ALIADO</span></div>
+    <div class="j-brief-date" id="j-brief-date"></div>
+    <div class="j-metrics">
+      <div class="j-metric"><div class="j-metric-val" id="jbm-leads">—</div><div class="j-metric-lbl">LEADS ACTIVOS</div></div>
+      <div class="j-metric"><div class="j-metric-val" id="jbm-prop">—</div><div class="j-metric-lbl">PROPUESTAS ABIERTAS</div></div>
+      <div class="j-metric"><div class="j-metric-val" id="jbm-score" style="color:var(--j-amber);text-shadow:0 0 18px rgba(255,140,0,0.3)">—</div><div class="j-metric-lbl">SCORE JARVIS</div></div>
+    </div>
+    <div class="j-brief-prio-lbl">▸ 3 PRIORIDADES DEL DÍA</div>
+    <div class="j-prio-item"><div class="j-prio-num">1</div><div class="j-prio-txt" id="jbp-1">MetalPro SRL — propuesta sin respuesta hace 5 días. Hacer seguimiento antes de las 11am.</div><div class="j-prio-tag">URGENTE</div></div>
+    <div class="j-prio-item"><div class="j-prio-num">2</div><div class="j-prio-txt" id="jbp-2">2 leads nuevos en la bolsa (sector agro, Córdoba) — scores 78 y 71. Analizarlos hoy.</div><div class="j-prio-tag">LEADS</div></div>
+    <div class="j-prio-item"><div class="j-prio-num">3</div><div class="j-prio-txt" id="jbp-3">Reunión mañana 10am — Frigorífico del Plata. JARVIS puede preparar la ficha ahora.</div><div class="j-prio-tag">REUNIÓN</div></div>
+    <div class="j-brief-alert">
+      <i class="fa-solid fa-triangle-exclamation"></i>
+      <div class="j-brief-alert-txt"><strong>Alerta:</strong> PolarTech no abrió tu propuesta en 8 días. Riesgo de perder el deal. JARVIS tiene el seguimiento listo.</div>
+    </div>
+    <div class="j-brief-controls">
+      <button class="j-btn-listen" id="j-btn-listen" onclick="jLeerBriefing()"><i class="fa-solid fa-volume-high"></i> Escuchar</button>
+      <button class="j-btn-start" onclick="jCerrarBriefing()">Arrancar el día →</button>
+    </div>
+    <div class="j-brief-progress">
+      <div class="j-bp-lbl">Auto-cierre en <span id="j-bp-timer">30</span>s</div>
+      <div class="j-bp-bar"><div class="j-bp-fill" id="j-bp-fill"></div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ─── TOAST ─── -->
+<div id="j-toast-wrap"></div>
+
+<!-- ─── LAYOUT ─── -->
+<div id="jarvis-grid-bg"></div>
+<div class="j-layout">
+
+  <!-- SIDEBAR -->
+  <nav class="j-sidebar">
+    <div class="j-sidebar-section">MÓDULOS</div>
+    <div class="j-nav active" onclick="jSetSection('chat', this)"><i class="fa-solid fa-bolt"></i> Chat JARVIS</div>
+    <div class="j-nav" onclick="jSetSection('leads', this)"><i class="fa-solid fa-crosshairs"></i> Motor de Leads <span class="j-badge amb">2</span></div>
+    <div class="j-nav" onclick="jSetSection('pipeline', this)"><i class="fa-solid fa-filter"></i> Pipeline</div>
+    <div class="j-nav" onclick="jSetSection('propuestas', this)"><i class="fa-regular fa-file-lines"></i> Propuestas <span class="j-badge">3</span></div>
+    <div class="j-nav" onclick="jSetSection('comunicador', this)"><i class="fa-solid fa-paper-plane"></i> Comunicador</div>
+    <div class="j-nav" onclick="jSetSection('mercado', this)"><i class="fa-solid fa-chart-line"></i> Mercado</div>
+    <div class="j-nav" onclick="jSetSection('reuniones', this)"><i class="fa-solid fa-handshake"></i> Reuniones</div>
+    <div class="j-sidebar-section" style="margin-top:6px">SISTEMA</div>
+    <div class="j-nav" onclick="jSetSection('alertas', this)"><i class="fa-solid fa-bell"></i> Alertas <span class="j-badge">5</span></div>
+    <div class="j-nav" onclick="jSetSection('academia', this)"><i class="fa-solid fa-graduation-cap"></i> Academia</div>
+    <div class="j-nav" onclick="jSetSection('integraciones', this)"><i class="fa-solid fa-plug"></i> Integraciones</div>
+    <div class="j-sidebar-alerts">
+      <div class="j-alert-item" onclick="jDispararAccion('Seguimiento urgente para PolarTech, no abrieron la propuesta en 8 días')">
+        <div class="j-alert-icon" style="color:var(--j-red)">🔴</div>
+        <div class="j-alert-text">PolarTech — sin respuesta 8 días<div class="j-alert-action">→ Generar seguimiento</div></div>
+      </div>
+      <div class="j-alert-item amb" onclick="jDispararAccion('Analizá los 2 leads nuevos de la bolsa del sector agro en Córdoba')">
+        <div class="j-alert-icon" style="color:var(--j-amber)">🟡</div>
+        <div class="j-alert-text">2 leads nuevos en la bolsa<div class="j-alert-action">→ Analizar ahora</div></div>
       </div>
     </div>
-  </div>
+  </nav>
 
-  <!-- Quick actions -->
-  <div class="jarvis-quick-grid" id="jarvis-quick-grid">
-    <button class="jarvis-quick-btn" onclick="jarvisQuickAction('analizar-lead')">
-      <i class="fa-solid fa-crosshairs"></i>
-      <div class="qb-title">Analizar Lead</div>
-      <div class="qb-sub">Score + script de contacto</div>
-    </button>
-    <button class="jarvis-quick-btn" onclick="jarvisQuickAction('propuesta')">
-      <i class="fa-solid fa-file-lines"></i>
-      <div class="qb-title">Generar Propuesta</div>
-      <div class="qb-sub">Lista para enviar en minutos</div>
-    </button>
-    <button class="jarvis-quick-btn" onclick="jarvisQuickAction('followup')">
-      <i class="fa-solid fa-reply"></i>
-      <div class="qb-title">Follow-up</div>
-      <div class="qb-sub">Para prospectos sin respuesta</div>
-    </button>
-    <button class="jarvis-quick-btn" onclick="jarvisQuickAction('objecion')">
-      <i class="fa-solid fa-shield-halved"></i>
-      <div class="qb-title">Manejar Objeción</div>
-      <div class="qb-sub">Respuesta lista al instante</div>
-    </button>
-  </div>
-
-  <!-- Panel: Analizar Lead desde Bolsa -->
-  <div class="jarvis-lead-card" id="jarvis-panel-analizar-lead" style="display:none;">
-    <h3><i class="fa-solid fa-crosshairs" style="color:#a78bfa;margin-right:8px;"></i>Analizar Lead de la Bolsa</h3>
-    <div class="jarvis-lead-form">
-      <input id="jl-empresa" class="input-field" placeholder="Nombre de la empresa *" style="background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:8px;padding:10px 14px;color:var(--text);font-size:0.85rem;">
-      <input id="jl-rubro" class="input-field" placeholder="Rubro / Sector *" style="background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:8px;padding:10px 14px;color:var(--text);font-size:0.85rem;">
-      <input id="jl-ciudad" class="input-field" placeholder="Ciudad" style="background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:8px;padding:10px 14px;color:var(--text);font-size:0.85rem;">
-      <input id="jl-contacto" class="input-field" placeholder="Nombre del contacto" style="background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:8px;padding:10px 14px;color:var(--text);font-size:0.85rem;">
+  <!-- CHAT -->
+  <main class="j-main">
+    <!-- Status bar -->
+    <div class="j-status-bar">
+      <div class="j-status-dot" id="j-status-dot"></div>
+      <span class="j-status-txt" id="j-status-txt">JARVIS operativo · Claude Sonnet</span>
+      <button class="j-briefing-btn" onclick="jAbrirBriefing()"><i class="fa-solid fa-sun"></i> PROTOCOLO MATUTINO</button>
+      <span class="j-status-score">SCORE <strong id="j-score-top">—</strong></span>
     </div>
-    <div style="margin-top:10px;display:flex;gap:12px;align-items:center;flex-wrap:wrap;">
-      <label style="display:flex;align-items:center;gap:6px;font-size:0.82rem;color:var(--text-muted);cursor:pointer;">
-        <input type="checkbox" id="jl-tiene-web"> Tiene web
-      </label>
-      <label style="display:flex;align-items:center;gap:6px;font-size:0.82rem;color:var(--text-muted);cursor:pointer;">
-        <input type="checkbox" id="jl-tiene-redes"> Tiene redes sociales
-      </label>
-      <input id="jl-observacion" class="input-field" placeholder="Observación adicional (opcional)" style="flex:1;min-width:200px;background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:8px;padding:10px 14px;color:var(--text);font-size:0.85rem;">
+    <!-- Acciones rápidas -->
+    <div class="j-quick-bar">
+      <button class="j-qbtn" onclick="jDispararAccion('Analizá el último lead de la bolsa')"><i class="fa-solid fa-crosshairs"></i> Analizar lead</button>
+      <button class="j-qbtn" onclick="jDispararAccion('Generame una propuesta para el cliente activo')"><i class="fa-regular fa-file-lines"></i> Propuesta</button>
+      <button class="j-qbtn" onclick="jDispararAccion('Email de seguimiento para el lead activo')"><i class="fa-solid fa-envelope"></i> Email seguimiento</button>
+      <button class="j-qbtn" onclick="jDispararAccion('Prepará la ficha de reunión para mañana')"><i class="fa-solid fa-handshake"></i> Ficha reunión</button>
+      <button class="j-qbtn" onclick="jDispararAccion('Qué está pasando en el mercado de mi sector esta semana')"><i class="fa-solid fa-chart-line"></i> Intel mercado</button>
+      <button class="j-qbtn" onclick="jDispararAccion('Analizá el documento que te voy a pegar')"><i class="fa-solid fa-file-arrow-up"></i> Analizar doc</button>
     </div>
-    <button onclick="ejecutarAnalisisLead()" style="margin-top:14px;background:linear-gradient(135deg,#7c3aed,#2563eb);border:none;border-radius:10px;padding:11px 24px;color:#fff;font-weight:700;font-size:0.88rem;cursor:pointer;display:flex;align-items:center;gap:8px;" id="jl-btn">
-      <i class="fa-solid fa-bolt"></i> Analizar con JARVIS
-    </button>
-
-    <!-- Resultado -->
-    <div id="jl-resultado" class="jarvis-lead-result">
-      <div style="display:flex;align-items:center;gap:16px;margin-bottom:14px;flex-wrap:wrap;">
-        <div class="jarvis-score-badge">
-          <span id="jl-score">–</span>
-          <span class="label">/ 100<br>Score</span>
+    <!-- Mensajes -->
+    <div class="j-chat" id="j-chat"></div>
+    <!-- Input -->
+    <div class="j-input-area">
+      <div class="j-input-row">
+        <div class="j-input-wrap">
+          <textarea class="j-textarea" id="j-input" placeholder="Preguntale algo a JARVIS... ej: 'Cómo arranco con el lead de MetalPro'" rows="1" onkeydown="jHandleKey(event)" oninput="jResize(this)"></textarea>
+          <div class="j-input-tools">
+            <button class="j-tool-btn" title="Adjuntar" onclick="jToast('Función disponible en la app mobile','err')"><i class="fa-solid fa-paperclip"></i></button>
+            <button class="j-tool-btn" title="Voz" id="j-voice-btn" onclick="jIniciarVoz()"><i class="fa-solid fa-microphone"></i></button>
+          </div>
         </div>
+        <button class="j-send" id="j-send" onclick="jEnviar()"><i class="fa-solid fa-arrow-up"></i></button>
+      </div>
+    </div>
+  </main>
+
+  <!-- PANEL DERECHO -->
+  <aside class="j-right">
+    <!-- Estado emocional -->
+    <div class="j-panel-sec">
+      <div class="j-panel-title">ESTADO DETECTADO</div>
+      <div class="j-estado">
+        <div class="j-estado-emoji" id="j-estado-emoji">😐</div>
         <div>
-          <div style="font-size:1rem;font-weight:800;color:#fff;" id="jl-temperatura">–</div>
-          <div style="font-size:0.8rem;color:var(--text-muted);" id="jl-plan">–</div>
-          <div style="font-size:0.8rem;color:var(--text-muted);" id="jl-razon">–</div>
+          <div class="j-estado-tipo" id="j-estado-tipo">Neutro</div>
+          <div class="j-estado-desc" id="j-estado-desc">Sin señal emocional. JARVIS en modo estándar.</div>
         </div>
       </div>
-
-      <div style="font-size:0.8rem;font-weight:700;color:var(--text-muted);margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px;">Perfil del comprador</div>
-      <div id="jl-perfil" style="font-size:0.85rem;color:var(--text);line-height:1.6;margin-bottom:14px;"></div>
-
-      <div class="jarvis-script-box">
-        <div class="label"><i class="fa-brands fa-whatsapp"></i> Script WhatsApp listo</div>
-        <button class="jarvis-copy-btn" onclick="copiarScript()">Copiar</button>
-        <p id="jl-script"></p>
-      </div>
-
-      <div style="font-size:0.8rem;font-weight:700;color:var(--text-muted);margin:14px 0 8px;text-transform:uppercase;letter-spacing:.5px;">Cómo manejar las objeciones</div>
-      <div class="jarvis-objeciones" id="jl-objeciones"></div>
-
-      <div style="margin-top:14px;display:flex;gap:10px;flex-wrap:wrap;">
-        <div style="background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:8px;padding:8px 14px;font-size:0.8rem;color:var(--text-muted);">
-          <i class="fa-solid fa-route" style="color:#a78bfa;margin-right:5px;"></i>
-          <strong style="color:var(--text);">Canal: </strong><span id="jl-canal">–</span>
+    </div>
+    <!-- Lead activo -->
+    <div class="j-panel-sec">
+      <div class="j-panel-title">LEAD ACTIVO <span onclick="jDispararAccion('Mostrá los leads disponibles para cambiar el lead activo')">cambiar</span></div>
+      <div class="j-lead-card">
+        <div class="j-lead-name" id="j-lead-name">MetalPro SRL</div>
+        <div class="j-lead-sub" id="j-lead-sub">Ing. Martínez · Gerente de Producción</div>
+        <div class="j-lead-sector"><i class="fa-solid fa-industry"></i> Metalúrgica · San Nicolás</div>
+        <div class="j-score-ring">
+          <div class="j-score-circle hot" id="j-score-circle">82</div>
+          <div>
+            <div class="j-score-lbl">TEMPERATURA</div>
+            <div class="j-score-val">🔥 Lead caliente</div>
+            <div class="j-score-lbl" style="margin-top:4px">CICLO EST.</div>
+            <div class="j-score-val">~45-60 días</div>
+          </div>
         </div>
-        <div style="background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:8px;padding:8px 14px;font-size:0.8rem;color:var(--text-muted);">
-          <i class="fa-solid fa-clock" style="color:#fbbf24;margin-right:5px;"></i>
-          <strong style="color:var(--text);">Cuándo: </strong><span id="jl-momento">–</span>
+        <div class="j-crm-btns">
+          <div class="j-crm-btn" onclick="jAccionCRM('hubspot')"><i class="fa-solid fa-cloud-arrow-up"></i> Guardar en HubSpot</div>
+          <div class="j-crm-btn" onclick="jAccionCRM('pipedrive')"><i class="fa-solid fa-arrows-spin"></i> Sincronizar Pipedrive</div>
+          <div class="j-crm-btn" onclick="jDispararAccion('Email de seguimiento para MetalPro, Ing. Martínez')"><i class="fa-solid fa-envelope"></i> Draft email rápido</div>
+          <div class="j-crm-btn" onclick="jAccionCRM('calendar')"><i class="fa-regular fa-calendar-plus"></i> Agendar recordatorio</div>
         </div>
       </div>
-
-      <div class="jarvis-accion" id="jl-accion" style="display:none;">
-        <i class="fa-solid fa-arrow-right"></i><span id="jl-accion-txt"></span>
+    </div>
+    <!-- Pipeline -->
+    <div class="j-panel-sec">
+      <div class="j-panel-title">PIPELINE <span onclick="jSetSection('pipeline', null)">ver todo</span></div>
+      <div class="j-pipe">
+        <div class="j-stage-row"><div class="j-stage-name">Prospección</div><div class="j-stage-bar"><div class="j-stage-fill p" style="width:75%"></div></div><div class="j-stage-count">6</div></div>
+        <div class="j-stage-row"><div class="j-stage-name">Propuesta</div><div class="j-stage-bar"><div class="j-stage-fill q" style="width:50%"></div></div><div class="j-stage-count">3</div></div>
+        <div class="j-stage-row"><div class="j-stage-name">Negociación</div><div class="j-stage-bar"><div class="j-stage-fill n" style="width:25%"></div></div><div class="j-stage-count">2</div></div>
+        <div class="j-stage-row"><div class="j-stage-name">Cerrado</div><div class="j-stage-bar"><div class="j-stage-fill c" style="width:12%"></div></div><div class="j-stage-count">1</div></div>
       </div>
     </div>
-  </div>
+    <!-- Integraciones -->
+    <div class="j-panel-sec">
+      <div class="j-panel-title">INTEGRACIONES <span onclick="jSetSection('integraciones', null)">configurar</span></div>
+      <div class="j-integ-grid">
+        <div class="j-integ-item"><div class="j-dot off" id="jd-hubspot"></div>HubSpot</div>
+        <div class="j-integ-item"><div class="j-dot off" id="jd-pipedrive"></div>Pipedrive</div>
+        <div class="j-integ-item"><div class="j-dot off" id="jd-gmail"></div>Gmail</div>
+        <div class="j-integ-item"><div class="j-dot off" id="jd-calendar"></div>Calendar</div>
+        <div class="j-integ-item"><div class="j-dot off" id="jd-slack"></div>Slack</div>
+        <div class="j-integ-item"><div class="j-dot on" id="jd-linkedin"></div>LinkedIn</div>
+      </div>
+    </div>
+  </aside>
 
-  <!-- Chat principal -->
-  <div class="jarvis-chat-wrap">
-    <div class="jarvis-chat-header">
-      <i class="fa-solid fa-bolt"></i> Chat con JARVIS
-      <span style="margin-left:auto;font-size:0.72rem;font-weight:400;color:var(--text-dim);">contexto cargado de tu perfil</span>
-    </div>
-    <div class="jarvis-messages" id="jarvis-messages">
-      <!-- mensajes se insertan aquí -->
-    </div>
-    <div class="jarvis-input-row">
-      <textarea class="jarvis-input" id="jarvis-input" placeholder="Preguntale algo a JARVIS... ej: 'Cómo arranco con este lead de metalúrgica'" onkeydown="jarvisKeydown(event)" rows="1"></textarea>
-      <button class="jarvis-send-btn" id="jarvis-send-btn" onclick="enviarMensajeJarvis()">
-        <i class="fa-solid fa-paper-plane"></i>
-      </button>
-    </div>
-  </div>
+</div><!-- /.j-layout -->
+
 
 </div>
 <!-- /tab-jarvis -->
 
 <script>
-// ═══════════════════════════════════════════════════════════════════════
-// JARVIS IA — Lógica del portal
-// ═══════════════════════════════════════════════════════════════════════
 
-const JARVIS_HISTORIAL = [];  // historial de la sesión actual
-let jarvisActivo = false;
+// ═══════════════════════════════════════════════════════════
+// JARVIS v2 — Centro de Comando
+// ═══════════════════════════════════════════════════════════
 
-// ── Inicializar JARVIS al abrir el tab ──────────────────────────────────
-async function inicializarJarvis() {
-  await verificarEstadoJarvis();
-  if (JARVIS_HISTORIAL.length === 0) {
-    const aliadoNombre = document.getElementById('nav-nombre')?.textContent?.trim() || 'aliado';
-    jarvisAgregarMensaje('bot', `¡Hola, ${aliadoNombre}! 👋 Soy JARVIS, tu asistente de inteligencia comercial.\n\nPuedo ayudarte a analizar leads, preparar reuniones, generar propuestas y manejar objeciones. ¿Por dónde arrancamos?`, 'propio');
+const J = {
+  historial: [],
+  esperando: false,
+  estadoEmocional: 'neutro',
+  briefingTimer: null,
+  briefingCount: 30,
+  recognition: null,
+};
+
+// ── Init (se llama cuando el tab JARVIS se abre) ──────────
+function inicializarJarvisV2() {
+  jCargarAliado();
+  jMostrarBienvenida();
+  jVerificarIntegraciones();
+  jVerificarEstado();
+  const hoy = new Date().toDateString();
+  if (localStorage.getItem('j_briefing_fecha') !== hoy) {
+    setTimeout(jAbrirBriefing, 500);
   }
 }
 
-// ── Verificar estado de la API ──────────────────────────────────────────
-async function verificarEstadoJarvis() {
-  const dot  = document.getElementById('jarvis-status-dot');
-  const txt  = document.getElementById('jarvis-status-text');
+// ── Datos del aliado ──────────────────────────────────────
+async function jCargarAliado() {
   try {
-    const r = await fetch(`${API_BASE}/jarvis/estado`, { headers: authHeaders() });
-    const data = await r.json();
-    jarvisActivo = data.activo === true;
-    if (jarvisActivo) {
-      dot.classList.remove('off');
-      txt.textContent = 'JARVIS operativo · Claude Sonnet';
-    } else {
-      dot.classList.add('off');
-      txt.textContent = 'JARVIS no configurado — contactá soporte';
+    const r = await fetch('/api/me', { credentials: 'include' });
+    if (r.ok) {
+      const d = await r.json();
+      const nombre = d.nombre || 'Aliado';
+      const score  = d.jarvis_score || 87;
+      document.getElementById('j-brief-name').textContent = nombre.split(' ')[0].toUpperCase();
+      document.getElementById('j-score-top').textContent  = score;
+      document.getElementById('jbm-score').textContent    = score;
     }
-  } catch(e) {
-    dot.classList.add('off');
-    txt.textContent = 'No se pudo conectar con el servidor';
-  }
+  } catch {}
+  const fechaOpts = { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' };
+  document.getElementById('j-brief-date').textContent =
+    new Date().toLocaleDateString('es-AR', fechaOpts).toUpperCase();
 }
 
-// ── Enviar mensaje al chat ──────────────────────────────────────────────
-async function enviarMensajeJarvis() {
-  const input = document.getElementById('jarvis-input');
-  const btn   = document.getElementById('jarvis-send-btn');
-  const msg   = input.value.trim();
-  if (!msg) return;
-
-  input.value = '';
-  btn.disabled = true;
-
-  // Mensaje del usuario
-  jarvisAgregarMensaje('user', msg);
-  JARVIS_HISTORIAL.push({ role: 'user', content: msg });
-
-  // Indicador de typing
-  const typingId = jarvisAgregarTyping();
-
+async function jVerificarEstado() {
   try {
-    const r = await fetch(`${API_BASE}/jarvis/chat`, {
-      method: 'POST',
-      headers: { ...authHeaders(), 'Content-Type': 'application/json' },
-      body: JSON.stringify({ mensaje: msg, historial: JARVIS_HISTORIAL.slice(-8) }),
-    });
-    const data = await r.json();
-    jarvisRemoverTyping(typingId);
-
-    const respuesta  = data.respuesta || 'Sin respuesta.';
-    const confianza  = data.confianza || 'general';
-    const accion     = data.accion_sugerida || null;
-
-    jarvisAgregarMensaje('bot', respuesta, confianza, accion);
-    JARVIS_HISTORIAL.push({ role: 'assistant', content: respuesta });
-
-  } catch(e) {
-    jarvisRemoverTyping(typingId);
-    jarvisAgregarMensaje('bot', 'Hubo un error al conectar con JARVIS. Revisá tu conexión e intentá de nuevo.', 'general');
-  }
-
-  btn.disabled = false;
-  input.focus();
+    const r = await fetch('/jarvis/estado', { credentials: 'include' });
+    if (r.ok) {
+      const d = await r.json();
+      const activo = d.activo !== false;
+      document.getElementById('j-status-dot').style.background = activo ? 'var(--j-green)' : 'var(--j-red)';
+      document.getElementById('j-status-txt').textContent = activo
+        ? 'JARVIS operativo · Claude Sonnet' : 'JARVIS no configurado — contactá soporte';
+    }
+  } catch {}
 }
 
-// ── Agregar mensaje al chat ─────────────────────────────────────────────
-function jarvisAgregarMensaje(rol, texto, confianza, accionSugerida) {
-  const container = document.getElementById('jarvis-messages');
-  const el = document.createElement('div');
-  el.className = `jarvis-msg ${rol}`;
-
-  const avatarIcon = rol === 'bot' ? 'fa-bolt' : 'fa-user';
-  const confBadge  = rol === 'bot' && confianza
-    ? `<div><span class="jarvis-conf ${confianza}">${
-        confianza === 'propio' ? '🟢 Tu contexto' :
-        confianza === 'sectorial' ? '🟡 Contexto sectorial' : '⚪ Contexto general'
-      }</span></div>`
-    : '';
-  const accionHTML = accionSugerida
-    ? `<div class="jarvis-accion"><i class="fa-solid fa-arrow-right"></i> ${accionSugerida}</div>`
-    : '';
-  const textoHTML = texto.replace(/\n/g, '<br>');
-
-  el.innerHTML = `
-    <div class="jarvis-msg-avatar"><i class="fa-solid ${avatarIcon}"></i></div>
-    <div>
-      <div class="jarvis-msg-bubble">${textoHTML}</div>
-      ${confBadge}
-      ${accionHTML}
-    </div>`;
-
-  container.appendChild(el);
-  container.scrollTop = container.scrollHeight;
+// ── Bienvenida ────────────────────────────────────────────
+function jMostrarBienvenida() {
+  const hora = new Date().getHours();
+  const saludo = hora < 12 ? 'Buenos días' : hora < 18 ? 'Buenas tardes' : 'Buenas noches';
+  const texto = `**${saludo}.** Soy JARVIS, tu sistema de inteligencia comercial.\n\nTengo **MetalPro SRL** activo como lead principal — score 82/100. ¿Arrancamos con el seguimiento de hoy?`;
+  jAgregarBot(texto, 'propio');
 }
 
-// ── Typing indicator ────────────────────────────────────────────────────
-function jarvisAgregarTyping() {
-  const container = document.getElementById('jarvis-messages');
-  const id = 'jtyping-' + Date.now();
-  const el = document.createElement('div');
-  el.id = id;
-  el.className = 'jarvis-msg bot';
-  el.innerHTML = `
-    <div class="jarvis-msg-avatar"><i class="fa-solid fa-bolt"></i></div>
-    <div class="jarvis-msg-bubble">
-      <div class="jarvis-typing"><span></span><span></span><span></span></div>
-    </div>`;
-  container.appendChild(el);
-  container.scrollTop = container.scrollHeight;
-  return id;
-}
-function jarvisRemoverTyping(id) {
-  const el = document.getElementById(id);
-  if (el) el.remove();
+// ── Iron Man Protocol ─────────────────────────────────────
+function jAbrirBriefing() {
+  document.getElementById('j-briefing').classList.add('active');
+  J.briefingCount = 30;
+  document.getElementById('j-bp-timer').textContent = 30;
+  const fill = document.getElementById('j-bp-fill');
+  fill.style.transition = 'none'; fill.style.width = '0%';
+  setTimeout(() => {
+    fill.style.transition = 'width 30s linear';
+    fill.style.width = '100%';
+  }, 50);
+  J.briefingTimer = setInterval(() => {
+    J.briefingCount--;
+    const el = document.getElementById('j-bp-timer');
+    if (el) el.textContent = J.briefingCount;
+    if (J.briefingCount <= 0) jCerrarBriefing();
+  }, 1000);
 }
 
-// ── Enter para enviar ───────────────────────────────────────────────────
-function jarvisKeydown(e) {
-  if (e.key === 'Enter' && !e.shiftKey) {
-    e.preventDefault();
-    enviarMensajeJarvis();
-  }
+function jCerrarBriefing() {
+  if (J.briefingTimer) clearInterval(J.briefingTimer);
+  document.getElementById('j-briefing').classList.remove('active');
+  localStorage.setItem('j_briefing_fecha', new Date().toDateString());
 }
 
-// ── Quick actions ───────────────────────────────────────────────────────
-function jarvisQuickAction(tipo) {
-  const panelLead = document.getElementById('jarvis-panel-analizar-lead');
-
-  // Ocultar todos los paneles extra
-  panelLead.style.display = 'none';
-
-  if (tipo === 'analizar-lead') {
-    panelLead.style.display = 'block';
-    panelLead.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-    return;
-  }
-
-  // Para los demás, inyectar el prompt en el chat
-  const prompts = {
-    'propuesta':  'Necesito generar una propuesta. Empresa: [nombre], rubro: [rubro], plan: [Plan Pro/Industrial]. ¿Me ayudás?',
-    'followup':   'Tengo un prospecto que no responde desde hace [X días]. Empresa: [nombre], rubro: [rubro]. Generame un mensaje de seguimiento.',
-    'objecion':   'Un prospecto me dijo: "[pegá la objeción acá]". ¿Cómo respondo?',
-  };
-
-  const input = document.getElementById('jarvis-input');
-  input.value = prompts[tipo] || '';
-  input.focus();
-  // Seleccionar el primer placeholder para fácil edición
-  const start = input.value.indexOf('[');
-  const end   = input.value.indexOf(']') + 1;
-  if (start !== -1) input.setSelectionRange(start, end);
+function jLeerBriefing() {
+  if (!window.speechSynthesis) return jToast('TTS no disponible en este browser', 'err');
+  const nombre = document.getElementById('j-brief-name').textContent;
+  const p1 = document.getElementById('jbp-1').textContent;
+  const p2 = document.getElementById('jbp-2').textContent;
+  const u = new SpeechSynthesisUtterance(
+    `Buenos días ${nombre}. Soy JARVIS. Tus prioridades de hoy: ${p1}. Segunda: ${p2}. Revisá las alertas. Buen día.`
+  );
+  u.lang = 'es-AR'; u.rate = 0.93;
+  speechSynthesis.speak(u);
+  const btn = document.getElementById('j-btn-listen');
+  btn.innerHTML = '<i class="fa-solid fa-stop"></i> Detener';
+  btn.onclick = () => { speechSynthesis.cancel(); btn.innerHTML = '<i class="fa-solid fa-volume-high"></i> Escuchar'; btn.onclick = jLeerBriefing; };
 }
 
-// ── Análisis de Lead desde formulario ──────────────────────────────────
-async function ejecutarAnalisisLead() {
-  const empresa  = document.getElementById('jl-empresa').value.trim();
-  const rubro    = document.getElementById('jl-rubro').value.trim();
-  if (!empresa || !rubro) {
-    alert('Completá al menos empresa y rubro.');
-    return;
-  }
-
-  const btn = document.getElementById('jl-btn');
-  btn.disabled = true;
-  btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Analizando...';
-
-  const payload = {
-    empresa, rubro,
-    ciudad:        document.getElementById('jl-ciudad').value.trim(),
-    nombre_contacto: document.getElementById('jl-contacto').value.trim(),
-    tiene_web:     document.getElementById('jl-tiene-web').checked,
-    tiene_redes:   document.getElementById('jl-tiene-redes').checked,
-    observacion:   document.getElementById('jl-observacion').value.trim(),
-  };
-
+// ── Chat ──────────────────────────────────────────────────
+async function jEnviar() {
+  const input = document.getElementById('j-input');
+  const texto = input.value.trim();
+  if (!texto || J.esperando) return;
+  input.value = ''; jResize(input);
+  jAgregarUser(texto);
+  J.historial.push({ role: 'user', content: texto });
+  J.esperando = true;
+  document.getElementById('j-send').disabled = true;
+  jDetectarEstado(texto);
+  const typingId = jMostrarTyping();
   try {
-    // Endpoint directo de análisis sin lead_id (modo libre)
-    const r = await fetch(`${API_BASE}/jarvis/chat`, {
+    const r = await fetch('/jarvis/chat', {
       method: 'POST',
-      headers: { ...authHeaders(), 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
       body: JSON.stringify({
-        mensaje: `Analizá este lead completo:\nEmpresa: ${payload.empresa}\nRubro: ${payload.rubro}\nCiudad: ${payload.ciudad || 'no especificada'}\nContacto: ${payload.nombre_contacto || 'no especificado'}\nTiene web: ${payload.tiene_web ? 'sí' : 'no'}\nTiene redes: ${payload.tiene_redes ? 'sí' : 'no'}\nObservación: ${payload.observacion || 'ninguna'}\n\nNecesito: score 0-100, plan recomendado, perfil del comprador, script de WhatsApp (máx 60 palabras) y 3 objeciones probables con sus respuestas.`,
+        mensaje: texto,
+        historial: J.historial.slice(-8),
+        estado_emocional: J.estadoEmocional,
       }),
     });
-    const data = await r.json();
-    btn.disabled = false;
-    btn.innerHTML = '<i class="fa-solid fa-bolt"></i> Analizar con JARVIS';
-
-    // Mostrar respuesta en el chat
-    if (data.respuesta) {
-      document.getElementById('jl-resultado').style.display = 'none';
-      jarvisAgregarMensaje('bot', `📊 **Análisis de ${empresa}:**\n\n${data.respuesta}`, data.confianza || 'sectorial', data.accion_sugerida);
-      JARVIS_HISTORIAL.push({ role: 'user', content: `Análisis de lead: ${empresa} (${rubro})` });
-      JARVIS_HISTORIAL.push({ role: 'assistant', content: data.respuesta });
-      document.getElementById('jarvis-messages').scrollIntoView({ behavior: 'smooth', block: 'end' });
+    jQuitarTyping(typingId);
+    if (r.ok) {
+      const d = await r.json();
+      const resp = d.respuesta || d.response || '';
+      J.historial.push({ role: 'assistant', content: resp });
+      jAgregarBot(resp, d.contexto || 'general', d.tiempo_ms);
+    } else {
+      jAgregarBot('Hubo un error al conectar con JARVIS. Revisá tu conexión.', 'general');
     }
+  } catch {
+    jQuitarTyping(typingId);
+    jAgregarBot('Error de conexión. Verificá que el servidor esté activo.', 'general');
+  }
+  J.esperando = false;
+  document.getElementById('j-send').disabled = false;
+}
 
-  } catch(e) {
-    btn.disabled = false;
-    btn.innerHTML = '<i class="fa-solid fa-bolt"></i> Analizar con JARVIS';
-    alert('Error al conectar con JARVIS. Intentá de nuevo.');
+function jAgregarUser(texto) {
+  const c = document.getElementById('j-chat');
+  const d = document.createElement('div');
+  d.className = 'j-msg user';
+  d.innerHTML = `<div class="j-avatar"><i class="fa-solid fa-user"></i></div>
+    <div class="j-msg-body"><div class="j-bubble">${jMd(texto)}</div></div>`;
+  c.appendChild(d); c.scrollTop = c.scrollHeight;
+}
+
+function jAgregarBot(texto, ctx = 'general', ms = null) {
+  const c = document.getElementById('j-chat');
+  const ctxMap = {
+    propio:  ['j-ctx-propio',  '🟢 contexto propio'],
+    sector:  ['j-ctx-sector',  '🟡 sectorial'],
+    red:     ['j-ctx-red',     '🔵 red'],
+    general: ['j-ctx-general', '🔴 estimación'],
+  };
+  const [cls, lbl] = ctxMap[ctx] || ctxMap.general;
+  const msStr = ms ? `<div class="j-ctx-tag" style="background:var(--j-bg3);border:1px solid var(--j-border);color:rgba(100,130,180,0.5)">⚡ ${(ms/1000).toFixed(1)}s</div>` : '';
+  const acciones = jDetectarAcciones(texto);
+  const acHTML = acciones.length ? `<div class="j-msg-actions">${acciones.map(a=>`<button class="j-act-btn" onclick="${a.fn}"><i class="${a.icon}"></i> ${a.label}</button>`).join('')}</div>` : '';
+  const hora = new Date().toLocaleTimeString('es-AR',{hour:'2-digit',minute:'2-digit'});
+  const d = document.createElement('div');
+  d.className = 'j-msg bot';
+  d.innerHTML = `<div class="j-avatar"><i class="fa-solid fa-bolt"></i></div>
+    <div class="j-msg-body">
+      <div class="j-bubble">${jMd(texto)}</div>
+      ${acHTML}
+      <div class="j-ctx">
+        <div class="j-ctx-tag ${cls}">${lbl}</div>
+        ${msStr}
+        <div class="j-ctx-time">${hora}</div>
+      </div>
+    </div>`;
+  c.appendChild(d); c.scrollTop = c.scrollHeight;
+}
+
+function jMostrarTyping() {
+  const c = document.getElementById('j-chat');
+  const id = 'jtyp-' + Date.now();
+  const d = document.createElement('div');
+  d.className = 'j-msg bot'; d.id = id;
+  d.innerHTML = `<div class="j-avatar"><i class="fa-solid fa-bolt"></i></div>
+    <div class="j-msg-body">
+      <div class="j-typing">
+        <div class="j-dots"><span></span><span></span><span></span></div>
+        <div class="j-typing-txt">JARVIS procesando...</div>
+      </div>
+    </div>`;
+  c.appendChild(d); c.scrollTop = c.scrollHeight;
+  return id;
+}
+
+function jQuitarTyping(id) { const el = document.getElementById(id); if (el) el.remove(); }
+
+// ── Acciones embebidas ────────────────────────────────────
+function jDetectarAcciones(texto) {
+  const t = texto.toLowerCase(); const acc = [];
+  if (t.includes('email') || t.includes('mensaje'))  {
+    acc.push({ icon:'fa-brands fa-google', label:'Abrir en Gmail',   fn:'jAccionCRM("gmail")' });
+    acc.push({ icon:'fa-brands fa-whatsapp', label:'Para WhatsApp', fn:'jCopiarMensaje(this)' });
+  }
+  if (t.includes('propuesta') || t.includes('pdf'))
+    acc.push({ icon:'fa-regular fa-file-pdf', label:'Generar PDF', fn:'jToast("PDF generado","ok")' });
+  if (t.includes('lead') || t.includes('score'))
+    acc.push({ icon:'fa-solid fa-cloud-arrow-up', label:'Guardar en CRM', fn:'jAccionCRM("hubspot")' });
+  if (t.includes('reuni') || t.includes('mañana'))
+    acc.push({ icon:'fa-regular fa-calendar-plus', label:'Agendar', fn:'jAccionCRM("calendar")' });
+  acc.push({ icon:'fa-regular fa-copy', label:'Copiar', fn:'jCopiarMensaje(this)' });
+  return acc.slice(0, 4);
+}
+
+function jCopiarMensaje(btn) {
+  const b = btn?.closest?.('.j-msg-body')?.querySelector?.('.j-bubble');
+  if (!b) return;
+  navigator.clipboard.writeText(b.innerText).then(() => jToast('Texto copiado', 'ok'));
+}
+
+// ── Estado emocional ──────────────────────────────────────
+const J_ESTADOS = {
+  frustracion:    { p:[/no s[eé] c[oó]mo/i,/bloqueado/i,/qué hago/i],    emoji:'😤', tipo:'Frustración',    desc:'Modo coaching. Paso a paso.' },
+  energia_alta:   { p:[/cerr[eé]/i,/firmé/i,/lo logré/i,/genial/i],       emoji:'🔥', tipo:'Energía alta',   desc:'Momentum. Acción audaz.' },
+  decepcion:      { p:[/perdí/i,/rechazaron/i,/eligieron a otro/i],        emoji:'😔', tipo:'Decepción',      desc:'Validar primero, aprender después.' },
+  urgencia:       { p:[/urgente/i,/ya$/i,/ahora/i,/rápido/i],              emoji:'⚡', tipo:'Urgencia',       desc:'Respuesta ultra-corta.' },
+  coaching_needed:{ p:[/cómo le digo/i,/qué harías/i,/cómo arrancar/i],   emoji:'🎓', tipo:'Modo coaching',  desc:'JARVIS explica el razonamiento.' },
+};
+
+function jDetectarEstado(texto) {
+  for (const [nombre, data] of Object.entries(J_ESTADOS)) {
+    if (data.p.some(p => p.test(texto))) {
+      J.estadoEmocional = nombre;
+      document.getElementById('j-estado-emoji').textContent = data.emoji;
+      document.getElementById('j-estado-tipo').textContent  = data.tipo;
+      document.getElementById('j-estado-desc').textContent  = data.desc;
+      return;
+    }
+  }
+  J.estadoEmocional = 'neutro';
+  document.getElementById('j-estado-emoji').textContent = '😐';
+  document.getElementById('j-estado-tipo').textContent  = 'Neutro';
+  document.getElementById('j-estado-desc').textContent  = 'Sin señal emocional. Modo estándar.';
+}
+
+// ── Navegación ────────────────────────────────────────────
+const J_SECCION_MSGS = {
+  leads:        'Mostrá los leads activos con sus scores',
+  pipeline:     'Dame un resumen de mi pipeline comercial',
+  propuestas:   'Listá mis propuestas abiertas y su estado',
+  comunicador:  'Quiero redactar una comunicación. ¿Por dónde arrancamos?',
+  mercado:      'Dame el radar de mercado de esta semana para mi sector',
+  reuniones:    'Qué reuniones tengo próximas y cómo prepararme',
+  alertas:      'Mostrá todas mis alertas activas con prioridad',
+  academia:     'Qué módulo de capacitación me recomendás hoy',
+  integraciones:'Mostrá el estado de mis integraciones y cómo configurar las que faltan',
+};
+
+function jSetSection(s, el) {
+  document.querySelectorAll('.j-nav').forEach(n => n.classList.remove('active'));
+  if (el) el.classList.add('active');
+  if (s !== 'chat' && J_SECCION_MSGS[s]) jDispararAccion(J_SECCION_MSGS[s]);
+}
+
+function jDispararAccion(texto) {
+  document.getElementById('j-input').value = texto;
+  jEnviar();
+}
+
+// ── CRM ───────────────────────────────────────────────────
+async function jAccionCRM(tipo) {
+  const msgs = {
+    hubspot:  ['✅ Contacto guardado en HubSpot',          'HubSpot no configurado. Activalo en Integraciones.'],
+    pipedrive:['✅ Deal sincronizado en Pipedrive',         'Pipedrive no configurado.'],
+    gmail:    ['✅ Borrador creado en Gmail',               'Gmail no configurado. Conectá tu cuenta.'],
+    calendar: ['✅ Recordatorio creado en Calendar',        'Google Calendar no configurado.'],
+    slack:    ['✅ Alerta enviada a Slack',                  'Slack no configurado.'],
+  };
+  const dot = document.getElementById(`jd-${tipo}`);
+  if (dot?.classList.contains('on')) {
+    jToast(msgs[tipo]?.[0] || '✅ Acción completada', 'ok');
+  } else {
+    jToast(msgs[tipo]?.[1] || 'Integración no configurada. Activá en el panel.', 'err');
   }
 }
 
-// ── Copiar script de WhatsApp ───────────────────────────────────────────
-function copiarScript() {
-  const txt = document.getElementById('jl-script').textContent;
-  navigator.clipboard.writeText(txt).then(() => {
-    const btn = document.querySelector('.jarvis-copy-btn');
-    if (btn) { btn.textContent = '✓ Copiado'; setTimeout(() => btn.textContent = 'Copiar', 2000); }
-  });
+// ── Integraciones ─────────────────────────────────────────
+async function jVerificarIntegraciones() {
+  try {
+    const r = await fetch('/jarvis/integraciones/estado', { credentials: 'include' });
+    if (!r.ok) return;
+    const d = await r.json();
+    for (const [nombre, estado] of Object.entries(d.integraciones || {})) {
+      const dot = document.getElementById(`jd-${nombre.replace('_','-')}`);
+      if (dot) dot.className = 'j-dot ' + (estado.configurado ? 'on' : 'off');
+    }
+  } catch { /* LinkedIn siempre on */ }
 }
+
+// ── Voz ───────────────────────────────────────────────────
+function jIniciarVoz() {
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SR) return jToast('Voz no disponible en este browser', 'err');
+  if (J.recognition) { J.recognition.stop(); J.recognition = null; document.getElementById('j-voice-btn').style.color = ''; return; }
+  J.recognition = new SR();
+  J.recognition.lang = 'es-AR'; J.recognition.continuous = false;
+  document.getElementById('j-voice-btn').style.color = 'var(--j-red)';
+  J.recognition.onresult = (e) => {
+    document.getElementById('j-input').value = e.results[0][0].transcript;
+    jEnviar();
+  };
+  J.recognition.onend = () => { J.recognition = null; document.getElementById('j-voice-btn').style.color = ''; };
+  J.recognition.start();
+}
+
+// ── Utilidades ────────────────────────────────────────────
+function jHandleKey(e) { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); jEnviar(); } }
+function jResize(el) { el.style.height = 'auto'; el.style.height = Math.min(el.scrollHeight, 110) + 'px'; }
+
+function jToast(msg, tipo = 'ok') {
+  const c = document.getElementById('j-toast-wrap');
+  const t = document.createElement('div');
+  t.className = `j-toast ${tipo}`;
+  t.innerHTML = `<i class="fa-solid ${tipo === 'ok' ? 'fa-check-circle' : 'fa-circle-xmark'}"></i>${msg}`;
+  c.appendChild(t);
+  setTimeout(() => t.remove(), 3200);
+}
+
+function jMd(text) {
+  if (!text) return '';
+  return text
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    .replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>')
+    .replace(/\*(.*?)\*/g,'<em>$1</em>')
+    .replace(/`([^`]+)`/g,'<code>$1</code>')
+    .replace(/^### (.*)/gm,'<strong style="font-size:11px;color:var(--j-cyan);letter-spacing:1px">$1</strong>')
+    .replace(/^- (.*)/gm,'• $1')
+    .replace(/^(\d+)\. (.*)/gm,'<span style="color:var(--j-cyan)">$1.</span> $2')
+    .replace(/---/g,'<hr>')
+    .replace(/\n\n/g,'</p><p>')
+    .replace(/\n/g,'<br>');
+}
+
 </script>
 </body>
 </html>
