@@ -30,6 +30,12 @@ import jarvis
 class ChatRequest(BaseModel):
     mensaje: str
     historial: Optional[list[dict]] = None
+    # Campos del Centro de Comando v2 (opcionales para compatibilidad con versión anterior)
+    estado_emocional: Optional[str] = "neutro"
+    lead_activo: Optional[dict] = None
+
+    class Config:
+        extra = "allow"  # ignorar campos desconocidos sin lanzar 422
 
 
 class PropuestaRequest(BaseModel):
@@ -102,9 +108,27 @@ def register(app, get_db_func, auth_dep):
 
         ctx = _aliado_context(aliado)
 
+        # Ajuste de tono según estado emocional detectado en el frontend
+        ajuste_emocional = ""
+        if body.estado_emocional and body.estado_emocional != "neutro":
+            from jarvis_emocional import JarvisEmocional, ajustar_tono_respuesta, EstadoAliado
+            estado_obj = EstadoAliado(estado=body.estado_emocional)
+            ajuste_emocional = ajustar_tono_respuesta(estado_obj)
+
+        # Contexto del lead activo (si el panel derecho tiene uno seleccionado)
+        contexto_lead = ""
+        if body.lead_activo:
+            lead = body.lead_activo
+            contexto_lead = (
+                f"\n\nLEAD ACTIVO EN EL PANEL: {lead.get('nombre','')} — "
+                f"{lead.get('contacto','')} ({lead.get('cargo','')}) — "
+                f"Sector: {lead.get('sector','')} — Score: {lead.get('score','')}/100"
+            )
+
         resultado = jarvis.chat_jarvis(
-            mensaje_aliado=body.mensaje,
+            mensaje_aliado=body.mensaje + contexto_lead,
             historial=body.historial,
+            ajuste_emocional=ajuste_emocional,
             **ctx,
         )
 
@@ -112,8 +136,10 @@ def register(app, get_db_func, auth_dep):
             return {
                 "modo": "jarvis",
                 "respuesta": resultado.get("respuesta", ""),
+                "contexto": resultado.get("confianza", "general"),
                 "confianza": resultado.get("confianza", "general"),
                 "accion_sugerida": resultado.get("accion_sugerida"),
+                "tiempo_ms": resultado.get("tiempo_ms"),
             }
 
         # Fallback si Claude no está disponible

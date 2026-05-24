@@ -18,7 +18,7 @@ FUNCIONES PRINCIPALES:
 """
 
 from __future__ import annotations
-import os, json, sys
+import os, json, sys, time
 from typing import Optional, Any
 
 # ─── CONFIG ──────────────────────────────────────────────────────────────────
@@ -149,6 +149,7 @@ def chat_jarvis(
     aliado_nivel: str = "BASIC",
     aliado_ventas: int = 0,
     aliado_perfil: str = "",
+    ajuste_emocional: str = "",   # instrucción de tono desde jarvis_emocional
 ) -> Optional[dict]:
     """
     Módulo 1 — Cerebro Comercial.
@@ -216,8 +217,13 @@ REGLAS DE OPERACIÓN:
         import anthropic
         client = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY)
 
-        system_final = system + "\n\nIMPORTANTE: Respondé ÚNICAMENTE con JSON válido. Sin texto antes ni después."
+        # Inyectar ajuste emocional al system prompt si corresponde
+        system_final = system
+        if ajuste_emocional:
+            system_final += f"\n\n{ajuste_emocional}"
+        system_final += "\n\nIMPORTANTE: Respondé ÚNICAMENTE con JSON válido. Sin texto antes ni después."
 
+        t_inicio = time.time()
         response = client.messages.create(
             model=JARVIS_MODEL,
             max_tokens=1500,
@@ -225,10 +231,12 @@ REGLAS DE OPERACIÓN:
             messages=messages,
             timeout=JARVIS_TIMEOUT,
         )
+        t_ms = int((time.time() - t_inicio) * 1000)
         raw = response.content[0].text.strip()
         parsed = _parse_json(raw)
 
         if parsed and "respuesta" in parsed:
+            parsed["tiempo_ms"] = t_ms
             return parsed
 
         # Si no parseó bien, devolver la respuesta como texto plano
@@ -236,6 +244,7 @@ REGLAS DE OPERACIÓN:
             "respuesta": raw,
             "confianza": "general",
             "accion_sugerida": None,
+            "tiempo_ms": t_ms,
         }
 
     except Exception as e:
