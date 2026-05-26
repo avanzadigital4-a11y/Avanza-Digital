@@ -1,4 +1,5 @@
 /aliados/*    https://avanza-digital.onrender.com/aliados/:splat    200
+/jarvis/*     https://avanza-digital.onrender.com/jarvis/:splat     200
 /auditoria-ia https://avanza-digital.onrender.com/auditoria-ia      200
 /p/*          https://avanza-digital.onrender.com/p/:splat          301
 /api/*        https://avanza-digital.onrender.com/api/:splat        301

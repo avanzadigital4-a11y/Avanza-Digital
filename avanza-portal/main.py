@@ -7307,6 +7307,11 @@ def portal_publico_aliado(ref_code: str, db: Session = Depends(get_db)):
         '<div class="icon">🪙</div><div class="label">USDT no disponible</div>'
         '<div class="sublabel">Próximamente</div></button>'
     )
+    _btn_payoneer = (
+        '<button class="moneda-btn payoneer" id="opt-payoneer" onclick="seleccionarMoneda(\'payoneer\')">'
+        '<div class="icon">💳</div><div class="label">USD Payoneer</div>'
+        '<div class="sublabel">Transferencia USD</div></button>'
+    )
     # Precio de cada plan para mostrarlo en el step de USDT
     _plan_precios_js = ", ".join(f'"{k}": {int(v)}' for k, v in PLANES.items())
     _usdt_dir_js = USDT_DIRECCION.replace("'", "\\'")
@@ -7430,8 +7435,8 @@ body{{font-family:Inter,sans-serif;background:#050505;color:#e2e8f0;line-height:
 .modal-box{{background:#111;border:1px solid #2a2a2a;border-radius:16px;padding:28px;width:100%;max-width:420px;}}
 .step{{display:none;}}
 .step.active{{display:block;}}
-.moneda-options{{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:16px 0;}}
-@media(max-width:420px){{.moneda-options{{grid-template-columns:1fr;}}}}
+.moneda-options{{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin:16px 0;}}
+@media(max-width:480px){{.moneda-options{{grid-template-columns:1fr;}}}}
 .moneda-btn{{padding:16px 12px;border-radius:10px;border:2px solid #2a2a2a;background:#1a1a1a;color:#e2e8f0;cursor:pointer;text-align:center;transition:all .2s;font-family:Inter,sans-serif;}}
 .moneda-btn:hover{{border-color:#3b82f6;background:rgba(59,130,246,0.08);}}
 .moneda-btn.selected{{border-color:#3b82f6;background:rgba(59,130,246,0.12);}}
@@ -7439,8 +7444,10 @@ body{{font-family:Inter,sans-serif;background:#050505;color:#e2e8f0;line-height:
 .moneda-btn .label{{font-weight:800;font-size:.9rem;}}
 .moneda-btn .sublabel{{font-size:.72rem;color:#a1a1aa;margin-top:2px;}}
 .moneda-btn.usdt .icon{{color:#26a17b;}}
-.moneda-btn.usdt .icon{{color:#26a17b;}}
 .moneda-btn.usdt.selected{{border-color:#26a17b;background:rgba(38,161,123,0.12);}}
+.moneda-btn.payoneer .icon{{color:#ffa31a;}}
+.moneda-btn.payoneer:hover{{border-color:#ffa31a;background:rgba(255,163,26,0.08);}}
+.moneda-btn.payoneer.selected{{border-color:#ffa31a;background:rgba(255,163,26,0.12);}}
 .btn-cancel{{flex:1;padding:12px;border-radius:8px;border:1px solid #444;background:transparent;color:#aaa;cursor:pointer;font-size:.95rem;font-family:Inter,sans-serif;}}
 .btn-primary{{flex:1;padding:12px;border-radius:8px;border:none;background:#3b82f6;color:#fff;cursor:pointer;font-weight:700;font-size:.95rem;font-family:Inter,sans-serif;}}
 .btn-primary:disabled{{opacity:.6;cursor:not-allowed;}}
@@ -7597,6 +7604,7 @@ input[type=text]:focus{{outline:none;border-color:#3b82f6;}}
         </button>
         {_btn_usd}
         {_btn_usdt}
+        {_btn_payoneer}
       </div>
       <div id="moneda-info" style="background:rgba(59,130,246,0.08);border:1px solid rgba(59,130,246,0.2);border-radius:8px;padding:10px 14px;font-size:.82rem;color:#93c5fd;margin-bottom:14px;">
         🏦 Pagarás en <strong>pesos argentinos</strong> a través de <strong>MercadoPago</strong>.
@@ -7648,6 +7656,38 @@ input[type=text]:focus{{outline:none;border-color:#3b82f6;}}
   </div>
 </div>
 
+    <div id="step-payoneer" class="step" style="padding:4px 0;">
+      <h3 style="margin:0 0 6px;font-size:1.05rem;font-weight:800;">💳 Instrucciones de pago por Payoneer</h3>
+      <p style="color:#a1a1aa;font-size:.82rem;margin:0 0 16px;">Realizá la transferencia y avisanos por WhatsApp para confirmar.</p>
+      <div style="background:#1a1a1a;border:1px solid rgba(255,163,26,0.35);border-radius:10px;padding:14px;margin-bottom:14px;">
+        <div style="margin-bottom:10px;">
+          <div style="font-size:.72rem;font-weight:700;color:#a1a1aa;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;">Monto exacto</div>
+          <div id="modal-payoneer-monto" style="font-size:1.4rem;font-weight:900;color:#e2e8f0;">USD —</div>
+        </div>
+        <div>
+          <div style="font-size:.72rem;font-weight:700;color:#a1a1aa;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;">Email Payoneer</div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+            <input type="text" id="modal-payoneer-email" value="avanzadigital4@gmail.com" readonly
+              style="flex:1;min-width:140px;font-family:monospace;font-size:.85rem;background:#111;border:1px solid rgba(255,163,26,0.2);border-radius:6px;padding:9px;color:#ffa31a;">
+            <button onclick="copiarEmailPayoneer()" style="background:rgba(255,163,26,0.15);color:#ffa31a;border:1px solid rgba(255,163,26,0.35);border-radius:6px;padding:0 12px;height:36px;font-weight:700;cursor:pointer;font-size:.8rem;white-space:nowrap;">
+              <i class="fa-solid fa-copy"></i> Copiar
+            </button>
+          </div>
+        </div>
+      </div>
+      <p style="font-size:.78rem;color:#71717a;margin:0 0 14px;line-height:1.5;padding:10px;background:rgba(0,0,0,0.4);border-radius:8px;border-left:2px solid rgba(255,163,26,0.5);">
+        Enviá el monto exacto a ese email de Payoneer y avisale a <strong style="color:#e2e8f0;">{titular}</strong> por WhatsApp en cuanto realices la transferencia. Tu plan se activa en cuanto Avanza confirma el pago (hasta 24hs hábiles).
+      </p>
+      <div style="display:flex;gap:10px;">
+        <button class="btn-cancel" onclick="volverAPaso1()">← Volver</button>
+        <a href="https://wa.me/{wa_contacto}" id="modal-payoneer-wa-btn"
+           target="_blank"
+           style="flex:1;padding:12px;border-radius:8px;border:none;background:#25d366;color:#fff;cursor:pointer;font-weight:700;font-size:.95rem;text-decoration:none;text-align:center;display:flex;align-items:center;justify-content:center;gap:6px;">
+          <i class="fa-brands fa-whatsapp"></i> Confirmar por WhatsApp
+        </a>
+      </div>
+    </div>
+
 <script>
   const _PLAN_PRECIOS = {{{_plan_precios_js}}};
   let _plan = \'\', _ref = \'\', _moneda = \'ars\';
@@ -7668,8 +7708,9 @@ input[type=text]:focus{{outline:none;border-color:#3b82f6;}}
     if (e.target === document.getElementById(\'modal-overlay\')) cerrarModal();
   }}
   function mostrarPaso(id) {{
-    [\'step-nombre\',\'step-moneda\',\'step-procesando\',\'step-usdt\'].forEach(s => {{
-      document.getElementById(s).classList.remove(\'active\');
+    [\'step-nombre\',\'step-moneda\',\'step-procesando\',\'step-usdt\',\'step-payoneer\'].forEach(s => {{
+      const el = document.getElementById(s);
+      if (el) el.classList.remove(\'active\');
     }});
     document.getElementById(id).classList.add(\'active\');
   }}
@@ -7692,10 +7733,15 @@ input[type=text]:focus{{outline:none;border-color:#3b82f6;}}
     document.getElementById(\'opt-ars\').classList.toggle(\'selected\', m === \'ars\');
     const optUsdt = document.getElementById(\'opt-usdt\');
     if (optUsdt) optUsdt.classList.toggle(\'selected\', m === \'usdt\');
+    const optPayoneer = document.getElementById(\'opt-payoneer\');
+    if (optPayoneer) optPayoneer.classList.toggle(\'selected\', m === \'payoneer\');
     const info = document.getElementById(\'moneda-info\');
     if (m === \'ars\') {{
       info.style.background = \'rgba(59,130,246,0.08)\'; info.style.borderColor = \'rgba(59,130,246,0.2)\'; info.style.color = \'#93c5fd\';
       info.innerHTML = \'🏦 Pagarás en <strong>pesos argentinos</strong> a través de <strong>MercadoPago</strong>.\';
+    }} else if (m === \'payoneer\') {{
+      info.style.background = \'rgba(255,163,26,0.08)\'; info.style.borderColor = \'rgba(255,163,26,0.25)\'; info.style.color = \'#fbbf24\';
+      info.innerHTML = \'💳 Pagarás en <strong>USD</strong> a través de <strong>Payoneer</strong>. Transferencia directa (confirmación manual en 24hs hábiles).\';
     }} else {{
       info.style.background = \'rgba(38,161,123,0.08)\'; info.style.borderColor = \'rgba(38,161,123,0.25)\'; info.style.color = \'#6ee7b7\';
       info.innerHTML = \'🪙 Pagarás en <strong>USDT/USDC</strong>. Transferencia directa a billetera cripto (confirmación manual en 24hs hábiles).\';
@@ -7711,11 +7757,32 @@ input[type=text]:focus{{outline:none;border-color:#3b82f6;}}
       el.select(); document.execCommand(\'copy\');
     }});
   }}
+  function copiarEmailPayoneer() {{
+    const el = document.getElementById(\'modal-payoneer-email\');
+    if (!el) return;
+    navigator.clipboard.writeText(el.value).then(() => {{
+      el.style.borderColor = \'#ffa31a\';
+      setTimeout(() => el.style.borderColor = \'rgba(255,163,26,0.2)\', 1500);
+    }}).catch(() => {{ el.select(); document.execCommand(\'copy\'); }});
+  }}
   async function confirmarContratacion() {{
     const nombre = document.getElementById(\'modal-nombre\').value.trim();
     const email = document.getElementById(\'modal-email\').value.trim();
     const whatsapp = document.getElementById(\'modal-whatsapp\').value.trim();
     if (!nombre || !email || !whatsapp) {{ volverAPaso1(); return; }}
+
+    // Flujo Payoneer: mostrar instrucciones de transferencia
+    if (_moneda === \'payoneer\') {{
+      const precio = _PLAN_PRECIOS[_plan] || \'—\';
+      document.getElementById(\'modal-payoneer-monto\').textContent = `USD $${{precio}}`;
+      const waBtn = document.getElementById(\'modal-payoneer-wa-btn\');
+      if (waBtn) {{
+        const texto = encodeURIComponent(`Hola, realicé la transferencia de USD $${{precio}} por Payoneer para el ${{_plan}} de Avanza Digital. Mi nombre: ${{nombre}}, email: ${{email}}`);
+        waBtn.href = `https://wa.me/{wa_contacto}?text=${{texto}}`;
+      }}
+      mostrarPaso(\'step-payoneer\');
+      return;
+    }}
 
     // Flujo USDT: mostrar instrucciones de transferencia sin checkout automático
     if (_moneda === \'usdt\') {{

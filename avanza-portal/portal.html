@@ -1161,12 +1161,14 @@
       <button class="tab-btn active" onclick="cambiarTab('dashboard',this)"><i class="fa-solid fa-chart-line"></i> Dashboard</button>
       <!-- C1: Bolsa de Leads -->
       <button class="tab-btn tab-canal1" onclick="cambiarTab('bolsa',this)"><i class="fa-solid fa-bullhorn"></i> Bolsa de Leads <span style="background:var(--green);color:#000;font-size:.6rem;font-weight:800;padding:2px 6px;border-radius:4px;margin-left:4px;">NUEVO</span></button>
+      <!-- C1: Academia — tab primario para Canal 1 (crítico: aliados nuevos deben verlo) -->
+      <button class="tab-btn tab-canal1" id="btn-tab-academia-primary" onclick="cambiarTab('academia',this)" style="background:rgba(249,115,22,0.12);border-color:rgba(249,115,22,0.3);color:#f97316;"><i class="fa-solid fa-graduation-cap"></i> Academia <span id="academia-progress-badge" style="display:none;background:rgba(249,115,22,0.8);color:#000;font-size:.6rem;font-weight:800;padding:2px 6px;border-radius:4px;margin-left:4px;"></span></button>
       <!-- C2: Kit de Ventas (primer tab al entrar) -->
       <button class="tab-btn tab-canal2" onclick="cambiarTab('kit-ventas',this)" style="display:none;background:rgba(74,222,128,0.12);border-color:rgba(74,222,128,0.3);color:#4ade80;"><i class="fa-solid fa-briefcase"></i> Kit de Ventas <span style="background:#4ade80;color:#000;font-size:.6rem;font-weight:800;padding:2px 6px;border-radius:4px;margin-left:4px;">C2</span></button>
       <!-- C1: Referidos → redirige al Pipeline unificado -->
       <button class="tab-btn tab-canal1" onclick="cambiarTab('prospectos',this)"><i class="fa-solid fa-user-plus"></i> Prospectos</button>
       <!-- Pipeline unificado (ambos canales) -->
-      <button class="tab-btn" id="btn-tab-pipeline" onclick="cambiarTab('pipeline',this)"><i class="fa-solid fa-bars-progress"></i> Pipeline</button>
+      <button class="tab-btn" id="btn-tab-pipeline" onclick="cambiarTab('pipeline',this)" title="Seguí el avance de cada lead desde el primer contacto hasta el cobro"><i class="fa-solid fa-bars-progress"></i> Mis Leads</button>
       <!-- Ambos: Comisiones -->
       <button class="tab-btn" onclick="cambiarTab('comisiones',this)"><i class="fa-solid fa-dollar-sign"></i> Comisiones</button>
       <!-- Toggle herramientas secundarias -->
@@ -1184,7 +1186,7 @@
       <button class="tab-btn" onclick="cambiarTab('herramientas',this)"><i class="fa-solid fa-magnifying-glass"></i> Auditoría</button>
       <button class="tab-btn" onclick="cambiarTab('red',this)"><i class="fa-solid fa-users-rays" style="color:var(--amber);"></i> Mi Red</button>
       <button class="tab-btn" onclick="cambiarTab('comunidad',this)"><i class="fa-solid fa-comments" style="color:#c084fc;"></i> Comunidad <span style="background:#c084fc;color:#000;font-size:.6rem;font-weight:800;padding:2px 6px;border-radius:4px;margin-left:4px;">NUEVO</span></button>
-      <button class="tab-btn" id="btn-tab-jarvis" onclick="cambiarTab('jarvis',this)" style="background:linear-gradient(135deg,rgba(0,196,255,0.12),rgba(0,80,200,0.08));border-color:rgba(0,196,255,0.35);color:#00c4ff;"><i class="fa-solid fa-bolt"></i> JARVIS IA</button>
+      <button class="tab-btn" id="btn-tab-jarvis" style="background:linear-gradient(135deg,rgba(0,196,255,0.06),rgba(0,80,200,0.04));border-color:rgba(0,196,255,0.15);color:#4a7a8a;opacity:0.5;cursor:default;pointer-events:none;" title="Próximamente"><i class="fa-solid fa-bolt"></i> JARVIS IA <span style="font-size:9px;background:#1a2a30;color:#4a7a8a;border-radius:4px;padding:1px 5px;margin-left:3px;">PRÓXIMAMENTE</span></button>
     </div>
 
     <div id="tab-dashboard" class="tab-panel active">
@@ -1196,21 +1198,33 @@
         </div>
       </div>
 
-      <!-- BANNER GRUPO WHATSAPP -->
-      <a href="https://chat.whatsapp.com/CqHsCyLUTmQK9I5JnvhCYx" target="_blank" rel="noopener" style="display:flex; align-items:center; gap:16px; background:linear-gradient(135deg,rgba(37,211,102,0.08),rgba(37,211,102,0.03)); border:1px solid rgba(37,211,102,0.25); border-radius:var(--radius); padding:16px 20px; margin-bottom:24px; text-decoration:none; transition:border-color 0.2s,background 0.2s;" onmouseover="this.style.borderColor='rgba(37,211,102,0.5)'" onmouseout="this.style.borderColor='rgba(37,211,102,0.25)'">
-        <div style="width:44px;height:44px;border-radius:50%;background:#25D366;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="white" xmlns="http://www.w3.org/2000/svg"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+      <!-- [WHATSAPP BANNER MOVED: see below after NBA] -->
+
+      <!-- ONBOARDING CHECKLIST — siempre visible, con fallback estático si la API falla -->
+      <div class="bento-box" id="onboarding-checklist-box" style="margin-bottom:24px; display:block;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+          <h3 style="font-size:0.95rem;font-weight:700;"><i class="fa-solid fa-list-check" style="color:var(--primary);margin-right:6px;"></i>Checklist de inicio</h3>
+          <span id="ob-pct-badge" style="font-size:0.75rem;font-weight:800;color:var(--primary);">0%</span>
         </div>
-        <div style="flex:1;">
-          <div style="font-size:0.9rem;font-weight:700;color:#4ade80;margin-bottom:2px;">📲 Únete al grupo de Avanza Partners</div>
-          <div style="font-size:0.8rem;color:var(--text-muted);">Tips de ventas, novedades del portal y comunidad de aliados</div>
+        <div class="ob-progress-bar"><div class="ob-progress-fill" id="ob-progress-fill" style="width:0%;"></div></div>
+        <div class="ob-checklist" id="ob-checklist-items">
+          <!-- Fallback estático: visible mientras carga la API (JS lo reemplaza si responde) -->
+          <div class="ob-step pending"><div class="ob-check pending"></div><span>Completá los módulos 1-3 de la Academia</span><span style="margin-left:auto;font-size:.72rem;font-weight:700;color:var(--primary);background:rgba(59,130,246,0.1);padding:2px 8px;border-radius:50px;">Pendiente</span></div>
+          <div class="ob-step pending"><div class="ob-check pending"></div><span>Reclamá tu primer lead de la Bolsa</span><span style="margin-left:auto;font-size:.72rem;font-weight:700;color:var(--primary);background:rgba(59,130,246,0.1);padding:2px 8px;border-radius:50px;">Pendiente</span></div>
+          <div class="ob-step pending"><div class="ob-check pending"></div><span>Registrá tu primer prospecto</span><span style="margin-left:auto;font-size:.72rem;font-weight:700;color:var(--primary);background:rgba(59,130,246,0.1);padding:2px 8px;border-radius:50px;">Pendiente</span></div>
+          <div class="ob-step pending"><div class="ob-check pending"></div><span>Cargá tu CBU/Alias para cobrar</span><a href="#" onclick="cambiarTab('comisiones', document.querySelector('.tab-btn[onclick*=comisiones]')); return false;" style="margin-left:auto;font-size:.72rem;font-weight:700;color:var(--amber);background:rgba(250,204,21,0.1);border:1px solid rgba(250,204,21,0.3);padding:2px 10px;border-radius:50px;text-decoration:none;white-space:nowrap;">Cargar →</a></div>
         </div>
-        <div style="font-size:0.78rem;font-weight:600;color:#25D366;white-space:nowrap;display:flex;align-items:center;gap:6px;">Unirme <i class="fa-solid fa-arrow-right" style="font-size:0.7rem;"></i></div>
-      </a>
+      </div>
 
       <!-- CAMINO CRÍTICO AL COBRO — canal-aware -->
       <div class="critical-path d-canal1-only" id="cp-canal1" style="display:none;">
         <span class="cp-title"><i class="fa-solid fa-route"></i> Tu camino al cobro</span>
+        <a href="#" class="cp-step" onclick="cambiarTab('herramientas', document.querySelector('.tab-btn[onclick*=herramientas]')); return false;" title="Antes de contactar al lead: generá su auditoría gratuita con nuestra herramienta.">
+          <span class="cp-num" style="background:rgba(139,92,246,0.2);color:#a78bfa;border:1px solid rgba(139,92,246,0.3);">0.5</span>
+          <i class="fa-solid fa-magnifying-glass" style="color:#a78bfa;font-size:.82rem;"></i>
+          <span class="cp-label" style="color:#a78bfa;">Auditoría al lead</span>
+        </a>
+        <span class="cp-arrow"><i class="fa-solid fa-chevron-right"></i></span>
         <a href="#" class="cp-step" onclick="cambiarTab('bolsa', document.querySelector('.tab-canal1[onclick*=bolsa]')); return false;">
           <span class="cp-num">1</span>
           <i class="fa-solid fa-bullhorn" style="color:var(--primary);font-size:.82rem;"></i>
@@ -1599,16 +1613,21 @@
         </div>
       </div>
 
-      <!-- ONBOARDING CHECKLIST -->
-      <div class="bento-box" id="onboarding-checklist-box" style="margin-bottom:24px; display:none;">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
-          <h3 style="font-size:0.95rem;font-weight:700;"><i class="fa-solid fa-list-check" style="color:var(--primary);margin-right:6px;"></i>Checklist de inicio</h3>
-          <span id="ob-pct-badge" style="font-size:0.75rem;font-weight:800;color:var(--primary);">0%</span>
+      <!-- BANNER GRUPO WHATSAPP — posición nueva: después de métricas, menos intrusivo -->
+      <a href="https://chat.whatsapp.com/CqHsCyLUTmQK9I5JnvhCYx" target="_blank" rel="noopener" style="display:flex; align-items:center; gap:16px; background:linear-gradient(135deg,rgba(37,211,102,0.08),rgba(37,211,102,0.03)); border:1px solid rgba(37,211,102,0.25); border-radius:var(--radius); padding:16px 20px; margin-bottom:24px; text-decoration:none; transition:border-color 0.2s,background 0.2s;" onmouseover="this.style.borderColor='rgba(37,211,102,0.5)'" onmouseout="this.style.borderColor='rgba(37,211,102,0.25)'">
+        <div style="width:44px;height:44px;border-radius:50%;background:#25D366;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="white" xmlns="http://www.w3.org/2000/svg"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
         </div>
-        <div class="ob-progress-bar"><div class="ob-progress-fill" id="ob-progress-fill" style="width:0%;"></div></div>
-        <div class="ob-checklist" id="ob-checklist-items"></div>
-      </div>
+        <div style="flex:1;">
+          <div style="font-size:0.9rem;font-weight:700;color:#4ade80;margin-bottom:2px;">📲 Únete al grupo de Avanza Partners</div>
+          <div style="font-size:0.8rem;color:var(--text-muted);">Tips de ventas, novedades del portal y comunidad de aliados</div>
+        </div>
+        <div style="font-size:0.78rem;font-weight:600;color:#25D366;white-space:nowrap;display:flex;align-items:center;gap:6px;">Unirme <i class="fa-solid fa-arrow-right" style="font-size:0.7rem;"></i></div>
+      </a>
 
+      <!-- REPUTACIÓN + CRÉDITOS — bloque principal está arriba en el dashboard -->
+
+      <!-- PROGRESO DE NIVEL -->
       <div class="bento-box" style="margin-bottom:24px;">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
           <h3 style="font-size:0.95rem;font-weight:700;"><i class="fa-solid fa-trophy" style="color:var(--amber);margin-right:6px;"></i>Progreso de nivel</h3>
@@ -2262,8 +2281,8 @@
 
       <div class="welcome-header">
         <div>
-          <div class="welcome-name">Pipeline <span style="font-size:1rem;font-weight:500;color:var(--text-muted);">— de prospecto a cobro en un solo lugar</span></div>
-          <div class="welcome-sub">Prospectos → Registrar prospecto (paso crítico) → Ventas confirmadas</div>
+          <div class="welcome-name">Mis Leads <span style="font-size:1rem;font-weight:500;color:var(--text-muted);">— de primer contacto a cobro en un solo lugar</span></div>
+          <div class="welcome-sub">Seguí el avance de cada lead: Prospectos → Registrar (paso crítico) → Ventas confirmadas</div>
         </div>
       </div>
 
@@ -2725,6 +2744,46 @@
   <i class="fa-brands fa-whatsapp"></i> <span class="float-support-text">Soporte Avanza</span>
 </a>
 
+<!-- MODAL GATE BOLSA DE LEADS — aviso antes del primer acceso sin Academia -->
+<div class="modal-overlay" id="modal-gate-bolsa">
+  <div class="onboarding-box" style="max-width:480px;padding:0;">
+    <div style="padding:24px 28px 20px;border-bottom:1px solid var(--border);">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:4px;">
+        <div style="width:40px;height:40px;border-radius:10px;background:rgba(249,115,22,0.15);border:1px solid rgba(249,115,22,0.3);display:flex;align-items:center;justify-content:center;font-size:1.2rem;flex-shrink:0;">🎓</div>
+        <div>
+          <div style="font-size:1.05rem;font-weight:800;color:var(--text);">Antes de reclamar leads</div>
+          <div style="font-size:.8rem;color:var(--text-muted);">15 minutos que duplican tus chances de cierre</div>
+        </div>
+      </div>
+    </div>
+    <div style="padding:20px 28px;">
+      <p style="font-size:.88rem;color:var(--text-muted);line-height:1.6;margin-bottom:16px;">
+        Los aliados que completan los primeros 3 módulos de la Academia <strong style="color:var(--text);">cierran más del doble</strong> que los que van directo a la Bolsa sin entrenamiento.
+      </p>
+
+      <!-- Progress de módulos 1-3 -->
+      <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:20px;" id="gate-modulos-lista">
+        <!-- Renderizado por JS -->
+      </div>
+
+      <!-- Aviso 48hs -->
+      <div style="background:rgba(250,204,21,0.07);border:1px solid rgba(250,204,21,0.25);border-radius:8px;padding:12px 14px;margin-bottom:20px;">
+        <div style="font-size:.78rem;color:#facc15;font-weight:700;margin-bottom:4px;"><i class="fa-solid fa-clock"></i> &nbsp;Recordá cuando entres a la Bolsa</div>
+        <div style="font-size:.8rem;color:#e4e4e7;line-height:1.5;">Cada lead que reclamás tiene <strong style="color:#fff;">48hs</strong> para contactar. Con 3 vencidos quedás bloqueado sin cupos.</div>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:10px;">
+        <button onclick="irAcademiaDesdeGate()" style="background:linear-gradient(135deg,#f97316,#ea580c);color:#fff;border:none;padding:13px 20px;border-radius:8px;font-size:.9rem;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;">
+          <i class="fa-solid fa-graduation-cap"></i> Ir a la Academia (Módulos 1-3)
+        </button>
+        <button onclick="ignorarGateBolsa()" style="background:transparent;color:var(--text-dim);border:1px solid var(--border);padding:11px 20px;border-radius:8px;font-size:.82rem;cursor:pointer;">
+          Entendido, igual quiero entrar a la Bolsa ahora
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <div class="modal-overlay" id="modal-onboarding">
   <div class="onboarding-box">
     <div class="onboard-header">
@@ -2794,6 +2853,17 @@
           <div style="font-size:.7rem;color:var(--text-dim);margin-top:6px;">* Nivel BASIC. Subís al 20% con ELITE.</div>
         </div>
 
+        <!-- Créditos de bienvenida — el número se inyecta por JS -->
+        <div id="onboard-creditos-card" style="background:rgba(250,204,21,0.07);border:1px solid rgba(250,204,21,0.25);border-radius:10px;padding:14px 16px;">
+          <div style="font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:1.4px;color:#facc15;margin-bottom:8px;"><i class="fa-solid fa-coins"></i> &nbsp;Tus créditos de bienvenida</div>
+          <p style="font-size:.82rem;color:#e4e4e7;line-height:1.55;margin:0;">
+            Tenés <strong id="onboard-creditos-num" style="color:#facc15;">—</strong> créditos cargados.
+            Los leads <strong style="color:var(--green);">Básicos son gratis</strong>.
+            Los <strong style="color:#facc15;">Calificados y Premium se pagan con créditos</strong>
+            y tienen mayor tasa de cierre porque ya fueron filtrados y tienen contacto verificado.
+          </p>
+        </div>
+
         <!-- Link de referido -->
         <div id="onboard-ref-box" style="background:rgba(59,130,246,0.08);border:1px solid rgba(59,130,246,0.2);border-radius:10px;padding:12px 14px;display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;">
           <div style="min-width:0;">
@@ -2811,11 +2881,12 @@
       <div class="onboard-col-right">
         <div style="font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:var(--text-muted);margin-bottom:4px;"><i class="fa-solid fa-list-check"></i> &nbsp;Cómo funciona</div>
         <div class="onboard-steps">
-          <div class="onboard-step">
-            <div class="onboard-step-num">1</div>
+          <div class="onboard-step" style="background:rgba(249,115,22,0.06);border:1px solid rgba(249,115,22,0.2);border-radius:10px;padding:12px 14px;">
+            <div class="onboard-step-num" style="background:rgba(249,115,22,0.2);color:#f97316;">1</div>
             <div>
-              <div class="onboard-step-title">Descargá el brochure y el guión</div>
-              <div class="onboard-step-desc">Son tus herramientas de venta. El brochure va al cliente, el guión te dice exactamente qué decir y cómo cerrar.</div>
+              <div class="onboard-step-title">Hacé los primeros 3 módulos de la <span style="color:#f97316;">Academia</span> <span style="font-size:.72rem;font-weight:600;color:var(--text-dim);">(15 min)</span></div>
+              <div class="onboard-step-desc">Te enseñan exactamente qué decir cuando contactás un lead. Después descargá el brochure y el guión desde el ícono de abajo — son tus materiales de venta.</div>
+              <button onclick="cerrarOnboarding();setTimeout(()=>document.getElementById('btn-tab-academia-primary')?.click(),300);" style="margin-top:8px;background:rgba(249,115,22,0.15);border:1px solid rgba(249,115,22,0.35);color:#f97316;padding:6px 12px;border-radius:6px;font-size:.76rem;font-weight:700;cursor:pointer;"><i class="fa-solid fa-graduation-cap"></i> Ir a la Academia →</button>
             </div>
           </div>
           <div class="onboard-step">
@@ -2840,11 +2911,56 @@
             </div>
           </div>
         </div>
+
+        <!-- Herramientas de venta clave — Cotizador y Auditoría -->
+        <div style="margin-top:14px;background:rgba(139,92,246,0.07);border:1px solid rgba(139,92,246,0.25);border-radius:10px;padding:14px 16px;">
+          <div style="font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:1.4px;color:#a78bfa;margin-bottom:10px;"><i class="fa-solid fa-toolbox"></i> &nbsp;Herramientas de venta (¡usálas desde el día 1!)</div>
+          <div style="display:flex;flex-direction:column;gap:8px;">
+            <div style="display:flex;align-items:flex-start;gap:10px;cursor:pointer;" onclick="cerrarOnboarding();setTimeout(()=>document.querySelector('.tab-btn[onclick*=cotizador]')?.click(),300);">
+              <div style="width:32px;height:32px;border-radius:8px;background:rgba(139,92,246,0.15);border:1px solid rgba(139,92,246,0.3);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                <i class="fa-solid fa-file-invoice-dollar" style="color:#a78bfa;font-size:.85rem;"></i>
+              </div>
+              <div>
+                <div style="font-size:.82rem;font-weight:700;color:var(--text);">Cotizador con IA <span style="font-size:.68rem;color:#a78bfa;font-weight:600;margin-left:4px;">→ Abrir</span></div>
+                <div style="font-size:.73rem;color:var(--text-muted);line-height:1.4;">Generá una propuesta personalizada en segundos. Elegís rubro y plan, la IA arma el argumento de valor.</div>
+              </div>
+            </div>
+            <div style="display:flex;align-items:flex-start;gap:10px;cursor:pointer;" onclick="cerrarOnboarding();setTimeout(()=>document.querySelector('.tab-btn[onclick*=herramientas]')?.click(),300);">
+              <div style="width:32px;height:32px;border-radius:8px;background:rgba(139,92,246,0.15);border:1px solid rgba(139,92,246,0.3);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                <i class="fa-solid fa-magnifying-glass" style="color:#a78bfa;font-size:.85rem;"></i>
+              </div>
+              <div>
+                <div style="font-size:.82rem;font-weight:700;color:var(--text);">Auditoría Digital B2B <span style="font-size:.68rem;color:#a78bfa;font-weight:600;margin-left:4px;">→ Abrir</span></div>
+                <div style="font-size:.73rem;color:var(--text-muted);line-height:1.4;">Mandá el link de auditoría al cliente antes de la reunión. Genera autoridad y abre la conversación sin que vos digas nada primero.</div>
+              </div>
+            </div>
+          </div>
+          <div style="font-size:.7rem;color:var(--text-dim);margin-top:8px;"><i class="fa-solid fa-grid-2" style="margin-right:4px;"></i>Las encontrás en el menú <strong style="color:#a78bfa;">Herramientas</strong> de la barra superior.</div>
+        </div>
+
       </div>
 
     </div><!-- fin onboard-body -->
 
     <div class="onboard-footer">
+      <!-- ⚠️ AVISO CRÍTICO: límite de reclamos y 48hs — debe aparecer ANTES de que entren a la Bolsa -->
+      <div id="onboard-reglas-bolsa" style="background:rgba(250,204,21,0.07);border:1px solid rgba(250,204,21,0.3);border-radius:10px;padding:14px 16px;margin-bottom:14px;">
+        <div style="font-size:.72rem;font-weight:800;text-transform:uppercase;letter-spacing:1.2px;color:#facc15;margin-bottom:8px;"><i class="fa-solid fa-triangle-exclamation"></i> &nbsp;Reglas de la Bolsa de Leads — leé esto antes de entrar</div>
+        <div style="display:flex;flex-direction:column;gap:6px;">
+          <div style="display:flex;align-items:flex-start;gap:10px;font-size:.82rem;color:#e4e4e7;">
+            <span style="color:#facc15;font-size:.9rem;flex-shrink:0;margin-top:1px;">⏱</span>
+            <span><strong style="color:#fff;">48 horas por lead.</strong> Cada lead que reclamás tiene 48hs de vida. Si no lo marcás como <em>Contactado</em> dentro de ese plazo, vuelve al pool automáticamente y perdés el cupo.</span>
+          </div>
+          <div style="display:flex;align-items:flex-start;gap:10px;font-size:.82rem;color:#e4e4e7;">
+            <span style="color:#facc15;font-size:.9rem;flex-shrink:0;margin-top:1px;">🔒</span>
+            <span><strong style="color:#fff;">Máximo 3 reclamos activos.</strong> Tenés 3 cupos en paralelo. Si se te vencen los 3 sin contactar, quedás bloqueado sin cupos disponibles hasta que liberen.</span>
+          </div>
+          <div style="display:flex;align-items:flex-start;gap:10px;font-size:.82rem;color:#e4e4e7;">
+            <span style="color:#f97316;font-size:.9rem;flex-shrink:0;margin-top:1px;">🎓</span>
+            <span><strong style="color:#f97316;">Hacé la Academia primero.</strong> Los primeros 3 módulos son 15 minutos y duplican tus chances de cierre. Están en la pestaña <strong>Academia</strong> de la barra principal.</span>
+          </div>
+        </div>
+      </div>
       <button class="btn-primary" onclick="cerrarOnboarding()" style="width:100%;padding:14px;font-size:0.95rem;">
         <i class="fa-solid fa-rocket"></i> ¡Entendido, a vender!
       </button>
@@ -4512,7 +4628,8 @@ function cambiarTab(tab, btn) {
   if (btn) btn.classList.add('active');
 
   // Gestionar estado del botón "Herramientas" y visibilidad de fila secundaria
-  const TABS_SEC = ['academia','selector-rubro','cotizador','herramientas','prospectos','ventas','red','comunidad','jarvis'];
+  // Nota: 'academia' se quitó de TABS_SEC — es tab primario para Canal 1
+  const TABS_SEC = ['selector-rubro','cotizador','herramientas','prospectos','ventas','red','comunidad','jarvis'];
   const extraRow = document.getElementById('tabs-extra-row');
   const btnMas   = document.getElementById('btn-mas-tabs');
   if (TABS_SEC.includes(tab)) {
@@ -4526,7 +4643,21 @@ function cambiarTab(tab, btn) {
   if(tab==='prospectos') cargarProspectos();
   if(tab==='pipeline') { cargarProspectosPipeline(); plRenderReferidos(); plRenderVentas(); }
   if(tab==='selector-rubro') cargarBadgesRubro();
-  if(tab==='bolsa') { cargarBolsa(); cargarHistorialBolsa(); cargarMarketplace(); }
+  if(tab==='bolsa') {
+    // Soft-gate: verificar si el aliado completó al menos los primeros 3 módulos de la Academia
+    const progresoBolsa = getAcademiaProgreso ? getAcademiaProgreso() : [];
+    const mod1 = progresoBolsa.includes(1);
+    const mod2 = progresoBolsa.includes(2);
+    const mod3 = progresoBolsa.includes(3);
+    const completadosReq = [mod1, mod2, mod3].filter(Boolean).length;
+    const yaVioAviso = aliado && localStorage.getItem(`bolsa_aviso_visto_${aliado.codigo}`);
+    if (completadosReq < 3 && !yaVioAviso) {
+      // Mostrar modal de gate suave antes de entrar
+      abrirModalGateBolsa(completadosReq);
+      return; // No cambiar al tab todavía
+    }
+    cargarBolsa(); cargarHistorialBolsa(); cargarMarketplace();
+  }
   if(tab==='red') cargarRed();
   if(tab==='comunidad') cargarComunidad();
   if(tab==='academia') inicializarAcademia();
@@ -4548,7 +4679,7 @@ function toggleMasTabsRow() {
   if (!visible) btn.classList.remove('active');
   else {
     // Verificar si el tab activo actual es secundario
-    const TABS_SEC = ['academia','selector-rubro','cotizador','herramientas','prospectos','ventas','red','comunidad','jarvis'];
+    const TABS_SEC = ['selector-rubro','cotizador','herramientas','prospectos','ventas','red','comunidad','jarvis'];
     const panelActivo = document.querySelector('.tab-panel.active');
     const tabId = panelActivo ? panelActivo.id.replace('tab-','') : '';
     if (TABS_SEC.includes(tabId)) btn.classList.add('active');
@@ -4767,6 +4898,7 @@ async function cargarTodo() {
   cargarCreditos();
   cargarSiguienteAccion();
   cargarOnboardingChecklist();
+  actualizarBadgeAcademia();
 
   // Mostrar botón flotante de soporte
   document.getElementById('float-support').style.display = 'flex';
@@ -4777,6 +4909,13 @@ async function cargarTodo() {
 
   // Onboarding primer login: guion recomendado para Canal 2
   _inyectarGuionRecomendado(aliado);
+
+  // Onboarding: mostrar saldo de créditos de bienvenida
+  const creditosEl = document.getElementById('onboard-creditos-num');
+  if (creditosEl && aliado) {
+    const creds = aliado.creditos ?? aliado.creditos_bienvenida ?? 0;
+    creditosEl.textContent = creds;
+  }
 
   // Onboarding primer login
   const key = `portal_onboarded_${aliado.codigo}`;
@@ -4817,6 +4956,64 @@ function _inyectarGuionRecomendado(aliado) {
 function cerrarOnboarding() {
   document.getElementById('modal-onboarding').classList.remove('open');
   if (aliado) localStorage.setItem(`portal_onboarded_${aliado.codigo}`, '1');
+}
+
+// ── GATE SUAVE: Bolsa de Leads ────────────────────────────────────────────────
+function abrirModalGateBolsa(completadosReq) {
+  const modConfig = [
+    { id: 1, label: 'Módulo 1 · Qué vendés y a quién' },
+    { id: 2, label: 'Módulo 2 · Cómo generar confianza' },
+    { id: 3, label: 'Módulo 3 · Cómo cerrar la venta' },
+  ];
+  const progreso = getAcademiaProgreso ? getAcademiaProgreso() : [];
+  const lista = document.getElementById('gate-modulos-lista');
+  if (lista) {
+    lista.innerHTML = modConfig.map(m => {
+      const hecho = progreso.includes(m.id);
+      return `<div style="display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:8px;background:${hecho ? 'rgba(74,222,128,0.07)' : 'rgba(255,255,255,0.03)'};border:1px solid ${hecho ? 'rgba(74,222,128,0.25)' : 'var(--border)'};">
+        <div style="width:22px;height:22px;border-radius:50%;background:${hecho ? 'var(--green)' : 'rgba(255,255,255,0.08)'};display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+          ${hecho ? '<i class="fa-solid fa-check" style="color:#000;font-size:.65rem;"></i>' : '<span style="font-size:.65rem;color:var(--text-dim);">' + m.id + '</span>'}
+        </div>
+        <span style="font-size:.82rem;color:${hecho ? 'var(--green)' : 'var(--text-muted)'};">${m.label}</span>
+        ${hecho ? '' : '<span style="margin-left:auto;font-size:.72rem;color:var(--text-dim);background:rgba(255,255,255,0.05);border-radius:4px;padding:2px 7px;">pendiente</span>'}
+      </div>`;
+    }).join('');
+  }
+  document.getElementById('modal-gate-bolsa').classList.add('open');
+}
+
+function ignorarGateBolsa() {
+  document.getElementById('modal-gate-bolsa').classList.remove('open');
+  if (aliado) localStorage.setItem(`bolsa_aviso_visto_${aliado.codigo}`, '1');
+  // Ahora sí abrir la bolsa
+  const btnBolsa = document.querySelector('.tab-canal1[onclick*="bolsa"]');
+  document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  const panel = document.getElementById('tab-bolsa');
+  if (panel) panel.classList.add('active');
+  if (btnBolsa) btnBolsa.classList.add('active');
+  cargarBolsa(); cargarHistorialBolsa(); cargarMarketplace();
+}
+
+function irAcademiaDesdeGate() {
+  document.getElementById('modal-gate-bolsa').classList.remove('open');
+  const tabAcademia = document.getElementById('btn-tab-academia-primary') ||
+                      document.querySelector('.tab-btn[onclick*="academia"]');
+  cambiarTab('academia', tabAcademia);
+}
+
+// ── BADGE progreso Academia en tab primario ──────────────────────────────────
+function actualizarBadgeAcademia() {
+  if (!aliado) return;
+  const badge = document.getElementById('academia-progress-badge');
+  if (!badge) return;
+  const progreso = getAcademiaProgreso ? getAcademiaProgreso() : [];
+  if (progreso.length === 0) {
+    badge.textContent = '¡Empezá!';
+    badge.style.display = 'inline';
+  } else {
+    badge.style.display = 'none';
+  }
 }
 
 document.getElementById('modal-onboarding').addEventListener('click', e => {
@@ -6498,9 +6695,11 @@ function cambiarTabDesdeNBA(tab) {
 
 async function cargarOnboardingChecklist() {
   if(!aliado) return;
+  // El checklist ya es visible por defecto con fallback estático en el HTML.
+  // Si la API responde, reemplazamos el contenido con datos reales.
   try {
     const res = await apiFetch(`${API}/aliados/${aliado.codigo}/onboarding`);
-    if(!res.ok) return;
+    if(!res.ok) return; // Mantener fallback estático si falla la API
     const data = await res.json();
     const box = document.getElementById('onboarding-checklist-box');
     if(data.pct === 100) { box.style.display='none'; return; }
@@ -6522,7 +6721,10 @@ async function cargarOnboardingChecklist() {
           : ''}
       </div>
     `).join('');
-  } catch(e) { console.warn('Error onboarding checklist', e); }
+  } catch(e) {
+    // Silently keep the static fallback — don't show error to user
+    console.warn('Checklist API no disponible, usando fallback estático', e);
+  }
 }
 
 // ─── COTIZADOR CON ANÁLISIS IA ────────────────────────────────────────────────
@@ -8492,7 +8694,28 @@ const ACADEMIA_MODULOS = [
         <li>El guión exacto del diagnóstico de 15 minutos</li>
         <li>Cómo llevar la conversación hacia el plan correcto sin parecer vendedor</li>
         <li>Qué apoyos visuales mostrar en cada etapa</li>
+        <li><strong>Cómo usar la Auditoría Digital y el Cotizador antes y después del diagnóstico</strong></li>
       </ul>
+
+      <h3>Antes del diagnóstico: la Auditoría Digital B2B</h3>
+      <p>Antes de llamar al lead, mandále el link de su <strong>Auditoría Digital gratuita</strong>. Es una herramienta que analiza la presencia digital de la empresa del prospecto (web, velocidad, posicionamiento, conversión) y genera un reporte en segundos.</p>
+
+      <div class="aca-highlight">
+        <div class="label">CUÁNDO USARLA</div>
+        <div class="text">Antes del primer contacto real. Mandás el link por WhatsApp o email como "adelanto" antes de la reunión. El cliente ve su propio reporte y <strong>llega al diagnóstico ya convencido de que tiene un problema</strong>. Vos solo tenés que confirmar lo que él ya sabe.</div>
+      </div>
+
+      <div class="aca-pitch-box">
+        <div class="label">MENSAJE DE ENVÍO</div>
+        <div class="text">\"Hola [Nombre], antes de que nos reunamos le paso un análisis rápido de la presencia digital de [empresa] — es gratuito y tarda 30 segundos. Muchas veces muestra cosas que no se ven a simple vista: [link de auditoría]. Nos vemos el [día] entonces.\"</div>
+      </div>
+
+      <p>La Auditoría está en el menú <strong>Herramientas</strong> de la barra principal. Tu link personal se genera automáticamente con tu código de referido.</p>
+
+      <div class="aca-tip">
+        <div class="label">DESPUÉS DEL DIAGNÓSTICO: EL COTIZADOR CON IA</div>
+        <div class="text">Una vez que identificaste el dolor y el plan correcto, usá el <strong>Cotizador</strong> (también en Herramientas) para generar una propuesta personalizada en segundos. Elegís rubro y plan, y la IA arma el argumento de valor adaptado a ese tipo de empresa. Mandalo por WhatsApp como cierre de la conversación.</div>
+      </div>
 
       <h3>Qué es el diagnóstico</h3>
       <p>El diagnóstico es una <strong>llamada de 15 minutos</strong> donde el cliente te cuenta su proceso comercial actual y vos le mostrás qué plan le conviene. Es el momento más importante del cierre. No es una demo ni una venta dura — es una conversación de asesor, donde el cliente se convence solo al oírse describir sus propios problemas.</p>
@@ -9310,7 +9533,8 @@ const ACADEMIA_MODULOS = [
 ];
 
 function inicializarAcademia() {
-  renderAcademiaIndex();
+  renderAcademiaIndex();         // Renderiza rápido con caché local
+  sincronizarProgresoDesdeBackend(); // Luego sincroniza con backend y re-renderiza
 }
 
 function renderAcademiaIndex() {
@@ -9355,14 +9579,60 @@ function getAcademiaProgreso() {
   } catch { return []; }
 }
 
-function marcarModuloCompleto(id) {
+// Carga el progreso desde el backend y sincroniza al localStorage.
+// Llamada al inicializar la academia para que el progreso sobreviva
+// cambios de dispositivo o limpieza de caché.
+async function sincronizarProgresoDesdeBackend() {
+  if (!aliado) return;
+  try {
+    const res = await apiFetch(`${API}/aliados/${aliado.codigo}/academia`);
+    if (!res.ok) return;
+    const data = await res.json();
+    const completadosIds = (data.modulos || [])
+      .filter(m => m.completado)
+      .map(m => m.id);
+    if (completadosIds.length > 0) {
+      const key = `academia_progress_${aliado.codigo}`;
+      // Merge: no pisar progreso local que el backend aún no tenga
+      const local = getAcademiaProgreso();
+      const merged = [...new Set([...completadosIds, ...local])];
+      localStorage.setItem(key, JSON.stringify(merged));
+    }
+    renderAcademiaIndex();
+  } catch (e) {
+    // Fallo silencioso: seguimos con lo que hay en localStorage
+  }
+}
+
+async function marcarModuloCompleto(id) {
   if (!aliado) return;
   const key = `academia_progress_${aliado.codigo}`;
   const progreso = getAcademiaProgreso();
   if (!progreso.includes(id)) {
+    // Optimistic update: guardamos localmente primero para UX rápida
     progreso.push(id);
     localStorage.setItem(key, JSON.stringify(progreso));
-    mostrarToast(`✓ Módulo ${id} completado`, 'green');
+    actualizarBadgeAcademia();
+  }
+  // Persistir en backend (idempotente: si ya estaba, no duplica créditos)
+  try {
+    const res = await apiFetch(
+      `${API}/aliados/${aliado.codigo}/academia/${id}/completar`,
+      { method: 'POST' }
+    );
+    if (res.ok) {
+      const data = await res.json();
+      if (!data.ya_completado && data.creditos_ganados > 0) {
+        mostrarToast(`✓ Módulo completado · +${data.creditos_ganados} créditos`, 'green');
+        // Refrescar saldo de créditos en el UI si existe el elemento
+        const saldoEl = document.getElementById('aliado-creditos');
+        if (saldoEl) saldoEl.textContent = data.saldo;
+      }
+    } else {
+      mostrarToast('✓ Módulo completado', 'green');
+    }
+  } catch (e) {
+    mostrarToast('✓ Módulo guardado localmente', 'green');
   }
 }
 
@@ -9422,9 +9692,91 @@ function volverAIndice() {
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
-function completarYAvanzar(id) {
-  marcarModuloCompleto(id);
-  const nextModulo = ACADEMIA_MODULOS.find(x => x.id === id + 1);
+function mostrarCelebracionAcademia() {
+  document.getElementById('aca-index').style.display = 'none';
+  const container = document.getElementById('aca-lessons-container');
+  container.innerHTML = `
+    <div style="
+      display:flex;flex-direction:column;align-items:center;justify-content:center;
+      gap:28px;padding:60px 24px;text-align:center;animation:fadeIn .5s ease;
+    ">
+      <div style="font-size:4rem;line-height:1;">&#127942;</div>
+      <div>
+        <h2 style="font-size:1.6rem;font-weight:800;color:var(--accent);margin:0 0 8px;">
+          &#161;Completaste la formación!
+        </h2>
+        <p style="color:var(--text-secondary);max-width:380px;margin:0 auto;line-height:1.5;">
+          Recorriste los 8 módulos de la Academia Avanza. Ya tenés todo lo que necesitás para cerrar tu primera venta.
+        </p>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:12px;width:100%;max-width:340px;">
+        <button
+          onclick="irABolsaDesdeAcademia()"
+          style="
+            padding:14px 24px;border-radius:10px;border:none;cursor:pointer;
+            background:linear-gradient(135deg,#f97316,#fb923c);
+            color:#000;font-weight:800;font-size:1rem;
+            box-shadow:0 4px 20px rgba(249,115,22,.35);
+            display:flex;align-items:center;justify-content:center;gap:8px;
+          ">
+          <i class="fa-solid fa-bolt"></i>
+          &#161;Ir a reclamar mi primer lead!
+        </button>
+        <button
+          onclick="volverAIndice()"
+          style="
+            padding:12px 24px;border-radius:10px;border:1px solid var(--border);
+            background:transparent;color:var(--text-secondary);cursor:pointer;font-size:.9rem;
+          ">
+          Ver resumen de la Academia
+        </button>
+      </div>
+    </div>
+  `;
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function irABolsaDesdeAcademia() {
+  // Navegar a la tab de Bolsa (leads gratuitos)
+  const btnBolsa = document.querySelector('.tab-btn[onclick*="bolsa"]') ||
+                   document.querySelector('[onclick*="bolsa"]');
+  if (btnBolsa) {
+    btnBolsa.click();
+  } else {
+    // Fallback: buscar por texto
+    const tabs = document.querySelectorAll('.tab-btn');
+    const bolsaTab = Array.from(tabs).find(t => t.textContent.toLowerCase().includes('bolsa'));
+    if (bolsaTab) bolsaTab.click();
+  }
+}
+
+async function completarYAvanzar(id) {
+  await marcarModuloCompleto(id);
+
+  const esCanal2 = aliado?.tipo_aliado === 'canal2';
+  const modulosVisibles = ACADEMIA_MODULOS.filter(m => {
+    if (m.canal === 'canal1' && esCanal2) return false;
+    if (m.canal === 'canal2' && !esCanal2) return false;
+    return true;
+  });
+
+  const idx = modulosVisibles.findIndex(x => x.id === id);
+  const esUltimo = idx === modulosVisibles.length - 1;
+
+  if (esUltimo) {
+    // Verificar que todos los módulos estén realmente completados
+    const progreso = getAcademiaProgreso();
+    const todosCompletos = modulosVisibles.every(m => progreso.includes(m.id));
+    if (todosCompletos) {
+      setTimeout(() => mostrarCelebracionAcademia(), 600);
+      return;
+    }
+  }
+
+  const nextModulo = idx >= 0 && idx < modulosVisibles.length - 1
+    ? modulosVisibles[idx + 1]
+    : null;
+
   if (nextModulo) {
     setTimeout(() => abrirModulo(nextModulo.id), 600);
   } else {
@@ -10277,7 +10629,7 @@ function descargarPDF(url, filename) {
   <!-- SIDEBAR -->
   <nav class="j-sidebar">
     <div class="j-sidebar-section">MÓDULOS</div>
-    <div class="j-nav active" onclick="jSetSection('chat', this)"><i class="fa-solid fa-bolt"></i> Chat JARVIS</div>
+    <div class="j-nav" style="opacity:0.45;cursor:default;pointer-events:none;"><i class="fa-solid fa-bolt"></i> Chat JARVIS <span style="font-size:9px;background:#444;color:#aaa;border-radius:4px;padding:1px 5px;margin-left:4px;letter-spacing:.5px;">PRÓXIMAMENTE</span></div>
     <div class="j-nav" onclick="jSetSection('leads', this)"><i class="fa-solid fa-crosshairs"></i> Motor de Leads <span class="j-badge amb">2</span></div>
     <div class="j-nav" onclick="jSetSection('pipeline', this)"><i class="fa-solid fa-filter"></i> Pipeline</div>
     <div class="j-nav" onclick="jSetSection('propuestas', this)"><i class="fa-regular fa-file-lines"></i> Propuestas <span class="j-badge">3</span></div>
@@ -10449,7 +10801,7 @@ async function jCargarAliado() {
 
 async function jVerificarEstado() {
   try {
-    const r = await fetch('/jarvis/estado', { credentials: 'include' });
+    const r = await apiFetch('/jarvis/estado');
     if (r.ok) {
       const d = await r.json();
       const activo = d.activo !== false;
@@ -10521,7 +10873,7 @@ async function jEnviar() {
   jDetectarEstado(texto);
   const typingId = jMostrarTyping();
   try {
-    const r = await fetch('/jarvis/chat', {
+    const r = await apiFetch('/jarvis/chat', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       credentials: 'include',
@@ -10695,7 +11047,7 @@ async function jAccionCRM(tipo) {
 // ── Integraciones ─────────────────────────────────────────
 async function jVerificarIntegraciones() {
   try {
-    const r = await fetch('/jarvis/integraciones/estado', { credentials: 'include' });
+    const r = await apiFetch('/jarvis/integraciones/estado');
     if (!r.ok) return;
     const d = await r.json();
     for (const [nombre, estado] of Object.entries(d.integraciones || {})) {
