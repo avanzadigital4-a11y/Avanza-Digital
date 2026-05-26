@@ -7653,9 +7653,6 @@ input[type=text]:focus{{outline:none;border-color:#3b82f6;}}
         </a>
       </div>
     </div>
-  </div>
-</div>
-
     <div id="step-payoneer" class="step" style="padding:4px 0;">
       <h3 style="margin:0 0 6px;font-size:1.05rem;font-weight:800;">💳 Instrucciones de pago por Payoneer</h3>
       <p style="color:#a1a1aa;font-size:.82rem;margin:0 0 16px;">Realizá la transferencia y avisanos por WhatsApp para confirmar.</p>
@@ -7687,6 +7684,8 @@ input[type=text]:focus{{outline:none;border-color:#3b82f6;}}
         </a>
       </div>
     </div>
+  </div>
+</div>
 
 <script>
   const _PLAN_PRECIOS = {{{_plan_precios_js}}};
