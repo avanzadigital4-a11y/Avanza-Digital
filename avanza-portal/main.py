@@ -117,6 +117,9 @@ for col_sql in [
     "ALTER TABLE aliados ADD COLUMN cbu_alias VARCHAR",
     "ALTER TABLE aliados ADD COLUMN terminos_aceptados BOOLEAN DEFAULT FALSE",
     "ALTER TABLE aliados ADD COLUMN terminos_aceptados_en TIMESTAMP",
+    # v2.1 — Métodos de cobro internacionales
+    "ALTER TABLE aliados ADD COLUMN payment_method VARCHAR",
+    "ALTER TABLE aliados ADD COLUMN payment_info VARCHAR",
     # v1.6 — Presencia digital en leads de bolsa
     "ALTER TABLE bolsa_leads ADD COLUMN web VARCHAR",
     "ALTER TABLE bolsa_leads ADD COLUMN instagram VARCHAR",
@@ -3200,6 +3203,8 @@ def _aliado_row(a):
         "ultimo_login": a.ultimo_login.strftime("%d/%m/%Y %H:%M") if getattr(a, "ultimo_login", None) else "Nunca",
         "cantidad_logins": getattr(a, "cantidad_logins", 0),
         "cbu_alias": getattr(a, "cbu_alias", None),
+        "payment_method": getattr(a, "payment_method", None),
+        "payment_info": getattr(a, "payment_info", None),
         "terminos_aceptados": bool(getattr(a, "terminos_aceptados", False)),
         "terminos_aceptados_en": a.terminos_aceptados_en.strftime("%d/%m/%Y %H:%M") if getattr(a, "terminos_aceptados_en", None) else None,
         "tipo_aliado": getattr(a, "tipo_aliado", "canal1") or "canal1",
@@ -3240,6 +3245,8 @@ def _aliado_detalle(a, incluir_token: bool = False):
         "portal_publico_activo": bool(getattr(a, "portal_publico_activo", True)),
         "tipo_aliado": getattr(a, "tipo_aliado", "canal1") or "canal1",
         "cbu_alias": getattr(a, "cbu_alias", None),
+        "payment_method": getattr(a, "payment_method", None),
+        "payment_info": getattr(a, "payment_info", None),
         "terminos_aceptados": bool(getattr(a, "terminos_aceptados", False)),
         "terminos_aceptados_en": a.terminos_aceptados_en.strftime("%d/%m/%Y %H:%M") if getattr(a, "terminos_aceptados_en", None) else None,
         "referidos": [{"cliente": r.nombre_cliente, "plan": r.plan_elegido,
@@ -4234,7 +4241,7 @@ def estado_onboarding(codigo: str, db: Session = Depends(get_db), _owner=Depends
     # real sobre cómo funciona el programa antes de comprometer un contacto propio.
     pasos = [
         {"id": "registro", "titulo": "Te registraste", "completado": True},
-        {"id": "cbu", "titulo": "Cargá tu CBU para cobrar", "completado": bool(getattr(a, "cbu_alias", None))},
+        {"id": "cbu", "titulo": "Configurá tu método de cobro", "completado": bool(getattr(a, "cbu_alias", None) or getattr(a, "payment_info", None))},
     ]
     if not es_canal2:
         pasos.append({
@@ -7883,22 +7890,45 @@ def configurar_portal_publico(codigo: str,
 
 class PerfilAliadoUpdate(BaseModel):
     cbu_alias: str | None = None
+    payment_method: str | None = None
+    payment_info: str | None = None
 
 @app.patch("/aliado/perfil")
 def actualizar_perfil_aliado(payload: PerfilAliadoUpdate,
                               aliado: Aliado = Depends(current_aliado_required),
                               db: Session = Depends(get_db)):
-    """Actualiza el CBU/alias del aliado autenticado.
+    """Actualiza el método de cobro del aliado autenticado.
 
+    Acepta payment_method + payment_info (nuevo, internacional) o cbu_alias (legacy).
     SECURITY: Toma el aliado del JWT, ya NO acepta `?codigo=` como parámetro
     (era una via de hijack del CBU para redirigir comisiones).
     """
+    VALID_METHODS = {"usdt_trc20", "wise", "transferencia", "payoneer"}
+
+    if payload.payment_method is not None:
+        method = (payload.payment_method or "").strip().lower()
+        if method and method not in VALID_METHODS:
+            raise HTTPException(400, f"Método no válido. Opciones: {', '.join(VALID_METHODS)}")
+        setattr(aliado, "payment_method", method or None)
+
+    if payload.payment_info is not None:
+        setattr(aliado, "payment_info", (payload.payment_info or "").strip()[:300] or None)
+
+    # cbu_alias: mantener por compatibilidad con admin y endpoints legacy
     if payload.cbu_alias is not None:
-        aliado.cbu_alias = payload.cbu_alias.strip()[:120] or None
+        aliado.cbu_alias = payload.cbu_alias.strip()[:300] or None
+    elif payload.payment_method and payload.payment_info:
+        # Auto-generar cbu_alias legible para el admin
+        labels = {"usdt_trc20":"USDT TRC20","wise":"Wise","transferencia":"Transf. bancaria","payoneer":"Payoneer"}
+        label = labels.get((payload.payment_method or "").lower(), payload.payment_method or "")
+        aliado.cbu_alias = f"[{label}] {(payload.payment_info or '').strip()}"[:300] or None
+
     db.commit()
     return {
         "mensaje": "Perfil actualizado.",
         "cbu_alias": aliado.cbu_alias,
+        "payment_method": getattr(aliado, "payment_method", None),
+        "payment_info": getattr(aliado, "payment_info", None),
     }
 
 

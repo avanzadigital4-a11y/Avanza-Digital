@@ -1212,7 +1212,7 @@
           <div class="ob-step pending"><div class="ob-check pending"></div><span>Completá los módulos 1-3 de la Academia</span><span style="margin-left:auto;font-size:.72rem;font-weight:700;color:var(--primary);background:rgba(59,130,246,0.1);padding:2px 8px;border-radius:50px;">Pendiente</span></div>
           <div class="ob-step pending"><div class="ob-check pending"></div><span>Reclamá tu primer lead de la Bolsa</span><span style="margin-left:auto;font-size:.72rem;font-weight:700;color:var(--primary);background:rgba(59,130,246,0.1);padding:2px 8px;border-radius:50px;">Pendiente</span></div>
           <div class="ob-step pending"><div class="ob-check pending"></div><span>Registrá tu primer prospecto</span><span style="margin-left:auto;font-size:.72rem;font-weight:700;color:var(--primary);background:rgba(59,130,246,0.1);padding:2px 8px;border-radius:50px;">Pendiente</span></div>
-          <div class="ob-step pending"><div class="ob-check pending"></div><span>Cargá tu CBU/Alias para cobrar</span><a href="#" onclick="cambiarTab('comisiones', document.querySelector('.tab-btn[onclick*=comisiones]')); return false;" style="margin-left:auto;font-size:.72rem;font-weight:700;color:var(--amber);background:rgba(250,204,21,0.1);border:1px solid rgba(250,204,21,0.3);padding:2px 10px;border-radius:50px;text-decoration:none;white-space:nowrap;">Cargar →</a></div>
+          <div class="ob-step pending"><div class="ob-check pending"></div><span>Configurá tu método de cobro</span><a href="#" onclick="cambiarTab('mi-cuenta', document.getElementById('btn-tab-mi-cuenta')); return false;" style="margin-left:auto;font-size:.72rem;font-weight:700;color:var(--amber);background:rgba(250,204,21,0.1);border:1px solid rgba(250,204,21,0.3);padding:2px 10px;border-radius:50px;text-decoration:none;white-space:nowrap;">Cargar →</a></div>
         </div>
       </div>
 
@@ -3801,23 +3801,77 @@
         <div style="font-size:.75rem; color:var(--text-dim); margin-top:8px;">Código de aliado: <span id="mc-ref-code" style="font-family:'Courier New',monospace; color:var(--text);">—</span></div>
       </div>
 
-      <!-- CBU / ALIAS DE COBRO -->
+      <!-- MÉTODO DE COBRO INTERNACIONAL -->
       <div class="bento-box" style="margin-bottom:20px;">
         <h3 style="font-size:0.95rem; font-weight:700; margin-bottom:4px;">
           <i class="fa-solid fa-building-columns" style="color:var(--primary);"></i>
-          &nbsp;Datos de cobro
+          &nbsp;Método de cobro
         </h3>
         <p style="font-size:0.82rem; color:var(--text-muted); margin-bottom:16px;">
-          El CBU o alias donde te transferimos las comisiones. <strong>Sin esto cargado, el admin no puede abonarte.</strong>
+          Donde te transferimos las comisiones. Funciona para cualquier país. <strong>Sin esto cargado, el admin no puede abonarte.</strong>
         </p>
-        <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:flex-end;">
-          <div style="flex:1; min-width:220px;">
-            <label style="font-size:.75rem; font-weight:600; color:var(--text-muted); text-transform:uppercase; letter-spacing:1px; display:block; margin-bottom:6px;">CBU o alias de Mercado Pago</label>
-            <input type="text" id="perfil-cbu" placeholder="Ej: mi.alias.mp  o  0000003100000000000000"
-                   style="width:100%; background:rgba(255,255,255,0.04); border:1px solid var(--border); border-radius:var(--radius-sm); padding:12px 14px; color:var(--text); font-size:.9rem; font-family:'Inter',sans-serif; outline:none;">
+
+        <!-- Selector de método -->
+        <div style="margin-bottom:16px;">
+          <label style="font-size:.75rem; font-weight:600; color:var(--text-muted); text-transform:uppercase; letter-spacing:1px; display:block; margin-bottom:8px;">Método de pago</label>
+          <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(140px,1fr)); gap:8px;" id="payment-method-grid">
+            <button type="button" onclick="seleccionarMetodoPago('usdt_trc20')" id="pm-btn-usdt_trc20"
+              style="display:flex;flex-direction:column;align-items:center;gap:4px;padding:12px 8px;border-radius:10px;border:2px solid var(--border);background:rgba(255,255,255,0.03);cursor:pointer;transition:all .15s;font-size:.78rem;font-weight:700;color:var(--text-muted);">
+              <span style="font-size:1.3rem;">₮</span>
+              <span>USDT TRC20</span>
+            </button>
+            <button type="button" onclick="seleccionarMetodoPago('wise')" id="pm-btn-wise"
+              style="display:flex;flex-direction:column;align-items:center;gap:4px;padding:12px 8px;border-radius:10px;border:2px solid var(--border);background:rgba(255,255,255,0.03);cursor:pointer;transition:all .15s;font-size:.78rem;font-weight:700;color:var(--text-muted);">
+              <span style="font-size:1.3rem;">🌍</span>
+              <span>Wise</span>
+            </button>
+            <button type="button" onclick="seleccionarMetodoPago('transferencia')" id="pm-btn-transferencia"
+              style="display:flex;flex-direction:column;align-items:center;gap:4px;padding:12px 8px;border-radius:10px;border:2px solid var(--border);background:rgba(255,255,255,0.03);cursor:pointer;transition:all .15s;font-size:.78rem;font-weight:700;color:var(--text-muted);">
+              <span style="font-size:1.3rem;">🏦</span>
+              <span>Transf. bancaria</span>
+            </button>
+            <button type="button" onclick="seleccionarMetodoPago('payoneer')" id="pm-btn-payoneer"
+              style="display:flex;flex-direction:column;align-items:center;gap:4px;padding:12px 8px;border-radius:10px;border:2px solid var(--border);background:rgba(255,255,255,0.03);cursor:pointer;transition:all .15s;font-size:.78rem;font-weight:700;color:var(--text-muted);">
+              <span style="font-size:1.3rem;">💳</span>
+              <span>Payoneer</span>
+            </button>
           </div>
-          <button onclick="guardarCBU()" id="btn-guardar-cbu" style="background:var(--primary); color:white; border:none; border-radius:8px; padding:12px 22px; font-weight:800; cursor:pointer; font-size:.88rem;">
-            <i class="fa-solid fa-floppy-disk"></i> Guardar
+        </div>
+
+        <!-- Campos dinámicos según método -->
+        <div id="pm-fields-usdt_trc20" class="pm-fields" style="display:none; margin-bottom:14px;">
+          <label style="font-size:.75rem; font-weight:600; color:var(--text-muted); text-transform:uppercase; letter-spacing:1px; display:block; margin-bottom:6px;">Dirección de wallet USDT (Red TRC20)</label>
+          <input type="text" id="pm-input-usdt_trc20" placeholder="Ej: TXxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+                 style="width:100%; background:rgba(255,255,255,0.04); border:1px solid var(--border); border-radius:var(--radius-sm); padding:12px 14px; color:var(--text); font-size:.88rem; font-family:'Courier New',monospace; outline:none; box-sizing:border-box;">
+          <div style="font-size:.72rem; color:var(--text-dim); margin-top:6px;">Asegurate de usar la red TRC20 (Tron). Verificá bien la dirección antes de guardar.</div>
+        </div>
+
+        <div id="pm-fields-wise" class="pm-fields" style="display:none; margin-bottom:14px;">
+          <label style="font-size:.75rem; font-weight:600; color:var(--text-muted); text-transform:uppercase; letter-spacing:1px; display:block; margin-bottom:6px;">Email o @ de tu cuenta Wise</label>
+          <input type="text" id="pm-input-wise" placeholder="Ej: tu@email.com  o  @usuario"
+                 style="width:100%; background:rgba(255,255,255,0.04); border:1px solid var(--border); border-radius:var(--radius-sm); padding:12px 14px; color:var(--text); font-size:.9rem; font-family:'Inter',sans-serif; outline:none; box-sizing:border-box;">
+        </div>
+
+        <div id="pm-fields-transferencia" class="pm-fields" style="display:none; margin-bottom:14px;">
+          <label style="font-size:.75rem; font-weight:600; color:var(--text-muted); text-transform:uppercase; letter-spacing:1px; display:block; margin-bottom:6px;">Datos bancarios (banco, cuenta, CBU/CLABE/IBAN/etc.)</label>
+          <textarea id="pm-input-transferencia" rows="3" placeholder="Ej: Banco Galicia · CBU 007000300000000000001 · Titular: Juan Pérez"
+                 style="width:100%; background:rgba(255,255,255,0.04); border:1px solid var(--border); border-radius:var(--radius-sm); padding:12px 14px; color:var(--text); font-size:.88rem; font-family:'Inter',sans-serif; outline:none; resize:vertical; box-sizing:border-box;"></textarea>
+          <div style="font-size:.72rem; color:var(--text-dim); margin-top:6px;">Incluí banco, número de cuenta y titular. Para cuentas internacionales agregá SWIFT/BIC.</div>
+        </div>
+
+        <div id="pm-fields-payoneer" class="pm-fields" style="display:none; margin-bottom:14px;">
+          <label style="font-size:.75rem; font-weight:600; color:var(--text-muted); text-transform:uppercase; letter-spacing:1px; display:block; margin-bottom:6px;">Email de tu cuenta Payoneer</label>
+          <input type="text" id="pm-input-payoneer" placeholder="Ej: tu@email.com"
+                 style="width:100%; background:rgba(255,255,255,0.04); border:1px solid var(--border); border-radius:var(--radius-sm); padding:12px 14px; color:var(--text); font-size:.9rem; font-family:'Inter',sans-serif; outline:none; box-sizing:border-box;">
+        </div>
+
+        <!-- Input oculto para compatibilidad (perfil-cbu) -->
+        <input type="hidden" id="perfil-cbu" value="">
+
+        <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
+          <button onclick="guardarMetodoPago()" id="btn-guardar-cbu"
+                  style="background:var(--primary); color:white; border:none; border-radius:8px; padding:12px 22px; font-weight:800; cursor:pointer; font-size:.88rem;">
+            <i class="fa-solid fa-floppy-disk"></i> Guardar método de cobro
           </button>
         </div>
         <div id="perfil-cbu-estado" style="font-size:0.78rem; margin-top:10px;"></div>
@@ -5329,15 +5383,17 @@ async function renderComisiones() {
       </div>`).join('');
   }
 
-  // Pintar CBU desde el objeto aliado que ya tenemos en memoria (spec §11)
+  // Pintar método de cobro desde el objeto aliado
   const cbuInput = document.getElementById('perfil-cbu');
   const cbuEstado = document.getElementById('perfil-cbu-estado');
   if(cbuInput) cbuInput.value = aliado.cbu_alias || '';
   if(cbuEstado) {
-    if(aliado.cbu_alias) {
-      cbuEstado.innerHTML = `<span style="color:var(--green);"><i class="fa-solid fa-circle-check"></i> CBU/alias cargado.</span>`;
+    if(aliado.payment_method && aliado.payment_info) {
+      cbuEstado.innerHTML = `<span style="color:var(--green);"><i class="fa-solid fa-circle-check"></i> Método de cobro configurado.</span>`;
+    } else if(aliado.cbu_alias) {
+      cbuEstado.innerHTML = `<span style="color:var(--green);"><i class="fa-solid fa-circle-check"></i> Método de cobro cargado.</span>`;
     } else {
-      cbuEstado.innerHTML = `<span style="color:var(--amber);"><i class="fa-solid fa-triangle-exclamation"></i> Cargá tu CBU/alias para poder cobrar.</span>`;
+      cbuEstado.innerHTML = `<span style="color:var(--amber);"><i class="fa-solid fa-triangle-exclamation"></i> Configurá tu método de cobro para poder cobrar.</span>`;
     }
   }
 
@@ -5610,13 +5666,55 @@ async function confirmarBajaVoluntaria() {
   }
 }
 
-// NUEVO v1.4: guardar CBU/alias del aliado (spec §11)
-async function guardarCBU() {
+// v2.1: seleccionar método de pago en Mi Cuenta
+let _metodoPagoActual = null;
+
+function seleccionarMetodoPago(metodo) {
+  _metodoPagoActual = metodo;
+  // Resaltar botón seleccionado
+  ['usdt_trc20','wise','transferencia','payoneer'].forEach(m => {
+    const btn = document.getElementById('pm-btn-' + m);
+    if(!btn) return;
+    if(m === metodo) {
+      btn.style.borderColor = 'var(--primary)';
+      btn.style.background = 'rgba(59,130,246,0.12)';
+      btn.style.color = 'var(--text)';
+    } else {
+      btn.style.borderColor = 'var(--border)';
+      btn.style.background = 'rgba(255,255,255,0.03)';
+      btn.style.color = 'var(--text-muted)';
+    }
+    // Mostrar/ocultar campos
+    const fields = document.getElementById('pm-fields-' + m);
+    if(fields) fields.style.display = m === metodo ? 'block' : 'none';
+  });
+}
+
+function _getInputMetodoPago() {
+  if(!_metodoPagoActual) return null;
+  const el = document.getElementById('pm-input-' + _metodoPagoActual);
+  return el ? (el.value || '').trim() : null;
+}
+
+// v2.1: guardar método de cobro internacional
+async function guardarMetodoPago() {
   if(!aliado) return;
-  const input = document.getElementById('perfil-cbu');
   const btn   = document.getElementById('btn-guardar-cbu');
   const estado = document.getElementById('perfil-cbu-estado');
-  const valor = (input.value || '').trim();
+
+  if(!_metodoPagoActual) {
+    estado.innerHTML = `<span style="color:var(--amber);"><i class="fa-solid fa-triangle-exclamation"></i> Seleccioná un método de cobro primero.</span>`;
+    return;
+  }
+  const detail = _getInputMetodoPago();
+  if(!detail) {
+    estado.innerHTML = `<span style="color:var(--amber);"><i class="fa-solid fa-triangle-exclamation"></i> Completá los datos del método elegido.</span>`;
+    return;
+  }
+
+  // Armar cbu_alias para compat con admin (legible)
+  const metodosLabel = { usdt_trc20:'USDT TRC20', wise:'Wise', transferencia:'Transferencia bancaria', payoneer:'Payoneer' };
+  const cbuAlias = `[${metodosLabel[_metodoPagoActual]}] ${detail}`;
 
   btn.innerHTML = '<span class="spinner"></span> Guardando...';
   btn.disabled  = true;
@@ -5625,27 +5723,28 @@ async function guardarCBU() {
     const res = await apiFetch(`${API}/aliado/perfil?codigo=${encodeURIComponent(aliado.codigo)}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ cbu_alias: valor }),
+      body: JSON.stringify({ cbu_alias: cbuAlias, payment_method: _metodoPagoActual, payment_info: detail }),
     });
     const data = await res.json();
     if(!res.ok) throw new Error(data.detail || 'Error');
 
-    aliado.cbu_alias = data.cbu_alias; // mantener sincronizado
-    if(valor) {
-      estado.innerHTML = `<span style="color:var(--green);"><i class="fa-solid fa-circle-check"></i> Guardado correctamente.</span>`;
-      mostrarToast('CBU/alias guardado. Ya podés cobrar comisiones.', 'green');
-    } else {
-      estado.innerHTML = `<span style="color:var(--amber);"><i class="fa-solid fa-triangle-exclamation"></i> Cargá tu CBU/alias para poder cobrar.</span>`;
-      mostrarToast('CBU/alias vaciado.', 'amber');
-    }
+    aliado.cbu_alias = data.cbu_alias;
+    aliado.payment_method = data.payment_method || _metodoPagoActual;
+    aliado.payment_info   = data.payment_info   || detail;
+
+    estado.innerHTML = `<span style="color:var(--green);"><i class="fa-solid fa-circle-check"></i> Método de cobro guardado. Ya podés cobrar comisiones.</span>`;
+    mostrarToast('Método de cobro guardado correctamente.', 'green');
   } catch(e) {
     estado.innerHTML = `<span style="color:var(--red);"><i class="fa-solid fa-circle-xmark"></i> ${e.message}</span>`;
     mostrarToast('No se pudo guardar. Intentá de nuevo.', 'red');
   } finally {
-    btn.innerHTML = '<i class="fa-solid fa-floppy-disk"></i> Guardar';
+    btn.innerHTML = '<i class="fa-solid fa-floppy-disk"></i> Guardar método de cobro';
     btn.disabled  = false;
   }
 }
+
+// LEGACY alias para compatibilidad
+async function guardarCBU() { return guardarMetodoPago(); }
 
 // ─── MI CUENTA: poblar datos ──────────────────────────────────────────────────
 function poblarMiCuenta() {
@@ -5659,15 +5758,32 @@ function poblarMiCuenta() {
   set('mc-ref-code', aliado.ref_code);
   const linkEl = document.getElementById('mc-link-aliado');
   if(linkEl) linkEl.textContent = `https://avanzadigital.digital/alianzas?ref=${aliado.ref_code}`;
-  // También pre-poblar CBU si ya tiene
+  // Pre-poblar método de cobro si ya tiene configurado
   const cbuInput = document.getElementById('perfil-cbu');
   const cbuEstado = document.getElementById('perfil-cbu-estado');
   if(cbuInput) cbuInput.value = aliado.cbu_alias || '';
+
+  // Restaurar método de pago guardado
+  const metodo = aliado.payment_method;
+  const info   = aliado.payment_info;
+  if(metodo) {
+    seleccionarMetodoPago(metodo);
+    const inputEl = document.getElementById('pm-input-' + metodo);
+    if(inputEl) inputEl.value = info || '';
+  } else if(aliado.cbu_alias) {
+    // Legacy: tenía cbu_alias pero sin payment_method → mostrar como transferencia
+    seleccionarMetodoPago('transferencia');
+    const inputEl = document.getElementById('pm-input-transferencia');
+    if(inputEl) inputEl.value = aliado.cbu_alias;
+  }
+
   if(cbuEstado) {
-    if(aliado.cbu_alias) {
-      cbuEstado.innerHTML = `<span style="color:var(--green);"><i class="fa-solid fa-circle-check"></i> CBU/alias cargado.</span>`;
+    if(metodo && info) {
+      cbuEstado.innerHTML = `<span style="color:var(--green);"><i class="fa-solid fa-circle-check"></i> Método de cobro configurado.</span>`;
+    } else if(aliado.cbu_alias) {
+      cbuEstado.innerHTML = `<span style="color:var(--green);"><i class="fa-solid fa-circle-check"></i> Método de cobro cargado.</span>`;
     } else {
-      cbuEstado.innerHTML = `<span style="color:var(--amber);"><i class="fa-solid fa-triangle-exclamation"></i> Cargá tu CBU/alias para poder cobrar.</span>`;
+      cbuEstado.innerHTML = `<span style="color:var(--amber);"><i class="fa-solid fa-triangle-exclamation"></i> Configurá tu método de cobro para poder cobrar.</span>`;
     }
   }
 }
@@ -6713,7 +6829,7 @@ async function cargarOnboardingChecklist() {
         </div>
         <span>${p.titulo}</span>
         ${!p.completado && p.id==='cbu'
-          ? `<a href="#" onclick="cambiarTab('comisiones', document.querySelector('.tab-btn[onclick*=comisiones]')); return false;"
+          ? `<a href="#" onclick="cambiarTab('mi-cuenta', document.getElementById('btn-tab-mi-cuenta')); return false;"
                style="margin-left:auto;font-size:.72rem;font-weight:700;color:var(--amber);background:rgba(250,204,21,0.1);border:1px solid rgba(250,204,21,0.3);padding:2px 10px;border-radius:50px;text-decoration:none;white-space:nowrap;">
                Cargar →</a>`
           : !p.completado

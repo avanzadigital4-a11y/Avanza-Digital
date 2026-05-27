@@ -121,6 +121,19 @@
             letter-spacing: 1px;
             margin-bottom: 20px;
         }
+        .badge-new {
+            display: inline-block;
+            background: rgba(251,191,36,0.1);
+            color: #fbbf24;
+            border: 1px solid rgba(251,191,36,0.3);
+            padding: 3px 10px;
+            border-radius: 20px;
+            font-size: 0.7rem;
+            font-weight: 700;
+            letter-spacing: 1px;
+            margin-left: 8px;
+            vertical-align: middle;
+        }
         .legal-footer {
             margin-top: 60px;
             padding-top: 30px;
@@ -140,6 +153,58 @@
             color: #4ade80;
             font-weight: 600;
         }
+        .highlight-yellow {
+            color: #fbbf24;
+            font-weight: 600;
+        }
+        .info-box {
+            background: rgba(59,130,246,0.07);
+            border: 1px solid rgba(59,130,246,0.25);
+            border-radius: 10px;
+            padding: 18px 22px;
+            margin: 20px 0;
+        }
+        .info-box p {
+            margin-bottom: 0;
+        }
+        .warning-box {
+            background: rgba(251,191,36,0.07);
+            border: 1px solid rgba(251,191,36,0.25);
+            border-radius: 10px;
+            padding: 18px 22px;
+            margin: 20px 0;
+        }
+        .warning-box p {
+            margin-bottom: 0;
+            color: #fbbf24;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            font-size: 0.9rem;
+        }
+        thead tr {
+            background: #111;
+            border-bottom: 1px solid #333;
+        }
+        th {
+            padding: 12px 15px;
+            text-align: left;
+            color: #aaa;
+        }
+        th.center { text-align: center; }
+        td {
+            padding: 12px 15px;
+            color: #aaa;
+        }
+        td.center { text-align: center; }
+        tbody tr {
+            border-bottom: 1px solid #1a1a1a;
+        }
+        tbody tr:nth-child(even) {
+            background: #0a0a0a;
+        }
     </style>
 </head>
 <body>
@@ -153,10 +218,11 @@
     <div class="legal-container">
         <span class="badge">Avanza Partner Network</span>
         <h1>Términos y Condiciones</h1>
-        <span class="update-date">Última actualización: Marzo 2026</span>
+        <span class="update-date">Última actualización: Mayo 2026</span>
 
         <p>Bienvenido al <strong>Avanza Partner Network</strong>. Este documento establece los términos y condiciones que rigen la relación comercial entre <strong>Avanza Digital</strong> (en adelante "la Empresa") y el profesional, agencia o empresa adherida al programa (en adelante "el Aliado"). Al registrarse y participar, el Aliado acepta íntegramente estas condiciones.</p>
 
+        <!-- ═══════════════════════════════════════════════════════ -->
         <h2>1. Definición del Rol del Aliado</h2>
         <p>El Aliado actúa como un <strong>prescriptor o referente comercial independiente</strong> de los servicios de Avanza Digital. Su función es:</p>
         <ul>
@@ -166,6 +232,7 @@
             <li><span class="highlight">El Aliado NO cobra al cliente final. El cobro lo realiza directamente Avanza Digital.</span></li>
         </ul>
 
+        <!-- ═══════════════════════════════════════════════════════ -->
         <h2>2. Registro de Ventas y Notificación</h2>
         <p>Para que una venta sea válida y genere comisión, el Aliado debe cumplir con el siguiente procedimiento:</p>
         <ol>
@@ -181,6 +248,7 @@
         </ol>
         <p><strong>Importante:</strong> Si el Aliado no notifica antes del pago, no podremos garantizar la asignación de la comisión, ya que el cliente podría ingresar por otro canal.</p>
 
+        <!-- ═══════════════════════════════════════════════════════ -->
         <h2>3. Comisiones y Forma de Pago al Aliado</h2>
 
         <h3>3.1 Estructura de niveles y comisiones</h3>
@@ -193,56 +261,293 @@
         </ul>
         <p><strong>Nota:</strong> Los niveles se recalculan automáticamente cada 6 meses en base a las ventas efectivas del período.</p>
 
-        <table style="width:100%; border-collapse: collapse; margin: 20px 0; font-size: 0.9rem;">
+        <table>
             <thead>
-                <tr style="background: #111; border-bottom: 1px solid #333;">
-                    <th style="padding: 12px 15px; text-align: left; color: #aaa;">Nivel</th>
-                    <th style="padding: 12px 15px; text-align: center; color: #aaa;">Comisión</th>
-                    <th style="padding: 12px 15px; text-align: center; color: #aaa;">Requisito</th>
-                    <th style="padding: 12px 15px; text-align: left; color: #aaa;">Beneficio extra</th>
+                <tr>
+                    <th>Nivel</th>
+                    <th class="center">Comisión</th>
+                    <th class="center">Requisito</th>
+                    <th>Beneficio extra</th>
                 </tr>
             </thead>
             <tbody>
-                <tr style="border-bottom: 1px solid #1a1a1a;">
-                    <td style="padding: 12px 15px; color: white;">🤝 Basic</td>
-                    <td style="padding: 12px 15px; text-align: center; color: white; font-weight: 700;">10%</td>
-                    <td style="padding: 12px 15px; text-align: center; color: #aaa;">Sin requisitos</td>
-                    <td style="padding: 12px 15px; color: #aaa;">Kit comercial + Brochure</td>
+                <tr>
+                    <td style="color:white;">🤝 Basic</td>
+                    <td class="center" style="color:white;font-weight:700;">10%</td>
+                    <td class="center">Sin requisitos</td>
+                    <td>Kit comercial + Brochure</td>
                 </tr>
-                <tr style="border-bottom: 1px solid #1a1a1a; background: #0a0a0a;">
-                    <td style="padding: 12px 15px; color: #c0c0c0;">⭐ Silver</td>
-                    <td style="padding: 12px 15px; text-align: center; color: #4ade80; font-weight: 700;">12%</td>
-                    <td style="padding: 12px 15px; text-align: center; color: #aaa;">1 venta cerrada</td>
-                    <td style="padding: 12px 15px; color: #aaa;">+ USD 50 bono primera venta · Grupo WhatsApp aliados</td>
+                <tr>
+                    <td style="color:#c0c0c0;">⭐ Silver</td>
+                    <td class="center" style="color:#4ade80;font-weight:700;">12%</td>
+                    <td class="center">1 venta cerrada</td>
+                    <td>+ USD 50 bono primera venta · Grupo WhatsApp aliados</td>
                 </tr>
-                <tr style="border-bottom: 1px solid #1a1a1a;">
-                    <td style="padding: 12px 15px; color: #3b82f6;">🏆 Premium</td>
-                    <td style="padding: 12px 15px; text-align: center; color: #4ade80; font-weight: 700;">15%</td>
-                    <td style="padding: 12px 15px; text-align: center; color: #aaa;">2 ventas en 6 meses</td>
-                    <td style="padding: 12px 15px; color: #aaa;">Badge "Aliado Oficial" · WhatsApp directo con asesor</td>
+                <tr>
+                    <td style="color:#3b82f6;">🏆 Premium</td>
+                    <td class="center" style="color:#4ade80;font-weight:700;">15%</td>
+                    <td class="center">2 ventas en 6 meses</td>
+                    <td>Badge "Aliado Oficial" · WhatsApp directo con asesor</td>
                 </tr>
-                <tr style="background: #0a0a0a;">
-                    <td style="padding: 12px 15px; color: #FFB800;">👑 Elite</td>
-                    <td style="padding: 12px 15px; text-align: center; color: #FFB800; font-weight: 700;">20%</td>
-                    <td style="padding: 12px 15px; text-align: center; color: #aaa;">5 ventas en 6 meses</td>
-                    <td style="padding: 12px 15px; color: #aaa;">Directorio web como consultor recomendado · Sesión trimestral</td>
+                <tr>
+                    <td style="color:#FFB800;">👑 Elite</td>
+                    <td class="center" style="color:#FFB800;font-weight:700;">20%</td>
+                    <td class="center">5 ventas en 6 meses</td>
+                    <td>Directorio web como consultor recomendado · Sesión trimestral</td>
                 </tr>
             </tbody>
         </table>
 
-        <h3>3.2 Momento de pago</h3>
+        <h3>3.2 Ventas en cuotas y financiación</h3>
+        <p>Cuando el cliente solicita financiación, se aplica un recargo sobre el valor de lista que se traslada al precio final abonado por el cliente. La base de cálculo de la comisión del Aliado es siempre el <strong>valor neto sin recargo de financiación</strong>, excepto acuerdo expreso por escrito en contrario.</p>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Modalidad</th>
+                    <th class="center">Recargo al cliente</th>
+                    <th>Base comisión Aliado</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Pago único</td>
+                    <td class="center">0%</td>
+                    <td>Valor de lista íntegro</td>
+                </tr>
+                <tr>
+                    <td>3 cuotas</td>
+                    <td class="center">+8%</td>
+                    <td>Valor de lista sin recargo</td>
+                </tr>
+                <tr>
+                    <td>6 cuotas</td>
+                    <td class="center">+15%</td>
+                    <td>Valor de lista sin recargo</td>
+                </tr>
+                <tr>
+                    <td>12 cuotas</td>
+                    <td class="center">+28%</td>
+                    <td>Valor de lista sin recargo</td>
+                </tr>
+            </tbody>
+        </table>
+        <p>La comisión del Aliado se abona en un único pago al momento de confirmar el cobro del cliente, independientemente de la modalidad en cuotas elegida por el cliente.</p>
+
+        <h3>3.3 Momento de pago</h3>
         <ul>
             <li>Avanza Digital abonará la comisión al Aliado dentro de las <strong>24 horas hábiles</strong> posteriores a la acreditación efectiva del pago del cliente en la cuenta de Avanza Digital.</li>
-            <li>El pago se realizará mediante transferencia bancaria a la cuenta registrada por el Aliado.</li>
+            <li>El pago se realizará mediante transferencia bancaria a la cuenta registrada por el Aliado (CBU/alias informado en el portal).</li>
         </ul>
 
-        <h3>3.3 Facturación de la comisión</h3>
+        <h3>3.4 Facturación de la comisión</h3>
         <ul>
             <li>Para recibir el pago, el Aliado deberá emitir una factura (A, B o C según corresponda) o recibo válido a nombre de Avanza Digital por el monto de la comisión, bajo el concepto "Comisión por intermediación comercial" o similar.</li>
             <li>El Aliado es responsable de su propia situación fiscal y de cumplir con las obligaciones impositivas que correspondan.</li>
         </ul>
 
-        <h2>4. Implementación Técnica y Soporte</h2>
+        <!-- ═══════════════════════════════════════════════════════ -->
+        <h2>4. Planes de Continuidad y Comisiones Recurrentes <span class="badge-new">NUEVO</span></h2>
+        <p>Avanza Digital ofrece <strong>Planes de Continuidad</strong> de suscripción mensual que el cliente puede contratar para mantenimiento, actualización y soporte continuo de su presencia digital. Los planes disponibles son:</p>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Plan</th>
+                    <th class="center">Precio mensual (USD)</th>
+                    <th class="center">Comisión mensual Aliado</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Plan Cuidado</td>
+                    <td class="center">USD 80</td>
+                    <td class="center" style="color:#4ade80;font-weight:700;">USD 8 / mes</td>
+                </tr>
+                <tr>
+                    <td>Plan Crecimiento</td>
+                    <td class="center">USD 170</td>
+                    <td class="center" style="color:#4ade80;font-weight:700;">USD 17 / mes</td>
+                </tr>
+                <tr>
+                    <td>Plan Escala</td>
+                    <td class="center">USD 280</td>
+                    <td class="center" style="color:#4ade80;font-weight:700;">USD 28 / mes</td>
+                </tr>
+                <tr>
+                    <td>Plan Liderazgo</td>
+                    <td class="center">USD 450</td>
+                    <td class="center" style="color:#4ade80;font-weight:700;">USD 45 / mes</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h3>4.1 Condiciones de la comisión recurrente</h3>
+        <ul>
+            <li>El Aliado percibirá el <span class="highlight">10% mensual fijo</span> sobre el precio del plan mientras el cliente mantenga la suscripción activa.</li>
+            <li>Cada ciclo mensual genera una liquidación independiente, identificada en el portal como comisión recurrente.</li>
+            <li>La comisión se abona dentro de las 24 horas hábiles posteriores a la acreditación del cobro mensual al cliente.</li>
+        </ul>
+
+        <h3>4.2 Corte de la comisión recurrente</h3>
+        <ul>
+            <li><strong>Por cancelación del cliente:</strong> Si el cliente cancela el Plan de Continuidad, la comisión recurrente cesa a partir del mes en que no se acredite el cobro, sin derecho a indemnización por lucro cesante futuro.</li>
+            <li><strong>Por baja del Aliado:</strong> En caso de baja voluntaria o suspensión del Aliado, las comisiones recurrentes de planes activos al momento de la baja continuarán abonándose durante <strong>3 ciclos mensuales adicionales</strong> desde la fecha efectiva de baja, siempre que el cliente mantenga su suscripción activa. Transcurrido dicho período, la comisión queda sin efecto.</li>
+            <li><strong>Por baja por incumplimiento:</strong> Si Avanza Digital da de baja al Aliado por prácticas desleales, fraude o incumplimiento grave, las comisiones recurrentes se interrumpen de manera inmediata sin período de gracia.</li>
+            <li>Avanza Digital se reserva el derecho de ajustar los precios de los Planes de Continuidad con un preaviso de <strong>30 días</strong> al Aliado. La comisión recurrente se recalculará automáticamente sobre el nuevo precio vigente.</li>
+        </ul>
+
+        <!-- ═══════════════════════════════════════════════════════ -->
+        <h2>5. Marketplace de Créditos y Bolsa de Leads <span class="badge-new">NUEVO</span></h2>
+        <p>El portal de Aliados incluye un <strong>Marketplace de Leads</strong> donde el Aliado puede acceder a contactos comerciales cualificados de empresas que han manifestado interés en soluciones digitales. El acceso a estos leads se realiza mediante un sistema de créditos.</p>
+
+        <h3>5.1 Sistema de créditos</h3>
+        <p>El Aliado puede adquirir créditos mediante los siguientes paquetes, con precios ancados en USD y convertidos al tipo de cambio vigente al momento de la solicitud:</p>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Paquete</th>
+                    <th class="center">Créditos</th>
+                    <th class="center">Precio (USD)</th>
+                    <th>Ahorro</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><strong>Impulso</strong></td>
+                    <td class="center">100</td>
+                    <td class="center">USD 10</td>
+                    <td>—</td>
+                </tr>
+                <tr>
+                    <td><strong>Acelerador</strong> ⭐</td>
+                    <td class="center">300</td>
+                    <td class="center">USD 25</td>
+                    <td>17% de descuento</td>
+                </tr>
+                <tr>
+                    <td><strong>Despegue</strong></td>
+                    <td class="center">1.000</td>
+                    <td class="center">USD 70</td>
+                    <td>30% de descuento</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h3>5.2 Proceso de compra de créditos</h3>
+        <ol>
+            <li>El Aliado selecciona el paquete desde su portal y recibe un <strong>código de referencia único</strong> (ej.: AVZ-A4F2) junto con los datos bancarios para la transferencia.</li>
+            <li>El Aliado realiza la transferencia e informa el comprobante a Avanza Digital.</li>
+            <li>El equipo de Avanza Digital verifica la acreditación y confirma la solicitud. Los créditos se acreditan automáticamente al saldo del Aliado.</li>
+            <li>Las solicitudes tienen una vigencia de <strong>48 horas</strong>. Pasado ese plazo sin confirmación, la solicitud expira y no se acreditan créditos.</li>
+        </ol>
+        <div class="info-box">
+            <p><strong>Nota sobre el tipo de cambio:</strong> El precio en pesos argentinos (ARS) se calcula al tipo de cambio blue vigente al momento de generar la solicitud. El monto queda congelado en la solicitud; variaciones posteriores del tipo de cambio no afectan el precio ya generado.</p>
+        </div>
+
+        <h3>5.3 Tiers de leads y costo en créditos</h3>
+        <p>Los leads de la Bolsa se clasifican por calidad en distintos tiers. Cada tier tiene un costo en créditos diferente, informado al momento de la consulta en el portal. El Aliado puede ver el rubro, ciudad y nivel de calificación del lead antes de adquirirlo.</p>
+
+        <h3>5.4 Reporte de mal contacto y reembolso de créditos</h3>
+        <p>Si el Aliado adquiere un lead premium y verifica que los datos de contacto son inválidos (teléfono inexistente, email rebotado, empresa cerrada, etc.), puede solicitar un reembolso de créditos bajo las siguientes condiciones:</p>
+        <ul>
+            <li>El reporte debe realizarse dentro de las <strong>72 horas</strong> posteriores a la adquisición del lead.</li>
+            <li>Solo se admite <strong>un reporte por lead adquirido</strong>.</li>
+            <li>El equipo de Avanza Digital revisará el reporte y resolverá en un plazo de hasta 5 días hábiles.</li>
+            <li>Si el reporte es aprobado, los créditos correspondientes se reintegran al saldo del Aliado.</li>
+            <li>Si el reporte es rechazado, Avanza Digital informará el motivo al Aliado.</li>
+        </ul>
+        <div class="warning-box">
+            <p>⚠️ <strong>Los créditos no tienen valor monetario externo</strong> y no son canjeables por dinero. Solo pueden utilizarse dentro del Marketplace de Leads de Avanza Digital. Los créditos no utilizados no expiran mientras la cuenta del Aliado esté activa.</p>
+        </div>
+
+        <!-- ═══════════════════════════════════════════════════════ -->
+        <h2>6. Red de Sub-Aliados (Sistema de Referidos) <span class="badge-new">NUEVO</span></h2>
+        <p>Todo Aliado puede invitar a otros profesionales a unirse al Avanza Partner Network a través de su <strong>código de referido único</strong>. Cuando un nuevo Aliado se registra usando ese código, queda vinculado como <strong>sub-aliado</strong> del Aliado que lo refirió (en adelante "sponsor").</p>
+
+        <h3>6.1 Funcionamiento de la red</h3>
+        <ul>
+            <li>La red es de <strong>un único nivel</strong>: el sponsor accede a beneficios sobre las ventas de sus sub-aliados directos, sin ramificaciones adicionales.</li>
+            <li>Los sub-aliados operan de forma totalmente independiente y tienen acceso a los mismos recursos, niveles y comisiones que cualquier otro Aliado.</li>
+            <li>El sponsor no tiene responsabilidad legal ni comercial sobre las acciones de sus sub-aliados.</li>
+        </ul>
+
+        <h3>6.2 Beneficios del sponsor</h3>
+        <p>El sponsor puede acceder a beneficios sobre las ventas realizadas por sus sub-aliados. Los detalles específicos (porcentaje, modalidad y condiciones) se informan en el portal del Aliado y pueden ser actualizados por Avanza Digital con un preaviso de 15 días.</p>
+        <div class="info-box">
+            <p><strong>Nota:</strong> Los beneficios sobre la red de sub-aliados no tienen impacto en el porcentaje de comisión que percibe el sub-aliado por sus propias ventas. Ambas liquidaciones son independientes entre sí.</p>
+        </div>
+
+        <h3>6.3 Baja de un sub-aliado</h3>
+        <p>Si un sub-aliado se da de baja del programa (voluntaria o por suspensión), el vínculo con su sponsor queda disuelto automáticamente. Las ventas ya registradas y en proceso de liquidación al momento de la baja serán respetadas. No se generan nuevas comisiones de red a partir de la fecha de baja del sub-aliado.</p>
+
+        <!-- ═══════════════════════════════════════════════════════ -->
+        <h2>7. Sistema de Reputación y Badges <span class="badge-new">NUEVO</span></h2>
+        <p>El portal mantiene un <strong>score de reputación</strong> por Aliado (escala 0–100) que refleja la calidad y consistencia de su actividad comercial. Este score puede influir en el orden de aparición en directorios internos y en el acceso prioritario a nuevos leads de la Bolsa.</p>
+
+        <h3>7.1 Badges de reconocimiento</h3>
+        <p>Avanza Digital otorga de manera automática los siguientes badges basados en métricas objetivas de actividad:</p>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Badge</th>
+                    <th>Criterio de obtención</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>🎯 <strong>Closer</strong></td>
+                    <td>Tasa de cierre sobre prospectos contactados ≥ 40%</td>
+                </tr>
+                <tr>
+                    <td>⚡ <strong>Rápido</strong></td>
+                    <td>Tiempo promedio de primer contacto a leads &lt; 6 horas</td>
+                </tr>
+                <tr>
+                    <td>🔥 <strong>Fiel</strong></td>
+                    <td>30 o más días consecutivos con actividad en el portal</td>
+                </tr>
+                <tr>
+                    <td>💎 <strong>Top Ticket</strong></td>
+                    <td>Ticket promedio de ventas cerradas ≥ USD 3.500</td>
+                </tr>
+                <tr>
+                    <td>👑 <strong>Embajador</strong></td>
+                    <td>3 o más sub-aliados con al menos 1 venta efectiva</td>
+                </tr>
+                <tr>
+                    <td>🏆 <strong>Bolsa Master</strong></td>
+                    <td>Tasa de éxito en leads de la Bolsa ≥ 30%</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <p>Los badges son informativos y pueden perderse si el Aliado deja de cumplir el criterio correspondiente en el período de recálculo. Avanza Digital podrá agregar, modificar o eliminar badges con un preaviso de 15 días.</p>
+
+        <!-- ═══════════════════════════════════════════════════════ -->
+        <h2>8. Academia Avanza <span class="badge-new">NUEVO</span></h2>
+        <p>El portal incluye un módulo de <strong>Academia</strong> con contenidos de formación comercial y técnica para Aliados. La finalización de cada módulo puede otorgar <strong>créditos para el Marketplace de Leads</strong> como reconocimiento al compromiso con la formación.</p>
+        <ul>
+            <li>Los créditos otorgados por la Academia son acumulativos y se suman al saldo disponible del Aliado.</li>
+            <li>Cada módulo otorga créditos <strong>una única vez</strong>: si el Aliado revisa el módulo nuevamente, no recibe créditos adicionales.</li>
+            <li>El número de créditos por módulo puede variar y es informado dentro del portal. Avanza Digital puede modificar los montos con un preaviso de 15 días.</li>
+            <li>Los créditos de la Academia quedan sujetos a las mismas condiciones que los créditos comprados (ver sección 5).</li>
+        </ul>
+
+        <!-- ═══════════════════════════════════════════════════════ -->
+        <h2>9. Portal Público del Aliado <span class="badge-new">NUEVO</span></h2>
+        <p>Cada Aliado cuenta con un <strong>portal público</strong> accesible en la URL <code>avanzadigital.digital/p/{codigo_aliado}</code>. Este portal puede ser personalizado con nombre, biografía, foto de perfil y rubros de especialidad, y es indexable por buscadores como herramienta de captación de prospectos.</p>
+        <ul>
+            <li>El portal público se activa por defecto al completar el onboarding. El Aliado puede desactivarlo en cualquier momento desde su panel.</li>
+            <li>El Aliado es responsable de la veracidad y adecuación del contenido que publica en su portal (nombre, bio, rubros). No podrá incluir información falsa, engañosa ni que vulnere derechos de terceros.</li>
+            <li>Avanza Digital se reserva el derecho de desactivar el portal público de un Aliado sin previo aviso si el contenido infringe estas condiciones o la imagen de la marca.</li>
+            <li>Los contactos que ingresen a través del portal público del Aliado se registran como prospectos vinculados a ese Aliado y siguen el proceso habitual de notificación y comisión descripto en la sección 2.</li>
+        </ul>
+
+        <!-- ═══════════════════════════════════════════════════════ -->
+        <h2>10. Implementación Técnica y Soporte</h2>
         <p>Una vez que el cliente realiza el pago:</p>
         <ul>
             <li>Avanza Digital contacta al cliente para realizar el relevamiento técnico (briefing).</li>
@@ -251,37 +556,141 @@
             <li>El Aliado puede, si lo desea, recibir copia de la comunicación para seguimiento, pero no tiene responsabilidad operativa.</li>
         </ul>
 
-        <h2>5. Propiedad Intelectual y Confidencialidad</h2>
+        <!-- ═══════════════════════════════════════════════════════ -->
+        <h2>11. Propiedad Intelectual y Confidencialidad</h2>
         <ul>
             <li>La propiedad intelectual de los desarrollos (código, diseños, integraciones) realizados por Avanza Digital pertenece al <strong>cliente final</strong> (en los modelos de pago único) o a Avanza Digital (en los modelos de suscripción), según el contrato de servicio. El Aliado no adquiere ningún derecho de propiedad sobre estos desarrollos.</li>
             <li>El Aliado se compromete a mantener estricta confidencialidad sobre la información comercial, técnica y estratégica de Avanza Digital y de los clientes referidos.</li>
             <li>El Brochure Comercial y otros materiales son de uso exclusivo del Aliado y no podrán ser compartidos con terceros sin autorización expresa.</li>
         </ul>
 
-        <h2>6. Naturaleza de la Relación</h2>
+        <!-- ═══════════════════════════════════════════════════════ -->
+        <h2>12. Naturaleza de la Relación</h2>
         <p>Este acuerdo no crea una relación laboral, sociedad, joint venture o vínculo de dependencia entre las partes. El Aliado actúa como un <strong>contratista independiente</strong> y asume toda la responsabilidad fiscal y legal derivada de su actividad como prescriptor.</p>
 
-        <h2>7. Vigencia y Baja del Programa</h2>
+        <!-- ═══════════════════════════════════════════════════════ -->
+        <h2>13. Inactividad, Suspensión y Eliminación Automática <span class="badge-new">NUEVO</span></h2>
+        <p>Con el fin de mantener la calidad de la red, Avanza Digital aplica el siguiente protocolo automático de gestión de inactividad:</p>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Plazo sin login</th>
+                    <th>Acción automática</th>
+                    <th>Notificación al Aliado</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>20 días</td>
+                    <td>Notificación de alerta por email/WhatsApp</td>
+                    <td>Sí</td>
+                </tr>
+                <tr>
+                    <td>30 días</td>
+                    <td>Segunda notificación + aviso de suspensión próxima</td>
+                    <td>Sí</td>
+                </tr>
+                <tr>
+                    <td>30 días (sin respuesta)</td>
+                    <td><strong>Cuenta suspendida</strong> (acceso bloqueado)</td>
+                    <td>Sí</td>
+                </tr>
+                <tr>
+                    <td>60 días desde suspensión</td>
+                    <td><strong>Eliminación definitiva</strong> de la cuenta y datos</td>
+                    <td>Sí (previo)</td>
+                </tr>
+            </tbody>
+        </table>
+
         <ul>
-            <li>El acuerdo tiene vigencia indefinida mientras el Aliado mantenga su registro activo.</li>
-            <li>Cualquiera de las partes puede rescindir este acuerdo en cualquier momento mediante notificación por escrito (email) con 5 días de antelación.</li>
-            <li>En caso de baja, se respetarán las comisiones de las ventas ya notificadas y en proceso de implementación, así como las comisiones recurrentes de clientes activos hasta la finalización del período correspondiente.</li>
-            <li>Avanza Digital se reserva el derecho de dar de baja a un Aliado sin previo aviso si:
-                <ul>
-                    <li>Realiza prácticas comerciales desleales, fraudulentas o que dañen la imagen de la marca.</li>
-                    <li>Comparte información confidencial sin autorización.</li>
-                    <li>Incumple reiteradamente las obligaciones de notificación o facturación.</li>
-                </ul>
-            </li>
+            <li>Durante el período de suspensión, el Aliado no puede generar nuevas ventas ni acceder al Marketplace. Las comisiones recurrentes de planes activos se siguen liquidando normalmente.</li>
+            <li>Para reactivar una cuenta suspendida por inactividad, el Aliado deberá contactar a Avanza Digital antes de que se cumpla el plazo de eliminación definitiva.</li>
+            <li>Una vez eliminada la cuenta, los datos del Aliado son borrados de forma irreversible. Las comisiones pendientes de pago serán liquidadas dentro de los 5 días hábiles posteriores a la eliminación, siempre que se cuente con los datos de facturación y CBU vigentes.</li>
         </ul>
 
-        <h2>8. Modificaciones</h2>
-        <p>Avanza Digital podrá modificar estos términos en cualquier momento, notificando los cambios a los aliados activos con al menos 15 días de antelación. El uso continuado del programa implicará la aceptación de las nuevas condiciones.</p>
+        <!-- ═══════════════════════════════════════════════════════ -->
+        <h2>14. Vigencia y Baja del Programa</h2>
 
-        <h2>9. Contacto y Aceptación</h2>
+        <h3>14.1 Baja voluntaria</h3>
+        <ul>
+            <li>El Aliado puede solicitar su baja voluntaria desde el portal en cualquier momento, indicando el motivo.</li>
+            <li>Al solicitar la baja, la cuenta queda <strong>suspendida de inmediato</strong>. El Aliado dispone de un plazo de <strong>30 días de gracia</strong> para arrepentirse y solicitar la reactivación.</li>
+            <li>Transcurridos los 30 días sin reversión, la cuenta es eliminada definitivamente.</li>
+            <li>En caso de baja voluntaria, las comisiones de ventas ya notificadas y en proceso de implementación se respetan. Las comisiones recurrentes activas continúan abonándose durante los 3 ciclos mensuales posteriores a la baja (ver sección 4.2).</li>
+        </ul>
+
+        <h3>14.2 Baja por incumplimiento</h3>
+        <p>Avanza Digital se reserva el derecho de dar de baja a un Aliado sin previo aviso si:</p>
+        <ul>
+            <li>Realiza prácticas comerciales desleales, fraudulentas o que dañen la imagen de la marca.</li>
+            <li>Comparte información confidencial sin autorización.</li>
+            <li>Incumple reiteradamente las obligaciones de notificación o facturación.</li>
+            <li>Manipula el sistema de reputación, badges o la Bolsa de Leads de forma deshonesta.</li>
+        </ul>
+        <p>En caso de baja por incumplimiento, las comisiones recurrentes se interrumpen de forma inmediata y sin período de gracia. Las comisiones ya devengadas y pendientes de pago serán liquidadas únicamente si no existe daño económico comprobable a Avanza Digital atribuible al Aliado.</p>
+
+        <h3>14.3 Baja por inactividad</h3>
+        <p>Aplica el protocolo automático descripto en la sección 13.</p>
+
+        <!-- ═══════════════════════════════════════════════════════ -->
+        <h2>15. Modificaciones</h2>
+        <p>Avanza Digital podrá modificar estos términos en cualquier momento, notificando los cambios a los aliados activos con al menos <strong>15 días de antelación</strong>. El uso continuado del programa implicará la aceptación de las nuevas condiciones.</p>
+
+        <!-- ═══════════════════════════════════════════════════════ -->
+        <h2>16. Protección de Datos Personales</h2>
+        <p>El Aliado autoriza expresamente a Avanza Digital a recopilar, almacenar y utilizar sus datos personales (nombre, DNI/CUIT, email, teléfono, datos bancarios, historial de ventas y actividad en el portal) exclusivamente para:</p>
+        <ul>
+            <li>La gestión y liquidación de comisiones.</li>
+            <li>La administración del programa de aliados y el funcionamiento del portal.</li>
+            <li>El cumplimiento de obligaciones fiscales y legales.</li>
+            <li>El envío de comunicaciones relacionadas con el programa (novedades, alertas de inactividad, liquidaciones).</li>
+        </ul>
+        <p>Avanza Digital no cederá los datos del Aliado a terceros, salvo requerimiento legal expreso o cuando sea estrictamente necesario para el procesamiento de pagos. Los datos serán tratados conforme a la <strong>Ley Nacional N.º 25.326 de Protección de Datos Personales</strong> (Argentina) y normativas aplicables.</p>
+        <p>El Aliado tiene derecho a acceder, rectificar, actualizar y suprimir sus datos en cualquier momento contactando a <a href="mailto:avanzadigital4@gmail.com">avanzadigital4@gmail.com</a>. La eliminación de la cuenta implica la supresión de los datos personales conforme a los plazos legales de conservación obligatoria.</p>
+        <p>El Aliado asume la plena responsabilidad de mantener la confidencialidad de sus credenciales de acceso al portal. Cualquier actividad realizada desde su cuenta se imputará a su titularidad. Ante sospecha de acceso no autorizado, deberá notificarlo a Avanza Digital de manera inmediata.</p>
+
+        <!-- ═══════════════════════════════════════════════════════ -->
+        <h2>17. Limitación de Responsabilidad</h2>
+        <p>Avanza Digital no será responsable por daños indirectos, lucro cesante, pérdida de oportunidades comerciales ni perjuicios de cualquier naturaleza que pudieran derivarse de:</p>
+        <ul>
+            <li>Interrupciones temporales del portal por mantenimiento, fallas técnicas o causas de fuerza mayor.</li>
+            <li>Decisiones comerciales del cliente final que resulten en la no contratación o cancelación de servicios.</li>
+            <li>Cambios en la estructura de comisiones comunicados con el preaviso establecido en estos términos.</li>
+            <li>El uso indebido que el Aliado haga de los materiales, portal público o herramientas provistas por Avanza Digital.</li>
+        </ul>
+        <p>La responsabilidad máxima de Avanza Digital frente al Aliado, por cualquier causa, quedará limitada al monto de las comisiones efectivamente devengadas y pendientes de pago al momento del reclamo.</p>
+
+        <!-- ═══════════════════════════════════════════════════════ -->
+        <h2>18. Conducta en Comunicaciones con Prospectos</h2>
+        <p>El Aliado se compromete a:</p>
+        <ul>
+            <li>Contactar únicamente a prospectos que hayan expresado interés o con quienes tenga una relación comercial preexistente. Queda prohibido el envío masivo de mensajes no solicitados (spam) en nombre de Avanza Digital o del programa.</li>
+            <li>No realizar promesas, garantías de resultados o afirmaciones que excedan lo establecido en el Brochure Comercial oficial.</li>
+            <li>Identificarse claramente como aliado independiente de Avanza Digital, sin sugerir que es empleado o representante legal de la empresa.</li>
+            <li>Respetar la normativa vigente en materia de comunicaciones comerciales electrónicas (Ley 25.326 y concordantes).</li>
+        </ul>
+        <p>El incumplimiento de estas obligaciones podrá ser causal de baja por incumplimiento conforme a la sección 14.2.</p>
+
+        <!-- ═══════════════════════════════════════════════════════ -->
+        <h2>19. Ley Aplicable y Jurisdicción</h2>
+        <p>El presente acuerdo se rige por las leyes de la <strong>República Argentina</strong>. Para la resolución de cualquier controversia que no pudiera resolverse de forma amigable entre las partes, estas se someten a la jurisdicción de los <strong>Tribunales Ordinarios de la ciudad de Santa Fe, provincia de Santa Fe</strong>, con renuncia expresa a cualquier otro fuero que pudiera corresponder.</p>
+        <p>Antes de iniciar cualquier acción legal, las partes se comprometen a intentar resolver el conflicto de forma extrajudicial mediante comunicación fehaciente, otorgando un plazo mínimo de <strong>15 días hábiles</strong> para alcanzar un acuerdo.</p>
+
+        <!-- ═══════════════════════════════════════════════════════ -->
+        <h2>20. Contacto y Aceptación</h2>
         <p>Para cualquier consulta relacionada con estos términos, el Aliado puede contactar a:</p>
         <p>
             <i class="fa-brands fa-whatsapp" style="color:#25D366;"></i> WhatsApp: <a href="https://wa.me/5493424392759" target="_blank">+54 9 342 439 2759</a><br>
             <i class="fa-regular fa-envelope"></i> Email: <a href="mailto:avanzadigital4@gmail.com">avanzadigital4@gmail.com</a>
         </p>
         <p>Al registrarse y hacer uso del programa, el Aliado declara haber leído, comprendido y aceptado estos términos en su totalidad.</p>
+
+        <div class="legal-footer">
+            <p>© 2026 Avanza Digital · <a href="politica.html">Política de Privacidad</a> · <a href="terminos-aliados.html">Términos y Condiciones</a></p>
+            <p style="margin-top: 8px; font-size: 0.8rem;">Última actualización: Mayo 2026 · Versión 2.1</p>
+        </div>
+    </div>
+</body>
+</html>

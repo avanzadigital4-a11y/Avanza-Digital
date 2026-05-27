@@ -349,6 +349,7 @@ tr:hover td { background:rgba(255,255,255,0.02); }
       <button class="tab-btn" onclick="cambiarTab('referidos',this)"><i class="fa-solid fa-bell"></i> Referidos <span id="badge-ref" style="display:none;background:var(--red);color:white;font-size:.65rem;font-weight:800;padding:2px 7px;border-radius:50px;margin-left:2px;">0</span></button>
       <button class="tab-btn" onclick="cambiarTab('ventas',this)"><i class="fa-solid fa-handshake"></i> Ventas</button>
       <button class="tab-btn" onclick="cambiarTab('prospectos',this)"><i class="fa-solid fa-bullseye"></i> Prospectos <span id="badge-prosp" style="display:none;background:var(--red);color:white;font-size:.65rem;font-weight:800;padding:2px 7px;border-radius:50px;margin-left:2px;">0</span></button>
+      <button class="tab-btn" onclick="cambiarTab('embudo',this)"><i class="fa-solid fa-filter"></i> Embudo</button>
       <button class="tab-btn" onclick="cambiarTab('auditorias',this)"><i class="fa-solid fa-magnifying-glass"></i> Auditorías</button>
       <button class="tab-btn" onclick="cambiarTab('bolsa',this)"><i class="fa-solid fa-bullhorn"></i> Bolsa de Leads</button>
       <button class="tab-btn" onclick="cambiarTab('comisiones',this)"><i class="fa-solid fa-percent"></i> Comisiones <span id="badge-comis" style="display:none;background:var(--red);color:white;font-size:.65rem;font-weight:800;padding:2px 7px;border-radius:50px;margin-left:2px;">0</span></button>
@@ -614,6 +615,102 @@ tr:hover td { background:rgba(255,255,255,0.02); }
       <div id="prosp-detalle-container"></div>
 
     </div>
+
+    <!-- ═══════════════════════════════════════ EMBUDO DE ACTIVACIÓN ══ -->
+    <div id="tab-embudo" class="tab-panel">
+
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;flex-wrap:wrap;gap:12px;">
+        <div>
+          <div class="section-title"><i class="fa-solid fa-filter" style="color:var(--primary);"></i> &nbsp;Embudo de Activación</div>
+          <div class="section-sub">Dónde se traban los aliados — del registro al cierre</div>
+        </div>
+        <button onclick="cargarEmbudo()" style="background:transparent;border:1px solid var(--border);color:var(--text-muted);border-radius:8px;padding:7px 14px;font-size:.8rem;cursor:pointer;"><i class="fa-solid fa-rotate-right"></i> Actualizar</button>
+      </div>
+
+      <!-- ── 1. FUNNEL VISUAL ─────────────────────────────────── -->
+      <div class="table-wrap" style="margin-bottom:24px;padding:28px 28px 20px;">
+        <div style="font-size:.88rem;font-weight:800;text-transform:uppercase;letter-spacing:.8px;color:var(--text-muted);margin-bottom:20px;">
+          <i class="fa-solid fa-chart-bar" style="color:var(--primary);margin-right:6px;"></i> Funnel real — de aliado registrado a cliente cerrado
+        </div>
+        <div id="embudo-funnel">
+          <div style="text-align:center;padding:32px;color:var(--text-muted);">Cargando...</div>
+        </div>
+      </div>
+
+      <!-- ── 2. ALIADOS CON 0 PROSPECTOS JAMÁS ──────────────── -->
+      <div class="table-wrap" style="margin-bottom:24px;">
+        <div class="table-head" style="display:flex;align-items:center;justify-content:space-between;">
+          <div>
+            <h3><i class="fa-solid fa-ghost" style="color:var(--red);"></i> &nbsp;Aliados con 0 prospectos jamás</h3>
+            <div style="font-size:.78rem;color:var(--text-muted);margin-top:3px;">Se registraron, miraron el portal, y nunca tocaron nada</div>
+          </div>
+          <div id="embudo-nunca-count" style="font-size:2rem;font-weight:800;color:var(--red);">—</div>
+        </div>
+        <div style="overflow-x:auto;">
+          <table>
+            <thead><tr>
+              <th>Aliado</th><th>Código</th><th>Nivel</th><th>Registrado</th><th>Días inactivo</th><th>Contactar</th>
+            </tr></thead>
+            <tbody id="embudo-nunca-body">
+              <tr><td colspan="6" style="padding:32px;text-align:center;color:var(--text-muted);">Cargando...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ── 3. TIEMPO REGISTRO → PRIMER PROSPECTO ─────────── -->
+      <div class="table-wrap" style="margin-bottom:24px;padding:24px;">
+        <div style="font-size:.88rem;font-weight:800;text-transform:uppercase;letter-spacing:.8px;color:var(--text-muted);margin-bottom:16px;">
+          <i class="fa-solid fa-clock" style="color:var(--amber);margin-right:6px;"></i> Ventana crítica — registro → primer prospecto
+        </div>
+        <div id="embudo-timing" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;">
+          <div style="text-align:center;padding:32px;color:var(--text-muted);">Cargando...</div>
+        </div>
+        <div id="embudo-timing-alertas" style="margin-top:16px;"></div>
+      </div>
+
+      <!-- ── 4. LAS 10 PROPUESTAS / PROSPECTOS CALIENTES ───── -->
+      <div class="table-wrap" style="margin-bottom:24px;">
+        <div class="table-head">
+          <div>
+            <h3><i class="fa-solid fa-fire" style="color:var(--amber);"></i> &nbsp;Los 10 prospectos más calientes</h3>
+            <div style="font-size:.78rem;color:var(--text-muted);margin-top:3px;">Tu caso de estudio más valioso — ¿están siendo trabajados?</div>
+          </div>
+        </div>
+        <div style="overflow-x:auto;">
+          <table>
+            <thead><tr>
+              <th>Prospecto</th><th>Aliado</th><th>Plan buscado</th><th>Estado</th><th>Días desde carga</th><th>Último contacto</th>
+            </tr></thead>
+            <tbody id="embudo-calientes-body">
+              <tr><td colspan="6" style="padding:32px;text-align:center;color:var(--text-muted);">Cargando...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ── 5. BOLSA POR ALIADO ────────────────────────────── -->
+      <div class="table-wrap" style="margin-bottom:0;">
+        <div class="table-head">
+          <div>
+            <h3><i class="fa-solid fa-box-archive" style="color:var(--primary);"></i> &nbsp;Uso de la bolsa por aliado</h3>
+            <div style="font-size:.78rem;color:var(--text-muted);margin-top:3px;">Quién reclamó leads — y si los trabajó o los abandonó</div>
+          </div>
+        </div>
+        <div style="overflow-x:auto;">
+          <table>
+            <thead><tr>
+              <th>Aliado</th><th style="text-align:center;">Reclamados</th><th style="text-align:center;">Contactados</th><th style="text-align:center;">Abandonados</th><th>Estado</th>
+            </tr></thead>
+            <tbody id="embudo-bolsa-body">
+              <tr><td colspan="5" style="padding:32px;text-align:center;color:var(--text-muted);">Cargando...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+    <!-- ═══════════════════════════════════════════════════════════════════ -->
 
     <div id="tab-auditorias" class="tab-panel">
       <div class="metrics-grid" id="audit-kpis"></div>
@@ -2146,6 +2243,7 @@ function cambiarTab(tab, btn) {
   }
   if (btn) btn.classList.add('active');
   if(tab==='prospectos')  cargarAdminProspectos();
+  if(tab==='embudo')      cargarEmbudo();
   if(tab==='auditorias')  cargarAuditoriasAdmin();
   if(tab==='bolsa')       cargarAdminBolsa();
   if(tab==='comisiones')  cargarAdminComisiones();
@@ -2153,6 +2251,297 @@ function cambiarTab(tab, btn) {
   if(tab==='pagos')       cargarAdminPagos();
   if(tab==='solicitudes') cargarSolicitudesCreditos();
   if(tab==='academia')    cargarAdminAcademia();
+}
+
+// ── EMBUDO DE ACTIVACIÓN ─────────────────────────────────────────────────────
+
+async function cargarEmbudo() {
+  // Necesitamos prospectos y bolsa — los cargamos si no están listos
+  const [prosp, bolsaRes] = await Promise.all([
+    datosProspectos
+      ? Promise.resolve(datosProspectos)
+      : apiFetch(`${API}/admin/prospectos`).then(r => r.ok ? r.json() : null),
+    apiFetch(`${API}/admin/bolsa`).then(r => r.ok ? r.json() : null),
+  ]);
+
+  if (prosp && !datosProspectos) datosProspectos = prosp;
+
+  renderEmbudoFunnel(prosp);
+  renderEmbudoNunca(prosp);
+  renderEmbudoTiming(prosp);
+  renderEmbudoCalientes(prosp);
+  renderEmbudoBolsa(bolsaRes);
+}
+
+/* ─── 1. FUNNEL VISUAL ─────────────────────────────────────────────────── */
+function renderEmbudoFunnel(prosp) {
+  const el = document.getElementById('embudo-funnel');
+  const total = todosAliados.length || 1;
+  const conProsp = prosp ? prosp.por_aliado.length : 0;
+  const contactaron = prosp
+    ? prosp.por_aliado.filter(a => (a.contactados || 0) + (a.respondieron || 0) > 0).length
+    : 0;
+  const aliadosConVenta = new Set(todasVentas.map(v => v.aliado_codigo)).size;
+
+  const steps = [
+    { label: 'Aliados registrados',    n: total,         pct: 100,                          color: '#3b82f6', icon: 'fa-users' },
+    { label: 'Cargaron ≥1 prospecto',  n: conProsp,      pct: Math.round(conProsp / total * 100),       color: '#fbbf24', icon: 'fa-user-plus' },
+    { label: 'Contactaron a alguien',  n: contactaron,   pct: Math.round(contactaron / total * 100),    color: '#f97316', icon: 'fa-phone' },
+    { label: 'Cerraron una venta',     n: aliadosConVenta, pct: Math.round(aliadosConVenta / total * 100), color: '#4ade80', icon: 'fa-handshake' },
+  ];
+
+  const funnelHTML = steps.map((s, i) => {
+    const dropPct = i > 0 ? Math.round((steps[i - 1].n - s.n) / (steps[i - 1].n || 1) * 100) : null;
+    const dropHTML = dropPct !== null
+      ? `<div style="font-size:.72rem;color:var(--red);font-weight:700;margin-top:3px;">▼ ${dropPct}% se caen acá</div>`
+      : '';
+    const barW = Math.max(s.pct, 4);
+    return `
+      <div style="margin-bottom:10px;">
+        ${dropHTML}
+        <div style="display:flex;align-items:center;gap:14px;">
+          <div style="width:32px;height:32px;border-radius:50%;background:${s.color}22;border:2px solid ${s.color};display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+            <i class="fa-solid ${s.icon}" style="color:${s.color};font-size:.75rem;"></i>
+          </div>
+          <div style="flex:1;">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:5px;">
+              <span style="font-size:.85rem;font-weight:700;color:var(--text);">${s.label}</span>
+              <span style="font-size:.85rem;font-weight:800;color:${s.color};">${s.n} <span style="font-size:.72rem;font-weight:600;color:var(--text-muted);">(${s.pct}%)</span></span>
+            </div>
+            <div style="height:10px;background:rgba(255,255,255,0.06);border-radius:5px;overflow:hidden;">
+              <div style="width:${barW}%;height:100%;background:${s.color};border-radius:5px;transition:width .6s ease;"></div>
+            </div>
+          </div>
+        </div>
+      </div>`;
+  }).join('');
+
+  // Diagnóstico automático
+  const pctProsp = conProsp / total;
+  const pctContacto = contactaron / (conProsp || 1);
+  let diagnostico = '';
+  if (pctProsp < 0.3)
+    diagnostico = `<div style="padding:12px 16px;background:rgba(248,113,113,.08);border-left:3px solid var(--red);border-radius:8px;font-size:.82rem;color:var(--text);margin-top:16px;"><i class="fa-solid fa-circle-xmark" style="color:var(--red);margin-right:6px;"></i><strong>Problema de activación post-registro.</strong> Solo ${Math.round(pctProsp*100)}% de los aliados cargó algún prospecto. El cuello de botella está en los primeros días después del alta.</div>`;
+  else if (pctContacto < 0.4)
+    diagnostico = `<div style="padding:12px 16px;background:rgba(251,191,36,.08);border-left:3px solid var(--amber);border-radius:8px;font-size:.82rem;color:var(--text);margin-top:16px;"><i class="fa-solid fa-triangle-exclamation" style="color:var(--amber);margin-right:6px;"></i><strong>Problema en el pitch / primer contacto.</strong> Hay prospectos cargados pero solo ${Math.round(pctContacto*100)}% fueron contactados. Los aliados cargan pero no llaman.</div>`;
+  else if (aliadosConVenta / total < 0.2)
+    diagnostico = `<div style="padding:12px 16px;background:rgba(251,191,36,.08);border-left:3px solid var(--amber);border-radius:8px;font-size:.82rem;color:var(--text);margin-top:16px;"><i class="fa-solid fa-triangle-exclamation" style="color:var(--amber);margin-right:6px;"></i><strong>Problema en el cierre.</strong> Los aliados contactan, pero pocos cierran ventas. Revisar capacitación en propuesta y objeciones.</div>`;
+  else
+    diagnostico = `<div style="padding:12px 16px;background:rgba(74,222,128,.08);border-left:3px solid var(--green);border-radius:8px;font-size:.82rem;color:var(--green);margin-top:16px;"><i class="fa-solid fa-circle-check" style="margin-right:6px;"></i>El embudo fluye bien en todos los pasos.</div>`;
+
+  el.innerHTML = funnelHTML + diagnostico;
+}
+
+/* ─── 2. ALIADOS SIN NINGÚN PROSPECTO ──────────────────────────────────── */
+function renderEmbudoNunca(prosp) {
+  const codigosConProsp = new Set((prosp?.por_aliado || []).map(a => a.codigo));
+  const nunca = todosAliados.filter(a => !codigosConProsp.has(a.codigo));
+  document.getElementById('embudo-nunca-count').textContent = nunca.length;
+
+  const tbody = document.getElementById('embudo-nunca-body');
+  if (!nunca.length) {
+    tbody.innerHTML = '<tr><td colspan="6" style="padding:24px;text-align:center;color:var(--green);">✅ Todos los aliados cargaron al menos un prospecto.</td></tr>';
+    return;
+  }
+
+  const hoy = new Date();
+  tbody.innerHTML = nunca.map(a => {
+    const fechaRegistro = a.fecha_firma ? new Date(a.fecha_firma) : null;
+    const diasInactivo = fechaRegistro ? Math.floor((hoy - fechaRegistro) / 86400000) : '—';
+    const urgencia = typeof diasInactivo === 'number' && diasInactivo <= 3
+      ? `<span style="color:var(--amber);font-weight:700;">⚡ ${diasInactivo}d — actuar ya</span>`
+      : typeof diasInactivo === 'number' && diasInactivo <= 10
+      ? `<span style="color:var(--amber);">${diasInactivo}d</span>`
+      : `<span style="color:var(--red);font-weight:700;">${diasInactivo}d — en riesgo</span>`;
+    return `
+      <tr style="border-bottom:1px solid var(--border);transition:background .15s;" onmouseover="this.style.background='rgba(255,255,255,0.03)'" onmouseout="this.style.background='transparent'">
+        <td style="padding:12px 20px;font-weight:700;">${a.nombre}</td>
+        <td style="padding:12px 20px;font-family:monospace;font-size:.8rem;color:var(--text-dim);">${a.codigo}</td>
+        <td style="padding:12px 20px;"><span class="nivel-pill nivel-${a.nivel}">${a.nivel}</span></td>
+        <td style="padding:12px 20px;font-size:.82rem;color:var(--text-muted);">${a.fecha_firma || '—'}</td>
+        <td style="padding:12px 20px;">${urgencia}</td>
+        <td style="padding:12px 20px;">
+          ${a.whatsapp ? `<a href="https://wa.me/${(a.whatsapp||'').replace(/[^0-9]/g,'')}" target="_blank" class="btn-outline" style="padding:5px 10px;font-size:.75rem;text-decoration:none;"><i class="fa-brands fa-whatsapp" style="color:var(--green);"></i> WA</a>` : '<span style="color:var(--text-dim);font-size:.8rem;">—</span>'}
+        </td>
+      </tr>`;
+  }).join('');
+}
+
+/* ─── 3. TIMING: REGISTRO → PRIMER PROSPECTO ───────────────────────────── */
+function renderEmbudoTiming(prosp) {
+  const el = document.getElementById('embudo-timing');
+  const alertasEl = document.getElementById('embudo-timing-alertas');
+
+  if (!prosp?.por_aliado?.length) {
+    el.innerHTML = '<div style="color:var(--text-muted);font-size:.85rem;">Sin datos de prospectos aún.</div>';
+    alertasEl.innerHTML = '';
+    return;
+  }
+
+  // Para cada aliado con prospectos, calcular días registro → primer prospecto
+  const deltas = [];
+  for (const a of prosp.por_aliado) {
+    const aliado = todosAliados.find(x => x.codigo === a.codigo);
+    if (!aliado || !aliado.fecha_firma) continue;
+    // Buscar el prospecto más antiguo
+    const fechasProsp = (a.prospectos || []).map(p => p.creado_en).filter(Boolean).sort();
+    if (!fechasProsp.length) continue;
+    const primerProsp = new Date(fechasProsp[0]);
+    const registro = new Date(aliado.fecha_firma);
+    const dias = Math.max(0, Math.floor((primerProsp - registro) / 86400000));
+    deltas.push({ nombre: a.nombre, dias, primerProsp: fechasProsp[0] });
+  }
+
+  if (!deltas.length) {
+    el.innerHTML = '<div style="color:var(--text-muted);font-size:.85rem;">No hay suficientes datos de fechas para calcular el timing.</div>';
+    alertasEl.innerHTML = '';
+    return;
+  }
+
+  const codigosConProsp = new Set((prosp?.por_aliado || []).map(a => a.codigo));
+  const totalAliados = todosAliados.length;
+  const sinNingun = totalAliados - codigosConProsp.size;
+
+  const dentro3d  = deltas.filter(d => d.dias <= 3).length;
+  const entre4y7  = deltas.filter(d => d.dias > 3 && d.dias <= 7).length;
+  const mas7d     = deltas.filter(d => d.dias > 7).length;
+  const promedio  = Math.round(deltas.reduce((s, d) => s + d.dias, 0) / deltas.length);
+
+  const cardStyle = 'background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:12px;padding:18px 20px;text-align:center;';
+  el.innerHTML = `
+    <div style="${cardStyle}">
+      <div style="font-size:.72rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:.8px;margin-bottom:6px;">Promedio días</div>
+      <div style="font-size:2rem;font-weight:800;color:${promedio<=3?'var(--green)':promedio<=7?'var(--amber)':'var(--red)'};">${promedio}d</div>
+      <div style="font-size:.75rem;color:var(--text-dim);">registro → 1er prospecto</div>
+    </div>
+    <div style="${cardStyle}">
+      <div style="font-size:.72rem;color:var(--green);text-transform:uppercase;letter-spacing:.8px;margin-bottom:6px;">✅ En ≤ 3 días</div>
+      <div style="font-size:2rem;font-weight:800;color:var(--green);">${dentro3d}</div>
+      <div style="font-size:.75rem;color:var(--text-dim);">alta probabilidad de éxito</div>
+    </div>
+    <div style="${cardStyle}">
+      <div style="font-size:.72rem;color:var(--amber);text-transform:uppercase;letter-spacing:.8px;margin-bottom:6px;">⚠ 4 a 7 días</div>
+      <div style="font-size:2rem;font-weight:800;color:var(--amber);">${entre4y7}</div>
+      <div style="font-size:.75rem;color:var(--text-dim);">zona de riesgo</div>
+    </div>
+    <div style="${cardStyle}">
+      <div style="font-size:.72rem;color:var(--red);text-transform:uppercase;letter-spacing:.8px;margin-bottom:6px;">❌ Más de 7 días</div>
+      <div style="font-size:2rem;font-weight:800;color:var(--red);">${mas7d}</div>
+      <div style="font-size:.75rem;color:var(--text-dim);">probablemente perdidos</div>
+    </div>
+    <div style="${cardStyle}">
+      <div style="font-size:.72rem;color:var(--red);text-transform:uppercase;letter-spacing:.8px;margin-bottom:6px;">🚫 Nunca activaron</div>
+      <div style="font-size:2rem;font-weight:800;color:var(--red);">${sinNingun}</div>
+      <div style="font-size:.75rem;color:var(--text-dim);">0 prospectos jamás</div>
+    </div>`;
+
+  // Alerta de acción
+  if (promedio > 3) {
+    alertasEl.innerHTML = `<div style="padding:12px 16px;background:rgba(248,113,113,.08);border-left:3px solid var(--red);border-radius:8px;font-size:.82rem;color:var(--text);">
+      <i class="fa-solid fa-bolt" style="color:var(--amber);margin-right:6px;"></i>
+      El promedio es de <strong>${promedio} días</strong>. Si no baja a 3 o menos, los aliados que no activan en la primera semana casi nunca lo hacen. Activar onboarding proactivo en D+1 y D+3.
+    </div>`;
+  } else {
+    alertasEl.innerHTML = `<div style="padding:12px 16px;background:rgba(74,222,128,.08);border-left:3px solid var(--green);border-radius:8px;font-size:.82rem;color:var(--green);">
+      <i class="fa-solid fa-circle-check" style="margin-right:6px;"></i> Promedio de ${promedio} días — los aliados activan rápido.
+    </div>`;
+  }
+}
+
+/* ─── 4. 10 PROSPECTOS CALIENTES ─────────────────────────────────────────── */
+function renderEmbudoCalientes(prosp) {
+  const tbody = document.getElementById('embudo-calientes-body');
+  if (!prosp?.por_aliado?.length) {
+    tbody.innerHTML = '<tr><td colspan="6" style="padding:32px;text-align:center;color:var(--text-muted);">Sin datos todavía.</td></tr>';
+    return;
+  }
+
+  // Aplanar todos los prospectos interesantes o respondieron
+  const calientes = [];
+  for (const a of prosp.por_aliado) {
+    for (const p of (a.prospectos || [])) {
+      if (p.interesante || p.estado === 'respondio') {
+        calientes.push({ ...p, aliado_nombre: a.nombre, aliado_codigo: a.codigo });
+      }
+    }
+  }
+
+  // Ordenar: interesantes primero, luego por fecha más reciente
+  calientes.sort((a, b) => {
+    if (a.interesante && !b.interesante) return -1;
+    if (!a.interesante && b.interesante) return 1;
+    return (b.creado_en || '').localeCompare(a.creado_en || '');
+  });
+
+  const top10 = calientes.slice(0, 10);
+  if (!top10.length) {
+    tbody.innerHTML = '<tr><td colspan="6" style="padding:32px;text-align:center;color:var(--text-muted);">Todavía no hay prospectos marcados como interesantes ni que hayan respondido.</td></tr>';
+    return;
+  }
+
+  const estadoLabel = { sin_contactar: 'Sin contactar', contactado: 'Contactado', respondio: 'Respondió' };
+  const estadoColor = { sin_contactar: 'var(--red)', contactado: 'var(--amber)', respondio: 'var(--green)' };
+  const hoy = new Date();
+
+  tbody.innerHTML = top10.map(p => {
+    const diasCarga = p.creado_en ? Math.floor((hoy - new Date(p.creado_en)) / 86400000) : '—';
+    const urgenciaColor = typeof diasCarga === 'number' && diasCarga > 7 ? 'var(--red)' : typeof diasCarga === 'number' && diasCarga > 3 ? 'var(--amber)' : 'var(--text-muted)';
+    return `
+      <tr style="border-bottom:1px solid var(--border);transition:background .15s;" onmouseover="this.style.background='rgba(255,255,255,0.03)'" onmouseout="this.style.background='transparent'">
+        <td style="padding:12px 16px;">
+          <div style="font-weight:700;font-size:.9rem;">${p.nombre || '—'} ${p.interesante ? '🔥' : ''}</div>
+          ${p.contacto ? `<div style="font-size:.75rem;color:var(--text-dim);">📞 ${p.contacto}</div>` : ''}
+          ${p.nota ? `<div style="font-size:.75rem;color:var(--text-dim);font-style:italic;">"${p.nota}"</div>` : ''}
+        </td>
+        <td style="padding:12px 16px;font-size:.85rem;color:var(--text-muted);">${p.aliado_nombre}</td>
+        <td style="padding:12px 16px;font-size:.82rem;color:var(--primary);">${p.plan_interes || '<span style="color:var(--text-dim);">—</span>'}</td>
+        <td style="padding:12px 16px;">
+          <span style="font-size:.72rem;font-weight:700;padding:3px 8px;border-radius:50px;border:1px solid ${estadoColor[p.estado]||'var(--border)'};color:${estadoColor[p.estado]||'var(--text-muted)'};">${estadoLabel[p.estado]||p.estado}</span>
+        </td>
+        <td style="padding:12px 16px;font-weight:700;color:${urgenciaColor};">${typeof diasCarga === 'number' ? diasCarga + 'd' : '—'}</td>
+        <td style="padding:12px 16px;font-size:.8rem;color:var(--text-muted);">${p.fecha_contacto || p.fecha_respuesta || '—'}</td>
+      </tr>`;
+  }).join('');
+}
+
+/* ─── 5. BOLSA POR ALIADO ─────────────────────────────────────────────────── */
+function renderEmbudoBolsa(bolsaData) {
+  const tbody = document.getElementById('embudo-bolsa-body');
+  if (!bolsaData?.leads?.length) {
+    tbody.innerHTML = '<tr><td colspan="5" style="padding:32px;text-align:center;color:var(--text-muted);">Sin leads en la bolsa todavía.</td></tr>';
+    return;
+  }
+
+  // Agrupar leads reclamados/contactados por aliado
+  const porAliado = {};
+  for (const l of bolsaData.leads) {
+    if (!l.asignado_a) continue;
+    if (!porAliado[l.asignado_a]) porAliado[l.asignado_a] = { reclamados: 0, contactados: 0, abandonados: 0 };
+    if (l.estado === 'reclamado') { porAliado[l.asignado_a].reclamados++; porAliado[l.asignado_a].abandonados++; }
+    if (l.estado === 'contactado') { porAliado[l.asignado_a].reclamados++; porAliado[l.asignado_a].contactados++; }
+  }
+
+  const filas = Object.entries(porAliado).sort((a, b) => b[1].abandonados - a[1].abandonados);
+  if (!filas.length) {
+    tbody.innerHTML = '<tr><td colspan="5" style="padding:32px;text-align:center;color:var(--text-muted);">Ningún aliado tiene leads reclamados aún.</td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = filas.map(([nombre, d]) => {
+    const tasaContacto = d.reclamados > 0 ? Math.round(d.contactados / d.reclamados * 100) : 0;
+    let estadoBadge = '';
+    if (d.abandonados === 0) estadoBadge = '<span style="font-size:.72rem;padding:3px 8px;border-radius:50px;background:rgba(74,222,128,.1);border:1px solid var(--green);color:var(--green);">✅ Activo</span>';
+    else if (d.abandonados === d.reclamados) estadoBadge = '<span style="font-size:.72rem;padding:3px 8px;border-radius:50px;background:rgba(248,113,113,.1);border:1px solid var(--red);color:var(--red);">⚠ Bloqueado — no contactó ninguno</span>';
+    else estadoBadge = `<span style="font-size:.72rem;padding:3px 8px;border-radius:50px;background:rgba(251,191,36,.1);border:1px solid var(--amber);color:var(--amber);">⚡ Parcial (${tasaContacto}% contacto)</span>`;
+    return `
+      <tr style="border-bottom:1px solid var(--border);transition:background .15s;" onmouseover="this.style.background='rgba(255,255,255,0.03)'" onmouseout="this.style.background='transparent'">
+        <td style="padding:12px 20px;font-weight:700;">${nombre}</td>
+        <td style="padding:12px 20px;text-align:center;font-weight:700;color:var(--primary);">${d.reclamados}</td>
+        <td style="padding:12px 20px;text-align:center;font-weight:700;color:var(--green);">${d.contactados}</td>
+        <td style="padding:12px 20px;text-align:center;font-weight:700;color:${d.abandonados > 0 ? 'var(--red)' : 'var(--text-dim)'};">${d.abandonados}</td>
+        <td style="padding:12px 20px;">${estadoBadge}</td>
+      </tr>`;
+  }).join('');
 }
 
 // ── PROSPECTOS ADMIN ────────────────────────────────────────────────────────
