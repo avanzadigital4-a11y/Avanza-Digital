@@ -1059,14 +1059,8 @@
       </div>
       <div class="field">
         <label><i class="fa-solid fa-briefcase"></i> &nbsp;¿A qué te dedicás? *</label>
-        <select id="reg-perfil" style="width:100%;background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:var(--radius-sm);padding:13px 16px;color:var(--text);font-size:.95rem;font-family:'Inter',sans-serif;cursor:pointer;">
-          <option value="" disabled selected>Elegí tu perfil</option>
-          <option value="Consultor Industrial">Consultor Industrial</option>
-          <option value="Estudio Contable">Estudio / Contador</option>
-          <option value="Agencia B2B">Agencia B2B / Marketing</option>
-          <option value="Vendedor Freelance">Vendedor Freelance</option>
-          <option value="Proveedor de Industrias">Proveedor de Industrias</option>
-          <option value="Otro">Otro</option>
+        <select id="reg-perfil" style="width:100%;background:#111827;border:1px solid var(--border);border-radius:var(--radius-sm);padding:13px 16px;color:var(--text);font-size:.95rem;font-family:'Inter',sans-serif;cursor:pointer;">
+          <option value="" disabled selected style="background:#111827;color:#888;">Elegí tu perfil</option>
         </select>
       </div>
 
@@ -3438,6 +3432,17 @@
         </div>
       </div>
 
+      <!-- Sub-selector de método USD: USDT / Payoneer -->
+      <div id="cred-usd-metodo-tabs" style="display:none; gap:8px; margin-bottom:14px;">
+        <button type="button" id="cred-mtab-usdt" onclick="cambiarMetodoUsdCreditos('usdt')"
+          style="flex:1; padding:11px; border-radius:9px; border:1px solid rgba(74,222,128,0.4); background:rgba(74,222,128,0.12); color:#4ade80; font-weight:800; font-size:.82rem; cursor:pointer;">
+          <i class="fa-solid fa-coins"></i> USDT / USDC
+        </button>
+        <button type="button" id="cred-mtab-payoneer" onclick="cambiarMetodoUsdCreditos('payoneer')"
+          style="flex:1; padding:11px; border-radius:9px; border:1px solid rgba(255,255,255,0.12); background:transparent; color:var(--text-muted); font-weight:800; font-size:.82rem; cursor:pointer;">
+          <i class="fa-solid fa-credit-card"></i> Payoneer
+        </button>
+      </div>
       <!-- Datos pago USD (alternativo) -->
       <div id="cred-bloque-usd" style="display:none; background:#0a0a0a; border:1px solid rgba(74,222,128,0.25); border-radius:10px; padding:16px; margin-bottom:18px;">
         <div style="font-size:.75rem; color:var(--text-muted); font-weight:800; text-transform:uppercase; letter-spacing:.5px; margin-bottom:12px;">
@@ -4908,6 +4913,36 @@ function seleccionarCanal(canal) {
       : (canal === 'canal2' ? 'rgba(74,222,128,0.04)' : 'rgba(59,130,246,0.04)');
   });
   document.getElementById('reg-tipo-aliado').value = canal;
+
+  // Actualizar opciones del dropdown según canal
+  const perfiles = canal === 'canal1'
+    ? [
+        { value: 'Closer de Ventas',        label: 'Closer de Ventas' },
+        { value: 'SDR / Prospectador',       label: 'SDR / Prospectador' },
+        { value: 'Representante Comercial',  label: 'Representante Comercial' },
+        { value: 'Vendedor Freelance',       label: 'Vendedor Freelance' },
+        { value: 'Otro',                     label: 'Otro' },
+      ]
+    : [
+        { value: 'Consultor Industrial',     label: 'Consultor Industrial' },
+        { value: 'Estudio Contable',         label: 'Estudio / Contador' },
+        { value: 'Agencia B2B',             label: 'Agencia B2B / Marketing' },
+        { value: 'Vendedor Freelance',       label: 'Vendedor Freelance' },
+        { value: 'Proveedor de Industrias',  label: 'Proveedor de Industrias' },
+        { value: 'Otro',                     label: 'Otro' },
+      ];
+
+  const sel = document.getElementById('reg-perfil');
+  sel.innerHTML = '<option value="" disabled selected style="background:#111827;color:#888;">Elegí tu perfil</option>';
+  perfiles.forEach(p => {
+    const opt = document.createElement('option');
+    opt.value = p.value;
+    opt.textContent = p.label;
+    opt.style.background = '#111827';
+    opt.style.color = '#fff';
+    sel.appendChild(opt);
+  });
+  sel.value = '';
 }
 
 function cerrarSesion() { 
@@ -8301,7 +8336,28 @@ async function comprarLead(id, costo) {
 
 // ─── COMPRA DE CRÉDITOS POR TRANSFERENCIA (v1.7) ─────────────────────
 let _ultimaSolicitudCreditos = null;  // guarda la última solicitud activa
-let _monedaCreditos = 'ars';          // 'ars' | 'usd' — moneda elegida en el toggle
+let _monedaCreditos = 'ars';
+let _metodosUsdCreditos = [];        // v2.2 — métodos USD disponibles (USDT/Payoneer)
+function aplicarMetodoUsdCreditos(id){
+  const m = (_metodosUsdCreditos || []).find(x => x.id === id) || _metodosUsdCreditos[0];
+  if(!m) return;
+  document.getElementById('cred-usd-metodo').textContent       = m.metodo || '—';
+  document.getElementById('cred-usd-destinatario').textContent = m.destinatario || '—';
+  document.getElementById('cred-usd-etiqueta').textContent     = m.etiqueta_dest || 'Destinatario';
+  document.getElementById('cred-usd-notas').textContent        = m.notas || '';
+  const redRow = document.getElementById('cred-usd-red-row');
+  if (m.red && m.red.trim()) { document.getElementById('cred-usd-red').textContent = m.red; redRow.style.display = 'flex'; }
+  else { redRow.style.display = 'none'; }
+  // estado visual de los tabs
+  const t1 = document.getElementById('cred-mtab-usdt'), t2 = document.getElementById('cred-mtab-payoneer');
+  if(t1 && t2){
+    const on = (b)=>{ b.style.background='rgba(74,222,128,0.12)'; b.style.color='#4ade80'; b.style.borderColor='rgba(74,222,128,0.4)'; };
+    const off= (b)=>{ b.style.background='transparent'; b.style.color='var(--text-muted)'; b.style.borderColor='rgba(255,255,255,0.12)'; };
+    (id==='payoneer') ? (on(t2),off(t1)) : (on(t1),off(t2));
+  }
+}
+function cambiarMetodoUsdCreditos(id){ aplicarMetodoUsdCreditos(id); }
+          // 'ars' | 'usd' — moneda elegida en el toggle
 let _paquetesCreditosCache = null;    // último resultado de /paquetes-creditos
 
 async function abrirModalComprarCreditos() {
@@ -8455,18 +8511,14 @@ function mostrarInstruccionesTransferencia(data) {
   document.getElementById('cred-bloque-usd').style.display = esUsd ? 'block' : 'none';
 
   if (esUsd) {
-    document.getElementById('cred-usd-metodo').textContent       = dp.metodo || '—';
-    document.getElementById('cred-usd-destinatario').textContent = dp.destinatario || '—';
-    document.getElementById('cred-usd-etiqueta').textContent     = dp.etiqueta_dest || 'Destinatario';
-    document.getElementById('cred-usd-titular').textContent      = dp.titular || '—';
-    document.getElementById('cred-usd-notas').textContent        = dp.notas || '';
-    const redRow = document.getElementById('cred-usd-red-row');
-    if (dp.red && dp.red.trim()) {
-      document.getElementById('cred-usd-red').textContent = dp.red;
-      redRow.style.display = 'flex';
-    } else {
-      redRow.style.display = 'none';
-    }
+    // v2.2 — soporta múltiples métodos USD (USDT / Payoneer)
+    _metodosUsdCreditos = (dp.metodos_usd && dp.metodos_usd.length)
+      ? dp.metodos_usd
+      : [{ id:'usdt', metodo:dp.metodo, destinatario:dp.destinatario, etiqueta_dest:dp.etiqueta_dest, red:dp.red, notas:dp.notas }];
+    document.getElementById('cred-usd-titular').textContent = dp.titular || '—';
+    const tabs = document.getElementById('cred-usd-metodo-tabs');
+    if (tabs) tabs.style.display = (_metodosUsdCreditos.length > 1) ? 'flex' : 'none';
+    aplicarMetodoUsdCreditos(_metodosUsdCreditos[0].id || 'usdt');
   } else {
     document.getElementById('cred-titular').textContent = dp.titular || '—';
     document.getElementById('cred-banco').textContent   = dp.banco   || '—';
@@ -8627,6 +8679,11 @@ document.addEventListener('DOMContentLoaded', () => {
   // Aplicar tema/canal si la URL trae ?canal=canal1 o ?canal=canal2
   if (typeof aplicarCanalDesdeURL === 'function') {
     aplicarCanalDesdeURL();
+  }
+  // Si no hay param de canal, poblar dropdown con opciones por defecto (canal2)
+  const params = new URLSearchParams(window.location.search);
+  if (!params.get('canal') && typeof seleccionarCanal === 'function') {
+    seleccionarCanal('canal2');
   }
 
   // Auto-login con sesión guardada (30 días)
@@ -9314,6 +9371,54 @@ const ACADEMIA_MODULOS = [
             <div><div class="dl-title">Guión por Rubro v2</div><div class="dl-sub">Casos por industria para cerrar</div></div>
           </a>
         </div>
+
+      <h3>Kit de Marca · Tu presencia online</h3>
+      <p style="color:var(--text-dim);font-size:.85rem;margin:-4px 0 12px;">Esto es para <strong>tu perfil</strong> (LinkedIn y redes), no para mandarle al cliente. Bajá el banner, el logo y la guía de identidad.</p>
+      <div class="aca-downloads">
+        <a class="aca-download" href="#" onclick="descargarPDF('https://drive.google.com/uc?export=download&id=1f-SgCcagc_uACtVxnoOCVD5ER4ncEnIL','Kit_Identidad_Aliados_Canal1.pdf');return false;">
+          <i class="fa-solid fa-palette" style="color:#f97316;"></i>
+          <div><div class="dl-title">Kit de Identidad (PDF)</div><div class="dl-sub">Colores, tipografía y cómo presentarte en LinkedIn</div></div>
+        </a>
+        <a class="aca-download" href="#" onclick="descargarPDF('https://drive.google.com/uc?export=download&id=1GJwxVGf9qDLAiCuIBTtsN7pR6Te5n319','Banner_LinkedIn_Aliado_Canal1.png');return false;">
+          <i class="fa-brands fa-linkedin" style="color:#0a66c2;"></i>
+          <div><div class="dl-title">Banner LinkedIn</div><div class="dl-sub">Portada lista para subir (1584×396). Subila sin recortar.</div></div>
+        </a>
+        <a class="aca-download" href="#" onclick="descargarPDF('https://drive.google.com/uc?export=download&id=1lVEyODAaPh3cqQ1Jet_RuyFBwOLUbbMO','Avanza_Logo_FondoOscuro.png');return false;">
+          <i class="fa-solid fa-image" style="color:#a1a1aa;"></i>
+          <div><div class="dl-title">Logo — fondo oscuro</div><div class="dl-sub">Versión clara, para usar sobre fondos oscuros</div></div>
+        </a>
+        <a class="aca-download" href="#" onclick="descargarPDF('https://drive.google.com/uc?export=download&id=1rXwgyjDcZqbzF2lcthCFhUTZMXPdt_Wo','Avanza_Logo_FondoClaro.png');return false;">
+          <i class="fa-solid fa-image" style="color:#a1a1aa;"></i>
+          <div><div class="dl-title">Logo — fondo claro</div><div class="dl-sub">Versión oscura, para usar sobre fondos claros</div></div>
+        </a>
+        <a class="aca-download" href="#" onclick="descargarPDF('https://drive.google.com/uc?export=download&id=1i2K9bwbBqDPHrY-2hNv1lpEueXgnTLu2','Avanza_Isotipo.png');return false;">
+          <i class="fa-solid fa-shapes" style="color:#06b6d4;"></i>
+          <div><div class="dl-title">Isotipo</div><div class="dl-sub">Solo el símbolo (las flechas), fondo transparente</div></div>
+        </a>
+      </div>
+
+      <h3>Casos de éxito · Para postear</h3>
+      <p style="color:var(--text-dim);font-size:.85rem;margin:-4px 0 12px;">Carruseles listos para subir a LinkedIn (como documento). Cada uno cuenta un caso real: problema → solución → resultado. Compartilos como caso de Avanza, no como propio.</p>
+      <div class="aca-downloads">
+        <a class="aca-download" href="#" onclick="descargarPDF('https://drive.google.com/uc?export=download&id=1qnj6IwmBDmodEyjFHUiejKsJc31DLiNY','Carrusel_Balconi_Canal1.pdf');return false;">
+          <i class="fa-solid fa-layer-group" style="color:#f97316;"></i>
+          <div><div class="dl-title">Caso Balconi (Metalúrgica)</div><div class="dl-sub">+47% conversión en 21 días</div></div>
+        </a>
+        <a class="aca-download" href="#" onclick="descargarPDF('https://drive.google.com/uc?export=download&id=1vss3SR6MHvUNiyhonIyWjJpZUhhuqWFP','Carrusel_Onate_Canal1.pdf');return false;">
+          <i class="fa-solid fa-layer-group" style="color:#f97316;"></i>
+          <div><div class="dl-title">Caso Oñate (Logística)</div><div class="dl-sub">De 31hs a 4hs de respuesta · +38% cierre</div></div>
+        </a>
+        <a class="aca-download" href="#" onclick="descargarPDF('https://drive.google.com/uc?export=download&id=1ztWe9BqnDWnknvbM4L9RcmOLQixSQ9qw','Carrusel_Litoral_Canal1.pdf');return false;">
+          <i class="fa-solid fa-layer-group" style="color:#f97316;"></i>
+          <div><div class="dl-title">Caso Litoral (Servicios técnicos)</div><div class="dl-sub">USD 8.400 en contratos · 1° en Google local</div></div>
+        </a>
+        <a class="aca-download" href="#" onclick="descargarPDF('https://drive.google.com/uc?export=download&id=1DSLzQOQ_SU8GrOTiOWqVAAhcCGWzQNsS','Carrusel_Parque_Canal1.pdf');return false;">
+          <i class="fa-solid fa-layer-group" style="color:#f97316;"></i>
+          <div><div class="dl-title">Caso Parque Logístico (Gran escala)</div><div class="dl-sub">Proyecto Estratégico 360 · 120 ha</div></div>
+        </a>
+      </div>
+
+
       </div>
 
       <h3>Cuándo usar cada material</h3>

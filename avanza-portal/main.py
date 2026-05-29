@@ -36,6 +36,7 @@ import jarvis_flywheel       # Motor del Flywheel Colectivo (Sección 6)
 import jarvis_whatsapp       # Integración WhatsApp con Twilio (Sección 8)
 import jarvis_api_publica    # JARVIS API pública v1 — autenticación por API key (Sección 9)
 import jarvis_integraciones  # Integraciones CRM/Gmail/Calendar/Slack (Sección 10)
+import jarvis_canal1         # Secuencia WhatsApp Canal 1 (onboarding, disparos, recurrentes)
 
 Base.metadata.create_all(bind=engine)
 
@@ -159,6 +160,15 @@ for col_sql in [
     "ALTER TABLE aliados ADD COLUMN rubros_especialidad TEXT DEFAULT '[]'",
     # v2.4 — WhatsApp Business (Twilio) + Flywheel colectivo
     "ALTER TABLE aliados ADD COLUMN whatsapp_numero VARCHAR",
+    # v2.5 — Secuencia WA Canal 1 (onboarding + inactividad + recurrentes)
+    "ALTER TABLE aliados ADD COLUMN canal1_wa_bienvenida_en TIMESTAMP",
+    "ALTER TABLE aliados ADD COLUMN canal1_wa_d1_en TIMESTAMP",
+    "ALTER TABLE aliados ADD COLUMN canal1_wa_d3_en TIMESTAMP",
+    "ALTER TABLE aliados ADD COLUMN canal1_wa_d7_en TIMESTAMP",
+    "ALTER TABLE aliados ADD COLUMN canal1_wa_inact7_en TIMESTAMP",
+    "ALTER TABLE aliados ADD COLUMN canal1_wa_inact30_en TIMESTAMP",
+    "ALTER TABLE aliados ADD COLUMN canal1_wa_semanal_en TIMESTAMP",
+    "ALTER TABLE aliados ADD COLUMN canal1_wa_mensual_en TIMESTAMP",
 ]:
     _aplicar_migracion(col_sql)
 
@@ -257,6 +267,15 @@ DATOS_USD = {
     "etiqueta_dest":  os.environ.get("USD_ETIQUETA",     "Dirección USDT (TRC20)"),
     "red":            os.environ.get("USD_RED",          ""),  # ej: "TRC20" para USDT
     "notas":          os.environ.get("USD_NOTAS",        "Enviá el monto exacto en USD. Recibís los créditos cuando confirmamos el pago (24hs hábiles)."),
+}
+
+# ─── Payoneer (segundo método USD para compra de créditos) ───────────────────
+DATOS_PAYONEER = {
+    "metodo":        "Payoneer",
+    "destinatario":  os.environ.get("PAYONEER_EMAIL", os.environ.get("USD_DESTINATARIO", "avanzadigital4@gmail.com")),
+    "etiqueta_dest": "Email de Payoneer",
+    "red":           "",
+    "notas":         os.environ.get("PAYONEER_NOTAS", "Enviá el monto exacto en USD a este email de Payoneer. Recibís los créditos cuando confirmamos el pago (24hs hábiles)."),
 }
 
 # ─── USDT/USDC para clientes finales ─────────────────────────────────────────
@@ -1172,6 +1191,16 @@ def job_eliminacion_definitiva():
 scheduler.add_job(job_eliminacion_definitiva, "interval", hours=24)
 scheduler.add_job(job_onboarding_sequence, "interval", hours=24)
 scheduler.add_job(job_generar_comisiones_recurrentes_mensual, "interval", hours=24)
+
+# ─── CANAL 1 — Secuencia WhatsApp ────────────────────────────────────────────
+# Onboarding día 1/3/7: cada hora (para reaccionar rápido al registro)
+scheduler.add_job(jarvis_canal1.job_onboarding_wa,  "interval", hours=1)
+# Inactividad 7d / 30d: cada 6hs (balance entre frescura y no saturar DB)
+scheduler.add_job(jarvis_canal1.job_inactividad_wa, "interval", hours=6)
+# Leads semanales: lunes 9hs Argentina (UTC-3 → UTC+0 = 12hs UTC)
+scheduler.add_job(jarvis_canal1.job_semanal_wa,     "cron", day_of_week="mon", hour=12, minute=0)
+# Ranking mensual: día 1 de cada mes, 10hs Argentina (13hs UTC)
+scheduler.add_job(jarvis_canal1.job_mensual_wa,     "cron", day=1, hour=13, minute=0)
 scheduler.start()
 jarvis_flywheel.agregar_insights_flywheel_al_scheduler(scheduler, get_db)
 
@@ -1832,6 +1861,10 @@ def auto_registro(request: Request,
     # función parece rota. Es señal de bienvenida, no costo real.
     _ajustar_creditos(db, a, 100, "bienvenida", "registro")
     db.commit()
+
+    # WhatsApp de bienvenida Canal 1 — EN SEGUNDO PLANO
+    # Envía: código de aliado + link grupo WA + primer paso accionable
+    background_tasks.add_task(jarvis_canal1.notificar_bienvenida, a, db)
 
     # Email de bienvenida — EN SEGUNDO PLANO (no bloquea la respuesta)
     # IMPORTANTE: este email NO debe mencionar el marketplace de créditos ni
@@ -2732,8 +2765,16 @@ def registrar_venta(body: schemas.RegistrarVentaIn | None = Body(default=None),
     if es_primera_venta:
         bonus_info = _aplicar_bonus_primera_venta(db, a, v.id)
     
+    _nivel_anterior_reg = a.nivel  # capturar antes de actualizar
     a.nivel = a.nivel_calculado
     db.commit()
+
+    # WhatsApp Canal 1: notificar venta y posible subida de nivel
+    try:
+        jarvis_canal1.notificar_venta_y_nivel(a, _nivel_anterior_reg, db)
+    except Exception as _e:
+        print(f"[CANAL1] Error notif venta/nivel (admin): {_e}", file=sys.stderr)
+
     return {
         "mensaje": "Venta registrada.",
         "aliado": a.nombre,
@@ -3810,8 +3851,15 @@ def _procesar_pago_confirmado(db: Session,
     if es_primera_venta_aliado:
         bonus_info = _aplicar_bonus_primera_venta(db, a, v.id)
 
+    _nivel_anterior_pago = a.nivel  # capturar antes de actualizar
     a.nivel = a.nivel_calculado
     db.commit()
+
+    # WhatsApp Canal 1: notificar venta y posible subida de nivel
+    try:
+        jarvis_canal1.notificar_venta_y_nivel(a, _nivel_anterior_pago, db)
+    except Exception as _e:
+        print(f"[CANAL1] Error notif venta/nivel (checkout): {_e}", file=sys.stderr)
 
     # --- Notificación al aliado (spec §7) ---
     # Intentamos personalizar el email con IA: coaching del próximo movimiento.
@@ -4653,6 +4701,15 @@ def reclamar_lead(id: int,
     lead.aliado_id = a.id
     lead.fecha_reclamo = datetime.now()
     db.commit()
+
+    # WhatsApp Canal 1: si es el primer lead del aliado, mandar los 3 tips
+    _n_leads = db.query(LeadBolsa).filter(LeadBolsa.aliado_id == a.id).count()
+    if _n_leads == 1:
+        try:
+            jarvis_canal1.notificar_primer_lead(a, db)
+        except Exception as _e:
+            print(f"[CANAL1] Error notif primer lead: {_e}", file=sys.stderr)
+
     return {"mensaje": "¡Lead reclamado exitosamente!"}
 
 @app.patch("/bolsa/{id}/contactar")
@@ -6596,13 +6653,34 @@ async def solicitar_creditos(codigo: str,
             "politica":             "Los créditos no vencen y no son reembolsables (excepto error técnico).",
         }
     else:
+        # v2.2 — Dos métodos USD disponibles: USDT y Payoneer. El aliado elige en el front.
+        metodos_usd = [
+            {
+                "id":           "usdt",
+                "metodo":       DATOS_USD["metodo"],
+                "destinatario": DATOS_USD["destinatario"],
+                "etiqueta_dest":DATOS_USD["etiqueta_dest"],
+                "red":          DATOS_USD["red"],
+                "notas":        DATOS_USD["notas"],
+            },
+            {
+                "id":           "payoneer",
+                "metodo":       DATOS_PAYONEER["metodo"],
+                "destinatario": DATOS_PAYONEER["destinatario"],
+                "etiqueta_dest":DATOS_PAYONEER["etiqueta_dest"],
+                "red":          DATOS_PAYONEER["red"],
+                "notas":        DATOS_PAYONEER["notas"],
+            },
+        ]
         datos_pago = {
             "tipo":              "pago_usd",
-            "metodo":            DATOS_USD["metodo"],
-            "destinatario":      DATOS_USD["destinatario"],
-            "etiqueta_dest":     DATOS_USD["etiqueta_dest"],
-            "red":               DATOS_USD["red"],
-            "notas":             DATOS_USD["notas"],
+            # Primer método por defecto (compatibilidad con vistas que leen estos campos sueltos)
+            "metodo":            metodos_usd[0]["metodo"],
+            "destinatario":      metodos_usd[0]["destinatario"],
+            "etiqueta_dest":     metodos_usd[0]["etiqueta_dest"],
+            "red":               metodos_usd[0]["red"],
+            "notas":             metodos_usd[0]["notas"],
+            "metodos_usd":       metodos_usd,
             "titular":           DATOS_BANCARIOS["titular"],
             "whatsapp_display":  DATOS_BANCARIOS["whatsapp_display"],
             "whatsapp_url":      wa_url,
@@ -7092,7 +7170,7 @@ def aliado_wa_publica(ref_code: str, db: Session = Depends(get_db)):
         }
     titular = getattr(a, "portal_publico_titular", None) or a.nombre
     bio = getattr(a, "portal_publico_bio", None) or (
-        f"Asesor digital · {a.ciudad}" if getattr(a, "ciudad", None) else "Partner certificado · Avanza Digital"
+        f"Asesor digital · {a.ciudad}" if getattr(a, "ciudad", None) else "Partner Oficial · Avanza Digital"
     )
     foto_url = getattr(a, "portal_publico_foto_url", None)
     return {
@@ -7196,7 +7274,11 @@ def portal_publico_aliado(ref_code: str, db: Session = Depends(get_db)):
     titular = a.portal_publico_titular or a.nombre
     bio = a.portal_publico_bio or (f"Asesor digital · {a.ciudad}" if getattr(a, 'ciudad', None) else "Asesor digital — Partner de Avanza Digital")
     foto_url = getattr(a, 'portal_publico_foto_url', None)
-    avatar_html = f'<img src="{foto_url}" alt="{titular}" style="width:54px;height:54px;border-radius:50%;object-fit:cover;">' if foto_url else '👤'
+    _iniciales = "".join([w[0] for w in (titular or "A").split()[:2]]).upper() or "A"
+    if foto_url:
+        avatar_hero_html = f'<img src="{foto_url}" alt="{titular}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">'
+    else:
+        avatar_hero_html = f'<span style="font-size:2.3rem;font-weight:800;color:#fff;">{_iniciales}</span>'
 
     # ── Rubros y país para SEO ──────────────────────────────────────────────
     import json as _json
@@ -7394,6 +7476,19 @@ body{{font-family:Inter,sans-serif;background:#050505;color:#e2e8f0;line-height:
 .hero-sub{{color:#a1a1aa;font-size:1.05rem;max-width:520px;margin:0 auto 32px;}}
 .hero-cta{{display:inline-block;padding:16px 32px;background:#3b82f6;color:#fff;border-radius:10px;font-weight:800;font-size:1rem;text-decoration:none;transition:background .2s;border:none;cursor:pointer;}}
 .hero-cta:hover{{background:#2563eb;}}
+.nav-partner-pill{{font-size:.7rem;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#93c5fd;background:rgba(59,130,246,0.1);border:1px solid rgba(59,130,246,0.25);padding:5px 12px;border-radius:50px;}}
+.hero-aliado{{position:relative;padding:50px 0 34px;text-align:center;}}
+.hero-aliado::before{{content:'';position:absolute;inset:0;background:radial-gradient(circle at 50% 0%,rgba(59,130,246,0.10),transparent 60%);pointer-events:none;}}
+.hero-avatar{{position:relative;width:104px;height:104px;border-radius:50%;margin:0 auto 18px;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#3b82f6,#1d4ed8);border:3px solid rgba(255,255,255,0.1);box-shadow:0 8px 40px rgba(59,130,246,0.25);overflow:visible;}}
+.hero-verified{{position:absolute;bottom:2px;right:2px;width:30px;height:30px;border-radius:50%;background:#4ade80;color:#04210f;display:flex;align-items:center;justify-content:center;font-size:.85rem;font-weight:900;border:3px solid #050505;}}
+.hero-aliado-name{{font-size:clamp(2rem,6vw,2.7rem);font-weight:900;letter-spacing:-1px;line-height:1.1;margin-bottom:8px;}}
+.hero-aliado-role{{color:#a1a1aa;font-size:1rem;font-weight:500;margin-bottom:16px;}}
+.hero-aliado-role b{{color:#93c5fd;font-weight:700;}}
+.hero-rubros{{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-bottom:20px;}}
+.hero-aliado-bio{{color:#a1a1aa;font-size:1.05rem;font-weight:300;max-width:540px;margin:0 auto 28px;line-height:1.6;}}
+.hero-cta-row{{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-bottom:18px;}}
+.hero-cta-wa{{display:inline-flex;align-items:center;gap:8px;padding:16px 28px;background:rgba(37,211,102,0.12);color:#25d366;border:1px solid rgba(37,211,102,0.3);border-radius:10px;font-weight:800;font-size:1rem;text-decoration:none;transition:background .2s;}}
+.hero-cta-wa:hover{{background:rgba(37,211,102,0.2);}}
 .hero-social{{margin-top:20px;font-size:.8rem;color:#71717a;}}
 .hero-social span{{color:#4ade80;font-weight:700;}}
 .section{{padding:40px 0;}}
@@ -7461,28 +7556,21 @@ body{{font-family:Inter,sans-serif;background:#050505;color:#e2e8f0;line-height:
 input[type=text]{{width:100%;padding:12px;border-radius:8px;border:1px solid #444;background:#1a1a1a;color:#fff;font-size:1rem;font-family:Inter,sans-serif;}}
 input[type=text]:focus{{outline:none;border-color:#3b82f6;}}
 </style></head><body>
-<div class="asesor-bar">
-  Estás siendo atendido por <strong style="color:#e2e8f0;">{titular}</strong> · Partner certificado de Avanza Digital
-</div>
 <nav class="nav">
   <a class="nav-logo" href="https://avanzadigital.digital">Avanza<span>Digital</span></a>
-  <a href="#planes" class="hero-cta" style="padding:10px 20px;font-size:.85rem;">Ver planes →</a>
+  <span class="nav-partner-pill">Partner Oficial</span>
 </nav>
 <div class="wrap">
-  <section class="asesor-intro">
-    <div class="asesor-avatar">{avatar_html}</div>
-    <div>
-      <div class="asesor-intro-badge">Partner certificado · Avanza Digital</div>
-      <div class="asesor-intro-name">{titular}</div>
-      <div class="asesor-intro-bio">{bio}</div>
+  <section class="hero hero-aliado">
+    <div class="hero-avatar">{avatar_hero_html}<span class="hero-verified" title="Partner verificado de Avanza Digital">✓</span></div>
+    <h1 class="hero-aliado-name">{titular}</h1>
+    <p class="hero-aliado-role">Partner Oficial de <b>Avanza Digital</b>{f' · {_ciudad}' if _ciudad else ''}</p>
+    {f'<div class="hero-rubros">{_rubros_badges_html}</div>' if _rubros_badges_html else ''}
+    <p class="hero-aliado-bio">{bio}</p>
+    <div class="hero-cta-row">
+      <a href="#planes" class="hero-cta">Ver planes y precios →</a>
+      <a href="https://wa.me/{wa_contacto}?text=Hola%20{wa_titular_encoded}%2C%20quiero%20coordinar%20un%20diagn%C3%B3stico%20de%2015%20minutos%20para%20mi%20empresa." class="hero-cta-wa" target="_blank" rel="noopener">Hablemos por WhatsApp</a>
     </div>
-  </section>
-  <section class="hero">
-    <div class="hero-badge">Sistema de ventas B2B</div>
-    <h1>Tu empresa merece <span>conseguir clientes</span> de forma sistemática</h1>
-    <p class="hero-sub">Implementamos tu sistema digital de ventas en 30 días. Más presupuestos, más respuestas rápidas, más clientes. Sin depender de la suerte ni del boca a boca.</p>
-    {f'<div style="margin:0 auto 20px;max-width:480px;text-align:center;">{_rubros_badges_html}</div>' if _rubros_badges_html else ''}
-    <a href="#planes" class="hero-cta">Elegir mi plan →</a>
     <p class="hero-social">Más de <span>40 PYMEs industriales</span> ya tienen su sistema funcionando</p>
   </section>
 
@@ -7579,7 +7667,7 @@ input[type=text]:focus{{outline:none;border-color:#3b82f6;}}
   </section>
 
   <div class="footer">
-    <p>Atendido por <strong style="color:#52525b;">{titular}</strong> · Partner certificado de Avanza Digital</p>
+    <p>Atendido por <strong style="color:#52525b;">{titular}</strong> · Partner Oficial de Avanza Digital</p>
     <p style="margin-top:6px;">Tu pago queda atribuido automáticamente a tu asesor.<br>
     <a href="https://avanzadigital.digital" target="_blank">avanzadigital.digital</a> ·
     <a href="https://avanzadigital.digital/politica.html" target="_blank">Privacidad</a></p>

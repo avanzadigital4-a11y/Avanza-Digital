@@ -312,11 +312,11 @@ tr:hover td { background:rgba(255,255,255,0.02); }
     <div class="admin-badge"><i class="fa-solid fa-lock"></i> &nbsp;Panel de Administración</div>
     <div class="field">
       <label><i class="fa-solid fa-user-shield"></i> &nbsp;Usuario admin</label>
-      <input type="text" id="login-user" placeholder="admin" onkeydown="if(event.key==='Enter')loginAdmin()">
+      <input type="text" id="login-user" placeholder="admin" autocomplete="off" onkeydown="if(event.key==='Enter')loginAdmin()">
     </div>
     <div class="field">
       <label><i class="fa-solid fa-lock"></i> &nbsp;Contraseña</label>
-      <input type="password" id="login-pass" placeholder="••••••••" onkeydown="if(event.key==='Enter')loginAdmin()">
+      <input type="password" id="login-pass" placeholder="••••••••" autocomplete="new-password" onkeydown="if(event.key==='Enter')loginAdmin()">
     </div>
 
     <div class="field">
