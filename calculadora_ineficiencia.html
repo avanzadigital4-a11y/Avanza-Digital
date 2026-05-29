@@ -1,0 +1,850 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calculadora de Ineficiencia Comercial Gratuita | Avanza Digital</title>
+    <meta name="description" content="Calculá gratis cuánto pierde tu empresa por mes por procesos de venta manuales. Diagnóstico comercial B2B en 2 minutos, con plan de recuperación y proyección a 3 años. Sin registro.">
+    <link rel="canonical" href="https://avanzadigital.digital/calculadora-ineficiencia.html">
+    <meta name="keywords" content="calculadora ineficiencia comercial, cuánto pierdo por procesos manuales, diagnóstico comercial gratis, calculadora pérdida ventas pyme, ROI automatización ventas argentina">
+    <meta name="geo.region" content="AR-S" />
+    <meta name="geo.placename" content="Santa Fe" />
+    <meta property="og:title" content="Calculadora de Ineficiencia Comercial Gratuita | Avanza Digital">
+    <meta property="og:description" content="Descubrí en 2 minutos cuánto pierde tu empresa por mes por procesos manuales, con plan de recuperación y proyección. Gratis, sin registro.">
+    <meta property="og:url" content="https://avanzadigital.digital/calculadora-ineficiencia.html">
+    <meta property="og:image" content="https://avanzadigital.digital/og-default.jpg">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><path d=%22M10 20 L40 50 L10 80 L30 80 L60 50 L30 20 Z%22 fill=%22%230044cc%22/><path d=%22M45 20 L75 50 L45 80 L65 80 L95 50 L65 20 Z%22 fill=%22%2300cccc%22/></svg>">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800;900&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebApplication",
+      "name": "Calculadora de Ineficiencia Comercial B2B",
+      "applicationCategory": "BusinessApplication",
+      "operatingSystem": "Web",
+      "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+      "url": "https://avanzadigital.digital/calculadora-ineficiencia.html"
+    }
+    </script>
+    <style>
+        :root {
+            --primary:#3b82f6; --primary-dim:rgba(59,130,246,0.15);
+            --green:#4ade80; --green-dim:rgba(74,222,128,0.12);
+            --yellow:#facc15; --red:#ef4444; --orange:#f97316;
+            --bg:#040404; --surface:#0e0e0e; --border:rgba(255,255,255,0.08);
+            --text:#e4e4e7; --text-dim:#71717a;
+            --font:'Inter',sans-serif; --mono:'Space Mono',monospace;
+        }
+        *{margin:0;padding:0;box-sizing:border-box;}
+        body{background:var(--bg);color:var(--text);font-family:var(--font);min-height:100vh;overflow-x:hidden;}
+        body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
+            background-image:linear-gradient(rgba(59,130,246,0.03) 1px,transparent 1px),linear-gradient(90deg,rgba(59,130,246,0.03) 1px,transparent 1px);
+            background-size:50px 50px;}
+        nav{position:fixed;top:16px;left:50%;transform:translateX(-50%);background:rgba(10,10,10,0.9);backdrop-filter:blur(20px);border:1px solid var(--border);border-radius:50px;padding:12px 28px;display:flex;align-items:center;gap:32px;z-index:1000;width:fit-content;max-width:calc(100vw - 32px);}
+        .nav-logo{font-weight:800;font-size:1.1rem;color:white;text-decoration:none;display:flex;align-items:center;gap:8px;}
+        .nav-logo .dot{width:8px;height:8px;background:var(--primary);border-radius:50%;animation:pulse-dot 2s infinite;}
+        @keyframes pulse-dot{0%,100%{box-shadow:0 0 0 0 rgba(59,130,246,0.5)}50%{box-shadow:0 0 0 6px rgba(59,130,246,0)}}
+        .nav-links{display:flex;gap:20px;list-style:none;}
+        .nav-links a{color:var(--text-dim);text-decoration:none;font-size:0.9rem;transition:color 0.2s;}
+        .nav-links a:hover{color:white;}
+        .nav-cta{background:var(--primary);color:white;padding:8px 18px;border-radius:50px;font-size:0.85rem;font-weight:600;text-decoration:none;transition:all 0.2s;}
+        .nav-cta:hover{background:#2563eb;}
+
+        .hero{padding:128px 24px 50px;text-align:center;position:relative;z-index:1;}
+        .badge{display:inline-flex;align-items:center;gap:8px;background:rgba(74,222,128,0.08);border:1px solid rgba(74,222,128,0.2);color:var(--green);padding:6px 16px;border-radius:50px;font-size:0.8rem;font-weight:600;letter-spacing:0.5px;text-transform:uppercase;margin-bottom:24px;}
+        .badge .blink{width:6px;height:6px;background:var(--green);border-radius:50%;animation:blink 1.5s infinite;}
+        @keyframes blink{0%,100%{opacity:1}50%{opacity:0.2}}
+        h1{font-size:clamp(2.2rem,5vw,4rem);font-weight:900;letter-spacing:-2px;line-height:1.1;margin-bottom:20px;}
+        h1 span{background:linear-gradient(135deg,var(--primary) 0%,var(--green) 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+        .hero-sub{font-size:1.1rem;color:var(--text-dim);max-width:600px;margin:0 auto 8px;line-height:1.7;}
+        .trust-line{display:flex;justify-content:center;gap:24px;margin-top:22px;font-size:0.8rem;color:var(--text-dim);flex-wrap:wrap;}
+        .trust-item{display:flex;align-items:center;gap:6px;}
+        .trust-item i{color:var(--green);}
+
+        /* ── FORM ── */
+        .calc-wrap{max-width:640px;margin:0 auto;position:relative;z-index:1;padding:0 24px 80px;}
+        .calc-card{background:var(--surface);border:1px solid var(--border);border-radius:22px;padding:32px;}
+        .calc-progress{display:flex;gap:6px;margin-bottom:28px;}
+        .calc-progress span{flex:1;height:4px;border-radius:50px;background:rgba(255,255,255,0.08);overflow:hidden;}
+        .calc-progress span.filled{background:linear-gradient(90deg,var(--primary),var(--green));}
+        .calc-step{margin-bottom:24px;}
+        .calc-label{display:flex;align-items:center;gap:10px;font-size:0.95rem;font-weight:600;color:var(--text);margin-bottom:14px;}
+        .calc-label span.num{display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;border-radius:50%;background:var(--primary-dim);color:var(--primary);font-size:0.78rem;font-weight:800;flex-shrink:0;font-family:var(--mono);}
+        .form-input,.form-select{width:100%;background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:12px;padding:14px 16px;color:white;font-size:1rem;font-family:var(--mono);outline:none;transition:border-color 0.2s,box-shadow 0.2s;}
+        .form-select{font-family:var(--font);appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%2371717a' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 16px center;cursor:pointer;}
+        .form-input:focus,.form-select:focus{border-color:var(--primary);box-shadow:0 0 0 3px rgba(59,130,246,0.1);}
+        .form-input::placeholder{color:var(--text-dim);}
+        .input-money{position:relative;}
+        .input-money .prefix{position:absolute;left:16px;top:50%;transform:translateY(-50%);color:var(--text-dim);font-family:var(--mono);font-size:0.95rem;pointer-events:none;}
+        .input-money .form-input{padding-left:52px;}
+        input[type="range"]{-webkit-appearance:none;width:100%;height:6px;border-radius:5px;background:rgba(255,255,255,0.1);outline:none;margin:6px 0;}
+        input[type="range"]::-webkit-slider-thumb{-webkit-appearance:none;width:22px;height:22px;border-radius:50%;background:var(--primary);cursor:pointer;border:3px solid #0e0e0e;box-shadow:0 0 0 1px var(--primary);}
+        input[type="range"]::-moz-range-thumb{width:22px;height:22px;border-radius:50%;background:var(--primary);cursor:pointer;border:3px solid #0e0e0e;}
+        .range-display{text-align:center;font-family:var(--mono);font-size:0.9rem;color:var(--primary);margin-top:8px;font-weight:700;}
+        .radio-grid{display:grid;grid-template-columns:1fr;gap:10px;}
+        @media(min-width:520px){.radio-grid.cols-3{grid-template-columns:1fr 1fr 1fr;}.radio-grid.cols-2{grid-template-columns:1fr 1fr;}}
+        .radio-option{position:relative;}
+        .radio-option input{position:absolute;opacity:0;width:0;height:0;}
+        .radio-option label{display:block;text-align:center;padding:14px 10px;border:1px solid var(--border);border-radius:12px;font-size:0.85rem;color:var(--text-dim);cursor:pointer;transition:all 0.2s;background:rgba(255,255,255,0.02);}
+        .radio-option input:checked + label{border-color:var(--primary);background:var(--primary-dim);color:white;font-weight:600;}
+        .radio-option label:hover{border-color:rgba(59,130,246,0.5);}
+        .btn-calc{width:100%;background:linear-gradient(135deg,var(--primary),#6366f1);color:white;border:none;padding:16px;border-radius:12px;font-weight:800;font-size:1rem;cursor:pointer;transition:all 0.25s;font-family:var(--font);display:flex;align-items:center;justify-content:center;gap:8px;margin-top:6px;}
+        .btn-calc:hover{transform:translateY(-1px);box-shadow:0 8px 25px rgba(59,130,246,0.4);}
+
+        /* ── SCANNER ── */
+        #loading-section{display:none;padding:40px 24px 80px;text-align:center;position:relative;z-index:1;}
+        .scanner-box{max-width:560px;margin:0 auto;background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:44px 36px;}
+        .scan-title{font-size:0.8rem;color:var(--text-dim);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;}
+        .scan-sub{font-family:var(--mono);color:var(--primary);font-size:1.05rem;margin-bottom:32px;}
+        .progress-steps{display:flex;flex-direction:column;gap:12px;text-align:left;}
+        .step-item{display:flex;align-items:center;gap:14px;padding:12px 16px;border-radius:10px;background:rgba(255,255,255,0.02);border:1px solid transparent;transition:all 0.4s;}
+        .step-item.active{background:var(--primary-dim);border-color:rgba(59,130,246,0.2);}
+        .step-item.done{background:var(--green-dim);border-color:rgba(74,222,128,0.15);}
+        .step-icon{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:0.85rem;flex-shrink:0;background:rgba(255,255,255,0.05);color:var(--text-dim);}
+        .step-item.active .step-icon{background:var(--primary);color:white;animation:spin 1s linear infinite;}
+        .step-item.done .step-icon{background:var(--green);color:#000;animation:none;}
+        @keyframes spin{to{transform:rotate(360deg)}}
+        .step-text{font-size:0.9rem;color:var(--text-dim);}
+        .step-item.active .step-text,.step-item.done .step-text{color:var(--text);}
+        .step-status{margin-left:auto;font-size:0.75rem;font-family:var(--mono);}
+        .step-item.active .step-status{color:var(--primary);}
+        .step-item.done .step-status{color:var(--green);}
+
+        /* ── RESULTS ── */
+        #results-section{display:none;padding:0 24px 80px;max-width:1080px;margin:0 auto;position:relative;z-index:1;}
+        .new-calc-btn{display:inline-flex;align-items:center;gap:8px;color:var(--text-dim);background:none;border:1px solid var(--border);padding:10px 20px;border-radius:8px;cursor:pointer;font-size:0.85rem;font-family:var(--font);transition:all 0.2s;margin-bottom:24px;}
+        .new-calc-btn:hover{color:white;border-color:rgba(255,255,255,0.2);}
+        .real-data-banner{display:flex;align-items:center;gap:10px;background:rgba(74,222,128,0.06);border:1px solid rgba(74,222,128,0.15);border-radius:12px;padding:12px 18px;margin-bottom:24px;font-size:0.84rem;color:var(--green);}
+        .real-data-banner span{color:var(--text-dim);}
+
+        .loss-hero{background:var(--surface);border:1px solid var(--border);border-radius:24px;padding:44px;display:grid;grid-template-columns:auto 1fr;gap:44px;align-items:center;margin-bottom:24px;position:relative;overflow:hidden;}
+        .loss-hero::before{content:'';position:absolute;top:-60px;right:-60px;width:260px;height:260px;border-radius:50%;background:radial-gradient(circle,rgba(239,68,68,0.07) 0%,transparent 70%);}
+        .score-ring-wrap{position:relative;width:180px;height:180px;flex-shrink:0;}
+        .score-ring-wrap svg{transform:rotate(-90deg);}
+        .score-ring-bg{fill:none;stroke:rgba(255,255,255,0.06);stroke-width:12;}
+        .score-ring-fill{fill:none;stroke-width:12;stroke-linecap:round;stroke-dasharray:502;stroke-dashoffset:502;transition:stroke-dashoffset 2s cubic-bezier(0.4,0,0.2,1);}
+        .score-center{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;}
+        .score-number{font-size:3rem;font-weight:900;line-height:1;font-family:var(--mono);}
+        .score-label{font-size:0.72rem;color:var(--text-dim);margin-top:2px;text-transform:uppercase;letter-spacing:0.5px;}
+        .loss-info .loss-tag{font-size:0.72rem;text-transform:uppercase;letter-spacing:1px;color:var(--red);font-weight:700;margin-bottom:8px;}
+        .loss-amount{font-size:clamp(2.4rem,6vw,3.6rem);font-weight:900;letter-spacing:-2px;line-height:1;color:#fca5a5;font-family:var(--mono);margin-bottom:6px;}
+        .loss-period{font-size:0.95rem;color:var(--text-dim);margin-bottom:18px;}
+        .loss-period b{color:var(--text);}
+        .loss-verdict{font-size:0.95rem;color:var(--text-dim);line-height:1.6;max-width:560px;}
+
+        .metrics-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:24px;}
+        .metric-card{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:20px 16px;text-align:center;}
+        .metric-value{font-size:1.7rem;font-weight:900;font-family:var(--mono);line-height:1;margin-bottom:6px;color:white;}
+        .metric-value.danger{color:#fca5a5;}
+        .metric-label{font-size:0.74rem;color:var(--text-dim);line-height:1.3;}
+
+        .section-block{background:var(--surface);border:1px solid var(--border);border-radius:22px;padding:32px;margin-bottom:24px;}
+        .block-head{display:flex;align-items:center;gap:14px;margin-bottom:22px;}
+        .block-icon{width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:1.2rem;flex-shrink:0;}
+        .block-icon.blue{background:rgba(59,130,246,0.12);border:1px solid rgba(59,130,246,0.2);}
+        .block-icon.red{background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.2);}
+        .block-icon.green{background:rgba(74,222,128,0.1);border:1px solid rgba(74,222,128,0.2);}
+        .block-icon.amber{background:rgba(249,115,22,0.12);border:1px solid rgba(249,115,22,0.2);}
+        .block-title{font-size:1.15rem;font-weight:800;}
+        .block-sub{font-size:0.82rem;color:var(--text-dim);margin-top:2px;}
+
+        .breakdown-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px;}
+        @media(max-width:640px){.breakdown-grid{grid-template-columns:1fr;}}
+        .bd-card{background:rgba(255,255,255,0.02);border:1px solid var(--border);border-radius:16px;padding:22px;}
+        .bd-top{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:14px;}
+        .bd-name{font-size:0.9rem;font-weight:700;}
+        .bd-amount{font-family:var(--mono);font-weight:700;font-size:1.05rem;color:#fca5a5;}
+        .score-bar-wrap{background:rgba(255,255,255,0.04);border-radius:50px;height:7px;overflow:hidden;margin-bottom:14px;}
+        .score-bar{height:100%;border-radius:50px;width:0;transition:width 1.4s cubic-bezier(0.4,0,0.2,1);}
+        .bd-desc{font-size:0.8rem;color:var(--text-dim);line-height:1.5;}
+
+        /* Projection bars */
+        .proj-row{display:flex;flex-direction:column;gap:14px;}
+        .proj-item{display:grid;grid-template-columns:64px 1fr auto;align-items:center;gap:14px;}
+        .proj-year{font-size:0.82rem;color:var(--text-dim);font-weight:600;}
+        .proj-track{background:rgba(255,255,255,0.04);border-radius:8px;height:30px;overflow:hidden;}
+        .proj-fill{height:100%;border-radius:8px;width:0;background:linear-gradient(90deg,rgba(239,68,68,0.5),var(--red));transition:width 1.3s cubic-bezier(0.4,0,0.2,1);}
+        .proj-val{font-family:var(--mono);font-weight:700;font-size:0.92rem;color:#fca5a5;white-space:nowrap;}
+
+        /* Recommendations */
+        .recs-list{display:flex;flex-direction:column;gap:14px;}
+        .rec-item{display:grid;grid-template-columns:auto 1fr;align-items:start;gap:16px;padding:18px;background:rgba(255,255,255,0.02);border:1px solid var(--border);border-radius:14px;}
+        .rec-priority{padding:4px 10px;border-radius:6px;font-size:0.68rem;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;white-space:nowrap;align-self:start;}
+        .priority-alta{background:rgba(239,68,68,0.12);color:var(--red);}
+        .priority-media{background:rgba(250,204,21,0.1);color:var(--yellow);}
+        .priority-baja{background:var(--green-dim);color:var(--green);}
+        .rec-content h4{font-size:0.92rem;font-weight:700;margin-bottom:4px;}
+        .rec-content p{font-size:0.82rem;color:var(--text-dim);line-height:1.5;}
+
+        /* Recovery / plan */
+        .recovery-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-bottom:8px;}
+        @media(max-width:640px){.recovery-grid{grid-template-columns:1fr;}}
+        .recovery-card{border-radius:16px;padding:24px;text-align:center;}
+        .recovery-card.green{background:rgba(74,222,128,0.06);border:1px solid rgba(74,222,128,0.2);}
+        .recovery-card.blue{background:rgba(59,130,246,0.06);border:1px solid rgba(59,130,246,0.2);}
+        .recovery-num{font-size:2rem;font-weight:900;font-family:var(--mono);line-height:1;margin-bottom:6px;}
+        .recovery-card.green .recovery-num{color:#86efac;}
+        .recovery-card.blue .recovery-num{color:#93c5fd;}
+        .recovery-lbl{font-size:0.78rem;color:var(--text-dim);}
+        .plan-row{display:flex;align-items:center;gap:14px;background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:14px;padding:18px 20px;margin-top:18px;flex-wrap:wrap;}
+        .plan-row .plan-tag{font-size:0.7rem;text-transform:uppercase;letter-spacing:1px;color:var(--green);font-weight:700;}
+        .plan-row .plan-name{font-size:1.05rem;font-weight:800;}
+        .plan-row .plan-price{font-family:var(--mono);color:var(--text-dim);font-size:0.9rem;}
+        .plan-payback{margin-left:auto;text-align:right;}
+        .plan-payback .pb-num{font-family:var(--mono);font-weight:800;font-size:1.3rem;color:var(--green);}
+        .plan-payback .pb-lbl{font-size:0.72rem;color:var(--text-dim);}
+
+        /* Gate */
+        .gate-block{background:linear-gradient(135deg,rgba(59,130,246,0.08),rgba(99,102,241,0.05));border:1px solid rgba(59,130,246,0.25);border-radius:22px;padding:36px;margin-bottom:24px;text-align:center;}
+        .gate-block h3{font-size:1.4rem;font-weight:800;margin-bottom:8px;letter-spacing:-0.5px;}
+        .gate-block p{color:var(--text-dim);font-size:0.9rem;line-height:1.6;margin-bottom:24px;max-width:460px;margin-left:auto;margin-right:auto;}
+        .gate-form{max-width:420px;margin:0 auto;display:flex;flex-direction:column;gap:12px;}
+        .gate-input{width:100%;background:rgba(255,255,255,0.05);border:1px solid var(--border);border-radius:10px;padding:14px 16px;color:white;font-size:0.95rem;font-family:var(--font);outline:none;transition:border-color 0.2s;}
+        .gate-input:focus{border-color:var(--primary);}
+        .btn-gate{width:100%;background:linear-gradient(135deg,var(--green),#22c55e);color:#04210f;border:none;padding:15px;border-radius:12px;font-weight:800;font-size:0.98rem;cursor:pointer;transition:all 0.25s;font-family:var(--font);}
+        .btn-gate:hover{transform:translateY(-1px);box-shadow:0 8px 25px rgba(74,222,128,0.3);}
+        .btn-gate:disabled{opacity:0.6;cursor:not-allowed;transform:none;}
+        .gate-fine{font-size:0.72rem;color:var(--text-dim);margin-top:4px;}
+        .locked{filter:blur(7px);pointer-events:none;user-select:none;opacity:0.6;}
+
+        /* Aliado card */
+        .aliado-card{background:rgba(59,130,246,0.07);border:1px solid rgba(59,130,246,0.25);border-radius:16px;padding:18px 20px;margin-bottom:24px;}
+        .aliado-card .ac-top{display:flex;align-items:center;gap:14px;}
+        .ac-avatar{width:54px;height:54px;border-radius:50%;background:linear-gradient(135deg,#3b82f6,#1d4ed8);display:flex;align-items:center;justify-content:center;font-size:1.4rem;flex-shrink:0;overflow:hidden;}
+        .ac-tag{font-size:0.66rem;text-transform:uppercase;letter-spacing:1px;color:#3b82f6;font-weight:700;margin-bottom:2px;}
+        .ac-name{font-weight:700;font-size:1rem;color:#f1f5f9;}
+        .ac-titular{font-size:0.8rem;color:#94a3b8;}
+        .ac-wa{display:inline-flex;align-items:center;gap:6px;background:#25d366;color:#fff;font-weight:700;font-size:0.82rem;padding:9px 16px;border-radius:8px;text-decoration:none;margin-top:12px;}
+
+        /* CTA + share */
+        .cta-box{background:linear-gradient(135deg,rgba(59,130,246,0.08) 0%,rgba(99,102,241,0.05) 100%);border:1px solid rgba(59,130,246,0.2);border-radius:24px;padding:44px 36px;text-align:center;margin-bottom:24px;}
+        .cta-box h2{font-size:1.8rem;font-weight:900;letter-spacing:-1px;margin-bottom:12px;}
+        .cta-box p{color:var(--text-dim);margin-bottom:28px;line-height:1.6;}
+        .cta-buttons{display:flex;gap:14px;justify-content:center;flex-wrap:wrap;}
+        .btn-primary-cta{background:var(--primary);color:white;padding:15px 30px;border-radius:12px;font-weight:700;font-size:0.95rem;text-decoration:none;transition:all 0.25s;display:inline-flex;align-items:center;gap:8px;}
+        .btn-primary-cta:hover{background:#2563eb;transform:translateY(-2px);box-shadow:0 12px 30px rgba(59,130,246,0.35);}
+        .btn-secondary-cta{background:transparent;color:white;padding:15px 30px;border-radius:12px;font-weight:600;font-size:0.95rem;text-decoration:none;border:1px solid var(--border);transition:all 0.25s;display:inline-flex;align-items:center;gap:8px;}
+        .btn-secondary-cta:hover{border-color:rgba(255,255,255,0.2);}
+        .share-bar{display:flex;justify-content:space-between;align-items:center;padding:16px 22px;background:rgba(255,255,255,0.02);border:1px solid var(--border);border-radius:14px;margin-bottom:8px;flex-wrap:wrap;gap:12px;}
+        .share-text{font-size:0.85rem;color:var(--text-dim);}
+        .share-actions{display:flex;gap:10px;}
+        .share-btn{padding:8px 16px;border-radius:8px;font-size:0.8rem;font-weight:600;cursor:pointer;border:1px solid var(--border);background:transparent;color:var(--text-dim);font-family:var(--font);display:flex;align-items:center;gap:6px;transition:all 0.2s;}
+        .share-btn:hover{color:white;border-color:rgba(255,255,255,0.2);}
+        .share-btn.wpp{border-color:rgba(37,211,102,0.3);color:#25D366;}
+        .share-btn.wpp:hover{background:rgba(37,211,102,0.08);}
+
+        .score-excellent{color:var(--green);} .score-good{color:#86efac;} .score-medium{color:var(--yellow);} .score-poor{color:var(--orange);} .score-bad{color:var(--red);}
+        .ring-excellent{stroke:var(--green);} .ring-good{stroke:#86efac;} .ring-medium{stroke:var(--yellow);} .ring-poor{stroke:var(--orange);} .ring-bad{stroke:var(--red);}
+        .bar-excellent{background:linear-gradient(90deg,var(--green),#22c55e);} .bar-good{background:linear-gradient(90deg,#86efac,var(--green));} .bar-medium{background:linear-gradient(90deg,var(--yellow),#eab308);} .bar-poor{background:linear-gradient(90deg,var(--orange),#ea580c);} .bar-bad{background:linear-gradient(90deg,var(--red),#dc2626);}
+
+        .watermark{text-align:center;font-size:0.78rem;color:var(--text-dim);padding:24px;position:relative;z-index:1;}
+        .watermark a{color:var(--primary);text-decoration:none;}
+        footer{border-top:1px solid var(--border);padding:40px 24px;text-align:center;position:relative;z-index:1;}
+        .footer-links{display:flex;justify-content:center;gap:24px;flex-wrap:wrap;margin-bottom:16px;}
+        .footer-links a{color:var(--text-dim);text-decoration:none;font-size:0.85rem;transition:color 0.2s;}
+        .footer-links a:hover{color:white;}
+        @media(max-width:768px){
+            nav{padding:10px 16px;gap:16px;} .nav-links{display:none;}
+            .loss-hero{grid-template-columns:1fr;text-align:center;padding:32px 24px;} .score-ring-wrap{margin:0 auto;}
+            .plan-payback{margin-left:0;text-align:left;width:100%;}
+        }
+    </style>
+</head>
+<body>
+
+<!-- Barra de aliado (solo si hay ?ref= válido) -->
+<div id="aliado-bar" style="display:none; background:rgba(59,130,246,0.08); border-bottom:1px solid rgba(59,130,246,0.2); padding:8px 20px; text-align:center; font-size:0.82rem; color:#94a3b8; font-family:'Inter',sans-serif;">
+  Estás siendo atendido por <strong id="aliado-bar-nombre" style="color:#e2e8f0;"></strong> · <span style="color:#3b82f6;">Partner certificado de Avanza Digital</span>
+</div>
+
+<nav>
+    <a href="index.html" class="nav-logo"><div class="dot"></div>Avanza</a>
+    <ul class="nav-links">
+        <li><a href="index.html#servicios">Planes</a></li>
+        <li><a href="auditoria-digital.html">Auditoría</a></li>
+        <li><a href="alianzas.html" style="color:#4ade80;font-weight:600;">Alianzas</a></li>
+    </ul>
+    <a href="index.html#contacto" class="nav-cta">Diagnóstico</a>
+</nav>
+
+<!-- HERO + FORM -->
+<section class="hero" id="hero-section">
+    <div class="badge"><span class="blink"></span>Diagnóstico comercial · 2 minutos · Gratis</div>
+    <h1>¿Cuánto te cuesta<br><span>vender a la vieja usanza?</span></h1>
+    <p class="hero-sub">Calculá la pérdida real de tu empresa por procesos de venta manuales — con plan de recuperación y proyección a 3 años.</p>
+    <div class="trust-line">
+        <span class="trust-item"><i class="fas fa-check-circle"></i>Sin registro para calcular</span>
+        <span class="trust-item"><i class="fas fa-check-circle"></i>Resultado al instante</span>
+        <span class="trust-item"><i class="fas fa-check-circle"></i>Plan + payback</span>
+    </div>
+</section>
+
+<div class="calc-wrap" id="form-wrap">
+    <div class="calc-card">
+        <div class="calc-progress"><span class="filled"></span><span></span><span></span></div>
+
+        <div class="calc-step">
+            <label class="calc-label"><span class="num">1</span> Rubro de tu empresa</label>
+            <select id="rubro" class="form-select">
+                <option value="generic">Elegí tu rubro…</option>
+                <option value="metal">Metalúrgica / Manufactura</option>
+                <option value="agro">Agro / Maquinaria agrícola</option>
+                <option value="logistica">Logística / Transporte</option>
+                <option value="servicios">Servicios B2B / Consultoría</option>
+                <option value="comercio">Comercio / Distribución B2B</option>
+                <option value="construccion">Construcción / Obras</option>
+                <option value="generic">Otro</option>
+            </select>
+        </div>
+
+        <div class="calc-step">
+            <label class="calc-label" for="revenue"><span class="num">2</span> Facturación mensual promedio (USD)</label>
+            <div class="input-money">
+                <span class="prefix">USD</span>
+                <input type="number" id="revenue" class="form-input" placeholder="15000" inputmode="numeric">
+            </div>
+        </div>
+
+        <div class="calc-step">
+            <label class="calc-label"><span class="num">3</span> ¿Cuántos vendedores tiene el equipo comercial?</label>
+            <div class="radio-grid cols-3">
+                <div class="radio-option"><input type="radio" name="vendedores" id="v1" value="1"><label for="v1">Solo yo</label></div>
+                <div class="radio-option"><input type="radio" name="vendedores" id="v2" value="3" checked><label for="v2">2 a 5</label></div>
+                <div class="radio-option"><input type="radio" name="vendedores" id="v3" value="8"><label for="v3">Más de 5</label></div>
+            </div>
+        </div>
+
+        <div class="calc-step">
+            <label class="calc-label"><span class="num">4</span> Horas/día perdidas en tareas administrativas por vendedor</label>
+            <input type="range" id="adminHours" min="0" max="8" value="3">
+            <div class="range-display" id="hoursDisplay">3 horas / vendedor</div>
+        </div>
+
+        <div class="calc-step">
+            <label class="calc-label"><span class="num">5</span> ¿Cómo gestionan hoy pedidos y cotizaciones?</label>
+            <div class="radio-grid cols-3">
+                <div class="radio-option"><input type="radio" name="catalog" id="cat1" value="0" checked><label for="cat1">Solo WhatsApp / Teléfono</label></div>
+                <div class="radio-option"><input type="radio" name="catalog" id="cat2" value="15"><label for="cat2">Email + PDF manual</label></div>
+                <div class="radio-option"><input type="radio" name="catalog" id="cat3" value="30"><label for="cat3">Web o sistema digital</label></div>
+            </div>
+        </div>
+
+        <div class="calc-step">
+            <label class="calc-label"><span class="num">6</span> ¿Hacés seguimiento sistemático de cada lead?</label>
+            <div class="radio-grid cols-3">
+                <div class="radio-option"><input type="radio" name="seguimiento" id="s1" value="no" checked><label for="s1">No / informal</label></div>
+                <div class="radio-option"><input type="radio" name="seguimiento" id="s2" value="aveces"><label for="s2">A veces</label></div>
+                <div class="radio-option"><input type="radio" name="seguimiento" id="s3" value="crm"><label for="s3">Sí, con CRM</label></div>
+            </div>
+        </div>
+
+        <button onclick="iniciarCalculo()" class="btn-calc"><i class="fa-solid fa-magnifying-glass-chart"></i> &nbsp;ANALIZAR MI EMPRESA</button>
+    </div>
+</div>
+
+<!-- SCANNER -->
+<section id="loading-section">
+    <div class="scanner-box">
+        <p class="scan-title">Analizando</p>
+        <p class="scan-sub" id="scan-rubro-label">tu proceso comercial</p>
+        <div class="progress-steps" id="progress-steps"></div>
+    </div>
+</section>
+
+<!-- RESULTS -->
+<section id="results-section">
+    <button class="new-calc-btn" onclick="resetCalc()"><i class="fa-solid fa-rotate-left"></i> Volver a calcular</button>
+
+    <div class="real-data-banner">
+        <i class="fa-solid fa-database"></i>
+        <span>Estimación basada en benchmarks de productividad comercial de PyMEs B2B. Ajustada a tus datos.</span>
+    </div>
+
+    <!-- LOSS HERO -->
+    <div class="loss-hero">
+        <div class="score-ring-wrap">
+            <svg width="180" height="180" viewBox="0 0 180 180">
+                <circle class="score-ring-bg" cx="90" cy="90" r="80"></circle>
+                <circle class="score-ring-fill" id="score-ring" cx="90" cy="90" r="80"></circle>
+            </svg>
+            <div class="score-center">
+                <div class="score-number" id="scoreValue">0</div>
+                <div class="score-label">Madurez<br>digital</div>
+            </div>
+        </div>
+        <div class="loss-info">
+            <div class="loss-tag"><i class="fa-solid fa-arrow-trend-down"></i> &nbsp;Pérdida operativa estimada</div>
+            <div class="loss-amount" id="lossAnnual">USD 0</div>
+            <div class="loss-period">≈ <b id="lossMonthly">USD 0</b> por mes que se escapan de tu operación comercial.</div>
+            <div class="loss-verdict" id="lossVerdict"></div>
+        </div>
+    </div>
+
+    <!-- METRICS -->
+    <div class="metrics-row">
+        <div class="metric-card"><div class="metric-value danger" id="mHours">0</div><div class="metric-label">Horas/año perdidas en tareas manuales</div></div>
+        <div class="metric-card"><div class="metric-value danger" id="mPerVend">USD 0</div><div class="metric-label">Costo por vendedor al año</div></div>
+        <div class="metric-card"><div class="metric-value danger" id="mLeak">USD 0</div><div class="metric-label">Fuga por seguimiento deficiente</div></div>
+        <div class="metric-card"><div class="metric-value danger" id="m3y">USD 0</div><div class="metric-label">Pérdida acumulada a 3 años</div></div>
+    </div>
+
+    <!-- BREAKDOWN -->
+    <div class="section-block">
+        <div class="block-head">
+            <div class="block-icon red"><i class="fa-solid fa-magnifying-glass-dollar"></i></div>
+            <div><div class="block-title">De dónde sale la pérdida</div><div class="block-sub">Las dos fuentes que más drenan tu rentabilidad comercial</div></div>
+        </div>
+        <div class="breakdown-grid">
+            <div class="bd-card">
+                <div class="bd-top"><span class="bd-name"><i class="fa-regular fa-clock" style="color:var(--orange);margin-right:6px;"></i>Tiempo improductivo</span><span class="bd-amount" id="bdTime">USD 0</span></div>
+                <div class="score-bar-wrap"><div class="score-bar bar-poor" id="bdTimeBar"></div></div>
+                <div class="bd-desc" id="bdTimeDesc"></div>
+            </div>
+            <div class="bd-card">
+                <div class="bd-top"><span class="bd-name"><i class="fa-solid fa-filter-circle-xmark" style="color:var(--red);margin-right:6px;"></i>Fuga comercial</span><span class="bd-amount" id="bdLeak">USD 0</span></div>
+                <div class="score-bar-wrap"><div class="score-bar bar-bad" id="bdLeakBar"></div></div>
+                <div class="bd-desc" id="bdLeakDesc"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- PROJECTION -->
+    <div class="section-block">
+        <div class="block-head">
+            <div class="block-icon amber"><i class="fa-solid fa-chart-line"></i></div>
+            <div><div class="block-title">Si no cambia nada</div><div class="block-sub">Pérdida acumulada proyectada manteniendo los procesos actuales</div></div>
+        </div>
+        <div class="proj-row">
+            <div class="proj-item"><span class="proj-year">Año 1</span><div class="proj-track"><div class="proj-fill" id="proj1"></div></div><span class="proj-val" id="proj1v">USD 0</span></div>
+            <div class="proj-item"><span class="proj-year">Año 2</span><div class="proj-track"><div class="proj-fill" id="proj2"></div></div><span class="proj-val" id="proj2v">USD 0</span></div>
+            <div class="proj-item"><span class="proj-year">Año 3</span><div class="proj-track"><div class="proj-fill" id="proj3"></div></div><span class="proj-val" id="proj3v">USD 0</span></div>
+        </div>
+    </div>
+
+    <!-- GATE: desbloquea plan + recomendaciones -->
+    <div class="gate-block" id="gate-block">
+        <div style="font-size:2rem;margin-bottom:10px;">🔓</div>
+        <h3>Tu plan de recuperación está listo</h3>
+        <p>Dejá tu email y te enviamos el informe completo con <b style="color:#fff;">cuánto podés recuperar</b>, el plan recomendado y los pasos concretos para tu rubro.</p>
+        <div class="gate-form">
+            <input type="text" id="gate-name" class="gate-input" placeholder="Tu nombre" autocomplete="off">
+            <input type="email" id="gate-email" class="gate-input" placeholder="tu@email.com" autocomplete="off">
+            <button id="gate-btn" class="btn-gate" onclick="desbloquear()">Ver mi plan de recuperación →</button>
+            <p class="gate-fine">Sin spam. Te llega el informe a tu correo. Podés darte de baja cuando quieras.</p>
+        </div>
+    </div>
+
+    <!-- RECOVERY (locked until gate) -->
+    <div id="locked-zone" class="locked">
+        <div class="section-block">
+            <div class="block-head">
+                <div class="block-icon green"><i class="fa-solid fa-arrow-trend-up"></i></div>
+                <div><div class="block-title">Cuánto podés recuperar</div><div class="block-sub">Con un proceso comercial digitalizado y automatizado</div></div>
+            </div>
+            <div class="recovery-grid">
+                <div class="recovery-card green"><div class="recovery-num" id="recYear">USD 0</div><div class="recovery-lbl">Recuperable estimado por año</div></div>
+                <div class="recovery-card blue"><div class="recovery-num" id="recMonth">USD 0</div><div class="recovery-lbl">Recuperable estimado por mes</div></div>
+            </div>
+            <div class="plan-row">
+                <div>
+                    <div class="plan-tag">Punto de partida recomendado</div>
+                    <div class="plan-name" id="planName">Plan Pro</div>
+                    <div class="plan-price" id="planPrice">USD 2.900 · pago único</div>
+                </div>
+                <div class="plan-payback">
+                    <div class="pb-num" id="paybackMonths">—</div>
+                    <div class="pb-lbl">meses para recuperar la inversión</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="section-block">
+            <div class="block-head">
+                <div class="block-icon blue"><i class="fa-solid fa-list-check"></i></div>
+                <div><div class="block-title">Tus 3 prioridades</div><div class="block-sub">Acciones ordenadas por impacto sobre la pérdida</div></div>
+            </div>
+            <div class="recs-list" id="recsList"></div>
+        </div>
+
+        <!-- Aliado card -->
+        <div class="aliado-card" id="aliado-card" style="display:none;">
+            <div class="ac-top">
+                <div class="ac-avatar" id="ac-avatar">👤</div>
+                <div style="flex:1;min-width:0;">
+                    <div class="ac-tag">Partner certificado · Avanza Digital</div>
+                    <div class="ac-name" id="ac-name"></div>
+                    <div class="ac-titular" id="ac-titular"></div>
+                </div>
+            </div>
+            <a class="ac-wa" id="ac-wa" href="#" target="_blank" style="display:none;"><i class="fab fa-whatsapp"></i> Hablar con <span id="ac-wa-name"></span></a>
+        </div>
+
+        <!-- CTA -->
+        <div class="cta-box">
+            <h2 id="cta-headline">Frená la pérdida</h2>
+            <p>Un diagnóstico gratuito de 15 minutos y te mostramos exactamente cómo recuperar ese dinero en tu operación.</p>
+            <div class="cta-buttons">
+                <a href="index.html#contacto" id="cta-primary" class="btn-primary-cta"><i class="fa-solid fa-calendar-check"></i> Diagnóstico gratuito de 15 min</a>
+                <a href="index.html#servicios" class="btn-secondary-cta">Ver planes <i class="fa-solid fa-arrow-right"></i></a>
+            </div>
+        </div>
+
+        <div class="share-bar">
+            <span class="share-text">¿Conocés a alguien que esté perdiendo plata así?</span>
+            <div class="share-actions">
+                <button class="share-btn wpp" onclick="compartirWpp()"><i class="fab fa-whatsapp"></i> Compartir</button>
+                <button class="share-btn" onclick="copiarLink()"><i class="fa-regular fa-copy"></i> Copiar link</button>
+            </div>
+        </div>
+    </div>
+</section>
+
+<div class="watermark">Herramienta gratuita de <a href="index.html">Avanza Digital</a> · Diagnóstico comercial B2B industrial · Las cifras son estimaciones orientativas.</div>
+
+<footer>
+    <div class="footer-links">
+        <a href="index.html">Inicio</a>
+        <a href="recursos.html">Recursos</a>
+        <a href="auditoria-digital.html">Auditoría Digital</a>
+        <a href="alianzas.html">Programa de Aliados</a>
+        <a href="terminos-aliados.html">Términos</a>
+    </div>
+    <p style="color:var(--text-dim);font-size:0.8rem;">&copy; 2026 Avanza Digital.</p>
+</footer>
+
+<script>
+    // ── Estado ────────────────────────────────────────────────────────────────
+    window._calcRef = '';
+    var R = {}; // resultados calculados
+
+    var RUBRO_LABEL = {
+        metal:'Metalúrgica / Manufactura', agro:'Agro / Maquinaria', logistica:'Logística / Transporte',
+        servicios:'Servicios B2B / Consultoría', comercio:'Comercio / Distribución B2B',
+        construccion:'Construcción / Obras', generic:'tu rubro'
+    };
+
+    var PLANS = [
+        { name:'Plan Base',        price:1050, label:'USD 1.050 · pago único' },
+        { name:'Plan Pro',         price:2900, label:'USD 2.900 · pago único' },
+        { name:'Plan Industrial',  price:4900, label:'USD 4.900 · pago único' },
+        { name:'Estratégico 360',  price:7500, label:'USD 7.500 · pago único' }
+    ];
+
+    function fmt(n){ return 'USD ' + Math.round(n).toLocaleString('es-AR'); }
+    function fmtNum(n){ return Math.round(n).toLocaleString('es-AR'); }
+
+    function scoreClasses(score){
+        if(score>=80) return {ring:'ring-excellent',txt:'score-excellent'};
+        if(score>=65) return {ring:'ring-good',txt:'score-good'};
+        if(score>=45) return {ring:'ring-medium',txt:'score-medium'};
+        if(score>=30) return {ring:'ring-poor',txt:'score-poor'};
+        return {ring:'ring-bad',txt:'score-bad'};
+    }
+
+    // Animación de conteo
+    function countUp(el, to, opts){
+        opts = opts || {};
+        var dur = opts.dur || 1400, money = opts.money !== false;
+        var start = null;
+        function step(ts){
+            if(!start) start = ts;
+            var p = Math.min((ts-start)/dur, 1);
+            var eased = 1 - Math.pow(1-p, 3);
+            var val = to * eased;
+            el.textContent = money ? fmt(val) : fmtNum(val);
+            if(p<1) requestAnimationFrame(step);
+            else el.textContent = money ? fmt(to) : fmtNum(to);
+        }
+        requestAnimationFrame(step);
+    }
+
+    // Slider
+    document.getElementById('adminHours').addEventListener('input', function(){
+        document.getElementById('hoursDisplay').innerText = this.value + (this.value==='1'?' hora / vendedor':' horas / vendedor');
+    });
+
+    // ── Cálculo ─────────────────────────────────────────────────────────────────
+    function computar(){
+        var revenue = parseFloat(document.getElementById('revenue').value) || 0;
+        var hours   = parseFloat(document.getElementById('adminHours').value) || 0;
+        var catalog = parseInt((document.querySelector('input[name="catalog"]:checked')||{value:0}).value);
+        var vendQty = parseInt((document.querySelector('input[name="vendedores"]:checked')||{value:1}).value);
+        var segVal  = (document.querySelector('input[name="seguimiento"]:checked')||{value:'no'}).value;
+        var rubro   = document.getElementById('rubro').value || 'generic';
+
+        // Costo de oportunidad del tiempo manual: fracción de la jornada de venta
+        // que se pierde en tareas administrativas, valuada sobre la facturación.
+        // (La facturación por vendedor x cantidad de vendedores = facturación total,
+        //  por eso la cantidad de vendedores no infla el costo de oportunidad: se
+        //  refleja en las HORAS perdidas del equipo, métrica operativa aparte.)
+        var fracTiempo    = Math.min(1, hours/8);
+        var perdidaTiempo = revenue * 12 * fracTiempo * 0.3;                  // costo de oportunidad anual
+        var horasAnio     = hours * 22 * 12 * vendQty;                        // horas/año que pierde el equipo
+
+        var leakFactor = segVal==='no' ? 0.12 : (segVal==='aveces' ? 0.06 : 0.015);
+        var fugaSeguimiento = revenue * 12 * leakFactor;                      // ingresos que se escapan por mal seguimiento
+
+        var perdidaAnual = perdidaTiempo + fugaSeguimiento;
+        var perdidaMensual = perdidaAnual/12;
+        var perdida3 = perdidaAnual * 3;
+        var perVend = vendQty ? perdidaAnual/vendQty : perdidaAnual;
+
+        var catScore  = catalog * 0.8;                                        // 0 / 12 / 24
+        var segScore  = segVal==='no' ? 0 : (segVal==='aveces' ? 11 : 20);
+        var hoursBonus = Math.max(0, 12 - hours*1.6);                         // jornada limpia suma
+        var score = Math.max(8, Math.min(92, Math.round(28 + catScore + segScore + hoursBonus)));
+
+        var recuperable = perdidaAnual * 0.62;
+        var recMensual = recuperable/12;
+
+        // Plan recomendado por facturación, ajustado por score
+        var planIdx;
+        if(revenue < 6000) planIdx = 0;
+        else if(revenue < 18000) planIdx = 1;
+        else if(revenue < 45000) planIdx = 2;
+        else planIdx = 3;
+        if(score < 35 && planIdx > 0) planIdx -= 1;          // muy crudo → empezar más liviano
+        var plan = PLANS[planIdx];
+        var payback = recMensual > 0 ? Math.max(1, Math.ceil(plan.price / recMensual)) : 0;
+
+        return {
+            revenue:revenue, hours:hours, catalog:catalog, vendQty:vendQty, seg:segVal, rubro:rubro,
+            perdidaTiempo:perdidaTiempo, horasAnio:horasAnio, fugaSeguimiento:fugaSeguimiento,
+            perdidaAnual:perdidaAnual, perdidaMensual:perdidaMensual, perdida3:perdida3, perVend:perVend,
+            score:score, recuperable:recuperable, recMensual:recMensual,
+            plan:plan, payback:payback, leakFactor:leakFactor
+        };
+    }
+
+    function iniciarCalculo(){
+        var revenue = parseFloat(document.getElementById('revenue').value) || 0;
+        if(!revenue){ alert('Ingresá tu facturación mensual para poder calcular.'); document.getElementById('revenue').focus(); return; }
+
+        R = computar();
+
+        // Mostrar scanner
+        document.getElementById('hero-section').style.display = 'none';
+        document.getElementById('form-wrap').style.display = 'none';
+        document.getElementById('loading-section').style.display = 'block';
+        document.getElementById('scan-rubro-label').textContent = RUBRO_LABEL[R.rubro] || 'tu proceso comercial';
+        window.scrollTo({top:0, behavior:'smooth'});
+
+        var steps = [
+            {icon:'fa-clock', text:'Midiendo el costo del tiempo manual'},
+            {icon:'fa-filter-circle-xmark', text:'Estimando fuga de oportunidades'},
+            {icon:'fa-gauge-high', text:'Calculando madurez digital'},
+            {icon:'fa-arrow-trend-up', text:'Armando tu plan de recuperación'}
+        ];
+        var cont = document.getElementById('progress-steps');
+        cont.innerHTML = '';
+        steps.forEach(function(s,i){
+            var d = document.createElement('div');
+            d.className = 'step-item'; d.id = 'step-'+i;
+            d.innerHTML = '<div class="step-icon"><i class="fa-solid '+s.icon+'"></i></div><div class="step-text">'+s.text+'</div><div class="step-status">en espera</div>';
+            cont.appendChild(d);
+        });
+
+        var delay = 520;
+        steps.forEach(function(s,i){
+            setTimeout(function(){
+                if(i>0){ var prev=document.getElementById('step-'+(i-1)); prev.className='step-item done'; prev.querySelector('.step-status').textContent='listo'; prev.querySelector('.step-icon').innerHTML='<i class="fa-solid fa-check"></i>'; }
+                var cur=document.getElementById('step-'+i); cur.className='step-item active'; cur.querySelector('.step-status').textContent='analizando…';
+            }, delay*(i+1));
+        });
+        setTimeout(function(){
+            var last=document.getElementById('step-'+(steps.length-1)); last.className='step-item done'; last.querySelector('.step-status').textContent='listo'; last.querySelector('.step-icon').innerHTML='<i class="fa-solid fa-check"></i>';
+            setTimeout(renderResultados, 360);
+        }, delay*(steps.length+1));
+    }
+
+    function renderResultados(){
+        document.getElementById('loading-section').style.display = 'none';
+        document.getElementById('results-section').style.display = 'block';
+        window.scrollTo({top:0, behavior:'smooth'});
+
+        var sc = scoreClasses(R.score);
+
+        // Anillo de score
+        var ring = document.getElementById('score-ring');
+        ring.setAttribute('class', 'score-ring-fill ' + sc.ring);
+        var circ = 502; // 2*pi*80
+        setTimeout(function(){ ring.style.strokeDashoffset = circ - (circ * R.score/100); }, 120);
+        var scoreEl = document.getElementById('scoreValue');
+        scoreEl.className = 'score-number ' + sc.txt;
+        countUp(scoreEl, R.score, {money:false, dur:1600});
+
+        // Pérdida
+        countUp(document.getElementById('lossAnnual'), R.perdidaAnual, {dur:1600});
+        document.getElementById('lossMonthly').textContent = fmt(R.perdidaMensual);
+
+        var verdict;
+        if(R.score < 45){
+            verdict = 'Tu operación comercial es casi enteramente manual. Cada mes que pasa sin digitalizar, esa cifra se repite — y se acumula. La buena noticia: es el escenario con mayor margen de recuperación rápida.';
+        } else if(R.score < 65){
+            verdict = 'Tenés una base digital incipiente, pero la falta de integración y de seguimiento sistemático sigue drenando tiempo y oportunidades. Con automatización dirigida, gran parte de esa pérdida es recuperable.';
+        } else {
+            verdict = 'Tu proceso ya tiene estructura. La pérdida que queda viene del último tramo sin automatizar: seguimiento, scoring y métricas en tiempo real. Es optimización fina, pero a tu escala sigue siendo plata real.';
+        }
+        document.getElementById('lossVerdict').textContent = verdict;
+
+        // Métricas
+        countUp(document.getElementById('mHours'), R.horasAnio, {money:false, dur:1300});
+        countUp(document.getElementById('mPerVend'), R.perVend, {dur:1300});
+        countUp(document.getElementById('mLeak'), R.fugaSeguimiento, {dur:1300});
+        countUp(document.getElementById('m3y'), R.perdida3, {dur:1300});
+
+        // Desglose
+        var total = R.perdidaAnual || 1;
+        document.getElementById('bdTime').textContent = fmt(R.perdidaTiempo);
+        document.getElementById('bdLeak').textContent = fmt(R.fugaSeguimiento);
+        setTimeout(function(){
+            document.getElementById('bdTimeBar').style.width = Math.round(R.perdidaTiempo/total*100) + '%';
+            document.getElementById('bdLeakBar').style.width = Math.round(R.fugaSeguimiento/total*100) + '%';
+        }, 200);
+        document.getElementById('bdTimeDesc').textContent = R.vendQty + (R.vendQty===1?' vendedor pierde ':' vendedores pierden ') + R.hours + 'h/día en carga manual, cotizaciones y seguimiento administrativo — tiempo que no se dedica a vender.';
+        var segTxt = R.seg==='no' ? 'Sin seguimiento sistemático, una porción de los leads se enfría y se pierde antes de cerrar.' : (R.seg==='aveces' ? 'El seguimiento irregular deja escapar oportunidades que ya estaban casi cerradas.' : 'Aún con CRM, un pequeño porcentaje se pierde por demoras en la respuesta.');
+        document.getElementById('bdLeakDesc').textContent = segTxt + ' Estimado: ' + Math.round(R.leakFactor*100) + '% de la facturación anual.';
+
+        // Proyección
+        document.getElementById('proj1v').textContent = fmt(R.perdidaAnual);
+        document.getElementById('proj2v').textContent = fmt(R.perdidaAnual*2);
+        document.getElementById('proj3v').textContent = fmt(R.perdida3);
+        setTimeout(function(){
+            document.getElementById('proj1').style.width = '33%';
+            document.getElementById('proj2').style.width = '66%';
+            document.getElementById('proj3').style.width = '100%';
+        }, 250);
+
+        // Recovery + plan (en zona bloqueada)
+        document.getElementById('recYear').textContent = fmt(R.recuperable);
+        document.getElementById('recMonth').textContent = fmt(R.recMensual);
+        document.getElementById('planName').textContent = R.plan.name;
+        document.getElementById('planPrice').textContent = R.plan.label;
+        document.getElementById('paybackMonths').textContent = R.payback ? '~' + R.payback : '—';
+
+        // Recomendaciones dinámicas
+        renderRecs();
+
+        // Headline CTA
+        document.getElementById('cta-headline').textContent = 'Recuperá ' + fmt(R.recuperable) + ' al año';
+    }
+
+    function renderRecs(){
+        var recs = [];
+        if(R.catalog === 0){
+            recs.push({p:'alta', t:'Centralizá pedidos y cotizaciones', d:'Pasar del WhatsApp suelto a un sistema con catálogo y cotización digital elimina la mayor parte del tiempo administrativo y los errores de carga.'});
+        } else if(R.catalog === 15){
+            recs.push({p:'alta', t:'Automatizá la cotización', d:'El Email + PDF manual sigue consumiendo horas. Un cotizador conectado genera propuestas en minutos y deja registro de cada una.'});
+        } else {
+            recs.push({p:'media', t:'Integrá tu sistema con el resto del proceso', d:'Ya tenés base digital: el próximo salto es conectarla con seguimiento y métricas para que no queden islas.'});
+        }
+        if(R.seg === 'no'){
+            recs.push({p:'alta', t:'Implementá seguimiento sistemático (CRM)', d:'Es la fuga más cara: ' + fmt(R.fugaSeguimiento) + '/año. Un CRM con recordatorios asegura que ningún lead caliente se enfríe.'});
+        } else if(R.seg === 'aveces'){
+            recs.push({p:'media', t:'Sistematizá el seguimiento', d:'Pasar de "a veces" a un flujo con recordatorios automáticos recupera buena parte de los ' + fmt(R.fugaSeguimiento) + '/año que hoy se escapan.'});
+        } else {
+            recs.push({p:'baja', t:'Sumá lead scoring y respuesta rápida', d:'Con CRM ya andás bien: priorizar por scoring y acortar el tiempo de primera respuesta cierra la fuga que queda.'});
+        }
+        if(R.hours >= 4){
+            recs.push({p:'media', t:'Recuperá horas del equipo', d:'Con ' + fmtNum(R.horasAnio) + ' horas/año en tareas manuales, automatizar lo repetitivo libera tiempo de venta real sin sumar personal.'});
+        } else {
+            recs.push({p:'baja', t:'Medí el proceso en tiempo real', d:'Con un tablero de métricas detectás cuellos de botella antes de que se vuelvan pérdida.'});
+        }
+
+        var html = '';
+        recs.forEach(function(r){
+            html += '<div class="rec-item"><span class="rec-priority priority-'+r.p+'">'+r.p+'</span><div class="rec-content"><h4>'+r.t+'</h4><p>'+r.d+'</p></div></div>';
+        });
+        document.getElementById('recsList').innerHTML = html;
+    }
+
+    function resetCalc(){
+        document.getElementById('results-section').style.display = 'none';
+        document.getElementById('loading-section').style.display = 'none';
+        document.getElementById('hero-section').style.display = 'block';
+        document.getElementById('form-wrap').style.display = 'block';
+        // re-bloquear la zona del plan
+        document.getElementById('locked-zone').classList.add('locked');
+        document.getElementById('gate-block').style.display = 'block';
+        var b = document.getElementById('gate-btn'); b.disabled=false; b.textContent='Ver mi plan de recuperación →';
+        document.getElementById('score-ring').style.strokeDashoffset = 502;
+        window.scrollTo({top:0, behavior:'smooth'});
+    }
+
+    // ── Gate: captura lead (atribuido al aliado) y desbloquea ──────────────────
+    function desbloquear(){
+        var name  = document.getElementById('gate-name').value.trim();
+        var email = document.getElementById('gate-email').value.trim();
+        if(!email || email.indexOf('@')<0){
+            document.getElementById('gate-email').style.borderColor = 'var(--red)';
+            document.getElementById('gate-email').focus();
+            return;
+        }
+        var btn = document.getElementById('gate-btn');
+        btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Generando tu plan…';
+
+        var ref = window._calcRef || '';
+        var recurso = 'Calculadora Ineficiencia · ' + (RUBRO_LABEL[R.rubro]||'') + ' · pérdida ' + fmt(R.perdidaAnual) + ' · score ' + R.score + ' · plan ' + R.plan.name;
+        var params = new URLSearchParams({ fuente:'recursos', email:email, nombre:name||'', recurso:recurso, ref_code:ref });
+
+        fetch('/leads/capturar?'+params, { method:'POST' })
+            .catch(function(e){ console.warn('Lead capture error:', e); })
+            .finally(function(){
+                document.getElementById('gate-block').style.display = 'none';
+                document.getElementById('locked-zone').classList.remove('locked');
+                document.getElementById('locked-zone').scrollIntoView({ behavior:'smooth', block:'start' });
+            });
+    }
+
+    // ── Compartir ───────────────────────────────────────────────────────────────
+    function compartirWpp(){
+        var txt = 'Calculé la ineficiencia comercial de mi empresa con la herramienta de Avanza Digital: pérdida estimada de ' + fmt(R.perdidaAnual) + '/año. Probala gratis: ' + window.location.href;
+        window.open('https://wa.me/?text=' + encodeURIComponent(txt), '_blank');
+    }
+    function copiarLink(){
+        navigator.clipboard.writeText(window.location.href).then(function(){
+            var b = event.target.closest('.share-btn'); var old=b.innerHTML;
+            b.innerHTML = '<i class="fa-solid fa-check"></i> Copiado'; setTimeout(function(){ b.innerHTML=old; }, 1800);
+        });
+    }
+
+    // ── Tracking de aliado (?ref=) — mismo mecanismo que la auditoría ──────────
+    (function(){
+        var params = new URLSearchParams(window.location.search);
+        var ref = params.get('ref') || localStorage.getItem('avanza_ref');
+        if(!ref) return;
+        window._calcRef = ref;
+        localStorage.setItem('avanza_ref', ref);
+
+        fetch('/aliados/wa-publica/' + encodeURIComponent(ref))
+            .then(function(r){ return r.json(); })
+            .then(function(data){
+                if(!data || !data.es_aliado || !data.nombre) return;
+                var bar = document.getElementById('aliado-bar');
+                var barNombre = document.getElementById('aliado-bar-nombre');
+                if(bar && barNombre){ barNombre.textContent = data.nombre; bar.style.display = 'block'; }
+
+                var card = document.getElementById('aliado-card');
+                if(card){
+                    if(data.foto_url){ document.getElementById('ac-avatar').innerHTML = '<img src="'+data.foto_url+'" alt="'+data.nombre+'" style="width:100%;height:100%;object-fit:cover;">'; }
+                    document.getElementById('ac-name').textContent = data.nombre;
+                    document.getElementById('ac-titular').textContent = data.titular || data.bio || '';
+                    if(data.whatsapp){
+                        var first = (data.nombre||'').split(' ')[0];
+                        var wa = document.getElementById('ac-wa');
+                        wa.href = 'https://wa.me/' + data.whatsapp; wa.style.display = 'inline-flex';
+                        document.getElementById('ac-wa-name').textContent = first;
+                        var ctaP = document.getElementById('cta-primary');
+                        if(ctaP){ ctaP.href = 'https://wa.me/' + data.whatsapp; ctaP.target = '_blank'; ctaP.innerHTML = '<i class="fab fa-whatsapp"></i> Hablar con ' + first; }
+                    }
+                    card.style.display = 'block';
+                }
+            })
+            .catch(function(){});
+    })();
+</script>
+</body>
+</html>

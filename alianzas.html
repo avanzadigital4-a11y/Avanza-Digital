@@ -297,9 +297,15 @@
       // Captura ?ref= de la URL y lo guarda en localStorage
       (function() {
         const params = new URLSearchParams(window.location.search);
-        const ref = params.get('ref');
+        const ref = params.get('ref') || localStorage.getItem('avanza_ref');
         if (ref) {
           localStorage.setItem('avanza_ref', ref);
+          // Propaga ?ref= a los links internos (canales + portal) para no perder
+          // la atribución en la URL al avanzar por el embudo. El localStorage ya
+          // es el respaldo; esto hace que el identificador viaje también visible.
+          document.querySelectorAll('a[href*="alianzas-canal1"],a[href*="alianzas-canal2"],a[href*="portal.html"],a[href*="calculadora-ineficiencia"],a[href*="auditoria-digital"]').forEach(function(a){
+            try { var u = new URL(a.href, window.location.href); u.searchParams.set('ref', ref); a.href = u.toString(); } catch(e){}
+          });
           const banner = document.createElement('div');
           banner.style.cssText = 'position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:rgba(74,222,128,0.12);border:1px solid rgba(74,222,128,0.3);color:#4ade80;padding:10px 20px;border-radius:50px;font-size:0.82rem;font-family:Inter,sans-serif;z-index:9999;backdrop-filter:blur(10px);white-space:nowrap;';
           banner.innerHTML = '<i class="fa-solid fa-handshake" style="margin-right:8px;"></i>Accediste a través de un aliado Avanza';

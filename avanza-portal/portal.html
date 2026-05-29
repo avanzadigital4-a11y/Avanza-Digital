@@ -1138,6 +1138,37 @@
   </div>
 </div>
 
+<div class="modal-overlay" id="modal-recuperar-pass">
+  <div class="onboarding-box" style="max-width:460px;padding:0;">
+    <div style="border-bottom:1px solid var(--border);padding:18px 24px;display:flex;justify-content:space-between;align-items:center;">
+      <h3 style="font-size:1rem;font-weight:800;margin:0;">
+        <i class="fa-solid fa-key" style="color:var(--primary);"></i> &nbsp;Recuperar contraseña
+      </h3>
+      <button onclick="document.getElementById('modal-recuperar-pass').classList.remove('open')" style="background:transparent;border:none;color:var(--text-muted);font-size:1.4rem;cursor:pointer;">&times;</button>
+    </div>
+    <div style="padding:24px;">
+      <p style="font-size:.88rem;color:var(--text-muted);margin-bottom:18px;line-height:1.6;">
+        Ingresá el email de tu cuenta. Si existe, te mandamos un link para crear una nueva contraseña. El link vence en <strong>1 hora</strong>.
+      </p>
+      <label style="font-size:.75rem;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;display:block;margin-bottom:6px;">Email</label>
+      <input type="email" id="rec-pass-email" placeholder="tu@email.com"
+             style="width:100%;background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:var(--radius-sm);padding:11px 14px;color:var(--text);font-size:.9rem;font-family:'Inter',sans-serif;outline:none;margin-bottom:14px;"
+             onkeydown="if(event.key==='Enter')enviarRecuperacionPass()">
+      <div id="rec-pass-estado" style="font-size:.82rem;min-height:20px;margin-bottom:14px;"></div>
+      <div style="display:flex;gap:10px;justify-content:flex-end;">
+        <button onclick="document.getElementById('modal-recuperar-pass').classList.remove('open')"
+                style="background:transparent;border:1px solid var(--border);color:var(--text-muted);border-radius:8px;padding:10px 18px;font-weight:600;cursor:pointer;font-size:.85rem;">
+          Cancelar
+        </button>
+        <button onclick="enviarRecuperacionPass()" id="btn-enviar-rec"
+                style="background:var(--primary);color:white;border:none;border-radius:8px;padding:10px 20px;font-weight:800;cursor:pointer;font-size:.85rem;">
+          <i class="fa-solid fa-paper-plane"></i> Enviar link
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <div id="portal-screen">
   <nav class="navbar-floating">
     <a href="index.html" class="nav-logo"><i class="fa-solid fa-layer-group"></i> Avanza</a>
@@ -2266,6 +2297,29 @@
           <button onclick="copiarMensajeWpp()" style="background:transparent; color:var(--text-muted); border:1px solid var(--border); padding:8px 16px; border-radius:6px; font-size:0.8rem; margin-top:12px; cursor:pointer; transition:all 0.2s;"><i class="fa-regular fa-copy"></i> Copiar plantilla de mensaje</button>
         </div>
       </div>
+
+      <div class="bento-box" style="margin-bottom:24px;">
+        <h3 style="font-size:1.1rem;font-weight:800;margin-bottom:8px;"><i class="fa-solid fa-calculator" style="color:var(--primary);"></i> Herramienta: Calculadora de Ineficiencia Comercial</h3>
+        <p style="color:var(--text-muted);font-size:0.9rem;margin-bottom:20px;">Otro disparador de conversación para prospectar en frío: el cliente calcula en 2 minutos cuánto pierde por mes con procesos manuales. Cuando deja su email, <strong>el lead queda asignado a tu cuenta automáticamente.</strong></p>
+
+        <div class="ref-card" style="background:rgba(59,130,246,0.05); border:1px solid rgba(59,130,246,0.2);">
+          <div style="flex:1;">
+            <div class="ref-label" style="color:var(--primary);"><i class="fa-solid fa-share-nodes"></i> &nbsp;Tu enlace único de Calculadora</div>
+            <div class="ref-url" id="d-calclink" style="color:var(--text);">Cargando...</div>
+          </div>
+          <button class="btn-copy" style="background:var(--primary);color:#fff;" onclick="copiarCalcLink()"><i class="fa-solid fa-copy"></i> Copiar enlace</button>
+        </div>
+
+        <div style="background:rgba(255,255,255,0.03); padding:20px; border-radius:10px; border:1px solid var(--border);">
+          <h4 style="font-size:0.85rem; margin-bottom:12px; display:flex; align-items:center; gap:8px;"><i class="fa-brands fa-whatsapp" style="color:var(--green);font-size:1.2rem;"></i> Mensaje sugerido para WhatsApp/Email:</h4>
+          <div style="background:rgba(0,0,0,0.3); padding:16px; border-radius:8px; border-left:3px solid var(--primary);">
+            <p style="font-size:0.85rem; color:var(--text-dim); font-style:italic; line-height:1.6;" id="d-mensaje-calc">
+              "Hola [Nombre], te comparto una calculadora gratuita que arma un diagnóstico en 2 minutos: te muestra cuánto dinero pierde [Empresa] por mes por tareas comerciales manuales.<br><br>Es solo para que tengan el número real, sin compromiso:<br><br><span style="color:var(--primary);" id="d-calc-link-msg">...</span>"
+            </p>
+          </div>
+          <button onclick="copiarMensajeCalc()" style="background:transparent; color:var(--text-muted); border:1px solid var(--border); padding:8px 16px; border-radius:6px; font-size:0.8rem; margin-top:12px; cursor:pointer; transition:all 0.2s;"><i class="fa-regular fa-copy"></i> Copiar plantilla de mensaje</button>
+        </div>
+      </div>
     </div>
 
     <!-- ══════════════════════════════════════════════════════════════════════
@@ -3224,36 +3278,6 @@
 <!-- ══════════════════════════════════════════════════════════════════════
      MODAL — RECUPERAR CONTRASEÑA (solicitar email)
      ══════════════════════════════════════════════════════════════════════ -->
-<div class="modal-overlay" id="modal-recuperar-pass">
-  <div class="onboarding-box" style="max-width:460px;padding:0;">
-    <div style="border-bottom:1px solid var(--border);padding:18px 24px;display:flex;justify-content:space-between;align-items:center;">
-      <h3 style="font-size:1rem;font-weight:800;margin:0;">
-        <i class="fa-solid fa-key" style="color:var(--primary);"></i> &nbsp;Recuperar contraseña
-      </h3>
-      <button onclick="document.getElementById('modal-recuperar-pass').classList.remove('open')" style="background:transparent;border:none;color:var(--text-muted);font-size:1.4rem;cursor:pointer;">&times;</button>
-    </div>
-    <div style="padding:24px;">
-      <p style="font-size:.88rem;color:var(--text-muted);margin-bottom:18px;line-height:1.6;">
-        Ingresá el email de tu cuenta. Si existe, te mandamos un link para crear una nueva contraseña. El link vence en <strong>1 hora</strong>.
-      </p>
-      <label style="font-size:.75rem;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;display:block;margin-bottom:6px;">Email</label>
-      <input type="email" id="rec-pass-email" placeholder="tu@email.com"
-             style="width:100%;background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:var(--radius-sm);padding:11px 14px;color:var(--text);font-size:.9rem;font-family:'Inter',sans-serif;outline:none;margin-bottom:14px;"
-             onkeydown="if(event.key==='Enter')enviarRecuperacionPass()">
-      <div id="rec-pass-estado" style="font-size:.82rem;min-height:20px;margin-bottom:14px;"></div>
-      <div style="display:flex;gap:10px;justify-content:flex-end;">
-        <button onclick="document.getElementById('modal-recuperar-pass').classList.remove('open')"
-                style="background:transparent;border:1px solid var(--border);color:var(--text-muted);border-radius:8px;padding:10px 18px;font-weight:600;cursor:pointer;font-size:.85rem;">
-          Cancelar
-        </button>
-        <button onclick="enviarRecuperacionPass()" id="btn-enviar-rec"
-                style="background:var(--primary);color:white;border:none;border-radius:8px;padding:10px 20px;font-weight:800;cursor:pointer;font-size:.85rem;">
-          <i class="fa-solid fa-paper-plane"></i> Enviar link
-        </button>
-      </div>
-    </div>
-  </div>
-</div>
 
 <!-- ══════════════════════════════════════════════════════════════════════
      MODAL — NUEVA CONTRASEÑA (después de click en el link del email)
@@ -5147,6 +5171,12 @@ function renderDashboard() {
 
   document.getElementById('d-auditlink').textContent = linkAuditoria;
 
+  const linkCalculadora = `https://avanzadigital.digital/calculadora-ineficiencia?ref=${aliado.ref_code}`;
+  const calcEl = document.getElementById('d-calclink');
+  if (calcEl) calcEl.textContent = linkCalculadora;
+  const calcMsgEl = document.getElementById('d-calc-link-msg');
+  if (calcMsgEl) calcMsgEl.textContent = linkCalculadora;
+
   // Card de "Personalizá tu link": visible solo si todavía no personalizó.
   // Una vez que personaliza, queda oculta para siempre.
   const persoCard = document.getElementById('personalizar-username-card');
@@ -5342,6 +5372,23 @@ async function subirFotoCloudinary(input) {
 function copiarAuditLink() {
   navigator.clipboard.writeText(document.getElementById('d-auditlink').textContent).then(()=>{
     mostrarToast('Enlace de auditoría copiado', 'green');
+  });
+}
+
+function copiarCalcLink() {
+  const el = document.getElementById('d-calclink');
+  if (!el || el.textContent === 'Cargando...') return;
+  navigator.clipboard.writeText(el.textContent).then(()=>{
+    mostrarToast('Enlace de calculadora copiado', 'green');
+  });
+}
+
+function copiarMensajeCalc() {
+  const link = document.getElementById('d-calclink');
+  if (!link || link.textContent === 'Cargando...') return;
+  const msg = `Hola, te comparto una calculadora gratuita que arma un diagnóstico en 2 minutos: te muestra cuánto dinero pierde tu empresa por mes por tareas comerciales manuales. Es solo para que tengas el número real, sin compromiso: ${link.textContent}`;
+  navigator.clipboard.writeText(msg).then(()=>{
+    mostrarToast('Plantilla de mensaje copiada', 'green');
   });
 }
 

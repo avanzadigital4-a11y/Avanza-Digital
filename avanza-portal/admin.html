@@ -1309,6 +1309,63 @@ tr:hover td { background:rgba(255,255,255,0.02); }
   </div>
 </div>
 
+<!-- MODAL: Resetear contraseña de aliado -->
+<div class="modal-overlay" id="modal-reset-pass">
+  <div class="modal-box" style="max-width:440px;">
+    <button class="modal-close" onclick="cerrarModal('modal-reset-pass')">&times;</button>
+    <div class="modal-title"><i class="fa-solid fa-key" style="color:var(--amber);"></i> &nbsp;Resetear contraseña</div>
+    <div class="modal-sub">Establecé una nueva contraseña de acceso al portal para este aliado.</div>
+
+    <div style="background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:var(--radius-sm);padding:14px 18px;margin-bottom:18px;">
+      <div style="font-size:.75rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;">Aliado</div>
+      <div style="font-weight:700;color:var(--text);" id="rp-nombre">—</div>
+      <div style="font-size:.82rem;color:var(--text-dim);margin-top:2px;" id="rp-email">—</div>
+    </div>
+
+    <div class="form-row">
+      <label><i class="fa-solid fa-lock"></i> &nbsp;Nueva contraseña</label>
+      <div style="position:relative;">
+        <input type="password" id="rp-nueva-pass" placeholder="Mínimo 8 caracteres"
+          style="padding-right:44px;"
+          oninput="validarResetPass()"
+          onkeydown="if(event.key==='Enter')ejecutarResetPass()">
+        <button type="button" onclick="toggleRpPass()"
+          style="position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--text-dim);cursor:pointer;font-size:.9rem;padding:0;">
+          <i class="fa-solid fa-eye" id="rp-eye-icon"></i>
+        </button>
+      </div>
+      <div style="font-size:.75rem;margin-top:6px;display:flex;gap:8px;align-items:center;">
+        <span id="rp-strength-bar" style="display:inline-block;height:4px;width:80px;border-radius:4px;background:var(--border);transition:background .2s;"></span>
+        <span id="rp-strength-label" style="color:var(--text-dim);">—</span>
+      </div>
+    </div>
+
+    <div style="margin-bottom:16px;">
+      <button type="button" class="btn-outline" style="font-size:.8rem;padding:6px 12px;" onclick="sugerirPassword()">
+        <i class="fa-solid fa-shuffle"></i> Generar contraseña segura
+      </button>
+    </div>
+
+    <div id="rp-generada-wrap" style="display:none;background:rgba(59,130,246,0.08);border:1px solid rgba(59,130,246,0.2);border-radius:var(--radius-sm);padding:12px 16px;margin-bottom:16px;">
+      <div style="font-size:.72rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;">Contraseña generada</div>
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;">
+        <code id="rp-pass-display" style="font-size:.95rem;font-weight:700;color:var(--text);letter-spacing:1px;">—</code>
+        <button type="button" class="btn-outline" style="font-size:.75rem;padding:4px 10px;" onclick="copiarPassGenerada()">
+          <i class="fa-solid fa-copy"></i> Copiar
+        </button>
+      </div>
+    </div>
+
+    <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:8px;">
+      <button class="btn-outline" onclick="cerrarModal('modal-reset-pass')"><i class="fa-solid fa-xmark"></i> Cancelar</button>
+      <button class="btn-primary" id="rp-guardar-btn" onclick="ejecutarResetPass()" disabled
+        style="background:linear-gradient(135deg,#f59e0b,#d97706);border-color:transparent;">
+        <i class="fa-solid fa-key"></i> Guardar contraseña
+      </button>
+    </div>
+  </div>
+</div>
+
 <!-- MODAL: Confirmar abono de comisión (§15) -->
 <div class="modal-overlay" id="modal-abonar">
   <div class="modal-box" style="max-width:460px;">
@@ -1816,6 +1873,7 @@ function renderAliados(lista) {
           <button class="btn-outline" title="Ver detalle" onclick="verAliado('${a.codigo}')"><i class="fa-solid fa-eye"></i></button>
           <a href="https://wa.me/${(a.whatsapp||'').replace(/[^0-9]/g,'')}" target="_blank" class="btn-outline" style="text-decoration:none;" title="WhatsApp"><i class="fa-brands fa-whatsapp" style="color:var(--green);"></i></a>
           <button class="btn-outline" style="color:var(--amber); border-color:rgba(250,204,21,0.3);" title="Asignar créditos" onclick="asignarCreditosAliado('${a.codigo}','${a.nombre.replace(/'/g,"\\'")}')"><i class="fa-solid fa-coins"></i></button>
+          <button class="btn-outline" style="color:#60a5fa; border-color:rgba(96,165,250,0.3);" title="Resetear contraseña" onclick="abrirResetPass('${a.email}','${a.nombre.replace(/'/g,"\\'")}')"><i class="fa-solid fa-key"></i></button>
           ${estado !== 'suspendido'
             ? `<button class="btn-red" style="padding:6px 10px;" title="Suspender cuenta" onclick="confirmarAccion('¿Suspender a ${a.nombre}?','El aliado no podrá acceder al portal hasta que lo reactives.','fa-user-slash','red',()=>suspenderAliado('${a.codigo}'))"><i class="fa-solid fa-user-slash"></i></button>`
             : `<button class="btn-green" style="padding:6px 10px;" title="Reactivar cuenta" onclick="confirmarAccion('¿Reactivar a ${a.nombre}?','El aliado podrá volver a acceder al portal.','fa-user-check','green',()=>activarAliado('${a.codigo}'))"><i class="fa-solid fa-user-check"></i></button>`
@@ -1860,6 +1918,98 @@ async function activarAliado(codigo) {
     renderAliados(); renderSuspendidos(); renderDashboard();
   } catch { mostrarToast('Error al reactivar', 'red'); }
 }
+
+// ── RESET CONTRASEÑA ALIADO ──────────────────────────────────────────────────
+let _rpEmail = '';
+
+function abrirResetPass(email, nombre) {
+  _rpEmail = email;
+  document.getElementById('rp-nombre').textContent = nombre;
+  document.getElementById('rp-email').textContent = email;
+  document.getElementById('rp-nueva-pass').value = '';
+  document.getElementById('rp-generada-wrap').style.display = 'none';
+  document.getElementById('rp-pass-display').textContent = '—';
+  document.getElementById('rp-guardar-btn').disabled = true;
+  document.getElementById('rp-strength-bar').style.background = 'var(--border)';
+  document.getElementById('rp-strength-label').textContent = '—';
+  const eyeIcon = document.getElementById('rp-eye-icon');
+  eyeIcon.className = 'fa-solid fa-eye';
+  document.getElementById('rp-nueva-pass').type = 'password';
+  document.getElementById('modal-reset-pass').classList.add('open');
+  setTimeout(() => document.getElementById('rp-nueva-pass').focus(), 120);
+}
+
+function toggleRpPass() {
+  const input = document.getElementById('rp-nueva-pass');
+  const icon = document.getElementById('rp-eye-icon');
+  const isHidden = input.type === 'password';
+  input.type = isHidden ? 'text' : 'password';
+  icon.className = isHidden ? 'fa-solid fa-eye-slash' : 'fa-solid fa-eye';
+}
+
+function validarResetPass() {
+  const val = document.getElementById('rp-nueva-pass').value;
+  const bar = document.getElementById('rp-strength-bar');
+  const lbl = document.getElementById('rp-strength-label');
+  const btn = document.getElementById('rp-guardar-btn');
+  let strength = 0;
+  if (val.length >= 8) strength++;
+  if (/[A-Z]/.test(val)) strength++;
+  if (/[0-9]/.test(val)) strength++;
+  if (/[^A-Za-z0-9]/.test(val)) strength++;
+  const colors = ['var(--border)', '#ef4444', '#f59e0b', '#22c55e', '#10b981'];
+  const labels = ['—', 'Débil', 'Regular', 'Buena', 'Muy buena'];
+  bar.style.background = colors[strength];
+  lbl.textContent = val.length ? labels[strength] : '—';
+  lbl.style.color = strength >= 3 ? colors[strength] : 'var(--text-dim)';
+  btn.disabled = val.length < 8;
+}
+
+function sugerirPassword() {
+  const chars = 'abcdefghijkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789!@#$%';
+  let pass = '';
+  for (let i = 0; i < 14; i++) pass += chars[Math.floor(Math.random() * chars.length)];
+  document.getElementById('rp-nueva-pass').value = pass;
+  document.getElementById('rp-nueva-pass').type = 'text';
+  document.getElementById('rp-eye-icon').className = 'fa-solid fa-eye-slash';
+  document.getElementById('rp-pass-display').textContent = pass;
+  document.getElementById('rp-generada-wrap').style.display = 'block';
+  validarResetPass();
+}
+
+function copiarPassGenerada() {
+  const pass = document.getElementById('rp-pass-display').textContent;
+  navigator.clipboard.writeText(pass).then(() => mostrarToast('Contraseña copiada al portapapeles', 'green'));
+}
+
+async function ejecutarResetPass() {
+  const nuevaPass = document.getElementById('rp-nueva-pass').value.trim();
+  if (nuevaPass.length < 8) { mostrarToast('La contraseña debe tener al menos 8 caracteres', 'red'); return; }
+  const btn = document.getElementById('rp-guardar-btn');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span> Guardando…';
+  try {
+    const r = await apiFetch(`${API}/admin/reset-password-aliado`, {
+      method: 'POST',
+      body: { email: _rpEmail, nueva_password: nuevaPass }
+    });
+    if (!r.ok) {
+      const err = await r.json().catch(() => ({}));
+      mostrarToast(err.detail || `Error al resetear (HTTP ${r.status})`, 'red');
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fa-solid fa-key"></i> Guardar contraseña';
+      return;
+    }
+    const d = await r.json();
+    mostrarToast(`Contraseña de ${d.aliado} actualizada ✓`, 'green');
+    cerrarModal('modal-reset-pass');
+  } catch {
+    mostrarToast('Error de conexión', 'red');
+    btn.disabled = false;
+    btn.innerHTML = '<i class="fa-solid fa-key"></i> Guardar contraseña';
+  }
+}
+// ────────────────────────────────────────────────────────────────────────────
 
 async function eliminarAliado(codigo, nombre) {
   try {
