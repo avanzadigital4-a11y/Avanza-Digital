@@ -7165,6 +7165,11 @@ def auditoria_digital_redirect():
     from fastapi.responses import FileResponse
     return FileResponse("auditoria-digital.html")
 
+@app.get("/calculadora-ineficiencia")
+def calculadora_ineficiencia_redirect():
+    from fastapi.responses import FileResponse
+    return FileResponse("calculadora-ineficiencia.html")
+
 
 # ── Endpoint público: datos del aliado para la auditoría (barra + card) ───────
 @app.get("/aliados/wa-publica/{ref_code}")
@@ -7322,7 +7327,7 @@ def portal_publico_aliado(ref_code: str, db: Session = Depends(get_db)):
     _ciudad = getattr(a, 'ciudad', None) or ''
     # Título SEO: "Gonzalo García · Asesor digital en metalúrgica y agro · Rosario, Argentina"
     _seo_title = f"{titular} · Asesor digital en {_rubros_seo} · {_ciudad + ', ' if _ciudad else ''}{_pais_nombre} | Avanza Digital"[:120]
-    _seo_desc = f"{titular} es partner oficial de Avanza Digital en {_pais_nombre}. Especialista en digitalización de {_rubros_seo}. Contactalo para implementar tu sistema de ventas B2B."[:160]
+    _seo_desc = f"{titular} es partner oficial de Avanza Digital en {_pais_nombre}. Especialista en digitalización de {_rubros_seo}. Contáctalo para implementar tu sistema de ventas B2B."[:160]
     # Badges de rubros para mostrar en el portal
     _rubros_badges_html = ''.join(
         f'<span style="display:inline-block;background:rgba(59,130,246,0.12);color:#93c5fd;border:1px solid rgba(59,130,246,0.2);padding:3px 10px;border-radius:20px;font-size:.72rem;font-weight:600;margin:3px 3px 3px 0;">{r}</span>'
@@ -7493,6 +7498,109 @@ def portal_publico_aliado(ref_code: str, db: Session = Depends(get_db)):
     else:
         _payoneer_banco_html = ""
 
+    # ── Bloques de conversión añadidos (lenguaje neutro) ───────────────────
+    # CSS extra para calculadora de pérdida, tabla comparativa y FAQ.
+    _extra_css = (
+        ".cp-box{background:linear-gradient(135deg,rgba(59,130,246,0.08),rgba(99,102,241,0.05));border:1px solid rgba(59,130,246,0.2);border-radius:16px;padding:26px 22px;margin:28px 0;}"
+        ".cp-box h3{font-size:1.25rem;font-weight:900;margin-bottom:6px;}"
+        ".cp-box .cp-intro{font-size:.9rem;color:#a1a1aa;margin-bottom:20px;}"
+        ".cp-field{margin-bottom:14px;}"
+        ".cp-field label{display:block;font-size:.8rem;font-weight:600;color:#cbd5e1;margin-bottom:6px;}"
+        ".cp-field input{width:100%;padding:12px 14px;background:#0a0a0a;border:1px solid rgba(255,255,255,0.12);border-radius:8px;color:#fff;font-size:1rem;font-family:inherit;}"
+        ".cp-field input:focus{outline:none;border-color:#3b82f6;}"
+        ".cp-calc-btn{width:100%;padding:14px;margin-top:6px;background:#3b82f6;color:#fff;border:none;border-radius:8px;font-weight:800;font-size:.95rem;cursor:pointer;transition:background .2s;}"
+        ".cp-calc-btn:hover{background:#2563eb;}"
+        ".cp-result{display:none;margin-top:20px;text-align:center;padding:22px;background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.25);border-radius:12px;}"
+        ".cp-result .cp-lead{font-size:.78rem;color:#fca5a5;text-transform:uppercase;letter-spacing:1px;font-weight:700;}"
+        ".cp-result .cp-monto{font-size:2.3rem;font-weight:900;color:#f87171;margin:8px 0;}"
+        ".cp-result .cp-foot{font-size:.82rem;color:#a1a1aa;}"
+        ".tabla-comp{width:100%;border-collapse:collapse;margin-top:18px;font-size:.86rem;}"
+        ".tabla-comp th,.tabla-comp td{padding:12px 14px;text-align:left;border-bottom:1px solid rgba(255,255,255,0.07);}"
+        ".tabla-comp thead th{font-size:.68rem;text-transform:uppercase;letter-spacing:1px;color:#71717a;font-weight:700;}"
+        ".tabla-comp td.col-avanza{color:#e2e8f0;font-weight:700;}"
+        ".tabla-comp td.col-trad{color:#71717a;}"
+        ".tabla-comp th.col-avanza{color:#93c5fd;}"
+        ".faq-item{border:1px solid rgba(255,255,255,0.08);border-radius:10px;margin-bottom:10px;background:#0a0a0a;overflow:hidden;}"
+        ".faq-item summary{padding:16px 18px;font-weight:700;font-size:.9rem;cursor:pointer;list-style:none;display:flex;justify-content:space-between;align-items:center;gap:10px;}"
+        ".faq-item summary::-webkit-details-marker{display:none;}"
+        ".faq-item summary::after{content:'+';color:#3b82f6;font-weight:900;font-size:1.2rem;flex-shrink:0;}"
+        ".faq-item[open] summary::after{content:'\\2212';}"
+        ".faq-item .faq-body{padding:0 18px 16px;font-size:.86rem;color:#a1a1aa;line-height:1.6;}"
+    )
+
+    # Calculadora de pérdida interactiva (misma lógica que el home: semanas=50).
+    _calc_html = """
+  <div class="cp-box">
+    <span class="section-label">🧮 Calculadora gratuita</span>
+    <h3>¿Cuánto pierde tu empresa por vender de forma manual?</h3>
+    <p class="cp-intro">Calcula en 10 segundos lo que cuesta cada semana buscar precios, armar presupuestos a mano y responder tarde.</p>
+    <div class="cp-field">
+      <label>Cantidad de vendedores</label>
+      <input type="number" id="cp-vendedores" min="0" placeholder="Ej: 3">
+    </div>
+    <div class="cp-field">
+      <label>Horas por semana perdidas en tareas manuales (buscar precios, armar PDFs)</label>
+      <input type="number" id="cp-horas" min="0" placeholder="Ej: 6">
+    </div>
+    <div class="cp-field">
+      <label>Costo promedio por hora del vendedor (USD)</label>
+      <input type="number" id="cp-costo" min="0" placeholder="Ej: 8">
+    </div>
+    <button class="cp-calc-btn" onclick="calcularPerdida()">Calcular impacto anual &rarr;</button>
+    <div class="cp-result" id="cp-resultado">
+      <div class="cp-lead">Tu empresa pierde cada año</div>
+      <div class="cp-monto" id="cp-monto">USD 0</div>
+      <div class="cp-foot">Solo en tareas administrativas manuales. Un sistema digital recupera buena parte de ese tiempo.</div>
+    </div>
+  </div>
+  <script>
+  function calcularPerdida(){
+    var v = parseFloat(document.getElementById('cp-vendedores').value) || 0;
+    var h = parseFloat(document.getElementById('cp-horas').value) || 0;
+    var c = parseFloat(document.getElementById('cp-costo').value) || 0;
+    var anual = v * h * c * 50;
+    var fmt = new Intl.NumberFormat('en-US', {style:'currency', currency:'USD', minimumFractionDigits:0});
+    document.getElementById('cp-monto').innerText = fmt.format(anual);
+    document.getElementById('cp-resultado').style.display = 'block';
+  }
+  </script>
+"""
+
+    # Tabla comparativa (Avanza vs agencia tradicional).
+    _tabla_html = """
+  <hr class="divider">
+  <section class="section">
+    <div class="section-label">Por qué elegir este sistema</div>
+    <h2>Avanza vs. una agencia web tradicional</h2>
+    <table class="tabla-comp">
+      <thead>
+        <tr><th>Característica</th><th class="col-trad">Agencia tradicional</th><th class="col-avanza">Avanza Digital</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>Objetivo principal</td><td class="col-trad">Diseño estético</td><td class="col-avanza">Generación de clientes</td></tr>
+        <tr><td>Propiedad del código</td><td class="col-trad">Licencia de alquiler</td><td class="col-avanza">100% tuyo (pago único)</td></tr>
+        <tr><td>Integración WhatsApp y CRM</td><td class="col-trad">Plugin básico</td><td class="col-avanza">Conexión nativa</td></tr>
+        <tr><td>Tiempo de implementación</td><td class="col-trad">2 a 3 meses</td><td class="col-avanza">7 a 30 días</td></tr>
+        <tr><td>Cotizaciones</td><td class="col-trad">Manuales</td><td class="col-avanza">Automáticas</td></tr>
+      </tbody>
+    </table>
+  </section>
+"""
+
+    # Preguntas frecuentes (acordeón sin JS, lenguaje neutro).
+    _faq_html = """
+  <hr class="divider">
+  <section class="section">
+    <div class="section-label">Preguntas frecuentes</div>
+    <h2>Lo que más nos consultan</h2>
+    <details class="faq-item"><summary>¿El sistema es mío o lo alquilo?</summary><div class="faq-body">Es 100% tuyo. Trabajamos con modelo de pago único: una vez implementado, el código y la plataforma te pertenecen, a diferencia de las agencias que cobran un alquiler mensual para que sigas usando tu propia web.</div></details>
+    <details class="faq-item"><summary>¿Cuánto tarda la implementación?</summary><div class="faq-body">Depende del plan. El Plan Base puede estar funcionando en 7 días, y los planes más completos entre 20 y 30 días. Te damos una fecha concreta antes de empezar.</div></details>
+    <details class="faq-item"><summary>¿Necesito conocimientos técnicos?</summary><div class="faq-body">No. Nos encargamos de todo el proceso técnico y te entregamos un panel simple para que veas tus consultas y clientes. Además, incluye 3 meses de soporte.</div></details>
+    <details class="faq-item"><summary>¿Hay costos mensuales obligatorios?</summary><div class="faq-body">No son obligatorios. El sistema es de pago único. Si lo deseas, puedes sumar un plan de mantenimiento mensual (hosting, seguridad y mejoras continuas), pero es totalmente opcional.</div></details>
+    <details class="faq-item"><summary>¿Sirve para mi rubro?</summary><div class="faq-body">Trabajamos con PYMEs industriales y de servicios B2B: metalúrgica, agro, logística, construcción, servicios técnicos y más. Si tienes dudas, escríbeme y lo vemos juntos.</div></details>
+  </section>
+"""
+
     html = f"""<!DOCTYPE html>
 <html lang="es"><head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
@@ -7607,7 +7715,7 @@ body{{font-family:Inter,sans-serif;background:#050505;color:#e2e8f0;line-height:
 .btn-primary:disabled{{opacity:.6;cursor:not-allowed;}}
 input[type=text]{{width:100%;padding:12px;border-radius:8px;border:1px solid #444;background:#1a1a1a;color:#fff;font-size:1rem;font-family:Inter,sans-serif;}}
 input[type=text]:focus{{outline:none;border-color:#3b82f6;}}
-</style></head><body>
+</style><style>{_extra_css}</style></head><body>
 <nav class="nav">
   <a class="nav-logo" href="https://avanzadigital.digital">Avanza<span>Digital</span></a>
   <span class="nav-partner-pill">Partner Oficial</span>
@@ -7636,14 +7744,16 @@ input[type=text]:focus{{outline:none;border-color:#3b82f6;}}
     <span class="audit-free-tag">Gratis · Sin spam · Resultado en menos de 30 segundos</span>
   </div>
 
+{_calc_html}
+
   <section class="section">
     <div class="section-label">El problema</div>
     <h2>¿Te suena alguna de estas situaciones?</h2>
     <ul class="problem-list">
       <li>Los presupuestos tardan días en salir y el cliente ya compró en otro lado</li>
-      <li>Dependés del boca a boca — no tenés forma de conseguir clientes nuevos sistemáticamente</li>
+      <li>Dependes del boca a boca y no tienes forma de conseguir clientes nuevos de manera sistemática</li>
       <li>Tu sitio web existe, pero no genera ninguna consulta real</li>
-      <li>No sabés cuántos clientes potenciales perdés por mes por responder tarde</li>
+      <li>No sabes cuántos clientes potenciales pierdes por mes por responder tarde</li>
       <li>Cada vendedor usa su propio método y no hay proceso replicable</li>
     </ul>
   </section>
@@ -7652,7 +7762,7 @@ input[type=text]:focus{{outline:none;border-color:#3b82f6;}}
 
   <section class="section">
     <div class="section-label">La solución</div>
-    <h2>Un sistema que trabaja aunque vos no estés</h2>
+    <h2>Un sistema que trabaja aunque tú no estés</h2>
     <div class="benefit-grid">
       <div class="benefit-card">
         <div class="benefit-icon">⚡</div>
@@ -7667,16 +7777,17 @@ input[type=text]:focus{{outline:none;border-color:#3b82f6;}}
       <div class="benefit-card">
         <div class="benefit-icon">📊</div>
         <div class="benefit-title">Métricas en tiempo real</div>
-        <div class="benefit-desc">CRM liviano integrado. Sabés exactamente de dónde vienen tus clientes y cuánto vale cada canal.</div>
+        <div class="benefit-desc">CRM liviano integrado. Sabes exactamente de dónde vienen tus clientes y cuánto vale cada canal.</div>
       </div>
       <div class="benefit-card">
         <div class="benefit-icon">🔁</div>
         <div class="benefit-title">Sistema replicable</div>
-        <div class="benefit-desc">Proceso documentado que cualquier vendedor puede seguir. Dejás de depender de una sola persona.</div>
+        <div class="benefit-desc">Proceso documentado que cualquier vendedor puede seguir. Dejas de depender de una sola persona.</div>
       </div>
     </div>
   </section>
 
+{_tabla_html}
   <hr class="divider">
 
   <section class="section">
@@ -7709,13 +7820,14 @@ input[type=text]:focus{{outline:none;border-color:#3b82f6;}}
 
   <section class="section" id="planes">
     <div class="section-label">Planes</div>
-    <p class="planes-title">Elegí el plan que le va a tu empresa</p>
+    <p class="planes-title">Elige el plan ideal para tu empresa</p>
     <p class="planes-sub">Implementación completa en 30 días. Pago único, sin costos ocultos.</p>
     {planes_html}
     <div class="garantia-box">
       <h3>✓ Garantía de 3 meses incluida</h3>
       <p>Todos los planes incluyen soporte técnico prioritario los primeros 90 días. Si algo no funciona, lo resolvemos nosotros.</p>
     </div>
+{_faq_html}
   </section>
 
   <div class="footer">
@@ -7729,7 +7841,7 @@ input[type=text]:focus{{outline:none;border-color:#3b82f6;}}
 <div id="modal-overlay" onclick="onOverlayClick(event)" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.8);z-index:100;align-items:center;justify-content:center;padding:16px;">
   <div class="modal-box" onclick="event.stopPropagation()">
     <div id="step-nombre" class="step active">
-      <h3 style="margin:0 0 6px;font-size:1.1rem;font-weight:800;">Completá tus datos para continuar</h3>
+      <h3 style="margin:0 0 6px;font-size:1.1rem;font-weight:800;">Completa tus datos para continuar</h3>
       <p style="color:#a1a1aa;font-size:.85rem;margin:0 0 18px;">Te enviaremos el formulario de inicio del proyecto apenas se confirme el pago.</p>
       <label style="display:block;font-size:.75rem;color:#a1a1aa;margin-bottom:4px;font-weight:700;">Nombre completo *</label>
       <input id="modal-nombre" type="text" placeholder="Tu nombre completo" style="margin-bottom:12px;" onkeydown="if(event.key==='Enter') document.getElementById('modal-email').focus()">
@@ -7743,8 +7855,8 @@ input[type=text]:focus{{outline:none;border-color:#3b82f6;}}
       </div>
     </div>
     <div id="step-moneda" class="step">
-      <h3 style="margin:0 0 6px;font-size:1.1rem;font-weight:800;">¿Cómo querés pagar?</h3>
-      <p style="color:#a1a1aa;font-size:.85rem;margin:0 0 4px;">Elegí tu moneda y método de pago.</p>
+      <h3 style="margin:0 0 6px;font-size:1.1rem;font-weight:800;">¿Cómo quieres pagar?</h3>
+      <p style="color:#a1a1aa;font-size:.85rem;margin:0 0 4px;">Elige tu moneda y método de pago.</p>
       <div class="moneda-options">
         <button class="moneda-btn ars selected" id="opt-ars" onclick="seleccionarMoneda('ars')">
           <div class="icon">🏦</div><div class="label">Pesos ARS</div><div class="sublabel">MercadoPago</div>
@@ -7821,7 +7933,7 @@ input[type=text]:focus{{outline:none;border-color:#3b82f6;}}
       </div>
       {_payoneer_banco_html}
       <p style="font-size:.78rem;color:#71717a;margin:0 0 14px;line-height:1.5;padding:10px;background:rgba(0,0,0,0.4);border-radius:8px;border-left:2px solid rgba(255,163,26,0.5);">
-        Dos formas de pagar: enviá el monto exacto al <strong style="color:#e2e8f0;">email de Payoneer</strong> (si también usás Payoneer) o hacé una <strong style="color:#e2e8f0;">transferencia bancaria en USD</strong> a los datos de arriba desde cualquier banco. Avisale a <strong style="color:#e2e8f0;">{titular}</strong> por WhatsApp en cuanto realices la transferencia. Tu plan se activa en cuanto Avanza confirma el pago (hasta 24hs hábiles).
+        Dos formas de pagar: enviá el monto exacto al <strong style="color:#e2e8f0;">email de Payoneer</strong> (si también usas Payoneer) o haz una <strong style="color:#e2e8f0;">transferencia bancaria en USD</strong> a los datos de arriba desde cualquier banco. Avisale a <strong style="color:#e2e8f0;">{titular}</strong> por WhatsApp en cuanto realices la transferencia. Tu plan se activa en cuanto Avanza confirma el pago (hasta 24hs hábiles).
       </p>
       <div style="display:flex;gap:10px;">
         <button class="btn-cancel" onclick="volverAPaso1()">← Volver</button>
