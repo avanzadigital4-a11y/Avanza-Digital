@@ -3483,6 +3483,13 @@
 
           <div class="cred-dato-row" style="display:flex; justify-content:space-between; align-items:center; gap:8px; padding:10px 12px; background:rgba(255,255,255,0.02); border-radius:8px;">
             <div style="flex:1; min-width:0;">
+              <div style="font-size:.7rem; color:var(--text-dim); margin-bottom:2px;">Titular</div>
+              <div id="cred-usd-titular" style="font-size:.95rem; font-weight:800; color:var(--text);">&mdash;</div>
+            </div>
+          </div>
+
+          <div class="cred-dato-row" style="display:flex; justify-content:space-between; align-items:center; gap:8px; padding:10px 12px; background:rgba(255,255,255,0.02); border-radius:8px;">
+            <div style="flex:1; min-width:0;">
               <div id="cred-usd-etiqueta" style="font-size:.7rem; color:var(--text-dim); margin-bottom:2px;">Destinatario</div>
               <div id="cred-usd-destinatario" style="font-size:.95rem; font-weight:800; color:var(--text); font-family:'Courier New',monospace; word-break:break-all;">—</div>
             </div>
@@ -3497,6 +3504,9 @@
               <div id="cred-usd-red" style="font-size:.92rem; font-weight:700; color:var(--amber);">—</div>
             </div>
           </div>
+
+          <!-- v2.3 — Datos de transferencia bancaria a Payoneer (desde cualquier banco) -->
+          <div id="cred-usd-banco-block" style="display:none; flex-direction:column; gap:8px; margin-top:4px; padding-top:10px; border-top:1px dashed rgba(74,222,128,0.25);"></div>
 
 
         </div>
@@ -6357,6 +6367,52 @@ function getInitials(name) {
   return name.substring(0, 2).toUpperCase();
 }
 
+// ─── Helpers de render del leaderboard (top + ver completo) ───────────────────
+let _lbData = null;          // lista completa del leaderboard
+let _lbExpandido = false;    // ¿mostrar todos o solo el top?
+const LB_TOP_VISIBLE = 10;   // total visible colapsado (incluye el podio top 3)
+
+function _lbRowHtml(item) {
+  const isMe = item.codigo === aliado.codigo;
+  return `
+      <div class="lb-row ${isMe?'is-me':''}">
+        <div class="lb-pos">#${item.posicion}</div>
+        <div class="lb-avatar-mini">${getInitials(item.nombre)}</div>
+        <div class="lb-info">
+          <div class="lb-name">
+            ${item.nombre} ${isMe?'<span class="lb-badge-me">Vos</span>':''}
+            <span class="lb-nivel nivel-${item.nivel}">${item.nivel}</span>
+          </div>
+          <div class="lb-stats">
+            <span><i class="fa-solid fa-chart-line"></i> ${item.ventas_6m} ventas</span>
+            ${item.tasa_cierre!=null ? `<span><i class="fa-solid fa-percent"></i> ${item.tasa_cierre}% cierre</span>` : ''}
+          </div>
+        </div>
+        <div class="lb-money"><i class="fa-solid fa-sack-dollar" style="font-size:0.9rem;color:var(--text-dim);"></i> USD ${item.total_ganado.toLocaleString()}</div>
+      </div>`;
+}
+
+function _pintarListaLeaderboard() {
+  const lb = _lbData; if (!lb) return;
+  const myIdx = lb.findIndex(x => x.codigo === aliado.codigo);
+  const me = lb[myIdx];
+  const resto = lb.slice(3);
+  const visibles = _lbExpandido ? resto : resto.slice(0, LB_TOP_VISIBLE - 3);
+  let html = visibles.map(_lbRowHtml).join('');
+  if (!_lbExpandido && me && me.posicion > LB_TOP_VISIBLE) {
+    html += `<div style="text-align:center;color:var(--text-dim);padding:4px 0 8px;letter-spacing:3px;">···</div>` + _lbRowHtml(me);
+  }
+  if (resto.length > (LB_TOP_VISIBLE - 3)) {
+    html += `<button onclick="toggleLeaderboardCompleto()" style="display:block;width:100%;margin-top:12px;padding:10px;background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:8px;color:var(--text-muted);font-weight:700;font-size:0.85rem;cursor:pointer;">${_lbExpandido ? 'Ver menos ▲' : 'Ver ranking completo ('+lb.length+') ▼'}</button>`;
+  }
+  document.getElementById('lb-list').innerHTML = html;
+}
+
+function toggleLeaderboardCompleto() {
+  _lbExpandido = !_lbExpandido;
+  _pintarListaLeaderboard();
+}
+
 async function renderLeaderboard() {
   try {
     const res = await apiFetch(`${API}/leaderboard`);
@@ -6418,27 +6474,8 @@ async function renderLeaderboard() {
 
     // 4. Renderizar Lista (Resto)
     const listContainer = document.getElementById('lb-list');
-    const rest = lb.slice(3);
-    
-    listContainer.innerHTML = rest.map(item => {
-        const isMe = item.codigo === aliado.codigo;
-        return `
-        <div class="lb-row ${isMe ? 'is-me' : ''}">
-            <div class="lb-pos">#${item.posicion}</div>
-            <div class="lb-avatar-mini">${getInitials(item.nombre)}</div>
-            <div class="lb-info">
-                <div class="lb-name">
-                    ${item.nombre} 
-                    ${isMe ? '<span class="lb-badge-me">Vos</span>' : ''}
-                    <span class="lb-nivel nivel-${item.nivel}">${item.nivel}</span>
-                </div>
-                <div class="lb-stats">
-                    <span><i class="fa-solid fa-chart-line"></i> ${item.ventas_6m} ventas</span>
-                </div>
-            </div>
-            <div class="lb-money"><i class="fa-solid fa-sack-dollar" style="font-size:0.9rem; color:var(--text-dim);"></i> USD ${item.total_ganado.toLocaleString()}</div>
-        </div>`;
-    }).join('');
+    _lbData = lb;
+    _pintarListaLeaderboard();
 
     // 5. UX: Hacer scroll suave hacia la fila del usuario si no está en el top 3
     if (me && me.posicion > 3) {
@@ -7431,27 +7468,8 @@ async function renderLeaderboard() {
     });
     document.getElementById('lb-podium').innerHTML = podiumHtml;
 
-    const rest = lb.slice(3);
-    document.getElementById('lb-list').innerHTML = rest.map(item => {
-      const isMe = item.codigo === aliado.codigo;
-      return `
-      <div class="lb-row ${isMe?'is-me':''}">
-        <div class="lb-pos">#${item.posicion}</div>
-        <div class="lb-avatar-mini">${getInitials(item.nombre)}</div>
-        <div class="lb-info">
-          <div class="lb-name">
-            ${item.nombre} ${isMe?'<span class="lb-badge-me">Vos</span>':''}
-            <span class="lb-nivel nivel-${item.nivel}">${item.nivel}</span>
-          </div>
-          <div class="lb-stats">
-            <span><i class="fa-solid fa-chart-line"></i> ${item.ventas_6m} ventas</span>
-            <span><i class="fa-solid fa-percent"></i> ${item.tasa_cierre||0}% cierre</span>
-            <span><i class="fa-solid fa-bolt"></i> ${item.velocidad||0}/mes</span>
-          </div>
-        </div>
-        <div class="lb-money"><i class="fa-solid fa-sack-dollar" style="font-size:0.9rem;color:var(--text-dim);"></i> USD ${item.total_ganado.toLocaleString()}</div>
-      </div>`;
-    }).join('');
+    _lbData = lb;
+    _pintarListaLeaderboard();
 
     if (me && me.posicion > 3) {
       setTimeout(() => {
@@ -8395,6 +8413,7 @@ function aplicarMetodoUsdCreditos(id){
   const redRow = document.getElementById('cred-usd-red-row');
   if (m.red && m.red.trim()) { document.getElementById('cred-usd-red').textContent = m.red; redRow.style.display = 'flex'; }
   else { redRow.style.display = 'none'; }
+  _renderCredBancoPayoneer(m.banco);  // v2.3 — datos bancarios Payoneer si existen
   // estado visual de los tabs
   const t1 = document.getElementById('cred-mtab-usdt'), t2 = document.getElementById('cred-mtab-payoneer');
   if(t1 && t2){
@@ -8402,6 +8421,31 @@ function aplicarMetodoUsdCreditos(id){
     const off= (b)=>{ b.style.background='transparent'; b.style.color='var(--text-muted)'; b.style.borderColor='rgba(255,255,255,0.12)'; };
     (id==='payoneer') ? (on(t2),off(t1)) : (on(t1),off(t2));
   }
+}
+function _renderCredBancoPayoneer(b){
+  const block = document.getElementById('cred-usd-banco-block');
+  if(!block) return;
+  if(!b || !(b.cuenta || b.aba || b.swift)){ block.style.display='none'; block.innerHTML=''; return; }
+  const esc = (t)=> String(t==null?'':t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  const row = (label, val, id, copiable)=>{
+    if(!val) return '';
+    const btn = copiable
+      ? `<button onclick="copiarCredDato('${id}', this)" style="background:rgba(74,222,128,0.1); color:var(--green); border:1px solid rgba(74,222,128,0.3); padding:7px 12px; border-radius:6px; font-size:.78rem; font-weight:700; cursor:pointer; flex-shrink:0;"><i class="fa-solid fa-copy"></i> Copiar</button>`
+      : '';
+    return `<div class="cred-dato-row" style="display:flex; justify-content:space-between; align-items:center; gap:8px; padding:10px 12px; background:rgba(255,255,255,0.02); border-radius:8px;">`
+      + `<div style="flex:1; min-width:0;"><div style="font-size:.7rem; color:var(--text-dim); margin-bottom:2px;">${label}</div>`
+      + `<div id="${id}" style="font-size:.88rem; font-weight:700; color:var(--text); font-family:'Courier New',monospace; word-break:break-all;">${esc(val)}</div></div>${btn}</div>`;
+  };
+  block.innerHTML =
+    `<div style="font-size:.7rem; color:#4ade80; font-weight:800; text-transform:uppercase; letter-spacing:.5px; margin-bottom:2px;"><i class="fa-solid fa-building-columns"></i> Transferencia bancaria en USD (desde cualquier banco)</div>`
+    + row('Beneficiario', b.beneficiario, 'cred-pyb-benef', true)
+    + row('Banco', b.banco, 'cred-pyb-banco', false)
+    + row('Dirección del banco', b.direccion, 'cred-pyb-dir', false)
+    + row('Número de cuenta', b.cuenta, 'cred-pyb-cuenta', true)
+    + row('Tipo de cuenta', b.tipo_cuenta, 'cred-pyb-tipo', false)
+    + row('ABA / Routing number', b.aba, 'cred-pyb-aba', true)
+    + row('Código SWIFT / BIC', b.swift, 'cred-pyb-swift', true);
+  block.style.display = 'flex';
 }
 function cambiarMetodoUsdCreditos(id){ aplicarMetodoUsdCreditos(id); }
           // 'ars' | 'usd' — moneda elegida en el toggle
@@ -8531,6 +8575,7 @@ async function seleccionarPaquete(paqueteId) {
     _ultimaSolicitudCreditos = data.solicitud;
     mostrarInstruccionesTransferencia(data);
   } catch(e) {
+    console.error('solicitar:', e);
     alert('Error de conexión.');
     document.getElementById('creditos-paquetes-loading').style.display = 'none';
     document.getElementById('creditos-paquetes-grid').style.display = 'flex';

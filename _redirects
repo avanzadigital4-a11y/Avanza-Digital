@@ -17,6 +17,7 @@
 /colombia/         /colombia/index.html      200
 /chile/            /chile/index.html         200
 /peru/             /peru/index.html          200
+/venezuela/        /venezuela/index.html     200
 
 # LATAM rubro+país
 /mexico/metalurgica/    /mexico/metalurgica/index.html    200
@@ -31,3 +32,6 @@
 /peru/agro/             /peru/agro/index.html             200
 /peru/metalurgica/      /peru/metalurgica/index.html      200
 /peru/logistica/        /peru/logistica/index.html        200
+/venezuela/agro/        /venezuela/agro/index.html        200
+/venezuela/metalurgica/ /venezuela/metalurgica/index.html 200
+/venezuela/logistica/   /venezuela/logistica/index.html   200

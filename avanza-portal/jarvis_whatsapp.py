@@ -570,6 +570,21 @@ def register(app, get_db_func, auth_dep):
         aliado = _identificar_aliado(numero_from, db)
 
         if not aliado:
+            # ── JARVIS Setter: tratar al número desconocido como PROSPECTO ──
+            # Antes de descartarlo con "no registrado", dejamos que el setter
+            # lo atienda, precalifique y eventualmente lo escale a un humano.
+            try:
+                import jarvis_setter  # type: ignore
+                if jarvis_setter.is_enabled():
+                    resp_setter = jarvis_setter.manejar_inbound_prospecto(
+                        numero=numero_from, texto=body_texto, db=db
+                    )
+                    if resp_setter:
+                        background_tasks.add_task(enviar_whatsapp, numero_from, resp_setter)
+                        return Response(content="", status_code=200)
+            except Exception as _e_setter:
+                print(f"[WA] Setter no disponible: {_e_setter}", file=sys.stderr)
+
             # Número no registrado — respuesta de bienvenida/registro
             respuesta_texto = (
                 "👋 Hola, soy JARVIS de Avanza Digital.\n\n"

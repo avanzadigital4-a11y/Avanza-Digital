@@ -37,6 +37,7 @@ import jarvis_whatsapp       # Integración WhatsApp con Twilio (Sección 8)
 import jarvis_api_publica    # JARVIS API pública v1 — autenticación por API key (Sección 9)
 import jarvis_integraciones  # Integraciones CRM/Gmail/Calendar/Slack (Sección 10)
 import jarvis_canal1         # Secuencia WhatsApp Canal 1 (onboarding, disparos, recurrentes)
+import jarvis_setter         # JARVIS Setter — embudo WhatsApp-first de cara al prospecto (Funnelchat-style)
 
 Base.metadata.create_all(bind=engine)
 
@@ -275,7 +276,18 @@ DATOS_PAYONEER = {
     "destinatario":  os.environ.get("PAYONEER_EMAIL", os.environ.get("USD_DESTINATARIO", "avanzadigital4@gmail.com")),
     "etiqueta_dest": "Email de Payoneer",
     "red":           "",
-    "notas":         os.environ.get("PAYONEER_NOTAS", "Enviá el monto exacto en USD a este email de Payoneer. Recibís los créditos cuando confirmamos el pago (24hs hábiles)."),
+    "notas":         os.environ.get("PAYONEER_NOTAS", "Podés enviar el monto exacto en USD al email de Payoneer (si también usás Payoneer) o por transferencia bancaria a los datos de abajo, desde cualquier banco. Recibís los créditos cuando confirmamos el pago (24hs hábiles)."),
+    # Datos para transferencia bancaria a la cuenta USD de Payoneer (Global Payment Service).
+    # Permite que cualquier empresa/aliado envíe USD por wire desde cualquier banco, sin tener Payoneer.
+    "banco": {
+        "banco":        os.environ.get("PAYONEER_BANCO",        "Citibank"),
+        "direccion":    os.environ.get("PAYONEER_BANCO_DIR",    "111 Wall Street, New York, NY 10043, USA"),
+        "aba":          os.environ.get("PAYONEER_ABA",          "031100209"),
+        "swift":        os.environ.get("PAYONEER_SWIFT",        "CITIUS33"),
+        "cuenta":       os.environ.get("PAYONEER_CUENTA",       "70589260002438922"),
+        "tipo_cuenta":  os.environ.get("PAYONEER_TIPO_CUENTA",  "CHECKING"),
+        "beneficiario": os.environ.get("PAYONEER_BENEFICIARIO", "Iván Darío Galarza"),
+    },
 }
 
 # ─── USDT/USDC para clientes finales ─────────────────────────────────────────
@@ -1201,6 +1213,9 @@ scheduler.add_job(jarvis_canal1.job_inactividad_wa, "interval", hours=6)
 scheduler.add_job(jarvis_canal1.job_semanal_wa,     "cron", day_of_week="mon", hour=12, minute=0)
 # Ranking mensual: día 1 de cada mes, 10hs Argentina (13hs UTC)
 scheduler.add_job(jarvis_canal1.job_mensual_wa,     "cron", day=1, hour=13, minute=0)
+# ─── SETTER — Secuencia de seguimiento a prospectos inbound ──────────────────
+# Reactiva prospectos en 'calificando' sin respuesta (máx 3 toques). Cada 2hs.
+scheduler.add_job(jarvis_setter.job_seguimientos,   "interval", hours=2)
 scheduler.start()
 jarvis_flywheel.agregar_insights_flywheel_al_scheduler(scheduler, get_db)
 
@@ -1265,6 +1280,8 @@ jarvis_flywheel.register(app, get_db, current_aliado_required)
 jarvis_whatsapp.register(app, get_db, current_aliado_required)
 jarvis_api_publica.register(app, get_db, current_aliado_required, engine=engine)
 jarvis_integraciones.register_integration_routes(app, get_db, current_aliado_required)  # Fix: integraciones/estado
+jarvis_setter.register(app, get_db, current_aliado_required)   # Setter: /l/{slug}, /jarvis/setter/*
+jarvis_setter.run_migrations(engine)                           # Crea setter_sesiones / setter_enlaces si no existen
 
 # ─── RUTAS ADMIN ─────────────────────────────────────────────────────────────
 # Solo se usan para el middleware de fallback con X-API-Key (legacy).
@@ -6670,6 +6687,7 @@ async def solicitar_creditos(codigo: str,
                 "etiqueta_dest":DATOS_PAYONEER["etiqueta_dest"],
                 "red":          DATOS_PAYONEER["red"],
                 "notas":        DATOS_PAYONEER["notas"],
+                "banco":        DATOS_PAYONEER["banco"],
             },
         ]
         datos_pago = {
@@ -7442,6 +7460,39 @@ def portal_publico_aliado(ref_code: str, db: Session = Depends(get_db)):
         _ld_data["sameAs"] = _ld_same_as
     _ld_json = _json_ld.dumps(_ld_data, ensure_ascii=False)
 
+    # ── Datos de Payoneer para la página de ventas: email + transferencia bancaria USD ──
+    _py_email = DATOS_PAYONEER.get("destinatario", "")
+    _pyb = DATOS_PAYONEER.get("banco") or {}
+    def _pyb_row(label, val, mono=True, copiable=False):
+        if not val:
+            return ""
+        _font = "monospace" if mono else "inherit"
+        _val_js = str(val).replace(chr(92), chr(92)*2).replace("'", chr(92)+"'")
+        _btn = (f'<button type="button" onclick="copiarTexto(this,&#39;{_val_js}&#39;)" '
+                'style="background:rgba(255,163,26,0.15);color:#ffa31a;border:1px solid rgba(255,163,26,0.35);border-radius:6px;padding:0 10px;height:32px;font-weight:700;cursor:pointer;font-size:.74rem;white-space:nowrap;flex-shrink:0;">'
+                '<i class="fa-solid fa-copy"></i></button>') if copiable else ""
+        return (f'<div style="margin-bottom:9px;">'
+                f'<div style="font-size:.66rem;font-weight:700;color:#a1a1aa;text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px;">{label}</div>'
+                f'<div style="display:flex;gap:8px;align-items:center;">'
+                f'<div style="flex:1;min-width:120px;font-family:{_font};font-size:.82rem;color:#e2e8f0;word-break:break-all;">{val}</div>'
+                f'{_btn}</div></div>')
+    if _pyb.get("cuenta") or _pyb.get("aba") or _pyb.get("swift"):
+        _payoneer_banco_html = (
+            '<div style="background:#1a1a1a;border:1px solid rgba(255,163,26,0.35);border-radius:10px;padding:14px;margin-bottom:14px;">'
+            '<div style="font-size:.72rem;font-weight:800;color:#ffa31a;text-transform:uppercase;letter-spacing:1px;margin-bottom:10px;">'
+            '<i class="fa-solid fa-building-columns"></i> Opción 2 · Transferencia bancaria en USD (desde cualquier banco)</div>'
+            + _pyb_row("Beneficiario", _pyb.get("beneficiario"), mono=False, copiable=True)
+            + _pyb_row("Banco", _pyb.get("banco"), mono=False)
+            + _pyb_row("Dirección del banco", _pyb.get("direccion"), mono=False)
+            + _pyb_row("Número de cuenta", _pyb.get("cuenta"), copiable=True)
+            + _pyb_row("Tipo de cuenta", _pyb.get("tipo_cuenta"), mono=False)
+            + _pyb_row("ABA / Routing number", _pyb.get("aba"), copiable=True)
+            + _pyb_row("Código SWIFT / BIC", _pyb.get("swift"), copiable=True)
+            + '</div>'
+        )
+    else:
+        _payoneer_banco_html = ""
+
     html = f"""<!DOCTYPE html>
 <html lang="es"><head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
@@ -7757,9 +7808,9 @@ input[type=text]:focus{{outline:none;border-color:#3b82f6;}}
           <div id="modal-payoneer-monto" style="font-size:1.4rem;font-weight:900;color:#e2e8f0;">USD —</div>
         </div>
         <div>
-          <div style="font-size:.72rem;font-weight:700;color:#a1a1aa;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;">Email Payoneer</div>
+          <div style="font-size:.72rem;font-weight:700;color:#a1a1aa;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;">Opción 1 · Email de Payoneer</div>
           <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
-            <input type="text" id="modal-payoneer-email" value="avanzadigital4@gmail.com" readonly
+            <input type="text" id="modal-payoneer-email" value="{_py_email}" readonly
               style="flex:1;min-width:140px;font-family:monospace;font-size:.85rem;background:#111;border:1px solid rgba(255,163,26,0.2);border-radius:6px;padding:9px;color:#ffa31a;">
             <button onclick="copiarEmailPayoneer()" style="background:rgba(255,163,26,0.15);color:#ffa31a;border:1px solid rgba(255,163,26,0.35);border-radius:6px;padding:0 12px;height:36px;font-weight:700;cursor:pointer;font-size:.8rem;white-space:nowrap;">
               <i class="fa-solid fa-copy"></i> Copiar
@@ -7767,8 +7818,9 @@ input[type=text]:focus{{outline:none;border-color:#3b82f6;}}
           </div>
         </div>
       </div>
+      {_payoneer_banco_html}
       <p style="font-size:.78rem;color:#71717a;margin:0 0 14px;line-height:1.5;padding:10px;background:rgba(0,0,0,0.4);border-radius:8px;border-left:2px solid rgba(255,163,26,0.5);">
-        Enviá el monto exacto a ese email de Payoneer y avisale a <strong style="color:#e2e8f0;">{titular}</strong> por WhatsApp en cuanto realices la transferencia. Tu plan se activa en cuanto Avanza confirma el pago (hasta 24hs hábiles).
+        Dos formas de pagar: enviá el monto exacto al <strong style="color:#e2e8f0;">email de Payoneer</strong> (si también usás Payoneer) o hacé una <strong style="color:#e2e8f0;">transferencia bancaria en USD</strong> a los datos de arriba desde cualquier banco. Avisale a <strong style="color:#e2e8f0;">{titular}</strong> por WhatsApp en cuanto realices la transferencia. Tu plan se activa en cuanto Avanza confirma el pago (hasta 24hs hábiles).
       </p>
       <div style="display:flex;gap:10px;">
         <button class="btn-cancel" onclick="volverAPaso1()">← Volver</button>
@@ -7858,6 +7910,13 @@ input[type=text]:focus{{outline:none;border-color:#3b82f6;}}
       el.style.borderColor = \'#ffa31a\';
       setTimeout(() => el.style.borderColor = \'rgba(255,163,26,0.2)\', 1500);
     }}).catch(() => {{ el.select(); document.execCommand(\'copy\'); }});
+  }}
+  function copiarTexto(btn, txt) {{
+    navigator.clipboard.writeText(txt).then(() => {{
+      const _o = btn.innerHTML;
+      btn.innerHTML = '<i class="fa-solid fa-check"></i>';
+      setTimeout(() => btn.innerHTML = _o, 1200);
+    }}).catch(() => {{}});
   }}
   async function confirmarContratacion() {{
     const nombre = document.getElementById(\'modal-nombre\').value.trim();
