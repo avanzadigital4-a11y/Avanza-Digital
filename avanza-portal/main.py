@@ -7512,6 +7512,7 @@ def portal_publico_aliado(ref_code: str, db: Session = Depends(get_db)):
 <meta name="robots" content="index, follow">
 <script type="application/ld+json">{_ld_json}</script>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <style>
 *{{box-sizing:border-box;margin:0;padding:0;}}
 body{{font-family:Inter,sans-serif;background:#050505;color:#e2e8f0;line-height:1.6;}}
@@ -7585,7 +7586,7 @@ body{{font-family:Inter,sans-serif;background:#050505;color:#e2e8f0;line-height:
 .asesor-intro-badge{{font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:#93c5fd;margin-bottom:6px;}}
 .asesor-intro-bio{{font-size:.82rem;color:#a1a1aa;line-height:1.55;}}
 #modal-overlay{{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.8);z-index:100;align-items:center;justify-content:center;padding:16px;}}
-.modal-box{{background:#111;border:1px solid #2a2a2a;border-radius:16px;padding:28px;width:100%;max-width:420px;}}
+.modal-box{{background:#111;border:1px solid #2a2a2a;border-radius:16px;padding:28px;width:100%;max-width:420px;max-height:88vh;overflow-y:auto;-webkit-overflow-scrolling:touch;}}
 .step{{display:none;}}
 .step.active{{display:block;}}
 .moneda-options{{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin:16px 0;}}
