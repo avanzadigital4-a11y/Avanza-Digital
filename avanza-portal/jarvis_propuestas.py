@@ -105,6 +105,7 @@ CONTENIDOS_POR_PLAN = {
 PAISES = {
     "AR": "Argentina", "MX": "México", "CO": "Colombia",
     "CL": "Chile",     "PE": "Perú",   "UY": "Uruguay",
+    "VE": "Venezuela",
 }
 
 

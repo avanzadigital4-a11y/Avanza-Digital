@@ -94,7 +94,7 @@ BASE_URL               = os.environ.get("BACKEND_PUBLIC_URL", PORTAL_URL).strip(
 CAMPOS_MINIMOS = 3
 
 PAISES = {"AR": "Argentina", "MX": "México", "CO": "Colombia",
-          "CL": "Chile", "PE": "Perú", "UY": "Uruguay"}
+          "CL": "Chile", "PE": "Perú", "UY": "Uruguay", "VE": "Venezuela"}
 
 
 def is_enabled() -> bool:
