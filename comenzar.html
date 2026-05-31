@@ -3,160 +3,189 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Comenzar Proyecto | Avanza Digital</title>
-    <link rel="canonical" href="https://avanzadigital.digital/comenzar.html">
+    <title>Términos y Privacidad | Avanza Digital</title>
+
+    <link rel="canonical" href="https://avanzadigital.digital/politica.html">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="style.css">
+
     <style>
-        body { 
-            display: flex; align-items: center; justify-content: center; 
-            min-height: 100vh; padding: 40px 20px; 
-            background: #000;
+        /* Estilos específicos para texto legal (lectura cómoda) */
+        .legal-header {
+            text-align: center;
+            padding: 100px 20px 60px;
         }
-        .start-container { max-width: 600px; width: 100%; margin: 0 auto; }
-        
-        /* Banner Verde de Éxito */
-        .success-banner {
-            background: rgba(46, 204, 113, 0.1); border: 1px solid #2ecc71; color: #2ecc71;
-            padding: 20px; border-radius: 12px; text-align: center; margin-bottom: 30px;
-            font-weight: 600; font-size: 1.1rem;
-            display: flex; align-items: center; justify-content: center; gap: 10px;
-            animation: fadeIn 0.5s ease;
+        .legal-header h1 { font-size: 3rem; margin-bottom: 20px; letter-spacing: -1px; }
+        .legal-header p { color: var(--accent-dim); max-width: 600px; margin: 0 auto; }
+
+        .legal-content {
+            max-width: 800px;
+            margin: 0 auto 100px;
         }
 
-        /* Sección de "No pagué todavía" */
-        .not-paid-yet {
-            margin-top: 30px; text-align: center; border-top: 1px solid rgba(255,255,255,0.1);
-            padding-top: 20px; font-size: 0.9rem; color: #666;
-        }
-        .not-paid-trigger {
-            color: var(--accent-dim); text-decoration: underline; cursor: pointer;
-        }
-        .payment-links-backup {
-            display: none; /* Oculto por defecto */
-            margin-top: 15px;
-            background: rgba(255,255,255,0.05); padding: 15px; border-radius: 8px;
-        }
-        .backup-link {
-            display: block; color: var(--primary-color); text-decoration: none; margin: 8px 0;
-            font-size: 0.9rem;
-        }
-        .backup-link:hover { color: white; }
-
-        /* CORRECCIÓN DEL SELECT: Para que las opciones sean legibles */
-        select option {
-            background-color: #111; /* Fondo oscuro para las opciones */
-            color: white; /* Texto blanco */
-            padding: 10px;
+        .legal-section {
+            margin-bottom: 40px;
         }
 
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; } }
+        .legal-section h2 {
+            font-size: 1.5rem;
+            color: white;
+            margin-bottom: 15px;
+            border-left: 4px solid var(--primary-color);
+            padding-left: 15px;
+        }
+
+        .legal-section p, .legal-section ul li {
+            color: var(--accent-dim);
+            font-size: 1rem;
+            line-height: 1.8;
+            margin-bottom: 15px;
+        }
+
+        .legal-section ul { list-style: disc; margin-left: 20px; }
+
+        /* Caja destacada para la propiedad intelectual */
+        .highlight-box {
+            background: rgba(59, 130, 246, 0.1); /* Azul muy suave */
+            border: 1px solid var(--primary-color);
+            padding: 20px;
+            border-radius: 12px;
+            margin: 20px 0;
+        }
+        .highlight-box strong { color: white; }
+        .legal-section a { color: var(--primary-color); }
     </style>
 </head>
 <body>
 
-    <div class="start-container">
-        
-        <div class="success-banner">
-            <i class="fa-solid fa-circle-check"></i> ¡Pago registrado! Vamos a activar tu servicio.
+    <nav class="navbar-floating">
+        <div class="logo">
+            <i class="fa-solid fa-scale-balanced"></i> Legales
         </div>
+        <a href="index.html" class="btn-nav"><i class="fa-solid fa-arrow-left"></i> Volver al Sitio</a>
+    </nav>
 
-        <div class="bento-box">
-            <div style="text-align: center; margin-bottom: 30px;">
-                <h2 style="color: white; margin-bottom: 10px;">Configuración Inicial 🚀</h2>
-                <p style="color: var(--accent-dim);">Completa este formulario obligatorio para que nuestro equipo técnico comience a trabajar en tu sitio.</p>
+    <header class="legal-header">
+        <h1>Política de Privacidad <span class="highlight">& Términos</span></h1>
+        <p>Transparencia total sobre cómo trabajamos, cómo protegemos tus datos y quién es dueño de qué.</p>
+    </header>
+
+    <div class="container legal-content">
+
+        <div class="bento-box" style="width: 100%;">
+
+            <div class="legal-section">
+                <h2>1. Responsable de los Datos</h2>
+                <p><strong>Avanza Digital</strong> (en adelante, «Avanza» o «la Empresa») es responsable del tratamiento de los datos personales recopilados a través de sus sitios web, formularios y canales de contacto. Avanza desarrolla sistemas digitales de venta B2B, sitios web, automatizaciones e integraciones para PYMEs e industrias de Latinoamérica.</p>
+                <ul>
+                    <li>Sitio: <strong>avanzadigital.digital</strong></li>
+                    <li>Email: <strong>avanzadigital4@gmail.com</strong></li>
+                    <li>WhatsApp: <strong>+54 9 342 439-2759</strong></li>
+                    <li>Operación: con base en Argentina y clientes en México, Colombia, Chile, Perú, Venezuela y demás países de habla hispana.</li>
+                </ul>
             </div>
 
-            <form action="https://formsubmit.co/avanzadigital4@gmail.com" method="POST" class="contact-form">
-                
-                <input type="hidden" name="_next" value="https://avanzadigital.digital">
-                <input type="hidden" name="_subject" value="NUEVO CLIENTE - Datos de Arranque">
-                <input type="hidden" name="_captcha" value="false">
+            <div class="legal-section">
+                <h2>2. Servicios que Prestamos</h2>
+                <p>Nuestros servicios incluyen:</p>
+                <ul>
+                    <li>Desarrollo de sistemas y sitios web B2B bajo modalidad de pago único.</li>
+                    <li>Generación y captación de leads.</li>
+                    <li>Automatizaciones y respuesta automática de consultas.</li>
+                    <li>Integración con CRM y ERP.</li>
+                    <li>Planes mensuales de mantenimiento (hosting, soporte, seguridad y optimización).</li>
+                    <li>Posicionamiento en Google (Perfil de Empresa y Maps).</li>
+                </ul>
+            </div>
 
-                <div class="form-row">
-                    <div style="width: 100%;">
-                        <label style="color:white; font-size:0.9rem; margin-bottom:5px; display:block;">Nombre del Titular</label>
-                        <input type="text" name="nombre_cliente" required placeholder="Tu nombre completo">
-                    </div>
+            <div class="legal-section">
+                <h2>3. Propiedad Intelectual y Licencias</h2>
+                <p>Esta es la parte más importante de nuestro acuerdo de servicio. A diferencia del modelo tradicional de alquiler, en Avanza el sistema es del cliente:</p>
+
+                <div class="highlight-box">
+                    <p><strong>A. Pago Único (Sistemas):</strong><br>
+                    El cliente abona una sola vez y se le ceden los derechos patrimoniales sobre el producto final. El cliente es <strong>dueño del 100% del código fuente</strong>, diseño y estructura, y puede alojarlo donde desee. La implementación incluye <strong>3 meses de garantía</strong>.</p>
+
+                    <p><strong>B. Planes Mensuales (Mantenimiento):</strong><br>
+                    Los planes Cuidado, Crecimiento, Escala y Liderazgo son <strong>servicios</strong> de hosting, soporte, seguridad y optimización continua. <strong>No constituyen un alquiler del código ni alteran su propiedad:</strong> el código sigue perteneciendo al cliente. Son <strong>opcionales y sin permanencia mínima</strong>.</p>
+
+                    <p style="margin-bottom: 0;"><strong>C. Materiales del Cliente:</strong><br>
+                    Los logos, textos, fotos y marcas provistos por el cliente siguen siendo de su exclusiva propiedad. Avanza los utiliza únicamente para prestar el servicio contratado.</p>
                 </div>
+            </div>
 
-                <div class="form-row">
-                    <div style="width: 100%;">
-                        <label style="color:white; font-size:0.9rem; margin-bottom:5px; display:block;">Email de Contacto</label>
-                        <input type="email" name="email" required placeholder="donde recibirás los accesos">
-                    </div>
-                </div>
+            <div class="legal-section">
+                <h2>4. Recopilación de Información</h2>
+                <p>Recopilamos la información necesaria para prestar el servicio:</p>
+                <ul>
+                    <li>Datos de contacto (nombre, email, WhatsApp, empresa, cargo) de clientes y prospectos.</li>
+                    <li>Leads y consultas capturados mediante formularios, la herramienta de Auditoría Digital y campañas.</li>
+                    <li>Material gráfico (logos, fotos) provisto por el cliente para el diseño.</li>
+                    <li>Datos técnicos de acceso (hosting, dominios, cuentas de CRM o correo) cuando el cliente los provee para implementar o integrar su sistema.</li>
+                    <li>Datos de navegación, dispositivo y cookies, con fines de analítica y mejora del servicio.</li>
+                    <li>En el caso de aliados: datos de registro, datos de cobro (alias/CBU o wallet) y datos de los clientes referidos, a los solos efectos de liquidar comisiones.</li>
+                </ul>
+            </div>
 
-                <div class="form-row">
-                    <div style="width: 100%;">
-                        <label style="color:white; font-size:0.9rem; margin-bottom:5px; display:block;">WhatsApp</label>
-                        <input type="tel" name="whatsapp" required placeholder="+54 9 ...">
-                    </div>
-                </div>
+            <div class="legal-section">
+                <h2>5. Cookies y Servicios de Terceros</h2>
+                <p>Nuestros sitios utilizan cookies y herramientas de terceros para funcionar, medir el tráfico y enviar comunicaciones:</p>
+                <ul>
+                    <li><strong>HubSpot</strong> — analítica y seguimiento de formularios.</li>
+                    <li><strong>Google</strong> — Maps, fuentes y métricas de tráfico.</li>
+                    <li><strong>Brevo</strong> — envío de correos transaccionales.</li>
+                    <li><strong>Meta / Instagram</strong> — cuando interactuás con nuestras redes sociales.</li>
+                </ul>
+                <p>Podés gestionar o bloquear las cookies desde la configuración de tu navegador. Algunas funciones del sitio podrían verse afectadas si las desactivás.</p>
+            </div>
 
-                <div class="form-row">
-                    <div style="width: 100%;">
-                        <label style="color:white; font-size:0.9rem; margin-bottom:5px; display:block;">Nombre de tu Marca / Negocio</label>
-                        <input type="text" name="nombre_negocio" required placeholder="Ej: Pizzería Don Luis">
-                    </div>
-                </div>
+            <div class="legal-section">
+                <h2>6. Pagos y Cancelaciones</h2>
+                <ul>
+                    <li><strong>Pago Único:</strong> se abona una sola vez por la implementación del sistema e incluye 3 meses de garantía.</li>
+                    <li><strong>Planes Mensuales (Mantenimiento):</strong> facturación mensual, <strong>sin permanencia mínima</strong>. El cliente puede dar de baja el servicio cuando quiera; el servicio permanece activo hasta el fin del período ya abonado. No se realizan reembolsos por períodos ya iniciados.</li>
+                    <li><strong>Medios de pago:</strong> Mercado Pago (moneda local) y USDT / transferencia para clientes internacionales.</li>
+                </ul>
+            </div>
 
-                <div class="form-row">
-                    <div style="width: 100%;">
-                        <label style="color:white; font-size:0.9rem; margin-bottom:5px; display:block;">Plan Abonado</label>
-                        <select name="plan_elegido" style="width: 100%; padding: 15px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; color: white; cursor: pointer;">
-                            <option value="" disabled selected>Selecciona qué pagaste...</option>
-                            
-                            <optgroup label="Suscripción Mensual (Mantenimiento)">
-                                <option value="Plan Cuidado - Mensual (USD 39)">Plan Cuidado - Mensual (USD 39)</option>
-                                <option value="Plan Crecimiento - Mensual (USD 89)">Plan Crecimiento - Mensual (USD 89)</option>
-                                <option value="Plan Escala - Mensual (USD 149)">Plan Escala - Mensual (USD 149)</option>
-                            </optgroup>
+            <div class="legal-section">
+                <h2>7. Programa de Aliados</h2>
+                <p>Avanza cuenta con una red de aliados comerciales. Cada aliado recibe un código de referido y percibe comisiones por las ventas que cierra y, opcionalmente, una comisión recurrente mientras el cliente mantenga activo su plan de mantenimiento. Las condiciones completas se detallan en los <a href="terminos-aliados.html">Términos para Aliados</a>.</p>
+            </div>
 
-                            <optgroup label="Desarrollo Pago Único (Sistemas)">
-                                <option value="Plan Base - Único (USD 590)">Plan Base - Único (USD 590)</option>
-                                <option value="Plan Pro - Único (USD 1.290)">Plan Pro - Único (USD 1.290)</option>
-                                <option value="Plan Industrial - Único (USD 2.490)">Plan Industrial - Único (USD 2.490)</option>
-                            </optgroup>
-                        </select>
-                    </div>
-                </div>
+            <div class="legal-section">
+                <h2>8. Conservación y Seguridad de los Datos</h2>
+                <p>Conservamos los datos mientras exista una relación comercial y durante el plazo que exijan las obligaciones legales y contables aplicables. Aplicamos medidas razonables de seguridad: certificados SSL, copias de respaldo, accesos restringidos y monitoreo. Ningún sistema es completamente infalible, pero trabajamos de forma continua para proteger tu información.</p>
+            </div>
 
-                <div class="form-row">
-                    <div style="width: 100%;">
-                        <label style="color:white; font-size:0.9rem; margin-bottom:5px; display:block;">Comentarios Extra (Opcional)</label>
-                        <textarea name="comentarios" rows="2" placeholder="¿Tienes dominio comprado? ¿Alguna preferencia?"></textarea>
-                    </div>
-                </div>
+            <div class="legal-section">
+                <h2>9. Limitación de Responsabilidad</h2>
+                <p>Avanza procura un tiempo en línea («uptime») de hasta el <strong>99,9%</strong> en sus servidores. Sin embargo, no nos hacemos responsables por pérdidas de ventas o lucro cesante derivadas de caídas eventuales de servicios de terceros (como Google, proveedores de internet, pasarelas de pago o redes sociales).</p>
+            </div>
 
-                <button type="submit" class="btn-primary" style="width: 100%; margin-top: 10px;">
-                    ENVIAR Y COMENZAR <i class="fa-solid fa-rocket"></i>
-                </button>
+            <div class="legal-section">
+                <h2>10. Derechos del Titular y Contacto Legal</h2>
+                <p>Podés ejercer tus derechos de acceso, rectificación, actualización, portabilidad y supresión de tus datos, o realizar consultas sobre facturación, escribiéndonos a:</p>
+                <p style="color: var(--primary-color); font-weight: bold; font-size: 1.2rem; margin-bottom: 6px;">avanzadigital4@gmail.com</p>
+                <p style="margin-bottom: 0;">WhatsApp: <strong>+54 9 342 439-2759</strong></p>
+                <p>Esta política puede actualizarse para reflejar cambios en nuestros servicios o en la normativa de protección de datos aplicable. La versión vigente es siempre la publicada en este sitio.</p>
+            </div>
 
-            </form>
-
-            <div class="not-paid-yet">
-                ¿Llegaste aquí sin pagar? <span class="not-paid-trigger" onclick="toggleLinks()">Haz clic aquí para abonar tu plan.</span>
-                
-                <div class="payment-links-backup" id="backupLinks">
-                    <p style="color:white; margin-bottom:10px; font-size:0.8rem;">Links de pago rápido:</p>
-                    
-                    <a href="#LINK_BASE_USD" class="backup-link">👉 Plan Base (USD 590)</a>
-                    <a href="#LINK_PRO_USD" class="backup-link">👉 Plan Pro (USD 1.290)</a>
-                    <a href="#LINK_INDUSTRIAL_USD" class="backup-link">👉 Plan Industrial (USD 2.490)</a>
-                </div>
+            <div style="text-align: center; margin-top: 40px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 20px;">
+                <p style="font-size: 0.8rem;">Última actualización: 31 de mayo de 2026</p>
             </div>
 
         </div>
     </div>
 
-    <script>
-        function toggleLinks() {
-            const box = document.getElementById('backupLinks');
-            box.style.display = box.style.display === 'block' ? 'none' : 'block';
-        }
-    </script>
+    <footer>
+        <div class="container footer-content" style="justify-content: center;">
+            <p>&copy; 2026 Avanza Digital. Todos los derechos reservados.</p>
+        </div>
+    </footer>
 <!-- Start of HubSpot Embed Code -->
 <script type="text/javascript" id="hs-script-loader" async defer src="//js.hs-scripts.com/51067454.js"></script>
 <!-- End of HubSpot Embed Code -->

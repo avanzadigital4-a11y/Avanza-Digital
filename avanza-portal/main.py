@@ -7386,7 +7386,7 @@ def portal_publico_aliado(ref_code: str, db: Session = Depends(get_db)):
             "m_badge": "Estabilidad", "m_badge_style": "background:rgba(255,255,255,0.06);color:#a1a1aa;border:1px solid rgba(255,255,255,0.15);",
             "m_emoji": "🛡️", "m_name": "PLAN 1 — CUIDADO", "m_price": PLANES_CONTINUIDAD["Plan Cuidado"], "m_plan": "Plan Cuidado",
             "m_desc": "Para empresas que quieren estabilidad técnica.",
-            "m_items": ["Hosting profesional de alta velocidad", "Dominio y Certificado SSL", "Backups automáticos semanales", "Seguridad y monitoreo 24/7", "Soporte técnico por fallas del sistema", "Reporte básico mensual"],
+            "m_items": ["Hosting profesional de alta velocidad", "Dominio profesional (.com, .com.ar o local) y Certificado SSL", "Backups automáticos semanales", "Seguridad y monitoreo 24/7", "Soporte técnico por fallas del sistema", "Reporte básico mensual"],
         },
         {
             "key": "Plan Pro", "accent": "pop",
@@ -7670,7 +7670,7 @@ def portal_publico_aliado(ref_code: str, db: Session = Depends(get_db)):
     <details class="faq-item"><summary>¿El sistema es mío o lo alquilo?</summary><div class="faq-body">Es 100% tuyo. Trabajamos con modelo de pago único: una vez implementado, el código y la plataforma te pertenecen, a diferencia de las agencias que cobran un alquiler mensual para que sigas usando tu propia web.</div></details>
     <details class="faq-item"><summary>¿Cuánto tarda la implementación?</summary><div class="faq-body">Depende del plan. El Plan Base puede estar funcionando en 7 días, y los planes más completos entre 20 y 30 días. Te damos una fecha concreta antes de empezar.</div></details>
     <details class="faq-item"><summary>¿Necesito conocimientos técnicos?</summary><div class="faq-body">No. Nos encargamos de todo el proceso técnico y te entregamos un panel simple para que veas tus consultas y clientes. Además, incluye 3 meses de soporte.</div></details>
-    <details class="faq-item"><summary>¿Hay costos mensuales obligatorios?</summary><div class="faq-body">No son obligatorios. El sistema es de pago único. Si lo deseas, puedes sumar un plan de mantenimiento mensual (hosting, seguridad y mejoras continuas), pero es totalmente opcional.</div></details>
+    <details class="faq-item"><summary>¿Hay costos mensuales obligatorios?</summary><div class="faq-body">No son obligatorios. El sistema es de pago único. Si lo deseas, puedes sumar un plan de mantenimiento mensual (hosting, dominio, seguridad y mejoras continuas), pero es totalmente opcional y sin permanencia.</div></details>
     <details class="faq-item"><summary>¿Sirve para mi rubro?</summary><div class="faq-body">Trabajamos con PYMEs industriales y de servicios B2B: metalúrgica, agro, logística, construcción, servicios técnicos y más. Si tienes dudas, escríbeme y lo vemos juntos.</div></details>
   </section>
 """
@@ -7742,7 +7742,7 @@ def portal_publico_aliado(ref_code: str, db: Session = Depends(get_db)):
     <label class="pv-switch"><input type="checkbox" id="pv-pricing-toggle" checked><span class="pv-slider"></span></label>
     <span class="lbl active" id="pv-lbl-unique">Pago Único (Sistema)</span>
   </div>
-  <p class="pv-hint">¿Buscas <b class="static">hosting, soporte y mejoras continuas</b>? Cambia el selector a <b onclick="pvVerMensual()">«Suscripción (Mantenimiento)»</b> para ver los planes mensuales.</p>
+  <p class="pv-hint">¿Buscas <b class="static">hosting, soporte y mejoras continuas</b>? Cambia el selector a <b onclick="pvVerMensual()">«Suscripción (Mantenimiento)»</b> para ver los planes mensuales. <span style="display:block;margin-top:10px;color:#cbd5e1;">Los planes de <b>Sistemas</b> son <b>pago único</b> y el código queda <b>100% tuyo</b>. El <b>hosting, dominio y SSL</b> se gestionan desde el <b>Plan Cuidado</b> (USD 80/mes) — o lo alojás en tu propio servidor. No te atás a nosotros.</span></p>
 """
 
     # Sección de presencia en Google Maps (f-string: doblar llaves si hubiera, aquí no hay).
