@@ -7461,7 +7461,7 @@ def portal_publico_aliado(ref_code: str, db: Session = Depends(get_db)):
             <p class="pv-desc">{p['m_desc']}</p>
             <ul class="pv-list">{m_items_html}</ul>
             <div class="pv-actions">
-              <a class="{btn_cls}" href="{_wa_m}" target="_blank" rel="noopener">⚡ Contratar</a>
+              <button class="{btn_cls}" onclick="abrirModal('{p['m_plan']}','{ref_code}')">⚡ Contratar</button>
               <a class="pv-btn-wa" href="{_wa_m}" target="_blank" rel="noopener">💬 Consultar</a>
             </div>
           </div>
@@ -7488,7 +7488,18 @@ def portal_publico_aliado(ref_code: str, db: Session = Depends(get_db)):
         '<div class="sublabel">Transferencia USD</div></button>'
     )
     # Precio de cada plan para mostrarlo en el step de USDT
-    _plan_precios_js = ", ".join(f'"{k}": {int(v)}' for k, v in PLANES.items())
+    # Precios para el JS del modal: incluye planes de sistema (PLANES) y
+    # los mensuales de mantenimiento (PLANES_CONTINUIDAD) para que USDT,
+    # Payoneer y MercadoPago muestren el monto correcto en ambos casos.
+    _precios_todos = {**PLANES, **PLANES_CONTINUIDAD}
+    _plan_precios_js = ", ".join(f'"{k}": {int(v)}' for k, v in _precios_todos.items())
+    # Set de planes mensuales para que el JS sepa cuáles son "por mes".
+    _planes_mensuales_js = ", ".join(f'"{k}": 1' for k in PLANES_CONTINUIDAD.keys())
+
+    # ── Datos de cobro por MercadoPago (transferencia manual, solo mensuales) ──
+    _mp_titular = os.environ.get("MP_TITULAR", "Iván Darío Galarza")
+    _mp_alias   = os.environ.get("MP_ALIAS",   "avanzadigital")
+    _mp_cvu     = os.environ.get("MP_CVU",     "0000003100061989560327")
     _usdt_dir_js = USDT_DIRECCION.replace("'", "\\'")
     _usdt_red_js = (USDT_RED or "TRC20").replace("'", "\\'")
 
@@ -8143,11 +8154,53 @@ input[type=text]:focus{{outline:none;border-color:#3b82f6;}}
         </a>
       </div>
     </div>
+    <div id="step-mp-mensual" class="step" style="padding:4px 0;">
+      <h3 style="margin:0 0 6px;font-size:1.05rem;font-weight:800;">🏦 Pago mensual por MercadoPago</h3>
+      <p style="color:#a1a1aa;font-size:.82rem;margin:0 0 16px;">Transferí desde tu banco o billetera a los datos de abajo y avisanos por WhatsApp para activar tu plan.</p>
+      <div style="background:#1a1a1a;border:1px solid rgba(59,130,246,0.35);border-radius:10px;padding:14px;margin-bottom:14px;">
+        <div style="margin-bottom:12px;">
+          <div style="font-size:.72rem;font-weight:700;color:#a1a1aa;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;">Monto mensual</div>
+          <div id="modal-mp-monto" style="font-size:1.4rem;font-weight:900;color:#e2e8f0;">$ —</div>
+          <div id="modal-mp-monto-ref" style="font-size:.74rem;color:#71717a;margin-top:2px;">—</div>
+        </div>
+        <div style="margin-bottom:10px;">
+          <div style="font-size:.72rem;font-weight:700;color:#a1a1aa;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;">Titular de la cuenta</div>
+          <div style="font-size:.92rem;color:#e2e8f0;font-weight:700;">{_mp_titular}</div>
+        </div>
+        <div style="margin-bottom:10px;">
+          <div style="font-size:.72rem;font-weight:700;color:#a1a1aa;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;">Alias</div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+            <input type="text" id="modal-mp-alias" value="{_mp_alias}" readonly style="flex:1;min-width:140px;font-family:monospace;font-size:.85rem;background:#111;border:1px solid rgba(59,130,246,0.2);border-radius:6px;padding:9px;color:#93c5fd;">
+            <button onclick="copiarTexto(this,'{_mp_alias}')" style="background:rgba(59,130,246,0.15);color:#93c5fd;border:1px solid rgba(59,130,246,0.35);border-radius:6px;padding:0 12px;height:36px;font-weight:700;cursor:pointer;font-size:.8rem;white-space:nowrap;"><i class="fa-solid fa-copy"></i> Copiar</button>
+          </div>
+        </div>
+        <div>
+          <div style="font-size:.72rem;font-weight:700;color:#a1a1aa;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;">CVU</div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+            <input type="text" id="modal-mp-cvu" value="{_mp_cvu}" readonly style="flex:1;min-width:140px;font-family:monospace;font-size:.8rem;background:#111;border:1px solid rgba(59,130,246,0.2);border-radius:6px;padding:9px;color:#93c5fd;">
+            <button onclick="copiarTexto(this,'{_mp_cvu}')" style="background:rgba(59,130,246,0.15);color:#93c5fd;border:1px solid rgba(59,130,246,0.35);border-radius:6px;padding:0 12px;height:36px;font-weight:700;cursor:pointer;font-size:.8rem;white-space:nowrap;"><i class="fa-solid fa-copy"></i> Copiar</button>
+          </div>
+        </div>
+      </div>
+      <p style="font-size:.78rem;color:#71717a;margin:0 0 14px;line-height:1.5;padding:10px;background:rgba(0,0,0,0.4);border-radius:8px;border-left:2px solid rgba(59,130,246,0.5);">
+        El monto en pesos es orientativo al dólar de hoy y puede variar al momento de transferir. Avisale a <strong style="color:#e2e8f0;">{titular}</strong> por WhatsApp cuando completes el pago. Tu plan se activa en cuanto Avanza confirma el pago (hasta 24hs hábiles).
+      </p>
+      <div style="display:flex;gap:10px;">
+        <button class="btn-cancel" onclick="volverAPaso1()">← Volver</button>
+        <a href="https://wa.me/{wa_contacto}" id="modal-mp-wa-btn"
+           target="_blank"
+           style="flex:1;padding:12px;border-radius:8px;border:none;background:#25d366;color:#fff;cursor:pointer;font-weight:700;font-size:.95rem;text-decoration:none;text-align:center;display:flex;align-items:center;justify-content:center;gap:6px;">
+          <i class="fa-brands fa-whatsapp"></i> Confirmar por WhatsApp
+        </a>
+      </div>
+    </div>
   </div>
 </div>
 
 <script>
   const _PLAN_PRECIOS = {{{_plan_precios_js}}};
+  const _PLANES_MENSUALES = {{{_planes_mensuales_js}}};
+  const _MP_DATOS = {{ titular: "{_mp_titular}", alias: "{_mp_alias}", cvu: "{_mp_cvu}" }};
   let _plan = \'\', _ref = \'\', _moneda = \'ars\';
   function abrirModal(plan, ref) {{
     _plan = plan; _ref = ref; _moneda = \'ars\';
@@ -8166,7 +8219,7 @@ input[type=text]:focus{{outline:none;border-color:#3b82f6;}}
     if (e.target === document.getElementById(\'modal-overlay\')) cerrarModal();
   }}
   function mostrarPaso(id) {{
-    [\'step-nombre\',\'step-moneda\',\'step-procesando\',\'step-usdt\',\'step-payoneer\'].forEach(s => {{
+    [\'step-nombre\',\'step-moneda\',\'step-procesando\',\'step-usdt\',\'step-payoneer\',\'step-mp-mensual\'].forEach(s => {{
       const el = document.getElementById(s);
       if (el) el.classList.remove(\'active\');
     }});
@@ -8235,6 +8288,42 @@ input[type=text]:focus{{outline:none;border-color:#3b82f6;}}
     const email = document.getElementById(\'modal-email\').value.trim();
     const whatsapp = document.getElementById(\'modal-whatsapp\').value.trim();
     if (!nombre || !email || !whatsapp) {{ volverAPaso1(); return; }}
+
+    const esMensual = !!_PLANES_MENSUALES[_plan];
+
+    // Flujo MercadoPago MANUAL — solo planes mensuales de mantenimiento.
+    // Muestra Alias + CVU + titular y el monto convertido a pesos al dólar de hoy.
+    if (esMensual && _moneda === \'ars\') {{
+      const precioUsd = _PLAN_PRECIOS[_plan] || 0;
+      const montoEl = document.getElementById(\'modal-mp-monto\');
+      const refEl = document.getElementById(\'modal-mp-monto-ref\');
+      if (montoEl) montoEl.textContent = \'Calculando…\';
+      if (refEl) refEl.textContent = \'\';
+      mostrarPaso(\'step-mp-mensual\');
+      try {{
+        const r = await fetch(\'/tipo-de-cambio\');
+        const d = await r.json();
+        const tc = parseFloat(d.venta) || 0;
+        if (tc > 0) {{
+          const ars = Math.round(precioUsd * tc);
+          const arsFmt = ars.toLocaleString(\'es-AR\');
+          if (montoEl) montoEl.textContent = \'$ \' + arsFmt + \' / mes\';
+          if (refEl) refEl.textContent = \'USD \' + precioUsd + \' al dólar de hoy ($\' + tc.toLocaleString(\'es-AR\') + \')\';
+        }} else {{
+          if (montoEl) montoEl.textContent = \'USD \' + precioUsd + \' / mes\';
+          if (refEl) refEl.textContent = \'Consultá el equivalente en pesos por WhatsApp.\';
+        }}
+      }} catch(_) {{
+        if (montoEl) montoEl.textContent = \'USD \' + precioUsd + \' / mes\';
+        if (refEl) refEl.textContent = \'Consultá el equivalente en pesos por WhatsApp.\';
+      }}
+      const waBtn = document.getElementById(\'modal-mp-wa-btn\');
+      if (waBtn) {{
+        const texto = encodeURIComponent(\'Hola \' + _MP_DATOS.titular + \', realicé la transferencia por MercadoPago para el \' + _plan + \' (mensual) de Avanza Digital. Mi nombre: \' + nombre + \', email: \' + email);
+        waBtn.href = \'https://wa.me/{wa_contacto}?text=\' + texto;
+      }}
+      return;
+    }}
 
     // Flujo Payoneer: mostrar instrucciones de transferencia
     if (_moneda === \'payoneer\') {{
