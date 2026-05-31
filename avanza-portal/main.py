@@ -7367,44 +7367,107 @@ def portal_publico_aliado(ref_code: str, db: Session = Depends(get_db)):
             "ideal": "Empresa que quiere rediseñar su área comercial completa."
         },
     }
-    planes_html = ""
-    for nombre_plan, precio in PLANES.items():
-        det = PLAN_DETALLE.get(nombre_plan, {})
-        emoji = det.get("emoji", "📦")
-        tagline = det.get("tagline", "")
-        badge_html = f'<span style="background:rgba(74,222,128,0.15);color:#4ade80;border:1px solid rgba(74,222,128,0.3);padding:3px 10px;border-radius:20px;font-size:.68rem;font-weight:800;letter-spacing:1px;text-transform:uppercase;margin-left:8px;">{det["badge"]}</span>' if det.get("badge") else ""
-        includes_items = "".join(f'<li style="display:flex;gap:8px;align-items:flex-start;font-size:.82rem;color:#a1a1aa;margin-bottom:6px;"><span style="color:#4ade80;flex-shrink:0;">✓</span>{item}</li>' for item in det.get("includes", []))
-        ideal = det.get("ideal", "")
-        wa_plan_encoded = nombre_plan.replace(" ", "%20")
-        _ideal_html = ('<p style="font-size:.78rem;color:#52525b;margin-bottom:16px;font-style:italic;">' + ideal + '</p>') if ideal else ''
-        planes_html += f"""
-        <div class="plan-card">
-          <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:12px;margin-bottom:14px;">
-            <div>
-              <div style="font-size:1.5rem;margin-bottom:6px;">{emoji}</div>
-              <h3 style="font-size:1.05rem;font-weight:900;margin-bottom:4px;">{nombre_plan}{badge_html}</h3>
-              <p style="font-size:.8rem;color:#71717a;">{tagline}</p>
-            </div>
-            <div style="text-align:right;">
-              <div style="font-size:1.8rem;font-weight:900;color:#e2e8f0;">USD {int(precio)}</div>
-              <div style="font-size:.72rem;color:#71717a;">pago único</div>
+    # ── Grilla de planes estilo home (4 en una línea) con selector ──────────
+    # Cada tarjeta tiene dos vistas: "Pago Único" (Sistema, desde PLANES) y
+    # "Suscripción" (Mantenimiento mensual, desde PLANES_CONTINUIDAD).
+    def _fmt_usd(v):
+        return f"{int(v):,}".replace(",", ".")
+
+    PLANES_VENTA = [
+        {
+            "key": "Plan Base", "accent": "",
+            # Pago Único
+            "u_badge": "Presencia Activa", "u_badge_style": "background:rgba(52,211,153,0.12);color:#34d399;border:1px solid rgba(52,211,153,0.3);",
+            "u_emoji": "🏗️", "u_name": "PLAN BASE", "u_price": PLANES["Plan Base"],
+            "u_desc": "Para pymes que hoy no generan consultas.",
+            "u_items": ["Landing page profesional", "Mensaje comercial estratégico", "Formulario de contacto + WhatsApp", "Captación básica de leads", "Diseño responsive", "Presencia en Google Maps", "Configuración inicial de métricas"],
+            "u_result": "Empiezan a recibir consultas.",
+            # Suscripción
+            "m_badge": "Estabilidad", "m_badge_style": "background:rgba(255,255,255,0.06);color:#a1a1aa;border:1px solid rgba(255,255,255,0.15);",
+            "m_emoji": "🛡️", "m_name": "PLAN 1 — CUIDADO", "m_price": PLANES_CONTINUIDAD["Plan Cuidado"], "m_plan": "Plan Cuidado",
+            "m_desc": "Para empresas que quieren estabilidad técnica.",
+            "m_items": ["Hosting profesional de alta velocidad", "Dominio y Certificado SSL", "Backups automáticos semanales", "Seguridad y monitoreo 24/7", "Soporte técnico por fallas del sistema", "Reporte básico mensual"],
+        },
+        {
+            "key": "Plan Pro", "accent": "pop",
+            "u_badge": "Generación de Leads", "u_badge_style": "background:rgba(59,130,246,0.15);color:#3b82f6;border:1px solid rgba(59,130,246,0.35);",
+            "u_emoji": "⚡", "u_name": "PLAN PRO", "u_price": PLANES["Plan Pro"],
+            "u_desc": "Para empresas que quieren un canal comercial.",
+            "u_items": ["Todo lo del Plan Base, más:", "Web multi-sección (hasta 6 páginas)", "Lead magnet o formulario avanzado", "Integración con CRM / Email Marketing", "Automatización de respuesta", "Copywriting orientado a ventas"],
+            "u_result": "Leads calificados y seguimiento.",
+            "m_badge": "Más Popular", "m_badge_style": "background:rgba(59,130,246,0.15);color:#3b82f6;border:1px solid rgba(59,130,246,0.35);",
+            "m_emoji": "🚀", "m_name": "PLAN 2 — CRECIMIENTO", "m_price": PLANES_CONTINUIDAD["Plan Crecimiento"], "m_plan": "Plan Crecimiento",
+            "m_desc": "Para empresas que quieren más consultas calificadas.",
+            "m_items": ["Todo lo del Plan Cuidado, más:", "1 Ajuste mensual de optimización", "Revisión de formularios y CTA", "Ajuste de textos comerciales", "Métricas de conversión mensuales", "Reunión trimestral de estrategia"],
+        },
+        {
+            "key": "Plan Industrial", "accent": "",
+            "u_badge": "Sistema Comercial", "u_badge_style": "background:rgba(250,204,21,0.12);color:#facc15;border:1px solid rgba(250,204,21,0.3);",
+            "u_emoji": "🏭", "u_name": "PLAN INDUSTRIAL", "u_price": PLANES["Plan Industrial"],
+            "u_desc": "Para empresas con procesos complejos.",
+            "u_items": ["Todo lo del Plan Pro, más:", "Arquitectura de embudo de ventas", "Formularios segmentados", "Integración con CRM avanzado", "Panel de métricas en tiempo real", "Capacitación básica al equipo"],
+            "u_result": "Web integrada al área comercial.",
+            "m_badge": "Ventas Pro", "m_badge_style": "background:rgba(59,130,246,0.12);color:#60a5fa;border:1px solid rgba(59,130,246,0.3);",
+            "m_emoji": "📈", "m_name": "PLAN 3 — ESCALA", "m_price": PLANES_CONTINUIDAD["Plan Escala"], "m_plan": "Plan Escala",
+            "m_desc": "Para empresas con equipo de ventas activo.",
+            "m_items": ["Todo lo del Plan Crecimiento, más:", "2 Ajustes mensuales de optimización", "Integración y revisión técnica de CRM", "Automatizaciones de seguimiento", "Revisión profunda de embudos", "Reporte avanzado de rendimiento"],
+        },
+        {
+            "key": "Estrategico 360", "accent": "estr",
+            "u_badge": "Transformación Total", "u_badge_style": "background:rgba(168,85,247,0.18);color:#c084fc;border:1px solid rgba(168,85,247,0.4);",
+            "u_emoji": "🌐", "u_name": "ESTRATÉGICO 360", "u_price": PLANES["Estrategico 360"],
+            "u_desc": "Para empresas complejas con visión de liderazgo.",
+            "u_items": ["Todo lo del Plan Industrial, más:", "Desarrollo a medida (Cotizador / Intranet)", "Integración bidireccional (Tango, SAP, CRMs)", "Automatización condicional y Lead Scoring", "Plan estratégico B2B y Auditoría comercial", "Garantía extendida (12 meses) y Soporte SLA", "Creación de Lead Magnet y contenidos"],
+            "u_result": "Ecosistema corporativo autónomo.",
+            "m_badge": "Dirección Externa", "m_badge_style": "background:rgba(168,85,247,0.15);color:#c084fc;border:1px solid rgba(168,85,247,0.35);",
+            "m_emoji": "👑", "m_name": "PLAN 4 — LIDERAZGO", "m_price": PLANES_CONTINUIDAD["Plan Liderazgo"], "m_plan": "Plan Liderazgo",
+            "m_desc": "Tu departamento digital y estratégico tercerizado.",
+            "m_items": ["Todo lo del Plan Escala, más:", "Soporte técnico prioritario (SLA 4hs)", "4 Ajustes mensuales de optimización", "Reunión estratégica quincenal", "Gestión de campañas de automatización", "Mantenimiento de integraciones ERP complejas"],
+        },
+    ]
+
+    planes_cards = ""
+    for p in PLANES_VENTA:
+        accent = p["accent"]
+        card_cls = ("pv-card " + accent).strip()
+        btn_cls = "pv-btn-main estr" if accent == "estr" else "pv-btn-main"
+        # Items (Pago Único)
+        u_items_html = "".join(f"<li>{it}</li>" for it in p["u_items"])
+        u_items_html += f'<li class="pv-result"><strong>Resultado:</strong> {p["u_result"]}</li>'
+        # Items (Suscripción)
+        m_items_html = "".join(f"<li>{it}</li>" for it in p["m_items"])
+        # WhatsApp links
+        _wa_u_msg = f"Hola%20{wa_titular_encoded}%2C%20me%20interesa%20el%20{p['key'].replace(' ', '%20')}%20(USD%20{int(p['u_price'])}%2C%20pago%20%C3%BAnico)%20de%20Avanza%20Digital.%20%C2%BFPodemos%20hablar%3F"
+        _wa_u = f"https://wa.me/{wa_contacto}?text={_wa_u_msg}"
+        _wa_m_msg = f"Hola%20{wa_titular_encoded}%2C%20me%20interesa%20el%20{p['m_plan'].replace(' ', '%20')}%20(USD%20{int(p['m_price'])}%2Fmes%2C%20mantenimiento)%20de%20Avanza%20Digital.%20%C2%BFPodemos%20hablar%3F"
+        _wa_m = f"https://wa.me/{wa_contacto}?text={_wa_m_msg}"
+        planes_cards += f"""
+        <div class="{card_cls}">
+          <div class="pv-unique">
+            <span class="pv-badge" style="{p['u_badge_style']}">{p['u_badge']}</span>
+            <h3 class="pv-name">{p['u_name']} {p['u_emoji']}</h3>
+            <div class="pv-price">USD {_fmt_usd(p['u_price'])} <span>final</span></div>
+            <p class="pv-desc">{p['u_desc']}</p>
+            <ul class="pv-list">{u_items_html}</ul>
+            <div class="pv-actions">
+              <button class="{btn_cls}" onclick="abrirModal('{p['key']}','{ref_code}')">⚡ Contratar</button>
+              <a class="pv-btn-wa" href="{_wa_u}" target="_blank" rel="noopener">💬 Consultar</a>
             </div>
           </div>
-          <ul style="list-style:none;padding:0;margin:0 0 16px;">{includes_items}</ul>
-          {_ideal_html}
-          <div style="display:flex;gap:10px;flex-wrap:wrap;">
-            <button onclick="abrirModal(\'{nombre_plan}\',\'{ref_code}\')"
-               style="flex:1;min-width:140px;padding:14px;background:#3b82f6;color:#fff;border-radius:8px;border:none;cursor:pointer;font-weight:800;font-size:.9rem;">
-              Contratar {nombre_plan} →
-            </button>
-            <a href="https://wa.me/{wa_contacto}?text=Hola%20{wa_titular_encoded}%2C%20me%20interesa%20el%20{wa_plan_encoded}%20de%20Avanza%20Digital.%20%C2%BFPodemos%20hablar%3F"
-               target="_blank"
-               style="flex:1;min-width:140px;padding:14px;background:rgba(37,211,102,0.12);color:#25d366;border:1px solid rgba(37,211,102,0.3);border-radius:8px;cursor:pointer;font-weight:800;font-size:.9rem;text-decoration:none;text-align:center;display:inline-flex;align-items:center;justify-content:center;gap:6px;">
-              💬 Consultar
-            </a>
+          <div class="pv-monthly" style="display:none;">
+            <span class="pv-badge" style="{p['m_badge_style']}">{p['m_badge']}</span>
+            <h3 class="pv-name">{p['m_name']} {p['m_emoji']}</h3>
+            <div class="pv-price">USD {_fmt_usd(p['m_price'])} <span>/mes</span></div>
+            <p class="pv-desc">{p['m_desc']}</p>
+            <ul class="pv-list">{m_items_html}</ul>
+            <div class="pv-actions">
+              <a class="{btn_cls}" href="{_wa_m}" target="_blank" rel="noopener">⚡ Contratar</a>
+              <a class="pv-btn-wa" href="{_wa_m}" target="_blank" rel="noopener">💬 Consultar</a>
+            </div>
           </div>
         </div>
         """
+    planes_html = f'<div class="planes-grid-4">{planes_cards}</div>'
 
     usdt_activo = bool(USDT_DIRECCION or TRON_MNEMONIC)
 
@@ -7601,6 +7664,136 @@ def portal_publico_aliado(ref_code: str, db: Session = Depends(get_db)):
   </section>
 """
 
+    # ── CSS de la grilla de planes (4 en línea) + selector Suscripción/Pago Único ──
+    # String normal (no f-string): NO requiere doblar llaves.
+    _planes_css = """
+.pv-toggle{display:flex;align-items:center;justify-content:center;gap:14px;margin:6px auto 8px;flex-wrap:wrap;}
+.pv-toggle .lbl{font-size:.82rem;font-weight:700;color:#71717a;transition:color .2s;}
+.pv-toggle .lbl.active{color:#fff;}
+.pv-switch{position:relative;display:inline-block;width:52px;height:28px;flex-shrink:0;}
+.pv-switch input{opacity:0;width:0;height:0;}
+.pv-slider{position:absolute;cursor:pointer;inset:0;background:#3b82f6;border-radius:28px;transition:.3s;}
+.pv-slider:before{content:"";position:absolute;height:22px;width:22px;left:3px;bottom:3px;background:#fff;border-radius:50%;transition:.3s;}
+.pv-switch input:checked + .pv-slider:before{transform:translateX(24px);}
+.pv-switch input:not(:checked) + .pv-slider{background:#3f3f46;}
+.pv-hint{text-align:center;font-size:.82rem;color:#a1a1aa;max-width:560px;margin:0 auto 6px;line-height:1.5;}
+.pv-hint b{color:#93c5fd;cursor:pointer;}
+.pv-hint b.static{color:#cbd5e1;cursor:default;}
+
+.planes-grid-4{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;align-items:stretch;width:100vw;max-width:1240px;position:relative;left:50%;transform:translateX(-50%);padding:0 20px;margin:16px 0 10px;}
+@media(max-width:1080px){.planes-grid-4{grid-template-columns:repeat(2,1fr);max-width:700px;}}
+@media(max-width:560px){.planes-grid-4{grid-template-columns:1fr;}}
+
+.pv-card{background:#0f0f0f;border:1px solid rgba(255,255,255,0.08);border-radius:14px;padding:20px 18px;display:flex;flex-direction:column;transition:border-color .2s,transform .2s;}
+.pv-card:hover{border-color:rgba(59,130,246,0.45);transform:translateY(-3px);}
+.pv-card.pop{border-color:rgba(59,130,246,0.55);box-shadow:0 0 24px rgba(59,130,246,0.12);}
+.pv-card.estr{border-color:#a855f7;box-shadow:0 0 24px rgba(168,85,247,0.15);}
+.pv-card > div{display:flex;flex-direction:column;flex:1;}
+.pv-badge{align-self:flex-start;font-size:.62rem;font-weight:800;letter-spacing:1px;text-transform:uppercase;padding:4px 10px;border-radius:20px;margin-bottom:12px;}
+.pv-name{font-size:1rem;font-weight:900;margin-bottom:10px;line-height:1.2;}
+.pv-price{font-size:1.7rem;font-weight:900;color:#fff;margin-bottom:2px;line-height:1.1;}
+.pv-price span{font-size:.72rem;font-weight:600;color:#71717a;}
+.pv-desc{font-size:.78rem;color:#71717a;margin-bottom:14px;min-height:34px;}
+.pv-list{list-style:none;padding:0;margin:0 0 16px;flex:1;}
+.pv-list li{display:flex;gap:7px;align-items:flex-start;font-size:.78rem;color:#a1a1aa;margin-bottom:7px;line-height:1.4;}
+.pv-list li:before{content:"✓";color:#4ade80;font-weight:900;flex-shrink:0;}
+.pv-list li.pv-result{color:#e2e8f0;font-weight:600;margin-top:2px;}
+.pv-list li.pv-result:before{content:"★";color:#facc15;}
+.pv-actions{display:flex;flex-direction:column;gap:8px;margin-top:auto;}
+.pv-btn-main{padding:11px;background:#3b82f6;color:#fff;border:none;border-radius:8px;cursor:pointer;font-weight:800;font-size:.84rem;font-family:Inter,sans-serif;text-decoration:none;text-align:center;transition:background .2s;}
+.pv-btn-main:hover{background:#2563eb;}
+.pv-btn-main.estr{background:#a855f7;}
+.pv-btn-main.estr:hover{background:#9333ea;}
+.pv-btn-wa{padding:11px;background:rgba(37,211,102,0.1);color:#25d366;border:1px solid rgba(37,211,102,0.3);border-radius:8px;cursor:pointer;font-weight:800;font-size:.84rem;text-decoration:none;text-align:center;transition:background .2s;}
+.pv-btn-wa:hover{background:rgba(37,211,102,0.18);}
+.legal-small-print-v2{text-align:center;font-size:.72rem;color:#52525b;max-width:620px;margin:14px auto 0;line-height:1.5;}
+
+/* ── Sección Google Maps ── */
+.maps-box{background:#0f0f0f;border:1px solid rgba(255,255,255,0.08);border-radius:16px;padding:28px 22px;display:flex;flex-wrap:wrap;gap:28px;align-items:center;}
+.maps-col{flex:1 1 300px;min-width:0;}
+.maps-pill{display:inline-flex;align-items:center;gap:8px;background:rgba(74,222,128,0.08);border:1px solid rgba(74,222,128,0.18);border-radius:50px;padding:6px 14px;font-size:.76rem;color:#4ade80;font-weight:700;margin-bottom:16px;}
+.maps-col h3{font-size:1.25rem;font-weight:900;color:#fff;margin-bottom:10px;}
+.maps-col p.lead{color:#a1a1aa;font-size:.9rem;line-height:1.6;margin-bottom:16px;}
+.maps-list{list-style:none;padding:0;margin:0;}
+.maps-list li{display:flex;gap:9px;align-items:flex-start;font-size:.85rem;color:#a1a1aa;margin-bottom:9px;line-height:1.45;}
+.maps-list li:before{content:"\\f3c5";font-family:"Font Awesome 6 Free";font-weight:900;color:#4ade80;flex-shrink:0;font-size:.78rem;margin-top:2px;}
+.maps-card{border-radius:12px;padding:16px 18px;}
+.maps-card h4{display:flex;align-items:center;gap:10px;font-size:.92rem;color:#fff;font-weight:800;margin-bottom:6px;}
+.maps-card p{color:#a1a1aa;font-size:.83rem;line-height:1.5;margin:0;}
+.maps-cta{display:inline-flex;align-items:center;gap:8px;margin-top:6px;padding:13px 24px;background:#25d366;color:#04210f;border-radius:10px;font-weight:800;font-size:.9rem;text-decoration:none;transition:opacity .2s;}
+.maps-cta:hover{opacity:.9;}
+"""
+
+    # Selector Suscripción / Pago Único (encabezado de la grilla).
+    _toggle_html = """
+  <div class="pv-toggle">
+    <span class="lbl" id="pv-lbl-sub">Suscripción (Mantenimiento)</span>
+    <label class="pv-switch"><input type="checkbox" id="pv-pricing-toggle" checked><span class="pv-slider"></span></label>
+    <span class="lbl active" id="pv-lbl-unique">Pago Único (Sistema)</span>
+  </div>
+  <p class="pv-hint">¿Buscas <b class="static">hosting, soporte y mejoras continuas</b>? Cambia el selector a <b onclick="pvVerMensual()">«Suscripción (Mantenimiento)»</b> para ver los planes mensuales.</p>
+"""
+
+    # Sección de presencia en Google Maps (f-string: doblar llaves si hubiera, aquí no hay).
+    _maps_html = f"""
+  <hr class="divider">
+  <section class="section">
+    <div class="section-label">Posicionamiento local</div>
+    <h2>Tu empresa, en el mapa de Google</h2>
+    <p style="color:#a1a1aa;font-size:.92rem;margin-bottom:20px;">Cuando alguien busca tu rubro o "proveedor industrial" en tu zona, el mapa de Google aparece <strong style="color:#e2e8f0;">antes</strong> que cualquier web. Te ponemos ahí — y bien.</p>
+    <div class="maps-box">
+      <div class="maps-col">
+        <span class="maps-pill"><i class="fa-brands fa-google"></i> Perfil de Empresa en Google</span>
+        <h3>Qué hacemos por tu negocio</h3>
+        <p class="lead">Creamos y optimizamos tu Perfil de Empresa en Google para que aparezcas en el mapa y en las búsquedas locales — el canal de captación más subestimado del B2B industrial.</p>
+        <ul class="maps-list">
+          <li>Alta y verificación del <strong style="color:#cbd5e1;">Perfil de Empresa en Google</strong></li>
+          <li>Categorías, servicios y zona de cobertura optimizadas</li>
+          <li>Fotos, horarios y ficha completa que genera confianza</li>
+          <li>Sistema para pedir y responder <strong style="color:#cbd5e1;">reseñas</strong> (el factor #1 del ranking local)</li>
+          <li>Conexión con tu CRM: cada consulta del mapa entra como lead</li>
+        </ul>
+      </div>
+      <div class="maps-col" style="display:flex;flex-direction:column;gap:12px;">
+        <div class="maps-card" style="background:rgba(59,130,246,0.05);border:1px solid rgba(59,130,246,0.15);">
+          <h4><i class="fa-solid fa-location-dot" style="color:#60a5fa;"></i> Te encuentran cuando te buscan</h4>
+          <p>Apareces en las búsquedas de tu ciudad y región, justo cuando hay intención de compra.</p>
+        </div>
+        <div class="maps-card" style="background:rgba(74,222,128,0.05);border:1px solid rgba(74,222,128,0.15);">
+          <h4><i class="fa-solid fa-arrow-trend-up" style="color:#4ade80;"></i> Más llamadas y mensajes directos</h4>
+          <p>El cliente llama, pide cómo llegar o escribe por WhatsApp desde el mismo mapa.</p>
+        </div>
+        <div class="maps-card" style="background:rgba(251,146,60,0.05);border:1px solid rgba(251,146,60,0.15);">
+          <h4><i class="fa-solid fa-star" style="color:#fb923c;"></i> Reputación que vende</h4>
+          <p>Reseñas reales que construyen confianza antes del primer contacto.</p>
+        </div>
+        <a class="maps-cta" href="https://wa.me/{wa_contacto}?text=Hola%20{wa_titular_encoded}%2C%20quiero%20poner%20mi%20empresa%20en%20Google%20Maps." target="_blank" rel="noopener"><i class="fa-brands fa-whatsapp"></i> Quiero estar en Google Maps</a>
+      </div>
+    </div>
+  </section>
+"""
+
+    # JS del selector (string normal: no doblar llaves).
+    _planes_js = """
+<script>
+(function(){
+  var t = document.getElementById('pv-pricing-toggle');
+  if(!t) return;
+  function apply(){
+    var unique = t.checked;
+    document.querySelectorAll('.pv-unique').forEach(function(e){ e.style.display = unique ? 'flex' : 'none'; });
+    document.querySelectorAll('.pv-monthly').forEach(function(e){ e.style.display = unique ? 'none' : 'flex'; });
+    var lu = document.getElementById('pv-lbl-unique'), ls = document.getElementById('pv-lbl-sub');
+    if(lu) lu.classList.toggle('active', unique);
+    if(ls) ls.classList.toggle('active', !unique);
+  }
+  t.addEventListener('change', apply);
+  apply();
+})();
+function pvVerMensual(){ var t=document.getElementById('pv-pricing-toggle'); if(t){ t.checked=false; t.dispatchEvent(new Event('change')); } }
+</script>
+"""
+
     html = f"""<!DOCTYPE html>
 <html lang="es"><head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
@@ -7715,7 +7908,7 @@ body{{font-family:Inter,sans-serif;background:#050505;color:#e2e8f0;line-height:
 .btn-primary:disabled{{opacity:.6;cursor:not-allowed;}}
 input[type=text]{{width:100%;padding:12px;border-radius:8px;border:1px solid #444;background:#1a1a1a;color:#fff;font-size:1rem;font-family:Inter,sans-serif;}}
 input[type=text]:focus{{outline:none;border-color:#3b82f6;}}
-</style><style>{_extra_css}</style></head><body>
+</style><style>{_extra_css}</style><style>{_planes_css}</style></head><body>
 <nav class="nav">
   <a class="nav-logo" href="https://avanzadigital.digital">Avanza<span>Digital</span></a>
   <span class="nav-partner-pill">Partner Oficial</span>
@@ -7818,17 +8011,23 @@ input[type=text]:focus{{outline:none;border-color:#3b82f6;}}
 
   <hr class="divider">
 
-  <section class="section" id="planes">
-    <div class="section-label">Planes</div>
-    <p class="planes-title">Elige el plan ideal para tu empresa</p>
-    <p class="planes-sub">Implementación completa en 30 días. Pago único, sin costos ocultos.</p>
+{_maps_html}
+  <hr class="divider">
+
+  <section class="section planes-section" id="planes">
+    <div class="section-label" style="text-align:center;">Planes</div>
+    <p class="planes-title" style="text-align:center;">Elige tu nivel de crecimiento</p>
+    <p class="planes-sub" style="text-align:center;max-width:560px;margin:0 auto 14px;">Desde <strong style="color:#cbd5e1;">estabilidad técnica</strong> hasta <strong style="color:#cbd5e1;">transformación digital completa</strong>. Implementación en 30 días, sin costos ocultos.</p>
+    {_toggle_html}
     {planes_html}
+    <div class="legal-small-print-v2">Cambios fuera del alcance especificado se cotizan por separado bajo demanda. No es un servicio de diseño ilimitado: es un sistema vivo con límites operativos para garantizar la calidad del soporte.</div>
     <div class="garantia-box">
       <h3>✓ Garantía de 3 meses incluida</h3>
       <p>Todos los planes incluyen soporte técnico prioritario los primeros 90 días. Si algo no funciona, lo resolvemos nosotros.</p>
     </div>
 {_faq_html}
   </section>
+{_planes_js}
 
   <div class="footer">
     <p>Atendido por <strong style="color:#52525b;">{titular}</strong> · Partner Oficial de Avanza Digital</p>
