@@ -897,6 +897,118 @@
     src="https://js.sentry-cdn.com/b7cd138fe81da0167e10adbf97d2092c.min.js"
     crossorigin="anonymous"
   ></script>
+
+<style id="av-explainer-styles">
+/* ===== Avanza · Reproductor de explicadores de la Academia ===== */
+.av-explainer{position:relative;width:100%;max-width:880px;margin:6px auto 30px;border-radius:16px;overflow:hidden;border:1px solid var(--border-h);background:#070708;box-shadow:0 30px 80px rgba(0,0,0,.6);font-family:'Inter',system-ui,sans-serif;}
+.av-explainer *{box-sizing:border-box;margin:0;}
+.av-tag{display:flex;align-items:center;gap:8px;padding:10px 16px;background:#0a0a0d;border-bottom:1px solid var(--border);font:600 .72rem/1 ui-monospace,'Courier New',monospace;letter-spacing:.14em;text-transform:uppercase;color:#71717a;}
+.av-tag i{color:#f97316;}
+.av-stage{position:relative;width:100%;aspect-ratio:16/9;overflow:hidden;background:radial-gradient(120% 120% at 50% -12%,rgba(59,130,246,.16),transparent 55%),linear-gradient(160deg,#0c0c11,#070708);}
+.av-stage::before{content:'';position:absolute;right:-6%;bottom:-18%;width:48%;height:130%;background:linear-gradient(120deg,rgba(0,68,204,.18),rgba(0,204,204,.08));clip-path:polygon(0 0,55% 0,100% 50%,55% 100%,0 100%,45% 50%);opacity:.55;pointer-events:none;}
+@media(max-width:640px){.av-stage{aspect-ratio:4/5;}}
+.av-slide{position:absolute;inset:0;display:flex;flex-direction:column;justify-content:center;gap:14px;padding:7% 8%;opacity:0;pointer-events:none;transition:opacity .45s ease;}
+.av-slide.active{opacity:1;pointer-events:auto;}
+.av-slide.center{align-items:center;text-align:center;}
+.av-slide .r{opacity:0;}
+.av-slide.active .r{animation:avUp .55s cubic-bezier(.2,.75,.2,1) both;}
+.av-slide.active .d1{animation-delay:.05s}.av-slide.active .d2{animation-delay:.18s}.av-slide.active .d3{animation-delay:.31s}
+.av-slide.active .d4{animation-delay:.44s}.av-slide.active .d5{animation-delay:.57s}.av-slide.active .d6{animation-delay:.70s}.av-slide.active .d7{animation-delay:.83s}
+@keyframes avUp{from{opacity:0;transform:translateY(22px)}to{opacity:1;transform:none}}
+/* texto */
+.av-kicker{font:600 .72rem/1 ui-monospace,'Courier New',monospace;letter-spacing:.22em;text-transform:uppercase;color:#f97316;}
+.av-h{font-weight:900;font-size:clamp(1.45rem,4.5vw,2.8rem);line-height:1.05;color:#fff;letter-spacing:-.02em;}
+.av-h .b{color:#3b82f6}.av-h .o{color:#f97316}.av-h .g{color:#4ade80}
+.av-sub{font-size:clamp(.9rem,1.7vw,1.1rem);color:#a1a1aa;max-width:46ch;line-height:1.5;font-weight:400;}
+.av-slide.center .av-sub{margin:0 auto;}
+.av-eyebrow{font-weight:700;font-size:clamp(.95rem,1.8vw,1.15rem);color:#e7e7ea;}
+/* listas */
+.av-list{display:flex;flex-direction:column;gap:9px;}
+.av-li{display:flex;gap:10px;align-items:flex-start;font-size:clamp(.85rem,1.55vw,1.04rem);color:#e7e7ea;line-height:1.4;}
+.av-li i{color:#3b82f6;margin-top:.25em;flex:0 0 auto;font-size:.85em;}
+.av-li b{color:#fff;font-weight:700;}
+/* grids / cards */
+.av-grid{display:grid;gap:10px;}
+.av-grid.g2{grid-template-columns:repeat(2,1fr)}.av-grid.g3{grid-template-columns:repeat(3,1fr)}.av-grid.g4{grid-template-columns:repeat(4,1fr)}
+.av-card{background:rgba(255,255,255,.045);border:1px solid var(--border);border-radius:12px;padding:13px 14px;display:flex;flex-direction:column;gap:5px;}
+.av-card .n{font-weight:900;font-size:1.45rem;color:#3b82f6;line-height:1;}
+.av-card .n.o{color:#f97316}.av-card .n.g{color:#4ade80}
+.av-card .t{font-weight:800;color:#fff;font-size:.95rem;}
+.av-card .d{color:#a1a1aa;font-size:.8rem;line-height:1.35;}
+/* stat */
+.av-stat{font-weight:900;font-size:clamp(2.4rem,8.5vw,4.6rem);line-height:1;color:#fff;letter-spacing:-.03em;}
+.av-stat .o{color:#f97316}.av-stat .b{color:#3b82f6}.av-stat .g{color:#4ade80}
+/* quote / callouts */
+.av-quote{border-left:3px solid #f97316;background:rgba(249,115,22,.07);padding:13px 16px;border-radius:0 12px 12px 0;color:#f4f4f5;font-size:clamp(.86rem,1.55vw,1.05rem);line-height:1.5;}
+.av-quote .lab{display:block;font:600 .64rem/1 ui-monospace,monospace;letter-spacing:.16em;color:#f97316;text-transform:uppercase;margin-bottom:7px;}
+.av-warn{border-left:3px solid #ef4444;background:rgba(239,68,68,.08);padding:13px 16px;border-radius:0 12px 12px 0;color:#fde2e2;font-size:clamp(.85rem,1.5vw,1.02rem);line-height:1.5;}
+.av-warn .lab{display:block;font:600 .64rem/1 ui-monospace,monospace;letter-spacing:.16em;color:#ef4444;text-transform:uppercase;margin-bottom:7px;}
+.av-ok{border-left:3px solid #4ade80;background:rgba(74,222,128,.08);padding:13px 16px;border-radius:0 12px 12px 0;color:#dcfce7;font-size:clamp(.85rem,1.5vw,1.02rem);line-height:1.5;}
+.av-ok .lab{display:block;font:600 .64rem/1 ui-monospace,monospace;letter-spacing:.16em;color:#4ade80;text-transform:uppercase;margin-bottom:7px;}
+/* dos columnas */
+.av-cols{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.av-col{border-radius:12px;padding:12px 14px;border:1px solid var(--border);display:flex;flex-direction:column;gap:7px;}
+.av-col.bad{background:rgba(239,68,68,.06);border-color:rgba(239,68,68,.22)}
+.av-col.good{background:rgba(74,222,128,.06);border-color:rgba(74,222,128,.22)}
+.av-col .hd{font:600 .66rem/1 ui-monospace,monospace;letter-spacing:.14em;text-transform:uppercase;}
+.av-col.bad .hd{color:#ef4444}.av-col.good .hd{color:#4ade80}
+.av-col .it{font-size:.84rem;color:#e7e7ea;line-height:1.35;}
+/* pills / precios */
+.av-pill{display:inline-flex;align-items:center;gap:7px;align-self:flex-start;background:rgba(59,130,246,.14);border:1px solid rgba(59,130,246,.32);color:#93c5fd;font-weight:700;font-size:.78rem;padding:6px 12px;border-radius:999px;}
+.av-pill.o{background:rgba(249,115,22,.14);border-color:rgba(249,115,22,.32);color:#fdba74;}
+.av-price{color:#4ade80;font-weight:900;}
+/* split (mock + texto) */
+.av-split{display:grid;grid-template-columns:1.02fr .98fr;gap:18px;align-items:center;}
+/* mock UI */
+.av-mock{border:1px solid var(--border-h);border-radius:12px;overflow:hidden;background:#0b0b10;box-shadow:0 14px 34px rgba(0,0,0,.5);}
+.av-mock .mbar{display:flex;align-items:center;gap:5px;padding:8px 10px;background:#15151c;border-bottom:1px solid var(--border);}
+.av-mock .mbar span{width:8px;height:8px;border-radius:50%;background:#3a3a45;}
+.av-mock .mbar .url{margin-left:8px;height:6px;flex:1;border-radius:3px;background:rgba(255,255,255,.07);}
+.av-mock .mbody{padding:12px;display:flex;flex-direction:column;gap:8px;}
+.av-row{display:flex;gap:8px;align-items:center;}
+.av-ln{height:8px;border-radius:4px;background:rgba(255,255,255,.1);}
+.av-ln.b{background:rgba(59,130,246,.55)}.av-ln.o{background:rgba(249,115,22,.6)}.av-ln.g{background:rgba(74,222,128,.55)}
+.w30{width:30%}.w40{width:40%}.w50{width:50%}.w60{width:60%}.w70{width:70%}.w85{width:85%}.w100{width:100%}
+.av-chip{font:600 .62rem/1 ui-monospace,monospace;letter-spacing:.06em;padding:5px 8px;border-radius:6px;background:rgba(255,255,255,.06);color:#a1a1aa;border:1px solid var(--border);}
+.av-chip.g{background:rgba(74,222,128,.12);color:#4ade80;border-color:rgba(74,222,128,.25)}
+.av-chip.b{background:rgba(59,130,246,.12);color:#93c5fd;border-color:rgba(59,130,246,.25)}
+.av-chip.o{background:rgba(249,115,22,.12);color:#fdba74;border-color:rgba(249,115,22,.25)}
+.av-kpi{display:flex;flex-direction:column;gap:2px;background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:9px;padding:8px 10px;flex:1;}
+.av-kpi .v{font-weight:900;font-size:1.1rem;color:#4ade80;line-height:1;}
+.av-kpi .k{font-size:.62rem;color:#71717a;text-transform:uppercase;letter-spacing:.08em;}
+/* flujo de pasos */
+.av-flow{display:flex;align-items:stretch;gap:8px;flex-wrap:wrap;}
+.av-step{flex:1;min-width:120px;background:rgba(255,255,255,.045);border:1px solid var(--border);border-radius:11px;padding:12px;display:flex;flex-direction:column;gap:5px;}
+.av-step .sn{font:700 .64rem/1 ui-monospace,monospace;color:#f97316;letter-spacing:.1em;}
+.av-step .st{font-weight:800;color:#fff;font-size:.9rem;line-height:1.2;}
+.av-step .sd{color:#a1a1aa;font-size:.76rem;line-height:1.3;}
+/* timeline */
+.av-tl{display:flex;flex-direction:column;gap:8px;}
+.av-tl .tr{display:grid;grid-template-columns:64px 1fr;gap:10px;align-items:baseline;}
+.av-tl .tm{font:700 .72rem/1 ui-monospace,monospace;color:#3b82f6;}
+.av-tl .tx{font-size:.86rem;color:#e7e7ea;line-height:1.35;}
+.av-tl .tx b{color:#fff;}
+/* controles */
+.av-controls{display:flex;align-items:center;gap:11px;padding:10px 14px;background:#0a0a0d;border-top:1px solid var(--border);}
+.av-btn{appearance:none;background:rgba(255,255,255,.06);border:1px solid var(--border);color:#fff;width:34px;height:34px;border-radius:9px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:.82rem;transition:.15s;flex:0 0 auto;}
+.av-btn:hover{background:rgba(255,255,255,.14);border-color:var(--border-h);}
+.av-btn.play{background:#f97316;border-color:#f97316;color:#0a0a0d;}
+.av-btn.play:hover{background:#fb923c;}
+.av-progress{position:relative;flex:1;height:4px;border-radius:3px;background:rgba(255,255,255,.09);overflow:hidden;}
+.av-progress-fill{position:absolute;left:0;top:0;height:100%;width:0;background:linear-gradient(90deg,#3b82f6,#00cccc);border-radius:3px;}
+.av-dots{display:flex;gap:6px;flex:0 0 auto;}
+.av-dot{width:7px;height:7px;border-radius:50%;background:rgba(255,255,255,.18);cursor:pointer;transition:.2s;border:0;padding:0;}
+.av-dot.on{background:#3b82f6;transform:scale(1.3);}
+.av-counter{font:600 .72rem/1 ui-monospace,monospace;color:#71717a;min-width:50px;text-align:right;flex:0 0 auto;}
+@media(max-width:640px){
+  .av-split{grid-template-columns:1fr;gap:12px;}
+  .av-grid.g3,.av-grid.g4{grid-template-columns:repeat(2,1fr);}
+  .av-cols{grid-template-columns:1fr;}
+  .av-dots{display:none;}
+  .av-slide{padding:8% 7%;gap:11px;}
+}
+</style>
+
 </head>
 <body>
 
@@ -1203,9 +1315,9 @@
 
     <!-- ── FILA SECUNDARIA (togglable) ── -->
     <div class="tabs-extra-row" id="tabs-extra-row">
-      <button class="tab-btn" onclick="cambiarTab('academia',this)" style="background:rgba(249,115,22,0.12);border-color:rgba(249,115,22,0.3);color:#f97316;"><i class="fa-solid fa-graduation-cap"></i> Academia</button>
+      <button class="tab-btn tab-canal2" onclick="cambiarTab('academia',this)" style="display:none;background:rgba(249,115,22,0.12);border-color:rgba(249,115,22,0.3);color:#f97316;"><i class="fa-solid fa-graduation-cap"></i> Academia</button>
       <button class="tab-btn tab-canal2" onclick="cambiarTab('selector-rubro',this)" style="display:none;background:rgba(74,222,128,0.12);border-color:rgba(74,222,128,0.3);color:#4ade80;"><i class="fa-solid fa-crosshairs"></i> Selector de Rubro</button>
-      <button class="tab-btn" onclick="cambiarTab('prospectos',this)"><i class="fa-solid fa-bullseye"></i> Prospectos</button>
+      <button class="tab-btn tab-canal2" onclick="cambiarTab('prospectos',this)" style="display:none;"><i class="fa-solid fa-bullseye"></i> Prospectos</button>
       <button class="tab-btn" onclick="cambiarTab('ventas',this)"><i class="fa-solid fa-handshake"></i> Ventas</button>
       <button class="tab-btn" onclick="cambiarTab('cotizador',this)"><i class="fa-solid fa-file-invoice-dollar"></i> Cotizador</button>
       <button class="tab-btn" onclick="cambiarTab('herramientas',this)"><i class="fa-solid fa-magnifying-glass"></i> Auditorías</button>
@@ -8798,6 +8910,8 @@ const ACADEMIA_MODULOS = [
     tiempo: '5 min',
     icon: 'fa-circle-info',
     content: `
+      <div class="av-explainer"><div class="av-tag"><i class="fa-solid fa-circle-play"></i> Tutorial en video &middot; M&Oacute;DULO 01</div><div class="av-stage"><div class="av-slide center" data-dur="5500"><div class="av-kicker r d1">Avanza Partners &middot; Canal 1</div><div class="av-h r d2">C&oacute;mo funciona<br>el <span class="b">programa</span></div><div class="av-sub r d3">Vos cerr&aacute;s. Avanza implementa. Ambos cobramos. En 5 minutos entend&eacute;s todo el modelo.</div></div><div class="av-slide" data-dur="6500"><div class="av-kicker r d1">El modelo en 3 pasos</div><div class="av-flow"><div class="av-step r d2"><div class="sn">01</div><div class="st">Vos cerr&aacute;s</div><div class="sd">Present&aacute;s la soluci&oacute;n y cerr&aacute;s la venta con el cliente.</div></div><div class="av-step r d3"><div class="sn">02</div><div class="st">Avanza implementa</div><div class="sd">Nos ocupamos de toda la parte t&eacute;cnica: web, CRM, automatizaci&oacute;n.</div></div><div class="av-step r d4"><div class="sn">03</div><div class="st">Ambos cobramos</div><div class="sd">El cliente paga, vos cobr&aacute;s comisi&oacute;n. Sin inversi&oacute;n inicial.</div></div></div></div><div class="av-slide" data-dur="6500"><div class="av-kicker r d1">Estructura de comisiones</div><div class="av-h r d2" style="font-size:clamp(1.2rem,3.4vw,2rem)">Tu comisi&oacute;n <span class="o">sube sola</span> con cada venta</div><div class="av-grid g4"><div class="av-card r d3"><div class="n">10%</div><div class="t">BASIC</div><div class="d">Arranc&aacute;s ac&aacute;</div></div><div class="av-card r d4"><div class="n">12%</div><div class="t">SILVER</div><div class="d">1 venta cerrada</div></div><div class="av-card r d5"><div class="n o">15%</div><div class="t">PREMIUM</div><div class="d">2 ventas / 6 meses</div></div><div class="av-card r d6"><div class="n g">20%</div><div class="t">ELITE</div><div class="d">5 ventas / 6 meses</div></div></div></div><div class="av-slide" data-dur="7000"><div class="av-kicker r d1">Cu&aacute;nto gan&aacute;s por venta</div><div class="av-stat r d2">USD <span class="g">1.500</span></div><div class="av-eyebrow r d3">por un Estrat&eacute;gico 360 siendo ELITE.</div><div class="av-ok r d4"><span class="lab">Comisiones recurrentes</span>Si el plan tiene mantenimiento mensual, cobr&aacute;s <b>10% de ese pago todos los meses</b> mientras el cliente siga activo. Ingreso pasivo que crece con cada cliente.</div></div><div class="av-slide" data-dur="7500"><div class="av-kicker r d1">El paso cr&iacute;tico</div><div class="av-h r d2">Registr&aacute; al prospecto<br><span class="o">ANTES</span> del pago</div><div class="av-warn r d3"><span class="lab">As&iacute; no perd&eacute;s tu comisi&oacute;n</span>Si el cliente llega a Avanza sin estar registrado por vos antes de pagar, <b>la venta no se te atribuye</b>. Siempre: primero registr&aacute;s, despu&eacute;s el cliente paga. Us&aacute; tu link con <b>?ref=</b> y queda registrado solo.</div></div><div class="av-slide center" data-dur="5500"><div class="av-kicker r d1">Cu&aacute;ndo cobr&aacute;s</div><div class="av-stat r d2"><span class="b">24 hs</span></div><div class="av-sub r d3">Tu comisi&oacute;n se abona dentro de las 24 horas posteriores al ingreso del pago del cliente. Te pedimos factura A o B.</div></div></div><div class="av-controls"><button class="av-btn prev" aria-label="Anterior"><i class="fa-solid fa-backward-step"></i></button><button class="av-btn play" aria-label="Pausar"><i class="fa-solid fa-pause"></i></button><button class="av-btn next" aria-label="Siguiente"><i class="fa-solid fa-forward-step"></i></button><div class="av-progress"><div class="av-progress-fill"></div></div><div class="av-dots"></div><div class="av-counter">1 / 1</div></div></div>
+
       <h3>Lo que vas a aprender</h3>
       <ul>
         <li>Cuánto cobrás por cada venta y cómo sube tu comisión con el tiempo</li>
@@ -8870,6 +8984,8 @@ const ACADEMIA_MODULOS = [
     tiempo: '6 min',
     icon: 'fa-bullseye',
     content: `
+      <div class="av-explainer"><div class="av-tag"><i class="fa-solid fa-circle-play"></i> Tutorial en video &middot; M&Oacute;DULO 02</div><div class="av-stage"><div class="av-slide center" data-dur="5500"><div class="av-kicker r d1">Calificaci&oacute;n &middot; M&oacute;dulo 02</div><div class="av-h r d2">C&oacute;mo detectar al<br><span class="b">cliente ideal</span></div><div class="av-sub r d3">En 30 segundos sab&eacute;s si un prospecto vale tu tiempo. No todos los negocios son clientes.</div></div><div class="av-slide" data-dur="6500"><div class="av-kicker r d1">El perfil que mejor convierte</div><div class="av-list"><div class="av-li r d2"><i class="fa-solid fa-check"></i><span><b>PYME B2B industrial o de servicios</b> &mdash; 5 a 200 empleados</span></div><div class="av-li r d3"><i class="fa-solid fa-check"></i><span>Le <b>venden a otras empresas</b>, no al consumidor final</span></div><div class="av-li r d4"><i class="fa-solid fa-check"></i><span>Reciben <b>consultas t&eacute;cnicas</b>: presupuestos, cotizaciones, servicios a medida</span></div><div class="av-li r d5"><i class="fa-solid fa-check"></i><span>El due&ntilde;o <b>ya siente el dolor</b> de perder consultas o tardar en responder</span></div></div></div><div class="av-slide" data-dur="8000"><div class="av-kicker r d1">Las 4 preguntas que nunca fallan</div><div class="av-tl"><div class="tr r d2"><div class="tm">01</div><div class="tx"><b>Volumen.</b> &iquest;Cu&aacute;ntas consultas nuevas reciben por mes? (busc&aacute;s 10+)</div></div><div class="tr r d3"><div class="tm">02</div><div class="tx"><b>Canales.</b> &iquest;Por d&oacute;nde entran? (busc&aacute;s 2 o m&aacute;s &mdash; ah&iacute; est&aacute; el dolor)</div></div><div class="tr r d4"><div class="tm">03</div><div class="tx"><b>Tiempo.</b> &iquest;Cu&aacute;nto tardan en responder? (m&aacute;s de 2 hs = oro)</div></div><div class="tr r d5"><div class="tm">04</div><div class="tx"><b>El cierre.</b> &iquest;Resolver&iacute;a tu problema un sistema que responde en 60 seg?</div></div></div></div><div class="av-slide" data-dur="6500"><div class="av-kicker r d1">Rubros que mejor convierten</div><div class="av-grid g2"><div class="av-card r d2"><div class="t">Metal&uacute;rgica &middot; F&aacute;brica &middot; Agro</div><div class="d">Plan Industrial &middot; USD 4.900</div></div><div class="av-card r d3"><div class="t">Transporte &middot; Log&iacute;stica</div><div class="d">Plan Pro &middot; USD 2.900</div></div><div class="av-card r d4"><div class="t">Servicios t&eacute;cnicos &middot; Construcci&oacute;n</div><div class="d">Plan Base &middot; USD 1.050</div></div><div class="av-card r d5"><div class="t">Parque industrial &middot; Corporativo +100</div><div class="d">Estrat&eacute;gico 360 &middot; USD 7.500</div></div></div></div><div class="av-slide" data-dur="7500"><div class="av-kicker r d1">Verde vs rojo</div><div class="av-cols"><div class="av-col good r d2"><div class="hd">Cliente caliente</div><div class="it">&ldquo;Estamos creciendo y no damos abasto&rdquo;</div><div class="it">&ldquo;Perdimos clientes por no responder a tiempo&rdquo;</div><div class="it">&ldquo;La competencia aparece primero en Google&rdquo;</div></div><div class="av-col bad r d3"><div class="hd">Dej&aacute; pasar</div><div class="it">&ldquo;Ya tengo una agencia&rdquo;</div><div class="it">&ldquo;Yo mismo hago la web&rdquo;</div><div class="it">&ldquo;No tengo presupuesto ahora&rdquo;</div></div></div></div><div class="av-slide center" data-dur="6500"><div class="av-quote r d1"><span class="lab">Tip clave</span>En esta fase <b>no vend&eacute;s, solo calific&aacute;s</b>. Si las 4 respuestas te dan verde, pas&aacute;s al pitch (M&oacute;dulo 5). Si alguna da rojo, no insistas: agradec&eacute; y guard&aacute; el contacto.</div></div></div><div class="av-controls"><button class="av-btn prev" aria-label="Anterior"><i class="fa-solid fa-backward-step"></i></button><button class="av-btn play" aria-label="Pausar"><i class="fa-solid fa-pause"></i></button><button class="av-btn next" aria-label="Siguiente"><i class="fa-solid fa-forward-step"></i></button><div class="av-progress"><div class="av-progress-fill"></div></div><div class="av-dots"></div><div class="av-counter">1 / 1</div></div></div>
+
       <h3>Lo que vas a aprender</h3>
       <ul>
         <li>Cómo saber en 30 segundos si un prospecto vale tu tiempo</li>
@@ -8954,6 +9070,8 @@ const ACADEMIA_MODULOS = [
     tiempo: '7 min',
     icon: 'fa-magnifying-glass-chart',
     content: `
+      <div class="av-explainer"><div class="av-tag"><i class="fa-solid fa-circle-play"></i> Tutorial en video &middot; M&Oacute;DULO 03</div><div class="av-stage"><div class="av-slide center" data-dur="5500"><div class="av-kicker r d1">El cierre consultivo &middot; M&oacute;dulo 03</div><div class="av-h r d2">C&oacute;mo hacer<br>el <span class="b">diagn&oacute;stico</span></div><div class="av-sub r d3">Una llamada de 15 minutos donde el cliente se convence solo al describir sus propios problemas.</div></div><div class="av-slide" data-dur="7000"><div class="av-kicker r d1">Antes de llamar</div><div class="av-h r d2" style="font-size:clamp(1.2rem,3.4vw,2rem)">Mand&aacute; la <span class="o">Auditor&iacute;a Digital</span> primero</div><div class="av-quote r d3"><span class="lab">Por WhatsApp, antes de la reuni&oacute;n</span>&ldquo;Antes de reunirnos te paso un an&aacute;lisis r&aacute;pido de la presencia digital de tu empresa &mdash; gratis, tarda 30 segundos: [link]&rdquo;. El cliente ve su propio reporte y <b>llega convencido de que tiene un problema</b>.</div></div><div class="av-slide center" data-dur="5500"><div class="av-kicker r d1">La regla de oro</div><div class="av-stat r d2"><span class="b">30</span> / <span class="o">70</span></div><div class="av-sub r d3">Habl&aacute; el 30%, escuch&aacute; el 70%. El cliente te va a vender a vos mismo si lo dej&aacute;s hablar lo suficiente.</div></div><div class="av-slide" data-dur="8500"><div class="av-kicker r d1">El diagn&oacute;stico de 15 minutos</div><div class="av-tl"><div class="tr r d2"><div class="tm">0&ndash;2</div><div class="tx"><b>Apertura.</b> Baj&aacute;le la guardia: &ldquo;no te vendo nada ac&aacute;&rdquo;.</div></div><div class="tr r d3"><div class="tm">2&ndash;6</div><div class="tx"><b>Las 4 preguntas.</b> Volumen, canales, tiempo, seguimiento.</div></div><div class="tr r d4"><div class="tm">6&ndash;10</div><div class="tx"><b>El dolor.</b> Identific&aacute; cu&aacute;l de los 4 dolores pesa m&aacute;s.</div></div><div class="tr r d5"><div class="tm">10&ndash;13</div><div class="tx"><b>El caso del rubro.</b> Cont&aacute;s un caso parecido al suyo.</div></div><div class="tr r d6"><div class="tm">13&ndash;15</div><div class="tx"><b>El cierre.</b> &ldquo;&iquest;Te paso el detalle por WhatsApp?&rdquo;</div></div></div></div><div class="av-slide" data-dur="7500"><div class="av-kicker r d1">Devolv&eacute; el dolor</div><div class="av-quote r d2"><span class="lab">Cuando termin&oacute; de contarte</span>&ldquo;O sea, si entiendo bien, el problema central es <b>[dolor principal]</b>. Perd&eacute;s clientes porque <b>[consecuencia concreta]</b>. &iquest;Es as&iacute; o me pierdo algo?&rdquo;</div><div class="av-sub r d3">El cliente asiente. Ah&iacute; ya ganaste: escuch&oacute; el diagn&oacute;stico de su propia boca.</div></div><div class="av-slide" data-dur="7500"><div class="av-warn r d1"><span class="lab">Error frecuente</span>No te vayas por la t&eacute;cnica. El cliente <b>no compra tecnolog&iacute;a, compra el resultado</b>: m&aacute;s leads, menos tiempo perdido, visibilidad. Los detalles t&eacute;cnicos los ve despu&eacute;s con el equipo de Avanza.</div><div class="av-ok r d2"><span class="lab">El follow-up del viernes</span>Si no cierra hoy, no pasa nada. Mand&aacute; el caso por WhatsApp y <b>volv&eacute; a escribir el viernes</b>. La mitad de las ventas cierran en el segundo contacto.</div></div></div><div class="av-controls"><button class="av-btn prev" aria-label="Anterior"><i class="fa-solid fa-backward-step"></i></button><button class="av-btn play" aria-label="Pausar"><i class="fa-solid fa-pause"></i></button><button class="av-btn next" aria-label="Siguiente"><i class="fa-solid fa-forward-step"></i></button><div class="av-progress"><div class="av-progress-fill"></div></div><div class="av-dots"></div><div class="av-counter">1 / 1</div></div></div>
+
       <h3>Lo que vas a aprender</h3>
       <ul>
         <li>El guión exacto del diagnóstico de 15 minutos</li>
@@ -9064,6 +9182,8 @@ const ACADEMIA_MODULOS = [
     tiempo: '8 min',
     icon: 'fa-layer-group',
     content: `
+      <div class="av-explainer"><div class="av-tag"><i class="fa-solid fa-circle-play"></i> Tutorial en video &middot; M&Oacute;DULO 04</div><div class="av-stage"><div class="av-slide center" data-dur="5500"><div class="av-kicker r d1">El producto &middot; M&oacute;dulo 04</div><div class="av-h r d2">Los 4 sistemas,<br><span class="o">por dentro</span></div><div class="av-sub r d3">Qu&eacute; hace cada plan, c&oacute;mo se ve y a qu&eacute; cliente le conviene. Sin tecnicismos.</div></div><div class="av-slide" data-dur="7500"><div class="av-pill r d1">Plan Base &middot; <span class="av-price">USD 1.050</span></div><div class="av-split"><div class="r d2"><div class="av-mock"><div class="mbar"><span></span><span></span><span></span><div class="url"></div></div><div class="mbody"><div class="av-ln b w60"></div><div class="av-ln w100"></div><div class="av-ln w85"></div><div class="av-row" style="margin-top:6px"><div class="av-chip g"><i class="fa-brands fa-whatsapp"></i> Consulta &rarr; WhatsApp</div></div></div></div></div><div class="r d3"><div class="av-eyebrow">Para arrancar sin arriesgar</div><div class="av-sub" style="margin-top:6px">Landing profesional + formulario que va directo al WhatsApp. En <b>7 d&iacute;as</b> recib&iacute;s consultas. Ideal para PYMEs chicas (menos de 15 empleados).</div></div></div></div><div class="av-slide" data-dur="7500"><div class="av-pill r d1">Plan Pro &middot; <span class="av-price">USD 2.900</span></div><div class="av-split"><div class="r d2"><div class="av-mock"><div class="mbar"><span></span><span></span><span></span><div class="url"></div></div><div class="mbody"><div class="av-row"><div class="av-chip">Lead entra</div><div class="av-chip b">&lt; 60 seg</div><div class="av-chip o">auto-respuesta</div></div><div class="av-ln w100"></div><div class="av-ln w70"></div><div class="av-row" style="margin-top:4px"><div class="av-chip g">&check; calificado &rarr; vendedor</div></div></div></div></div><div class="r d3"><div class="av-eyebrow">Canal comercial automatizado</div><div class="av-sub" style="margin-top:6px">El sistema <b>contesta solo en menos de 60 segundos</b>, califica el lead y reci&eacute;n ah&iacute; se lo pasa a tu vendedor. Tu equipo deja de perder tiempo con consultas basura.</div></div></div></div><div class="av-slide" data-dur="7500"><div class="av-pill r d1">Plan Industrial &middot; <span class="av-price">USD 4.900</span></div><div class="av-split"><div class="r d2"><div class="av-mock"><div class="mbar"><span></span><span></span><span></span><div class="url"></div></div><div class="mbody"><div class="av-row"><div class="av-kpi"><div class="v">+47%</div><div class="k">conversi&oacute;n</div></div><div class="av-kpi"><div class="v">0</div><div class="k">sin respuesta 24h</div></div></div><div class="av-ln b w85"></div><div class="av-ln w60"></div><div class="av-row"><div class="av-chip o">formulario segmentado</div></div></div></div></div><div class="r d3"><div class="av-eyebrow">Para ciclos de venta complejos</div><div class="av-sub" style="margin-top:6px">El formulario <b>se adapta al producto consultado</b>: si preguntan por un silo, pide capacidad. Cada consulta llega calificada y el due&ntilde;o ve todo en un <b>panel en tiempo real</b>.</div></div></div></div><div class="av-slide" data-dur="7500"><div class="av-pill o r d1">Estrat&eacute;gico 360 &middot; <span class="av-price">USD 7.500</span></div><div class="av-split"><div class="r d2"><div class="av-mock"><div class="mbar"><span></span><span></span><span></span><div class="url"></div></div><div class="mbody"><div class="av-row"><div class="av-chip b">ERP: Tango / SAP</div><div class="av-chip g">Lead scoring</div></div><div class="av-row"><div class="av-ln g w50"></div><div class="av-chip">92</div></div><div class="av-row"><div class="av-ln o w40"></div><div class="av-chip">71</div></div><div class="av-row"><div class="av-ln w30"></div><div class="av-chip">38</div></div></div></div></div><div class="r d3"><div class="av-eyebrow">El sistema a medida</div><div class="av-sub" style="margin-top:6px">Integraci&oacute;n con el <b>ERP</b> que ya usan (Tango, SAP) + <b>lead scoring</b> que prioriza los leads m&aacute;s calientes. Garant&iacute;a 12 meses. Es lo que se implementa en parques log&iacute;sticos.</div></div></div></div><div class="av-slide" data-dur="7500"><div class="av-kicker r d1">Qu&eacute; plan ofrecer</div><div class="av-list"><div class="av-li r d2"><i class="fa-solid fa-arrow-right"></i><span>&ldquo;No tengo presencia digital&rdquo; &rarr; <b>Base</b></span></div><div class="av-li r d3"><i class="fa-solid fa-arrow-right"></i><span>&ldquo;Tengo web pero no me sirve&rdquo; &rarr; <b>Pro</b></span></div><div class="av-li r d4"><i class="fa-solid fa-arrow-right"></i><span>&ldquo;Vendo productos t&eacute;cnicos complejos&rdquo; &rarr; <b>Industrial</b></span></div><div class="av-li r d5"><i class="fa-solid fa-arrow-right"></i><span>&ldquo;Uso Tango/SAP y quiero integrar todo&rdquo; &rarr; <b>Estrat&eacute;gico 360</b></span></div></div></div><div class="av-slide" data-dur="7500"><div class="av-quote r d1"><span class="lab">Tip de upsell</span>Si el cliente duda entre dos planes, empuj&aacute; siempre al <b>m&aacute;s caro</b>. Tu comisi&oacute;n sube y el cliente queda m&aacute;s conforme: arrancar corto y tener que escalar a los 3 meses sale m&aacute;s caro.</div><div class="av-ok r d2"><span class="lab">Todos los planes incluyen</span>Pago &uacute;nico &middot; c&oacute;digo 100% del cliente &middot; implementaci&oacute;n en el plazo pactado &middot; factura A o B.</div></div></div><div class="av-controls"><button class="av-btn prev" aria-label="Anterior"><i class="fa-solid fa-backward-step"></i></button><button class="av-btn play" aria-label="Pausar"><i class="fa-solid fa-pause"></i></button><button class="av-btn next" aria-label="Siguiente"><i class="fa-solid fa-forward-step"></i></button><div class="av-progress"><div class="av-progress-fill"></div></div><div class="av-dots"></div><div class="av-counter">1 / 1</div></div></div>
+
       <h3>Lo que vas a aprender</h3>
       <ul>
         <li>Qué incluye cada plan en palabras simples</li>
@@ -9170,6 +9290,8 @@ const ACADEMIA_MODULOS = [
     tiempo: '6 min',
     icon: 'fa-handshake',
     content: `
+      <div class="av-explainer"><div class="av-tag"><i class="fa-solid fa-circle-play"></i> Tutorial en video &middot; M&Oacute;DULO 05</div><div class="av-stage"><div class="av-slide center" data-dur="5500"><div class="av-kicker r d1">El cierre &middot; M&oacute;dulo 05</div><div class="av-h r d2">Cerr&aacute; con el<br><span class="b">gui&oacute;n por rubro</span></div><div class="av-sub r d3">El caso correcto del rubro del cliente cierra 3 veces m&aacute;s que improvisar.</div></div><div class="av-slide" data-dur="6500"><div class="av-kicker r d1">Matriz de decisi&oacute;n</div><div class="av-grid g2"><div class="av-card r d2"><div class="t">Metal&uacute;rgica / Agro</div><div class="d">Caso <b>Balconi</b> &middot; Industrial USD 4.900</div></div><div class="av-card r d3"><div class="t">Transporte / Log&iacute;stica</div><div class="d">Caso <b>O&ntilde;ate</b> &middot; Pro USD 2.900</div></div><div class="av-card r d4"><div class="t">Servicios t&eacute;cnicos</div><div class="d">Caso <b>Litoral</b> &middot; Base USD 1.050</div></div><div class="av-card r d5"><div class="t">Gran escala / Corporativo</div><div class="d">Caso <b>PLI</b> &middot; Estrat&eacute;gico 360</div></div></div></div><div class="av-slide" data-dur="8000"><div class="av-kicker r d1">Caso metal&uacute;rgica / agro</div><div class="av-quote r d2"><span class="lab">Pitch verbal</span>&ldquo;Uno que te va a sonar: <b>Metal&uacute;rgica Balconi</b>, en Rafaela. 38 empleados, consultas por 3 canales sin control. Les armamos un panel &uacute;nico en 21 d&iacute;as. Hoy: cero consultas sin respuesta en 24hs y <b>+47% de conversi&oacute;n</b>. Recuperaron dos clientes que daban por perdidos.&rdquo;</div></div><div class="av-slide" data-dur="8000"><div class="av-kicker r d1">Caso transporte / log&iacute;stica</div><div class="av-quote r d2"><span class="lab">Pitch verbal</span>&ldquo;<b>Transportes O&ntilde;ate</b>, en Rosario. Tardaban 31 horas en contestar un presupuesto &mdash; en transporte eso es muerte. En 14 d&iacute;as montamos el sistema. Hoy responden en <b>4 horas autom&aacute;ticamente</b> y cerraron 3 contratos nuevos el primer mes.&rdquo;</div></div><div class="av-slide" data-dur="8500"><div class="av-kicker r d1">Servicios t&eacute;cnicos &amp; gran escala</div><div class="av-quote r d2"><span class="lab">Caso Litoral</span>&ldquo;<b>Soluciones T&eacute;cnicas del Litoral</b>, Paran&aacute;. Conseguian clientes solo por referidos. Plan Base en 7 d&iacute;as &rarr; USD 8.400 en contratos el primer trimestre.&rdquo;</div><div class="av-quote r d3"><span class="lab">Caso PLI &middot; autoridad</span>&ldquo;Hay un Parque Log&iacute;stico de 120 hect&aacute;reas con Andreani, Grido e YPF. Lo tuyo puede ser m&aacute;s chico, pero el enfoque es el mismo.&rdquo;</div></div><div class="av-slide center" data-dur="6500"><div class="av-quote r d1"><span class="lab">Regla de oro</span>Si vas con <b>Balconi a un transportista</b>, el cliente no se reconoce. Memoriz&aacute; los 4 casos por rubro: eso solo te cambia el resultado del mes.</div></div></div><div class="av-controls"><button class="av-btn prev" aria-label="Anterior"><i class="fa-solid fa-backward-step"></i></button><button class="av-btn play" aria-label="Pausar"><i class="fa-solid fa-pause"></i></button><button class="av-btn next" aria-label="Siguiente"><i class="fa-solid fa-forward-step"></i></button><div class="av-progress"><div class="av-progress-fill"></div></div><div class="av-dots"></div><div class="av-counter">1 / 1</div></div></div>
+
       <h3>Lo que vas a aprender</h3>
       <ul>
         <li>Qué caso usar según el rubro del prospecto</li>
@@ -9250,6 +9372,8 @@ const ACADEMIA_MODULOS = [
     tiempo: '7 min',
     icon: 'fa-shield',
     content: `
+      <div class="av-explainer"><div class="av-tag"><i class="fa-solid fa-circle-play"></i> Tutorial en video &middot; M&Oacute;DULO 06</div><div class="av-stage"><div class="av-slide center" data-dur="5500"><div class="av-kicker r d1">Manejo de objeciones &middot; M&oacute;dulo 06</div><div class="av-h r d2">Las <span class="o">6 objeciones</span><br>m&aacute;s comunes</div><div class="av-sub r d3">Qu&eacute; te van a decir para no comprar, y c&oacute;mo responder sin pelear.</div></div><div class="av-slide" data-dur="7500"><div class="av-kicker r d1">Objeci&oacute;n 1</div><div class="av-warn r d2"><span class="lab">El cliente dice</span>&ldquo;Es caro&rdquo;</div><div class="av-ok r d3"><span class="lab">Lo que dec&iacute;s</span>&iquest;Cu&aacute;nto vale para vos cerrar una venta m&aacute;s por mes? Si tu venta promedio es USD 3.000+, el plan <b>se paga solo con una venta de m&aacute;s</b> &mdash; y no una al a&ntilde;o: todos los meses.</div></div><div class="av-slide" data-dur="7500"><div class="av-kicker r d1">Objeci&oacute;n 2</div><div class="av-warn r d2"><span class="lab">El cliente dice</span>&ldquo;Ya tengo una web&rdquo;</div><div class="av-ok r d3"><span class="lab">Lo que dec&iacute;s</span>Perfecto. La pregunta no es si ten&eacute;s web, es <b>cu&aacute;ntas consultas te genera por mes</b>. La mayor&iacute;a son folletos lindos que no convierten. Nosotros armamos un sistema de ventas, no una web bonita.</div></div><div class="av-slide" data-dur="7500"><div class="av-kicker r d1">Objeci&oacute;n 3</div><div class="av-warn r d2"><span class="lab">El cliente dice</span>&ldquo;Lo voy a pensar&rdquo;</div><div class="av-ok r d3"><span class="lab">Lo que dec&iacute;s</span>Buen&iacute;simo, es una decisi&oacute;n importante. &iquest;Qu&eacute; es lo que te quedar&iacute;a por definir &mdash; el plan, los tiempos o el presupuesto? <b>As&iacute; te paso justo eso</b> y lo charlamos el viernes sin presi&oacute;n.</div></div><div class="av-slide" data-dur="7500"><div class="av-kicker r d1">Objeci&oacute;n 4</div><div class="av-warn r d2"><span class="lab">El cliente dice</span>&ldquo;No tengo tiempo para implementar esto&rdquo;</div><div class="av-ok r d3"><span class="lab">Lo que dec&iacute;s</span>Esa es justo la idea: <b>lo implementamos nosotros</b>. Vos solo nos das la info inicial una vez. En el plazo pactado lo ten&eacute;s funcionando sin mover a tu equipo.</div></div><div class="av-slide" data-dur="7500"><div class="av-kicker r d1">Objeci&oacute;n 5</div><div class="av-warn r d2"><span class="lab">El cliente dice</span>&ldquo;Ya tenemos WhatsApp Business&rdquo;</div><div class="av-ok r d3"><span class="lab">Lo que dec&iacute;s</span>Genial, eso ayuda a responder. Pero WhatsApp <b>no califica ni hace seguimiento solo</b>: cuando llegan 30 consultas juntas, igual se pierden. El sistema responde, filtra y le pasa al vendedor solo los buenos.</div></div><div class="av-slide" data-dur="8000"><div class="av-kicker r d1">Objeci&oacute;n 6</div><div class="av-warn r d2"><span class="lab">El cliente dice</span>&ldquo;D&eacute;jame hablarlo con mi socio&rdquo;</div><div class="av-ok r d3"><span class="lab">Lo que dec&iacute;s</span>L&oacute;gico. Para que se lo lleves claro, te mando el <b>brochure con el caso de tu rubro</b> y los n&uacute;meros. &iquest;Coordinamos una llamada corta con los dos as&iacute; respondo lo que surja?</div></div></div><div class="av-controls"><button class="av-btn prev" aria-label="Anterior"><i class="fa-solid fa-backward-step"></i></button><button class="av-btn play" aria-label="Pausar"><i class="fa-solid fa-pause"></i></button><button class="av-btn next" aria-label="Siguiente"><i class="fa-solid fa-forward-step"></i></button><div class="av-progress"><div class="av-progress-fill"></div></div><div class="av-dots"></div><div class="av-counter">1 / 1</div></div></div>
+
       <h3>Lo que vas a aprender</h3>
       <ul>
         <li>Las 6 objeciones que escuchás en el 90% de los cierres</li>
@@ -9345,6 +9469,8 @@ const ACADEMIA_MODULOS = [
     tiempo: '5 min',
     icon: 'fa-trophy',
     content: `
+      <div class="av-explainer"><div class="av-tag"><i class="fa-solid fa-circle-play"></i> Tutorial en video &middot; M&Oacute;DULO 07</div><div class="av-stage"><div class="av-slide center" data-dur="5500"><div class="av-kicker r d1">Prueba social &middot; M&oacute;dulo 07</div><div class="av-h r d2">Casos de &eacute;xito,<br>con <span class="g">n&uacute;meros</span></div><div class="av-sub r d3">Cuatro casos reales para contar con confianza. Los n&uacute;meros cierran ventas.</div></div><div class="av-slide" data-dur="7000"><div class="av-kicker r d1">Metal&uacute;rgica Balconi &middot; Rafaela</div><div class="av-row r d2" style="gap:10px"><div class="av-kpi"><div class="v">+47%</div><div class="k">conversi&oacute;n</div></div><div class="av-kpi"><div class="v">21</div><div class="k">d&iacute;as de implementaci&oacute;n</div></div><div class="av-kpi"><div class="v">0</div><div class="k">consultas sin respuesta 24h</div></div></div><div class="av-sub r d3">38 empleados, consultas por 3 canales sin control &rarr; un panel &uacute;nico. Recuperaron 2 clientes grandes.</div></div><div class="av-slide center" data-dur="6500"><div class="av-kicker r d1">Transportes O&ntilde;ate &middot; Rosario</div><div class="av-stat r d2"><span class="o">31h</span> &rarr; <span class="g">4h</span></div><div class="av-sub r d3">De 31 horas a 4 horas de respuesta autom&aacute;tica. <b>+38% de cierre</b> y 3 contratos nuevos el primer mes.</div></div><div class="av-slide center" data-dur="6500"><div class="av-kicker r d1">Soluciones T&eacute;cnicas del Litoral &middot; Paran&aacute;</div><div class="av-stat r d2 g">USD 8.400</div><div class="av-sub r d3">En contratos nuevos el primer trimestre, con Plan Base. Adem&aacute;s, 1&ordm; en Google local. El plan se pag&oacute; con la primera venta.</div></div><div class="av-slide" data-dur="6500"><div class="av-kicker r d1">Parque Log&iacute;stico Industrial &middot; en curso</div><div class="av-grid g3"><div class="av-card r d2"><div class="n">120 ha</div><div class="d">superficie</div></div><div class="av-card r d3"><div class="n o">89</div><div class="d">lotes</div></div><div class="av-card r d4"><div class="n g">Estrat&eacute;gico 360</div><div class="d">Andreani, Grido, YPF Gas</div></div></div></div><div class="av-slide center" data-dur="6500"><div class="av-quote r d1"><span class="lab">C&oacute;mo usar los casos</span>Eleg&iacute; el caso del <b>rubro del cliente</b> y cont&aacute; el antes/despu&eacute;s con los n&uacute;meros. El cliente se reconoce y la venta se cierra sola.</div></div></div><div class="av-controls"><button class="av-btn prev" aria-label="Anterior"><i class="fa-solid fa-backward-step"></i></button><button class="av-btn play" aria-label="Pausar"><i class="fa-solid fa-pause"></i></button><button class="av-btn next" aria-label="Siguiente"><i class="fa-solid fa-forward-step"></i></button><div class="av-progress"><div class="av-progress-fill"></div></div><div class="av-dots"></div><div class="av-counter">1 / 1</div></div></div>
+
       <h3>Lo que vas a aprender</h3>
       <ul>
         <li>Los 4 casos reales en profundidad</li>
@@ -9430,6 +9556,8 @@ const ACADEMIA_MODULOS = [
     tiempo: '2 min',
     icon: 'fa-download',
     content: `
+      <div class="av-explainer"><div class="av-tag"><i class="fa-solid fa-circle-play"></i> Tutorial en video &middot; M&Oacute;DULO 08</div><div class="av-stage"><div class="av-slide center" data-dur="5500"><div class="av-kicker r d1">Tu kit &middot; M&oacute;dulo 08</div><div class="av-h r d2">Qu&eacute; material mandar<br>en <span class="o">cada momento</span></div><div class="av-sub r d3">Todo lo que necesit&aacute;s para vender est&aacute; listo para descargar abajo. Ac&aacute; va el orden.</div></div><div class="av-slide" data-dur="6500"><div class="av-kicker r d1">El flujo de una venta</div><div class="av-flow"><div class="av-step r d2"><div class="sn">01</div><div class="st">Auditor&iacute;a</div><div class="sd">Antes de la reuni&oacute;n, como anticipo.</div></div><div class="av-step r d3"><div class="sn">02</div><div class="st">Brochure</div><div class="sd">Para mostrarle al cliente en la charla.</div></div><div class="av-step r d4"><div class="sn">03</div><div class="st">Gui&oacute;n por rubro</div><div class="sd">El caso exacto de su industria.</div></div><div class="av-step r d5"><div class="sn">04</div><div class="st">Contrato</div><div class="sd">Tras el s&iacute;, para formalizar.</div></div></div></div><div class="av-slide" data-dur="7500"><div class="av-kicker r d1">Tus dos links</div><div class="av-cols"><div class="av-col good r d2"><div class="hd">Para vender</div><div class="it"><b>P&aacute;gina de ventas</b><br>/p/tu-link</div><div class="it">Se la mand&aacute;s al cliente que quer&eacute;s cerrar.</div></div><div class="av-col r d3" style="border-color:rgba(59,130,246,.25);background:rgba(59,130,246,.06)"><div class="hd" style="color:#93c5fd">Para reclutar</div><div class="it"><b>Link de reclutamiento</b><br>/alianzas?ref=tu-link</div><div class="it">Para sumar nuevos aliados a tu red.</div></div></div></div><div class="av-slide" data-dur="6500"><div class="av-kicker r d1">Kit de marca</div><div class="av-list"><div class="av-li r d2"><i class="fa-brands fa-linkedin"></i><span><b>Banner LinkedIn</b> (1584&times;396) &mdash; sub&iacute; sin recortar</span></div><div class="av-li r d3"><i class="fa-solid fa-image"></i><span><b>Logos</b> para fondo claro y oscuro + isotipo transparente</span></div><div class="av-li r d4"><i class="fa-solid fa-palette"></i><span><b>Kit de identidad</b>: colores, tipograf&iacute;a y c&oacute;mo presentarte</span></div><div class="av-li r d5"><i class="fa-solid fa-share-nodes"></i><span><b>Casos para postear</b>: Balconi, O&ntilde;ate, Litoral, PLI</span></div></div></div><div class="av-slide center" data-dur="6000"><div class="av-ok r d1"><span class="lab">Listo para usar</span>Todos estos materiales est&aacute;n <b>m&aacute;s abajo en este mismo m&oacute;dulo</b>, listos para descargar. Guard&aacute;los en el celu y tenelos a mano en cada llamada.</div></div></div><div class="av-controls"><button class="av-btn prev" aria-label="Anterior"><i class="fa-solid fa-backward-step"></i></button><button class="av-btn play" aria-label="Pausar"><i class="fa-solid fa-pause"></i></button><button class="av-btn next" aria-label="Siguiente"><i class="fa-solid fa-forward-step"></i></button><div class="av-progress"><div class="av-progress-fill"></div></div><div class="av-dots"></div><div class="av-counter">1 / 1</div></div></div>
+
       <h3>Lo que vas a aprender</h3>
       <ul>
         <li>Qué material mandar en cada momento del cierre</li>
@@ -9695,6 +9823,8 @@ const ACADEMIA_MODULOS = [
     tiempo: '12 min',
     icon: 'fa-linkedin',
     content: `
+      <div class="av-explainer"><div class="av-tag"><i class="fa-solid fa-circle-play"></i> Tutorial en video &middot; M&Oacute;DULO 09</div><div class="av-stage"><div class="av-slide center" data-dur="5500"><div class="av-kicker r d1">Prospecci&oacute;n &middot; M&oacute;dulo 09</div><div class="av-h r d2"><span class="b">LinkedIn</span> B2B</div><div class="av-sub r d3">El canal con m&aacute;s potencial a mediano plazo para llegar a gerentes industriales.</div></div><div class="av-slide center" data-dur="6500"><div class="av-kicker r d1">Por qu&eacute; es distinto</div><div class="av-sub r d2" style="max-width:48ch">WhatsApp sirve para cerrar. Instagram para awareness. <b>LinkedIn es el &uacute;nico canal</b> donde un gerente de compras busca proveedores con intenci&oacute;n declarada, en horario laboral.</div></div><div class="av-slide center" data-dur="6500"><div class="av-kicker r d1">La regla de oro</div><div class="av-h r d2" style="font-size:clamp(1.3rem,3.6vw,2.1rem)">LinkedIn <span class="o">calienta</span>,<br>WhatsApp <span class="g">cierra</span></div><div class="av-sub r d3">No es para vender. Es para que cuando el prospecto tenga el problema, vos seas la primera persona que recuerda.</div></div><div class="av-slide" data-dur="7500"><div class="av-kicker r d1">Tu perfil = landing, no CV</div><div class="av-cols"><div class="av-col bad r d2"><div class="hd">Titular que NO</div><div class="it">&ldquo;Consultor de Marketing | Especialista en Redes | Freelance&rdquo;</div></div><div class="av-col good r d3"><div class="hd">Titular que convierte</div><div class="it">&ldquo;Sistemas de ventas B2B para empresas industriales en LATAM &middot; Canal certificado Avanza&rdquo;</div></div></div></div><div class="av-slide center" data-dur="6500"><div class="av-kicker r d1">A qui&eacute;n conectar</div><div class="av-stat r d2"><span class="b">30&ndash;50</span></div><div class="av-sub r d3">prospectos calificados por semana con la cuenta gratis. Filtr&aacute; por Cargo &rarr; Industria &rarr; Ubicaci&oacute;n. Busc&aacute; due&ntilde;os y gerentes comerciales de PYMEs industriales.</div></div><div class="av-slide center" data-dur="7000"><div class="av-quote r d1"><span class="lab">Mensaje de conexi&oacute;n &middot; 280 caracteres</span>Person&aacute; (mencion&aacute; algo de su empresa) &rarr; aport&aacute; valor (un dato o caso del rubro) &rarr; <b>no vendas en el primer mensaje</b>. Solo abr&iacute; la puerta.</div></div></div><div class="av-controls"><button class="av-btn prev" aria-label="Anterior"><i class="fa-solid fa-backward-step"></i></button><button class="av-btn play" aria-label="Pausar"><i class="fa-solid fa-pause"></i></button><button class="av-btn next" aria-label="Siguiente"><i class="fa-solid fa-forward-step"></i></button><div class="av-progress"><div class="av-progress-fill"></div></div><div class="av-dots"></div><div class="av-counter">1 / 1</div></div></div>
+
       <h3>Por qué LinkedIn es diferente a todos los otros canales</h3>
       <p>WhatsApp sirve para cerrar. Instagram sirve para awareness. LinkedIn es el único canal donde un <strong>gerente de compras industrial</strong> está activamente buscando proveedores y soluciones, con intención declarada, dentro de su horario laboral.</p>
       <p>En LATAM, la penetración de LinkedIn entre decisores industriales B2B (gerentes de compra, directores de operaciones, dueños de PYMEs exportadoras) creció más del 40% desde 2022. El problema: casi nadie de tu competencia lo usa bien, lo que te deja un canal con muy poca fricción.</p>
@@ -9997,6 +10127,7 @@ function abrirModulo(id) {
   `;
   
   document.getElementById('aca-lessons-container').innerHTML = html;
+  if (window.initAvExplainers) initAvExplainers(document.getElementById('aca-lessons-container'));
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
@@ -11415,5 +11546,130 @@ function jMd(text) {
 }
 
 </script>
+
+<script>
+/* ===== Avanza · Motor del reproductor de explicadores ===== */
+(function(){
+  if (window.initAvExplainers) return;
+  window.__avTimers = [];
+  function clearTimers(){ window.__avTimers.forEach(function(t){clearTimeout(t);}); window.__avTimers = []; }
+
+  window.initAvExplainers = function(root){
+    clearTimers();
+    var scope = root || document;
+    var boxes = scope.querySelectorAll('.av-explainer');
+    for (var i=0;i<boxes.length;i++){ setup(boxes[i]); }
+  };
+
+  function setup(box){
+    var slides = box.querySelectorAll('.av-slide');
+    var total = slides.length;
+    if (!total) return;
+    var fill = box.querySelector('.av-progress-fill');
+    var counter = box.querySelector('.av-counter');
+    var dotsWrap = box.querySelector('.av-dots');
+    var playBtn = box.querySelector('.av-btn.play');
+    var prevBtn = box.querySelector('.av-btn.prev');
+    var nextBtn = box.querySelector('.av-btn.next');
+
+    var idx = 0, playing = true, timer = null, startTs = 0, remaining = 0;
+
+    // dots
+    var dots = [];
+    if (dotsWrap){
+      dotsWrap.innerHTML = '';
+      for (var k=0;k<total;k++){
+        var b = document.createElement('button');
+        b.className = 'av-dot';
+        b.setAttribute('aria-label','Ir a la diapositiva '+(k+1));
+        (function(j){ b.addEventListener('click', function(){ goto(j); }); })(k);
+        dotsWrap.appendChild(b);
+        dots.push(b);
+      }
+    }
+
+    function dur(i){ return parseInt(slides[i].getAttribute('data-dur')||'6500',10); }
+
+    function paint(){
+      for (var i=0;i<total;i++){ slides[i].classList.toggle('active', i===idx); }
+      for (var d=0;d<dots.length;d++){ dots[d].classList.toggle('on', d===idx); }
+      if (counter) counter.textContent = (idx+1)+' / '+total;
+    }
+
+    function resetBar(){
+      if (!fill) return;
+      fill.style.transition = 'none';
+      fill.style.width = '0%';
+      void fill.offsetWidth; // reflow
+    }
+    function runBar(ms){
+      if (!fill) return;
+      fill.style.transition = 'width '+ms+'ms linear';
+      fill.style.width = '100%';
+    }
+    function freezeBar(){
+      if (!fill) return;
+      var w = getComputedStyle(fill).width;
+      var pw = getComputedStyle(fill.parentElement).width;
+      fill.style.transition = 'none';
+      fill.style.width = (parseFloat(w)/parseFloat(pw)*100)+'%';
+    }
+
+    function schedule(ms){
+      clearTimeout(timer);
+      startTs = Date.now();
+      remaining = ms;
+      runBar(ms);
+      timer = setTimeout(function(){
+        if (idx < total-1){ idx++; show(true); }
+        else { playing = false; setPlayIcon(); }
+      }, ms);
+      window.__avTimers.push(timer);
+    }
+
+    function show(autoplayProgress){
+      paint();
+      resetBar();
+      if (playing){ schedule(dur(idx)); }
+    }
+
+    function goto(i){
+      idx = (i+total)%total;
+      playing = true; setPlayIcon();
+      show(true);
+    }
+
+    function setPlayIcon(){
+      if (!playBtn) return;
+      playBtn.innerHTML = playing
+        ? '<i class="fa-solid fa-pause"></i>'
+        : '<i class="fa-solid fa-play"></i>';
+      playBtn.setAttribute('aria-label', playing ? 'Pausar' : 'Reproducir');
+    }
+
+    function togglePlay(){
+      playing = !playing;
+      setPlayIcon();
+      if (playing){
+        // reanudar el tiempo restante de la diapositiva actual
+        var elapsed = Date.now() - startTs;
+        var rem = Math.max(800, remaining - elapsed);
+        schedule(rem);
+      } else {
+        clearTimeout(timer);
+        freezeBar();
+      }
+    }
+
+    if (playBtn) playBtn.addEventListener('click', togglePlay);
+    if (prevBtn) prevBtn.addEventListener('click', function(){ goto(idx-1); });
+    if (nextBtn) nextBtn.addEventListener('click', function(){ goto(idx+1); });
+
+    // arranque
+    idx = 0; playing = true; setPlayIcon(); show(true);
+  }
+})();
+</script>
+
 </body>
 </html>
