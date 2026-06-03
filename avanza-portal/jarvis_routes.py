@@ -25,6 +25,15 @@ import json
 import jarvis
 
 
+# ─── COSTOS POR ACCIÓN (en créditos) — ver plan de monetización, sección 4 ────
+COSTO_CHAT          = 1
+COSTO_ANALISIS_LEAD = 5
+COSTO_PROSPECTO     = 5
+COSTO_PROPUESTA     = 12
+COSTO_FOLLOWUP      = 2
+COSTO_OBJECION      = 2
+
+
 # ─── SCHEMAS ─────────────────────────────────────────────────────────────────
 
 class ChatRequest(BaseModel):
@@ -74,12 +83,61 @@ def _aliado_context(aliado_obj) -> dict:
 
 # ─── REGISTER: inyecta las rutas en la app FastAPI ───────────────────────────
 
-def register(app, get_db_func, auth_dep):
+def register(app, get_db_func, auth_dep, ajustar_creditos_fn=None):
     """
     Llamar desde main.py:
         import jarvis_routes
-        jarvis_routes.register(app, get_db, current_aliado_required)
+        jarvis_routes.register(app, get_db, current_aliado_required, _ajustar_creditos)
+
+    ajustar_creditos_fn: función de main.py con firma
+        (db, aliado, delta: int, motivo: str, ref: str) -> None
+    Es ATÓMICA (UPDATE ... WHERE creditos+delta>=0) y LANZA HTTPException(400)
+    si el saldo no alcanza; NO hace commit (lo hace este módulo).
+    Si es None, JARVIS responde sin cobrar (modo legacy/desarrollo).
     """
+
+    # ── Gate de acceso: pago por créditos (abierto a todos los que pagan) ─────
+    def _verificar_acceso(aliado, costo: int):
+        """402 si no hay créditos suficientes. Sin créditos = sin acceso.
+
+        El acceso a JARVIS está abierto a cualquier aliado: lo que habilita el
+        uso es haber pagado (tener créditos), no un flag de habilitación. Por eso
+        el gate es puramente por saldo. (La columna jarvis_habilitado queda en el
+        modelo por si más adelante se quiere un kill-switch de admin, pero hoy no
+        bloquea nada: el negocio es pagar para usar.)
+        """
+        if ajustar_creditos_fn is not None and costo > 0:
+            saldo = getattr(aliado, "creditos", 0) or 0
+            if saldo < costo:
+                raise HTTPException(
+                    402,
+                    f"Créditos insuficientes: esta acción cuesta {costo} y tenés {saldo}.",
+                )
+
+    def _cobrar(db, aliado, costo: int, motivo: str) -> bool:
+        """
+        Descuenta `costo` créditos DESPUÉS de una respuesta exitosa de JARVIS.
+        Sólo se invoca cuando hubo resultado real → nunca cobra acciones
+        fallidas (ese era el riesgo del esquema 'cobrar-antes-de-llamar').
+        Ante una carrera de saldo no rompe la respuesta ya entregada: loguea y
+        devuelve False. Devuelve True si efectivamente cobró.
+        """
+        if ajustar_creditos_fn is None or costo <= 0:
+            return False
+        try:
+            ajustar_creditos_fn(db, aliado, -costo, motivo, "jarvis")
+            db.commit()
+            return True
+        except HTTPException:
+            db.rollback()
+            print(f"[JARVIS] No se pudo cobrar {costo}cr a aliado "
+                  f"{getattr(aliado, 'id', '?')} ({motivo}): saldo cambió en carrera. "
+                  f"Respuesta entregada igual.")
+            return False
+        except Exception as e:
+            db.rollback()
+            print(f"[JARVIS] Error cobrando créditos ({motivo}): {e}")
+            return False
 
     # ── Health check ─────────────────────────────────────────────────────────
     @app.get("/jarvis/estado")
@@ -105,6 +163,8 @@ def register(app, get_db_func, auth_dep):
         """
         if not body.mensaje.strip():
             raise HTTPException(400, "El mensaje no puede estar vacío.")
+
+        _verificar_acceso(aliado, COSTO_CHAT)
 
         ctx = _aliado_context(aliado)
 
@@ -133,6 +193,7 @@ def register(app, get_db_func, auth_dep):
         )
 
         if resultado:
+            _cobrar(db, aliado, COSTO_CHAT, "jarvis_chat")
             return {
                 "modo": "jarvis",
                 "respuesta": resultado.get("respuesta", ""),
@@ -168,6 +229,8 @@ def register(app, get_db_func, auth_dep):
         if not lead:
             raise HTTPException(404, "Lead no encontrado.")
 
+        _verificar_acceso(aliado, COSTO_ANALISIS_LEAD)
+
         ctx = _aliado_context(aliado)
 
         resultado = jarvis.analizar_lead_bolsa(
@@ -188,6 +251,7 @@ def register(app, get_db_func, auth_dep):
         )
 
         if resultado:
+            _cobrar(db, aliado, COSTO_ANALISIS_LEAD, "jarvis_lead")
             return {"modo": "jarvis", **resultado}
 
         # Fallback al score existente del lead
@@ -227,6 +291,8 @@ def register(app, get_db_func, auth_dep):
         if not p:
             raise HTTPException(404, "Prospecto no encontrado.")
 
+        _verificar_acceso(aliado, COSTO_PROSPECTO)
+
         ctx = _aliado_context(aliado)
 
         resultado = jarvis.perfilar_prospecto(
@@ -249,6 +315,9 @@ def register(app, get_db_func, auth_dep):
             p.perfilado_en = datetime.now()
             db.commit()
 
+            # Cobro en transacción aparte: si el saldo cambió en carrera, el
+            # análisis ya quedó guardado igual (no se pierde por el rollback).
+            _cobrar(db, aliado, COSTO_PROSPECTO, "jarvis_prospecto")
             return {
                 "modo": "jarvis",
                 "score": resultado["score"],
@@ -271,6 +340,8 @@ def register(app, get_db_func, auth_dep):
         """
         Genera una propuesta comercial personalizada lista para enviar.
         """
+        _verificar_acceso(aliado, COSTO_PROPUESTA)
+
         ctx = _aliado_context(aliado)
 
         resultado = jarvis.generar_propuesta(
@@ -285,6 +356,7 @@ def register(app, get_db_func, auth_dep):
         )
 
         if resultado:
+            _cobrar(db, aliado, COSTO_PROPUESTA, "jarvis_propuesta")
             return {"modo": "jarvis", **resultado}
 
         raise HTTPException(503, "JARVIS no disponible. Intentá de nuevo.")
@@ -312,6 +384,8 @@ def register(app, get_db_func, auth_dep):
         if not p:
             raise HTTPException(404, "Prospecto no encontrado.")
 
+        _verificar_acceso(aliado, COSTO_FOLLOWUP)
+
         dias = None
         if p.fecha_contacto:
             dias = (datetime.now() - p.fecha_contacto).days
@@ -331,6 +405,7 @@ def register(app, get_db_func, auth_dep):
         )
 
         if resultado:
+            _cobrar(db, aliado, COSTO_FOLLOWUP, "jarvis_followup")
             return {
                 "modo": "jarvis",
                 "mensaje": resultado.get("mensaje", ""),
@@ -366,6 +441,8 @@ def register(app, get_db_func, auth_dep):
         if not obj_text:
             raise HTTPException(400, "Falta el texto de la objeción (?objecion=...)")
 
+        _verificar_acceso(aliado, COSTO_OBJECION)
+
         ticket = None
         if p.plan_recomendado and p.plan_recomendado in PLANES:
             ticket = float(PLANES[p.plan_recomendado])
@@ -380,6 +457,7 @@ def register(app, get_db_func, auth_dep):
         )
 
         if resultado:
+            _cobrar(db, aliado, COSTO_OBJECION, "jarvis_objecion")
             return {
                 "modo": "jarvis",
                 "respuesta": resultado.get("respuesta", ""),

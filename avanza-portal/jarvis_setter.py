@@ -80,7 +80,11 @@ from sqlalchemy import text
 
 # ─── CONFIG ───────────────────────────────────────────────────────────────────
 ANTHROPIC_API_KEY = os.environ.get("ANTHROPIC_API_KEY", "").strip()
-JARVIS_MODEL      = "claude-sonnet-4-20250514"
+from jarvis_config import JARVIS_MODEL, MODEL_MEDIO, get_client  # config centralizada
+# El Setter atiende prospectos EXTERNOS (tope de embudo, sin aliado que pague).
+# Por eso corre en tier MEDIO (Haiku), mucho más barato que Sonnet: es costo de
+# marketing, no acción facturable. El techo de gasto de Anthropic es la red final.
+SETTER_MODEL = MODEL_MEDIO
 JARVIS_TIMEOUT    = 18.0
 
 SETTER_ON              = os.environ.get("SETTER_ENABLED", "1").strip() not in ("0", "false", "False", "")
@@ -183,14 +187,15 @@ def _chat(prompt: str, system: str, *, max_tokens: int = 1100, json_mode: bool =
     if not ANTHROPIC_API_KEY:
         return None
     try:
-        import anthropic
-        client = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY)
+        client = get_client()
+        if client is None:
+            return None
         system_final = system
         if json_mode:
             system_final += ("\n\nIMPORTANTE: Respondé ÚNICAMENTE con JSON válido. "
                              "Sin texto antes ni después. Sin bloques de código markdown.")
         msg = client.messages.create(
-            model=JARVIS_MODEL,
+            model=SETTER_MODEL,
             max_tokens=max_tokens,
             system=system_final,
             messages=[{"role": "user", "content": prompt}],

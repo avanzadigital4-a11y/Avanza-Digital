@@ -46,7 +46,7 @@ from enum import Enum
 # ─── CONFIG ──────────────────────────────────────────────────────────────────
 
 ANTHROPIC_API_KEY = os.environ.get("ANTHROPIC_API_KEY", "").strip()
-JARVIS_MODEL      = "claude-sonnet-4-20250514"
+from jarvis_config import JARVIS_MODEL  # modelo centralizado en jarvis_config.py
 JARVIS_TIMEOUT    = 18.0
 
 # Umbrales por defecto (configurables por aliado en el futuro)

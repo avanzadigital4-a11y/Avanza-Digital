@@ -37,7 +37,7 @@ from typing import Optional, Any
 
 # ─── CONFIG ──────────────────────────────────────────────────────────────────
 ANTHROPIC_API_KEY = os.environ.get("ANTHROPIC_API_KEY", "").strip()
-JARVIS_MODEL      = "claude-sonnet-4-20250514"
+from jarvis_config import JARVIS_MODEL  # modelo centralizado en jarvis_config.py
 JARVIS_TIMEOUT    = 20.0
 EPISODIC_TTL_DAYS = 90   # días que vive la memoria episódica
 

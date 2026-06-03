@@ -47,7 +47,7 @@ PARA ACTIVAR EN PRODUCCIÓN:
 """
 
 from __future__ import annotations
-import os, json, sys, hmac, hashlib, base64
+import os, re, json, sys, hmac, hashlib, base64
 from datetime import datetime
 from typing import Optional
 from urllib.parse import urlencode
@@ -58,7 +58,7 @@ TWILIO_AUTH_TOKEN    = os.environ.get("TWILIO_AUTH_TOKEN", "").strip()
 TWILIO_WHATSAPP_FROM = os.environ.get("TWILIO_WHATSAPP_FROM", "").strip()
 TWILIO_WEBHOOK_SECRET = os.environ.get("TWILIO_WEBHOOK_SECRET", "").strip()
 ANTHROPIC_API_KEY    = os.environ.get("ANTHROPIC_API_KEY", "").strip()
-JARVIS_MODEL         = "claude-sonnet-4-20250514"
+from jarvis_config import JARVIS_MODEL  # modelo centralizado en jarvis_config.py
 JARVIS_TIMEOUT       = 18.0
 
 # Longitud máxima de respuesta por WhatsApp (WhatsApp acepta ~4096 chars)
@@ -66,6 +66,11 @@ WA_MAX_CHARS = 3800
 
 # Tiempo máximo sin actividad para considerar una sesión nueva (segundos)
 SESSION_TIMEOUT_SECS = 3600  # 1 hora
+
+# ─── COSTOS EN CRÉDITOS (WhatsApp del aliado) — ver plan, sección 4 ───────────
+COSTO_WA_CHAT          = 1   # respuesta de texto de JARVIS
+COSTO_WA_VISION        = 1   # análisis de imagen/foto
+COSTO_WA_TRANSCRIPCION = 1   # transcripción de audio (Whisper) — se suma al chat
 
 
 def is_enabled() -> bool:
@@ -428,6 +433,24 @@ Si es una tarjeta de prospecto, terminá con: "¿Querés que te arme el primer m
 
 # ─── ENVIAR MENSAJE POR WHATSAPP (Twilio) ─────────────────────────────────────
 
+def _normalizar_numero_wa(numero):
+    """
+    Limpia un número a formato E.164 para Twilio: solo dígitos con un '+' al frente.
+    Quita espacios, guiones, paréntesis y '+' mal ubicados (ej: '57+3133839728',
+    '+ 573186223123', '+54 9 116376127' → '+57...', '+57...', '+549116376127').
+    NO inventa código de país: si el original no traía '+', devuelve solo los
+    dígitos (un número local sin código no se puede completar sin adivinar el país).
+    """
+    if not numero:
+        return None
+    s = str(numero).strip()
+    tiene_plus = "+" in s
+    digitos = re.sub(r"\D", "", s)
+    if not digitos:
+        return None
+    return ("+" + digitos) if tiene_plus else digitos
+
+
 def enviar_whatsapp(
     numero_destino: str,
     mensaje: str,
@@ -453,9 +476,13 @@ def enviar_whatsapp(
     try:
         from twilio.rest import Client  # type: ignore
 
-        # Normalizar número destino
-        if not numero_destino.startswith("whatsapp:"):
-            numero_destino = f"whatsapp:{numero_destino}"
+        # Normalizar número a E.164 (Twilio rechaza espacios, guiones, paréntesis)
+        crudo = numero_destino.replace("whatsapp:", "").strip()
+        norm = _normalizar_numero_wa(crudo)
+        if not norm:
+            return {"ok": False, "sid": None,
+                    "error": f"Número inválido o vacío: {numero_destino!r}"}
+        numero_destino = f"whatsapp:{norm}"
 
         # Truncar si es muy largo para WhatsApp
         texto_final = mensaje[:WA_MAX_CHARS]
@@ -513,18 +540,47 @@ def _registrar_en_memoria(aliado_id: int, texto_aliado: str, respuesta: str, db_
 # ENDPOINTS FASTAPI — register()
 # ═══════════════════════════════════════════════════════════════════════════════
 
-def register(app, get_db_func, auth_dep):
+def register(app, get_db_func, auth_dep, ajustar_creditos_fn=None):
     """
     Registra todos los endpoints de WhatsApp en la app FastAPI.
 
     Llamar desde main.py:
         import jarvis_whatsapp
-        jarvis_whatsapp.register(app, get_db, current_aliado_required)
+        jarvis_whatsapp.register(app, get_db, current_aliado_required, _ajustar_creditos)
+
+    ajustar_creditos_fn: función atómica de main.py (db, aliado, delta, motivo, ref).
+    Si es None, JARVIS-WhatsApp responde sin cobrar (modo legacy/desarrollo).
     """
     from fastapi import Depends, HTTPException, Request, Form, BackgroundTasks
     from fastapi.responses import Response, JSONResponse
     from sqlalchemy.orm import Session
     from pydantic import BaseModel
+
+    # ── Gate de acceso para WhatsApp: devuelve mensaje de WA si NO puede usar ──
+    def _wa_sin_acceso(aliado, costo: int):
+        """Devuelve un texto para responderle por WA si no tiene créditos, o None si puede.
+        Acceso abierto a todos los aliados: lo que habilita es tener saldo (haber pagado)."""
+        if ajustar_creditos_fn is not None and costo > 0:
+            saldo = getattr(aliado, "creditos", 0) or 0
+            if saldo < costo:
+                return (f"💳 Te quedaste sin créditos para usar JARVIS por acá "
+                        f"(esta acción cuesta {costo} y tenés {saldo}). "
+                        f"Recargá desde el portal y seguimos.")
+        return None
+
+    def _wa_cobrar(db, aliado, costo: int, motivo: str) -> bool:
+        """Cobra DESPUÉS de enviar la respuesta. Ante carrera de saldo, no rompe nada."""
+        if ajustar_creditos_fn is None or costo <= 0:
+            return False
+        try:
+            ajustar_creditos_fn(db, aliado, -costo, motivo, "jarvis_wa")
+            db.commit()
+            return True
+        except Exception as e:
+            db.rollback()
+            print(f"[WA] No se pudo cobrar {costo}cr a aliado "
+                  f"{getattr(aliado, 'id', '?')} ({motivo}): {e}", file=sys.stderr)
+            return False
 
     # ── POST /webhook/whatsapp — Webhook principal de Twilio ─────────────────
     @app.post("/webhook/whatsapp")
@@ -609,6 +665,24 @@ def register(app, get_db_func, auth_dep):
                 sesion = _get_sesion(numero_from)
                 historial = sesion.get("historial", [])
 
+                # ── Gate de créditos: costo según el tipo de contenido ────────
+                if num_media > 0 and "audio" in media_type:
+                    _wa_costo, _wa_motivo = COSTO_WA_TRANSCRIPCION + COSTO_WA_CHAT, "jarvis_wa_audio"
+                elif num_media > 0 and ("image" in media_type or media_type == ""):
+                    _wa_costo, _wa_motivo = COSTO_WA_VISION, "jarvis_wa_vision"
+                elif num_media > 0 and "pdf" in media_type:
+                    _wa_costo, _wa_motivo = 0, "jarvis_wa_pdf"   # respuesta fija, sin IA
+                elif body_texto:
+                    _wa_costo, _wa_motivo = COSTO_WA_CHAT, "jarvis_wa_chat"
+                else:
+                    _wa_costo, _wa_motivo = 0, ""
+
+                if _wa_costo > 0:
+                    _bloqueo = _wa_sin_acceso(aliado, _wa_costo)
+                    if _bloqueo:
+                        enviar_whatsapp(numero_from, _bloqueo)
+                        return
+
                 # ── Caso 1: Audio / voice memo ────────────────────────────────
                 if num_media > 0 and "audio" in media_type:
                     transcripcion = _transcribir_audio_url(media_url)
@@ -654,6 +728,11 @@ def register(app, get_db_func, auth_dep):
 
                 # Enviar respuesta
                 resultado_envio = enviar_whatsapp(numero_from, respuesta)
+
+                # Cobro: solo si fue una acción con IA y el envío salió bien.
+                # (transcripción fallida o PDF canned → _wa_costo es 0 o ya retornó)
+                if _wa_costo > 0 and resultado_envio.get("ok"):
+                    _wa_cobrar(db, aliado, _wa_costo, _wa_motivo)
 
                 # Registrar en memoria episódica (no bloquea si falla)
                 if hasattr(aliado, "id"):

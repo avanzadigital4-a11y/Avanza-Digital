@@ -58,6 +58,7 @@ from __future__ import annotations
 
 import os
 import sys
+import time
 from datetime import datetime, timedelta
 from typing import Optional
 
@@ -65,6 +66,13 @@ from typing import Optional
 
 PORTAL_URL         = os.environ.get("PORTAL_URL", "https://portal.avanzadigital.com")
 GRUPO_WHATSAPP_URL = os.environ.get("CANAL1_GRUPO_WA_URL", "https://chat.whatsapp.com/XXXXXXXX")
+
+# Anti-spam / protección de la calidad del número en envíos masivos (semanal/mensual):
+# - WA_BATCH_DELAY: segundos de pausa entre envíos (no disparar 140 de golpe).
+# - WA_BATCH_MAX: tope de envíos por corrida (circuit-breaker; subilo por env
+#   cuando la cuenta de Twilio salga del trial de 50/día).
+WA_BATCH_DELAY = float(os.environ.get("CANAL1_WA_BATCH_DELAY", "1.5"))
+WA_BATCH_MAX   = int(os.environ.get("CANAL1_WA_BATCH_MAX", "500"))
 
 # ─── SQL DE MIGRACIONES ───────────────────────────────────────────────────────
 
@@ -285,6 +293,18 @@ def _msg_mensual_ranking(aliado, posicion: int, total: int, ventas_propias: int)
     )
 
 
+def _msg_lead_24h(aliado, empresa: str, horas_rest: int) -> str:
+    nombre = aliado.nombre.split()[0] if aliado.nombre else ""
+    empresa = empresa or "tu lead"
+    return (
+        f"⏰ {nombre}, ojo con tu lead\n\n"
+        f"Reclamaste a *{empresa}* hace 24 h y todavía no lo marcaste como contactado.\n\n"
+        f"Te quedan ~{horas_rest} h antes de que vuelva a la bolsa y lo agarre otro aliado. "
+        f"Un llamado o un WhatsApp ahora puede ser la diferencia.\n\n"
+        f"👉 Contactalo y actualizá el estado en el portal: {PORTAL_URL}/portal.html"
+    )
+
+
 # ═══════════════════════════════════════════════════════════════════════════════
 # FUNCIONES DE DISPARO POR EVENTO (llamar desde los endpoints de main.py)
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -328,6 +348,21 @@ def notificar_primer_lead(aliado, db) -> bool:
     if not numero:
         return False
     return _enviar(numero, _msg_primer_lead(aliado), "primer_lead")
+
+
+def notificar_lead_sin_contactar(aliado, empresa: str, horas_rest: int) -> bool:
+    """
+    Llamar desde el job de recordatorio de 24h (main.py) cuando un lead reclamado
+    sigue sin contactar y está por liberarse. Recordatorio urgente por WhatsApp.
+    La idempotencia la maneja el caller con la bandera notif_24h_enviada del lead.
+    """
+    if not _es_canal1(aliado):
+        return False
+    numero = _numero(aliado)
+    if not numero:
+        return False
+    return _enviar(numero, _msg_lead_24h(aliado, empresa, horas_rest),
+                   f"lead_24h aliado={aliado.id}")
 
 
 def notificar_venta_y_nivel(aliado, nivel_anterior: str, db) -> bool:
@@ -399,20 +434,11 @@ def job_onboarding_wa() -> None:
 
             dias = (ahora - creado_en).days
 
-            # Día 7 (prioridad primero para no sobreescribir con d3/d1)
-            if dias >= 7 and not getattr(a, "canal1_wa_d7_en", None):
-                if _enviar(numero, _msg_dia7(a), f"onboarding_d7 aliado={a.id}"):
-                    a.canal1_wa_d7_en = ahora
-                    enviados += 1
-
-            # Día 3
-            elif dias >= 3 and not getattr(a, "canal1_wa_d3_en", None):
-                if _enviar(numero, _msg_dia3(a), f"onboarding_d3 aliado={a.id}"):
-                    a.canal1_wa_d3_en = ahora
-                    enviados += 1
-
-            # Día 1 (+24hs)
-            elif dias >= 1 and not getattr(a, "canal1_wa_d1_en", None):
+            # Solo el toque de Día 1 por WhatsApp. La secuencia educativa de
+            # Día 3 y Día 7 la cubre el email (job_onboarding_sequence en
+            # main.py). Así no duplicamos el mismo empujón en ambos canales el
+            # mismo día (evita sensación de spam).
+            if dias >= 1 and not getattr(a, "canal1_wa_d1_en", None):
                 if _enviar(numero, _msg_dia1(a), f"onboarding_d1 aliado={a.id}"):
                     a.canal1_wa_d1_en = ahora
                     enviados += 1
@@ -541,6 +567,9 @@ def job_semanal_wa() -> None:
 
         enviados = 0
         for a in aliados:
+            if enviados >= WA_BATCH_MAX:
+                print(f"[CANAL1] job_semanal_wa: tope {WA_BATCH_MAX}/corrida alcanzado, corto.", flush=True)
+                break
             numero = _numero(a)
             if not numero:
                 continue
@@ -553,6 +582,8 @@ def job_semanal_wa() -> None:
             if _enviar(numero, _msg_semanal(a, n_leads_nuevos), f"semanal aliado={a.id}"):
                 a.canal1_wa_semanal_en = ahora
                 enviados += 1
+                db.commit()              # commit incremental: no perder progreso si corta
+                time.sleep(WA_BATCH_DELAY)  # espaciar para no degradar el número
 
         if enviados:
             db.commit()
@@ -610,6 +641,9 @@ def job_mensual_wa() -> None:
 
         enviados = 0
         for posicion_0, (aliado_id, n_ventas_propias, a) in enumerate(scores):
+            if enviados >= WA_BATCH_MAX:
+                print(f"[CANAL1] job_mensual_wa: tope {WA_BATCH_MAX}/corrida alcanzado, corto.", flush=True)
+                break
             numero = _numero(a)
             if not numero:
                 continue
@@ -624,6 +658,8 @@ def job_mensual_wa() -> None:
             if _enviar(numero, msg, f"mensual aliado={a.id} pos={posicion_real}"):
                 a.canal1_wa_mensual_en = ahora
                 enviados += 1
+                db.commit()              # commit incremental: no perder progreso si corta
+                time.sleep(WA_BATCH_DELAY)  # espaciar para no degradar el número
 
         if enviados:
             db.commit()

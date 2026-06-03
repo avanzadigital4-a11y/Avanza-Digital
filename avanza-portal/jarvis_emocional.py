@@ -32,7 +32,7 @@ from datetime import datetime, timedelta
 # ─── CONFIG ──────────────────────────────────────────────────────────────────
 
 ANTHROPIC_API_KEY = os.environ.get("ANTHROPIC_API_KEY", "").strip()
-JARVIS_MODEL      = "claude-sonnet-4-20250514"
+from jarvis_config import JARVIS_MODEL  # modelo centralizado en jarvis_config.py
 TIMEOUT           = 12.0
 
 # ─── TIPOS ───────────────────────────────────────────────────────────────────

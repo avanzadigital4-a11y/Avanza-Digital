@@ -49,6 +49,11 @@ class Aliado(Base):
     # --- CRÉDITOS PARA MARKETPLACE ---
     creditos = Column(Integer, default=0)
 
+    # --- JARVIS (gate de acceso: beta cerrada) ---
+    # Default False: nadie usa JARVIS hasta habilitarlo. Para la beta se
+    # habilitan 3-5 aliados a mano. Al abrir a todos, cambiar default a True.
+    jarvis_habilitado = Column(Boolean, default=False)
+
     # --- PORTAL PÚBLICO ---
     portal_publico_activo = Column(Boolean, default=True)
     portal_publico_titular = Column(String, nullable=True)

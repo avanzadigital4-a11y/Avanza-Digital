@@ -1323,7 +1323,7 @@
       <button class="tab-btn" onclick="cambiarTab('herramientas',this)"><i class="fa-solid fa-magnifying-glass"></i> Auditorías</button>
       <button class="tab-btn" onclick="cambiarTab('red',this)"><i class="fa-solid fa-users-rays" style="color:var(--amber);"></i> Mi Red</button>
       <button class="tab-btn" onclick="cambiarTab('comunidad',this)"><i class="fa-solid fa-comments" style="color:#c084fc;"></i> Comunidad <span style="background:#c084fc;color:#000;font-size:.6rem;font-weight:800;padding:2px 6px;border-radius:4px;margin-left:4px;">NUEVO</span></button>
-      <button class="tab-btn" id="btn-tab-jarvis" style="background:linear-gradient(135deg,rgba(0,196,255,0.06),rgba(0,80,200,0.04));border-color:rgba(0,196,255,0.15);color:#4a7a8a;opacity:0.5;cursor:default;pointer-events:none;" title="Próximamente"><i class="fa-solid fa-bolt"></i> JARVIS IA <span style="font-size:9px;background:#1a2a30;color:#4a7a8a;border-radius:4px;padding:1px 5px;margin-left:3px;">PRÓXIMAMENTE</span></button>
+      <button class="tab-btn" id="btn-tab-jarvis" onclick="cambiarTab('jarvis',this)" style="background:linear-gradient(135deg,rgba(0,196,255,0.12),rgba(0,80,200,0.06));border-color:rgba(0,196,255,0.30);color:#7fd8ff;" title="JARVIS IA"><i class="fa-solid fa-bolt"></i> JARVIS IA</button>
     </div>
 
     <div id="tab-dashboard" class="tab-panel active">
@@ -1509,7 +1509,7 @@
               <div style="font-size:2rem; font-weight:900; color:var(--amber);" id="d-creditos">0</div>
               <p style="font-size:0.72rem; color:var(--text-dim); margin-top:4px;" id="d-creditos-sub">Para comprar leads Premium</p>
               <div id="d-creditos-cta" style="display:none; margin-top:8px;">
-                <button onclick="abrirComprarCreditos()" style="background:rgba(245,158,11,0.15);color:var(--amber);border:1px solid rgba(245,158,11,0.4);border-radius:8px;padding:6px 12px;font-size:.72rem;font-weight:800;cursor:pointer;white-space:nowrap;letter-spacing:.3px;">
+                <button onclick="abrirModalComprarCreditos()" style="background:rgba(245,158,11,0.15);color:var(--amber);border:1px solid rgba(245,158,11,0.4);border-radius:8px;padding:6px 12px;font-size:.72rem;font-weight:800;cursor:pointer;white-space:nowrap;letter-spacing:.3px;">
                   <i class="fa-solid fa-plus"></i> Comprar créditos
                 </button>
               </div>
@@ -8910,7 +8910,7 @@ const ACADEMIA_MODULOS = [
     tiempo: '5 min',
     icon: 'fa-circle-info',
     content: `
-      <div class="av-explainer"><div class="av-tag"><i class="fa-solid fa-circle-play"></i> C&oacute;mo funciona el programa &middot; M&Oacute;DULO 01</div><div class="av-stage"><div class="av-slide center" data-dur="6000"><div class="av-kicker r d1">Avanza Partner Network &middot; Canal 1</div><div class="av-h r d2">Empez&aacute;s <span class="b">sin cartera</span>.<br>El sistema te trae los leads.</div><div class="av-sub r d3">Reclam&aacute;s un lead de la bolsa, la IA te dice qu&eacute; ofrecer, vos cerr&aacute;s, Avanza implementa. Ambos cobramos.</div></div><div class="av-slide" data-dur="8000"><div class="av-kicker r d1">El modelo en 3 pasos</div><div class="av-flow"><div class="av-step r d2"><div class="sn">01</div><div class="st">Reclam&aacute;s un lead</div><div class="sd">De la Bolsa. Ten&eacute;s 48hs para contactar, m&aacute;x 3 activos a la vez.</div></div><div class="av-step r d3"><div class="sn">02</div><div class="st">La IA te prepara</div><div class="sd">Score 0-100, plan recomendado y pitch sugerido. Sab&eacute;s qu&eacute; decir antes de hablar.</div></div><div class="av-step r d4"><div class="sn">03</div><div class="st">Cerr&aacute;s y cobr&aacute;s</div><div class="sd">Registr&aacute;s antes del pago. La comisi&oacute;n llega en 24hs.</div></div></div></div><div class="av-slide" data-dur="7500"><div class="av-kicker r d1">Comisiones &mdash; mismo esquema, sin techo</div><div class="av-grid g4"><div class="av-card r d2"><div class="n">10%</div><div class="t">BASIC</div><div class="d">Arranc&aacute;s ac&aacute;</div></div><div class="av-card r d3"><div class="n">12%</div><div class="t">SILVER</div><div class="d">1 venta</div></div><div class="av-card r d4"><div class="n o">15%</div><div class="t">PREMIUM</div><div class="d">2 ventas / 6m</div></div><div class="av-card r d5"><div class="n g">20%</div><div class="t">ELITE</div><div class="d">5 ventas / 6m</div></div></div><div class="av-sub r d6" style="margin-top:2px">Tu % sube solo con cada venta y no vuelve a bajar.</div></div><div class="av-slide" data-dur="8000"><div class="av-kicker r d1">Cu&aacute;nto gan&aacute;s por venta</div><div class="av-tl"><div class="tr r d2"><div class="tm">Base</div><div class="tx">USD 1.050 &rarr; comisi&oacute;n <b>USD 105 a 210</b></div></div><div class="tr r d3"><div class="tm">Pro</div><div class="tx">USD 2.900 &rarr; comisi&oacute;n <b>USD 290 a 580</b></div></div><div class="tr r d4"><div class="tm">Indus.</div><div class="tx">USD 4.900 &rarr; comisi&oacute;n <b>USD 490 a 980</b></div></div><div class="tr r d5"><div class="tm">360</div><div class="tx">USD 7.500 &rarr; comisi&oacute;n <b>USD 750 a 1.500</b></div></div></div></div><div class="av-slide center" data-dur="6000"><div class="av-kicker r d1">Proyecci&oacute;n realista</div><div class="av-stat r d2">USD <span class="g">1.070</span><span style="font-size:.4em;color:#a1a1aa"> /mes</span></div><div class="av-sub r d3">con 2 ventas Pro + 1 Industrial al mes &mdash; desde la bolsa, sin cartera previa y sin moverte de tu casa.</div></div><div class="av-slide" data-dur="8000"><div class="av-kicker r d1">Ingreso recurrente &middot; de por vida</div><div class="av-ok r d2"><span class="lab">+10% mensual, sin importar tu nivel</span>Si adem&aacute;s cerr&aacute;s el plan de mantenimiento, cobr&aacute;s <b>10% del precio mensual</b> mientras el cliente lo mantenga activo.</div><div class="av-row r d3" style="gap:8px;margin-top:2px"><div class="av-kpi"><div class="v">USD 8</div><div class="k">Cuidado /mes</div></div><div class="av-kpi"><div class="v">USD 17</div><div class="k">Crecim. /mes</div></div><div class="av-kpi"><div class="v">USD 28</div><div class="k">Escala /mes</div></div><div class="av-kpi"><div class="v">USD 45</div><div class="k">Liderazgo /mes</div></div></div><div class="av-sub r d4" style="margin-top:2px">Ej.: 5 Crecimiento + 3 Escala = <b>USD 169/mes</b> sin volver a vender.</div></div><div class="av-slide" data-dur="7500"><div class="av-kicker r d1">El paso que no se negocia</div><div class="av-warn r d2"><span class="lab">Registr&aacute; ANTES del pago</span>Si el cliente paga sin estar registrado por vos antes, <b>la venta no se te atribuye</b>. Siempre: primero registr&aacute;s en el portal, despu&eacute;s el cliente transfiere.</div><div class="av-ok r d3"><span class="lab">Cu&aacute;ndo cobr&aacute;s</span>Apenas ingresa el pago, te transferimos en <b>24 horas</b>. Factura A o B.</div></div><div class="av-slide" data-dur="8000"><div class="av-kicker r d1">Para qui&eacute;n es este programa</div><div class="av-grid g2"><div class="av-card r d2"><div class="t">Vendedores independientes</div><div class="d">Ingreso desde cero, sin empleador ni cartera.</div></div><div class="av-card r d3"><div class="t">Emprendedores digitales</div><div class="d">Sab&eacute;s vender; ac&aacute; ten&eacute;s producto listo.</div></div><div class="av-card r d4"><div class="t">Referidores de red</div><div class="d">Convert&iacute;s tus conexiones en comisiones.</div></div><div class="av-card r d5"><div class="t">Aliados en crecimiento</div><div class="d">Leaderboard, badges y Mi Red amplifican tu resultado.</div></div></div></div></div><div class="av-controls"><button class="av-btn prev" aria-label="Anterior"><i class="fa-solid fa-backward-step"></i></button><button class="av-btn play" aria-label="Pausar"><i class="fa-solid fa-pause"></i></button><button class="av-btn next" aria-label="Siguiente"><i class="fa-solid fa-forward-step"></i></button><div class="av-progress"><div class="av-progress-fill"></div></div><div class="av-dots"></div><div class="av-counter">1 / 1</div></div></div>
+      <div class="av-explainer"><div class="av-tag"><i class="fa-solid fa-circle-play"></i> C&oacute;mo funciona el programa &middot; M&Oacute;DULO 01</div><div class="av-stage"><div class="av-slide center" data-dur="6000"><div class="av-kicker r d1">Avanza Partner Network &middot; Canal 1</div><div class="av-h r d2">Empez&aacute;s <span class="b">sin cartera</span>.<br>El sistema te trae los leads.</div><div class="av-sub r d3">Reclam&aacute;s un lead de la bolsa, la IA te dice qu&eacute; ofrecer, vos cerr&aacute;s, Avanza implementa. Ambos cobramos.</div></div><div class="av-slide" data-dur="8000"><div class="av-kicker r d1">El modelo en 3 pasos</div><div class="av-flow"><div class="av-step r d2"><div class="sn">01</div><div class="st">Reclam&aacute;s un lead</div><div class="sd">De la Bolsa. Ten&eacute;s 48hs para contactar, m&aacute;x 3 activos a la vez.</div></div><div class="av-step r d3"><div class="sn">02</div><div class="st">La IA te prepara</div><div class="sd">Score 0-100, plan recomendado y pitch sugerido. Sab&eacute;s qu&eacute; decir antes de hablar.</div></div><div class="av-step r d4"><div class="sn">03</div><div class="st">Cerr&aacute;s y cobr&aacute;s</div><div class="sd">Registr&aacute;s antes del pago. La comisi&oacute;n llega en 24hs.</div></div></div></div><div class="av-slide" data-dur="7500"><div class="av-kicker r d1">Comisiones &mdash; mismo esquema, sin techo</div><div class="av-grid g4"><div class="av-card r d2"><div class="n">10%</div><div class="t">BASIC</div><div class="d">Arranc&aacute;s ac&aacute;</div></div><div class="av-card r d3"><div class="n">12%</div><div class="t">SILVER</div><div class="d">1 venta</div></div><div class="av-card r d4"><div class="n o">15%</div><div class="t">PREMIUM</div><div class="d">2 ventas / 6m</div></div><div class="av-card r d5"><div class="n g">20%</div><div class="t">ELITE</div><div class="d">5 ventas / 6m</div></div></div><div class="av-sub r d6" style="margin-top:2px">Tu % sube solo con cada venta y no vuelve a bajar.</div></div><div class="av-slide" data-dur="8000"><div class="av-kicker r d1">Cu&aacute;nto gan&aacute;s por venta</div><div class="av-tl"><div class="tr r d2"><div class="tm">Base</div><div class="tx">USD 1.050 &rarr; comisi&oacute;n <b>USD 105 a 210</b></div></div><div class="tr r d3"><div class="tm">Pro</div><div class="tx">USD 2.900 &rarr; comisi&oacute;n <b>USD 290 a 580</b></div></div><div class="tr r d4"><div class="tm">Indus.</div><div class="tx">USD 4.900 &rarr; comisi&oacute;n <b>USD 490 a 980</b></div></div><div class="tr r d5"><div class="tm">360</div><div class="tx">USD 7.500 &rarr; comisi&oacute;n <b>USD 750 a 1.500</b></div></div></div></div><div class="av-slide center" data-dur="6000"><div class="av-kicker r d1">Proyecci&oacute;n realista</div><div class="av-stat r d2">USD <span class="g">1.070</span><span style="font-size:.4em;color:#a1a1aa"> /mes</span></div><div class="av-sub r d3">con 2 ventas Pro + 1 Industrial al mes &mdash; desde la bolsa, sin cartera previa y sin moverte de tu casa.</div></div><div class="av-slide" data-dur="8000"><div class="av-kicker r d1">Ingreso recurrente &middot; de por vida</div><div class="av-ok r d2"><span class="lab">+10% mensual, sin importar tu nivel</span>Si adem&aacute;s cerr&aacute;s el plan de mantenimiento, cobr&aacute;s <b>10% del precio mensual</b> mientras el cliente lo mantenga activo.</div><div class="av-row r d3" style="gap:8px;margin-top:2px"><div class="av-kpi"><div class="v">USD 8</div><div class="k">Cuidado /mes</div></div><div class="av-kpi"><div class="v">USD 17</div><div class="k">Crecim. /mes</div></div><div class="av-kpi"><div class="v">USD 28</div><div class="k">Escala /mes</div></div><div class="av-kpi"><div class="v">USD 45</div><div class="k">Liderazgo /mes</div></div></div><div class="av-sub r d4" style="margin-top:2px">Ej.: 5 Crecimiento + 3 Escala = <b>USD 169/mes</b> sin volver a vender.</div></div><div class="av-slide" data-dur="7500"><div class="av-kicker r d1">El paso que no se negocia</div><div class="av-warn r d2"><span class="lab">Registr&aacute; ANTES del pago</span>Si el cliente paga sin estar registrado por vos antes, <b>la venta no se te atribuye</b>. Siempre: primero registr&aacute;s en el portal, despu&eacute;s el cliente transfiere.</div><div class="av-ok r d3"><span class="lab">Cu&aacute;ndo cobr&aacute;s</span>Apenas ingresa el pago, te transferimos en <b>24 horas</b>. No necesit&aacute;s factura A ni B: como aliado independiente cobr&aacute;s seg&uacute;n tu situaci&oacute;n fiscal y tu pa&iacute;s.</div></div><div class="av-slide" data-dur="8000"><div class="av-kicker r d1">Para qui&eacute;n es este programa</div><div class="av-grid g2"><div class="av-card r d2"><div class="t">Vendedores independientes</div><div class="d">Ingreso desde cero, sin empleador ni cartera.</div></div><div class="av-card r d3"><div class="t">Emprendedores digitales</div><div class="d">Sab&eacute;s vender; ac&aacute; ten&eacute;s producto listo.</div></div><div class="av-card r d4"><div class="t">Referidores de red</div><div class="d">Convert&iacute;s tus conexiones en comisiones.</div></div><div class="av-card r d5"><div class="t">Aliados en crecimiento</div><div class="d">Leaderboard, badges y Mi Red amplifican tu resultado.</div></div></div></div></div><div class="av-controls"><button class="av-btn prev" aria-label="Anterior"><i class="fa-solid fa-backward-step"></i></button><button class="av-btn play" aria-label="Pausar"><i class="fa-solid fa-pause"></i></button><button class="av-btn next" aria-label="Siguiente"><i class="fa-solid fa-forward-step"></i></button><div class="av-progress"><div class="av-progress-fill"></div></div><div class="av-dots"></div><div class="av-counter">1 / 1</div></div></div>
 
       <h3>Lo que vas a aprender</h3>
       <ul>
@@ -8964,7 +8964,7 @@ const ACADEMIA_MODULOS = [
       </div>
 
       <h3>Cuándo cobrás</h3>
-      <p>La comisión se abona sobre el valor neto de cada venta <strong>dentro de las 24 horas posteriores al ingreso del pago</strong> del cliente a la cuenta de Avanza. Te vamos a pedir factura A o B (o recibo válido según tu situación fiscal).</p>
+      <p>La comisión se abona sobre el valor neto de cada venta <strong>dentro de las 24 horas posteriores al ingreso del pago</strong> del cliente a la cuenta de Avanza. No necesitás factura A ni B para cobrar: como aliado independiente, cobrás según tu propia situación fiscal y la normativa de tu país.</p>
 
       <h3>Tus obligaciones como aliado</h3>
       <ul>
@@ -11025,8 +11025,118 @@ function descargarPDF(url, filename) {
 
 .j-briefing-btn:hover { background: rgba(255,140,0,0.16); }
 
+/* ════════════════════════════════════════════════════════════
+   RESKIN OSCURO estilo Claude — overrides (al final: ganan)
+   Paleta cálida-oscura + tipografía limpia, sin cyberpunk.
+   ════════════════════════════════════════════════════════════ */
+:root{
+  --j-cyan:#C8693F; --j-cyan-dim:rgba(200,105,63,.15); --j-cyan-glow:rgba(200,105,63,.22);
+  --j-amber:#D9A85C; --j-amber-dim:rgba(217,168,92,.15);
+  --j-green:#84B26A; --j-red:#D2706A;
+  --j-bg0:#1A1712; --j-bg1:#211D17; --j-bg2:#28231C; --j-bg3:#322B22;
+  --j-border:rgba(236,230,219,.10); --j-border-h:rgba(236,230,219,.20);
+  --j-mono:'Hanken Grotesk','Inter',sans-serif;
+  --j-ink:#ECE6DB; --j-ink-soft:#B5AE9F; --j-ink-faint:#8A8474;
+}
+#tab-jarvis{ background:var(--j-bg0); color:var(--j-ink); font-family:'Hanken Grotesk','Inter',sans-serif; }
+#jarvis-grid-bg,.j-hud-corner,.j-scanline{ display:none !important; }
+
+/* títulos en serif cálida */
+.j-brief-title,.j-panel-title,.j-metric-val,.j-score-val,.j-status-score{
+  font-family:'Fraunces',Georgia,serif !important; letter-spacing:-.2px !important; text-shadow:none !important;
+}
+.j-panel-title{ text-transform:none !important; }
+
+/* superficies base */
+.j-sidebar,.j-right{ background:var(--j-bg1) !important; border-color:var(--j-border) !important; }
+.j-main{ background:var(--j-bg0) !important; }
+.j-status-bar{ background:var(--j-bg1) !important; border-color:var(--j-border) !important; }
+.j-sidebar-section{ color:var(--j-ink-faint) !important; }
+
+/* navegación lateral */
+.j-nav{ color:var(--j-ink-soft) !important; border-radius:11px !important; font-family:'Hanken Grotesk',sans-serif !important; transition:.15s !important; }
+.j-nav:hover{ background:var(--j-bg2) !important; color:var(--j-ink) !important; }
+.j-nav.active{ background:var(--j-cyan-dim) !important; color:#F0C9B2 !important; }
+.j-nav i{ color:var(--j-cyan) !important; }
+
+/* chat y burbujas */
+.j-chat{ background:transparent !important; }
+.j-bubble{ background:var(--j-bg2) !important; border:1px solid var(--j-border) !important; border-radius:16px !important; color:var(--j-ink) !important; box-shadow:none !important; font-family:'Hanken Grotesk',sans-serif !important; line-height:1.6 !important; }
+.j-msg.user .j-bubble,.j-msg-user .j-bubble,.j-bubble.user{ background:var(--j-cyan-dim) !important; border-color:transparent !important; }
+.j-msg-body{ color:var(--j-ink) !important; font-family:'Hanken Grotesk',sans-serif !important; }
+.j-avatar{ background:linear-gradient(135deg,#D98A5E,var(--j-cyan)) !important; color:#1A1712 !important; box-shadow:none !important; }
+.j-typing,.j-typing-txt,.j-dots{ color:var(--j-ink-faint) !important; }
+.j-ctx-tag,.j-ctx-time{ color:var(--j-ink-faint) !important; }
+
+/* área de input */
+.j-input-area{ background:var(--j-bg0) !important; border-color:var(--j-border) !important; }
+.j-input-wrap,.j-input-row{ background:var(--j-bg2) !important; border:1px solid var(--j-border-h) !important; border-radius:16px !important; box-shadow:none !important; }
+.j-textarea{ background:transparent !important; color:var(--j-ink) !important; font-family:'Hanken Grotesk',sans-serif !important; }
+.j-textarea::placeholder{ color:var(--j-ink-faint) !important; }
+.j-send{ background:var(--j-cyan) !important; color:#1A1712 !important; border:0 !important; border-radius:12px !important; box-shadow:none !important; }
+.j-send:hover{ background:#D17A4F !important; }
+.j-tool-btn,.j-btn-listen{ color:var(--j-ink-faint) !important; background:transparent !important; }
+.j-tool-btn:hover,.j-btn-listen:hover{ color:var(--j-cyan) !important; }
+
+/* chips / botones rápidos */
+.j-qbtn{ background:var(--j-bg2) !important; border:1px solid var(--j-border) !important; color:var(--j-ink-soft) !important; border-radius:10px !important; font-family:'Hanken Grotesk',sans-serif !important; }
+.j-qbtn:hover{ border-color:var(--j-cyan) !important; color:var(--j-ink) !important; }
+.j-act-btn,.j-crm-btn{ font-family:'Hanken Grotesk',sans-serif !important; border-radius:10px !important; }
+.j-badge{ background:var(--j-cyan-dim) !important; color:var(--j-cyan) !important; border:0 !important; }
+.j-badge.amb{ background:var(--j-amber-dim) !important; color:var(--j-amber) !important; }
+
+/* paneles de la derecha */
+.j-panel-sec,.j-lead-card,.j-metric,.j-prio-item,.j-estado,.j-integ-item,.j-alert-item{
+  background:var(--j-bg2) !important; border-color:var(--j-border) !important; border-radius:12px !important; box-shadow:none !important;
+}
+.j-metric-val{ color:var(--j-cyan) !important; }
+.j-metric-lbl,.j-lead-sub,.j-lead-sector,.j-prio-tag,.j-estado-desc{ color:var(--j-ink-faint) !important; }
+.j-bp-bar,.j-stage-bar{ background:var(--j-bg3) !important; }
+.j-bp-fill,.j-stage-fill{ background:linear-gradient(90deg,#D98A5E,var(--j-cyan)) !important; }
+
+/* briefing de inicio: tarjeta limpia, sin HUD */
+#j-briefing{ background:rgba(18,15,11,.86) !important; backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px); }
+.j-brief-wrap{ background:linear-gradient(160deg,var(--j-bg2),var(--j-bg1)) !important; border:1px solid var(--j-border-h) !important; border-radius:20px !important; box-shadow:0 30px 70px -28px #000 !important; }
+.j-brief-label,.j-brief-date,.j-brief-prio-lbl{ color:var(--j-ink-faint) !important; font-family:'Hanken Grotesk',sans-serif !important; }
+.j-brief-title{ color:var(--j-ink) !important; }
+.j-briefing-btn{ background:var(--j-cyan-dim) !important; color:#F0C9B2 !important; border:1px solid var(--j-border-h) !important; }
+.j-btn-start{ background:var(--j-cyan) !important; color:#1A1712 !important; border:0 !important; }
+
+/* status / score */
+.j-status-txt{ color:var(--j-ink-soft) !important; }
+.j-status-score{ color:var(--j-amber) !important; }
+.j-score-val{ color:var(--j-cyan) !important; }
+.j-score-lbl{ color:var(--j-ink-faint) !important; }
+/* ════════════════ fin reskin ════════════════ */
+
 </style>
 
+
+<!-- ─── PAYWALL JARVIS (acceso por créditos) ─── -->
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400..600;1,9..144,400&family=Hanken+Grotesk:wght@400;500;600;700&display=swap');
+#j-paywall{position:absolute;inset:0;z-index:60;display:none;align-items:center;justify-content:center;padding:24px}
+#j-paywall.show{display:flex}
+#j-paywall .pw-bg{position:absolute;inset:0;background:rgba(3,8,12,.82);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
+#j-paywall .pw-card{position:relative;max-width:400px;width:100%;text-align:center;background:linear-gradient(160deg,#0a1a24,#0a0f14);border:1px solid var(--j-border-h);border-radius:18px;padding:34px 28px;box-shadow:0 30px 70px -28px #000;animation:jPwRise .4s ease both}
+#j-paywall .pw-lock{width:56px;height:56px;border-radius:16px;margin:0 auto 18px;display:grid;place-items:center;background:var(--j-cyan-dim);color:var(--j-cyan);font-size:23px}
+#j-paywall h3{font-family:'Fraunces',Georgia,serif;font-size:22px;font-weight:600;color:#F3ECE0;letter-spacing:-.2px;margin:0}
+#j-paywall p{color:#9fb4c0;font-size:14px;line-height:1.55;margin-top:10px}
+#j-paywall .pw-cta{display:block;width:100%;margin-top:22px;background:var(--j-cyan);color:#012;border:0;font-family:inherit;font-weight:800;font-size:15px;padding:13px;border-radius:12px;cursor:pointer;transition:.15s}
+#j-paywall .pw-cta:hover{filter:brightness(1.12)}
+#j-paywall .pw-note{font-size:11.5px;color:#6a8090;margin-top:14px;line-height:1.5}
+@keyframes jPwRise{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+</style>
+<div id="j-paywall">
+  <div class="pw-bg"></div>
+  <div class="pw-card">
+    <div class="pw-lock"><i class="fa-solid fa-lock"></i></div>
+    <h3>Activá JARVIS con créditos</h3>
+    <p id="j-paywall-msg">JARVIS funciona con créditos: cada acción descuenta del saldo. Cargá créditos para empezar a usar tu asistente comercial.</p>
+    <button class="pw-cta" onclick="abrirModalComprarCreditos()"><i class="fa-solid fa-bolt"></i>&nbsp; Conseguir créditos</button>
+    <div class="pw-note">Chat 1 cr · Follow-up 2 cr · Análisis de lead 5 cr · Propuesta 12 cr</div>
+  </div>
+</div>
 
 <!-- ─── IRON MAN PROTOCOL ─── -->
 <div id="j-briefing">
@@ -11073,7 +11183,7 @@ function descargarPDF(url, filename) {
   <!-- SIDEBAR -->
   <nav class="j-sidebar">
     <div class="j-sidebar-section">MÓDULOS</div>
-    <div class="j-nav" style="opacity:0.45;cursor:default;pointer-events:none;"><i class="fa-solid fa-bolt"></i> Chat JARVIS <span style="font-size:9px;background:#444;color:#aaa;border-radius:4px;padding:1px 5px;margin-left:4px;letter-spacing:.5px;">PRÓXIMAMENTE</span></div>
+    <div class="j-nav active" onclick="jSetSection('chat', this)"><i class="fa-solid fa-bolt"></i> Chat JARVIS</div>
     <div class="j-nav" onclick="jSetSection('leads', this)"><i class="fa-solid fa-crosshairs"></i> Motor de Leads <span class="j-badge amb">2</span></div>
     <div class="j-nav" onclick="jSetSection('pipeline', this)"><i class="fa-solid fa-filter"></i> Pipeline</div>
     <div class="j-nav" onclick="jSetSection('propuestas', this)"><i class="fa-regular fa-file-lines"></i> Propuestas <span class="j-badge">3</span></div>
@@ -11219,10 +11329,40 @@ function inicializarJarvisV2() {
   jMostrarBienvenida();
   jVerificarIntegraciones();
   jVerificarEstado();
+  jChequearAcceso();
   const hoy = new Date().toDateString();
   if (localStorage.getItem('j_briefing_fecha') !== hoy) {
     setTimeout(jAbrirBriefing, 500);
   }
+}
+
+// ── Paywall: acceso por créditos (pagar para usar) ────────
+function jMostrarPaywall(msg) {
+  const pw = document.getElementById('j-paywall');
+  if (!pw) return;
+  if (msg) { const m = document.getElementById('j-paywall-msg'); if (m) m.textContent = msg; }
+  pw.classList.add('show');
+}
+function jOcultarPaywall() {
+  const pw = document.getElementById('j-paywall');
+  if (pw) pw.classList.remove('show');
+}
+// Acceso abierto a TODOS: lo que habilita el uso es tener créditos (haber pagado).
+async function jChequearAcceso() {
+  try {
+    if (!aliado || !aliado.codigo) return;
+    const res = await apiFetch(`${API}/aliados/${aliado.codigo}/creditos`);
+    if (res.ok) {
+      const data = await res.json();
+      const saldo = data.saldo ?? 0;
+      J.saldo = saldo;
+      if (saldo < 1) {
+        jMostrarPaywall('JARVIS funciona con créditos y tu saldo es 0. Cargá créditos para empezar a usar tu asistente comercial.');
+      } else {
+        jOcultarPaywall();
+      }
+    }
+  } catch {}
 }
 
 // ── Datos del aliado ──────────────────────────────────────
@@ -11333,6 +11473,10 @@ async function jEnviar() {
       const resp = d.respuesta || d.response || '';
       J.historial.push({ role: 'assistant', content: resp });
       jAgregarBot(resp, d.contexto || 'general', d.tiempo_ms);
+    } else if (r.status === 402) {
+      let msg = 'Te quedaste sin créditos. Cargá créditos para seguir usando JARVIS.';
+      try { const e = await r.json(); if (e && e.detail) msg = e.detail; } catch {}
+      jMostrarPaywall(msg);
     } else {
       jAgregarBot('Hubo un error al conectar con JARVIS. Revisá tu conexión.', 'general');
     }

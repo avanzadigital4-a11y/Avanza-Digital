@@ -23,7 +23,7 @@ from typing import Optional, Any
 
 # ─── CONFIG ──────────────────────────────────────────────────────────────────
 ANTHROPIC_API_KEY = os.environ.get("ANTHROPIC_API_KEY", "").strip()
-JARVIS_MODEL      = "claude-sonnet-4-20250514"
+from jarvis_config import JARVIS_MODEL, get_client  # config centralizada en jarvis_config.py
 JARVIS_TIMEOUT    = 15.0
 
 # Planes de Avanza — deben coincidir con models.PLANES
@@ -58,8 +58,9 @@ def _chat(
         return None
 
     try:
-        import anthropic
-        client = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY)
+        client = get_client()
+        if client is None:
+            return None
 
         system_final = system
         if json_mode:
@@ -214,8 +215,9 @@ REGLAS DE OPERACIÓN:
     messages.append({"role": "user", "content": mensaje_aliado})
 
     try:
-        import anthropic
-        client = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY)
+        client = get_client()
+        if client is None:
+            return None
 
         # Inyectar ajuste emocional al system prompt si corresponde
         system_final = system

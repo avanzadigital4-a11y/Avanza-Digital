@@ -170,6 +170,8 @@ for col_sql in [
     "ALTER TABLE aliados ADD COLUMN canal1_wa_inact30_en TIMESTAMP",
     "ALTER TABLE aliados ADD COLUMN canal1_wa_semanal_en TIMESTAMP",
     "ALTER TABLE aliados ADD COLUMN canal1_wa_mensual_en TIMESTAMP",
+    # v2.6 — JARVIS: gate de acceso (beta cerrada)
+    "ALTER TABLE aliados ADD COLUMN jarvis_habilitado BOOLEAN DEFAULT FALSE",
 ]:
     _aplicar_migracion(col_sql)
 
@@ -496,6 +498,13 @@ def job_notificaciones_24h():
                 </div>
                 """
                 enviar_email(lead.aliado.email, f"⏰ Avanza: Tenés {horas_rest}hs para contactar a {lead.empresa}", html)
+                # Recordatorio también por WhatsApp (urgente, alta conversión). Usa
+                # la misma bandera notif_24h_enviada → se intenta una sola vez. Solo
+                # aplica a Canal 1 con número (la función lo valida internamente).
+                try:
+                    jarvis_canal1.notificar_lead_sin_contactar(lead.aliado, lead.empresa, horas_rest)
+                except Exception as _e:
+                    print(f"[24H WA] no se pudo enviar WA a aliado {lead.aliado.codigo}: {_e}")
                 lead.notif_24h_enviada = True
         db.commit()
     except Exception as e:
@@ -1205,10 +1214,15 @@ scheduler.add_job(job_onboarding_sequence, "interval", hours=24)
 scheduler.add_job(job_generar_comisiones_recurrentes_mensual, "interval", hours=24)
 
 # ─── CANAL 1 — Secuencia WhatsApp ────────────────────────────────────────────
-# Onboarding día 1/3/7: cada hora (para reaccionar rápido al registro)
+# Onboarding: cada hora. Por WhatsApp solo se manda el toque de DÍA 1; la
+# secuencia educativa D3/D7 va por email (job_onboarding_sequence) para no
+# duplicar el mismo empujón en ambos canales el mismo día.
 scheduler.add_job(jarvis_canal1.job_onboarding_wa,  "interval", hours=1)
-# Inactividad 7d / 30d: cada 6hs (balance entre frescura y no saturar DB)
-scheduler.add_job(jarvis_canal1.job_inactividad_wa, "interval", hours=6)
+# Inactividad por WhatsApp: DESACTIVADA a propósito. La reactivación por
+# inactividad (7d/30d) + suspensión la maneja el email (job_notificaciones_inactividad),
+# así no mandamos el mismo recordatorio por dos canales. Si algún día se quiere
+# reactivar el canal WA para esto, descomentar la línea de abajo.
+# scheduler.add_job(jarvis_canal1.job_inactividad_wa, "interval", hours=6)
 # Leads semanales: lunes 9hs Argentina (UTC-3 → UTC+0 = 12hs UTC)
 scheduler.add_job(jarvis_canal1.job_semanal_wa,     "cron", day_of_week="mon", hour=12, minute=0)
 # Ranking mensual: día 1 de cada mes, 10hs Argentina (13hs UTC)
@@ -1275,9 +1289,17 @@ pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 # ─── JARVIS — Registrar rutas de inteligencia comercial ──────────────────────
 # Los endpoints viven en /jarvis/* y corren en paralelo al resto del portal.
 # Si ANTHROPIC_API_KEY no está configurada, los endpoints devuelven fallback.
-jarvis_routes.register(app, get_db, current_aliado_required)
+jarvis_routes.register(
+    app, get_db, current_aliado_required,
+    # _ajustar_creditos se define más abajo en este archivo; el lambda lo
+    # resuelve en tiempo de request (cuando ya existe), evitando NameError.
+    lambda *a, **k: _ajustar_creditos(*a, **k),
+)
 jarvis_flywheel.register(app, get_db, current_aliado_required)
-jarvis_whatsapp.register(app, get_db, current_aliado_required)
+jarvis_whatsapp.register(
+    app, get_db, current_aliado_required,
+    lambda *a, **k: _ajustar_creditos(*a, **k),   # cobro de créditos en WhatsApp
+)
 jarvis_api_publica.register(app, get_db, current_aliado_required, engine=engine)
 jarvis_integraciones.register_integration_routes(app, get_db, current_aliado_required)  # Fix: integraciones/estado
 jarvis_setter.register(app, get_db, current_aliado_required)   # Setter: /l/{slug}, /jarvis/setter/*
