@@ -20,6 +20,7 @@ from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 from typing import Optional
 from sqlalchemy.orm import Session
+from datetime import datetime
 import json
 
 import jarvis
@@ -96,16 +97,30 @@ def register(app, get_db_func, auth_dep, ajustar_creditos_fn=None):
     Si es None, JARVIS responde sin cobrar (modo legacy/desarrollo).
     """
 
-    # ── Gate de acceso: pago por créditos (abierto a todos los que pagan) ─────
+    # ── Gate de acceso: 7 días gratis, luego pago por créditos ───────────────
+    def _en_trial(aliado) -> bool:
+        """True si el aliado está dentro de su ventana de prueba gratis de JARVIS.
+
+        Durante el trial JARVIS es gratis: no se cobra ni se bloquea. Así los
+        créditos del aliado quedan intactos para la bolsa de leads esa semana.
+        """
+        fin = getattr(aliado, "jarvis_trial_fin", None)
+        if not fin:
+            return False
+        try:
+            return datetime.now() <= fin
+        except Exception:
+            return False
+
     def _verificar_acceso(aliado, costo: int):
         """402 si no hay créditos suficientes. Sin créditos = sin acceso.
 
-        El acceso a JARVIS está abierto a cualquier aliado: lo que habilita el
-        uso es haber pagado (tener créditos), no un flag de habilitación. Por eso
-        el gate es puramente por saldo. (La columna jarvis_habilitado queda en el
-        modelo por si más adelante se quiere un kill-switch de admin, pero hoy no
-        bloquea nada: el negocio es pagar para usar.)
+        Excepción: durante los 7 días de prueba gratis (jarvis_trial_fin en el
+        futuro) el acceso es libre y no se mira el saldo. Terminado el trial, lo
+        que habilita el uso es haber pagado (tener créditos): el gate es por saldo.
         """
+        if _en_trial(aliado):
+            return  # prueba gratis activa → acceso libre
         if ajustar_creditos_fn is not None and costo > 0:
             saldo = getattr(aliado, "creditos", 0) or 0
             if saldo < costo:
@@ -117,11 +132,14 @@ def register(app, get_db_func, auth_dep, ajustar_creditos_fn=None):
     def _cobrar(db, aliado, costo: int, motivo: str) -> bool:
         """
         Descuenta `costo` créditos DESPUÉS de una respuesta exitosa de JARVIS.
+        Durante la prueba gratis NO descuenta (los créditos quedan para la bolsa).
         Sólo se invoca cuando hubo resultado real → nunca cobra acciones
         fallidas (ese era el riesgo del esquema 'cobrar-antes-de-llamar').
         Ante una carrera de saldo no rompe la respuesta ya entregada: loguea y
         devuelve False. Devuelve True si efectivamente cobró.
         """
+        if _en_trial(aliado):
+            return False  # en prueba gratis no se cobra
         if ajustar_creditos_fn is None or costo <= 0:
             return False
         try:

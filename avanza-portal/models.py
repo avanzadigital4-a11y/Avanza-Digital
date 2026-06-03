@@ -2,7 +2,7 @@ from sqlalchemy import Column, Integer, String, Float, Boolean, DateTime, Foreig
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 from database import Base
-from datetime import datetime
+from datetime import datetime, timedelta
 
 
 # ─── ALIADO ──────────────────────────────────────────────────────────────────
@@ -53,6 +53,14 @@ class Aliado(Base):
     # Default False: nadie usa JARVIS hasta habilitarlo. Para la beta se
     # habilitan 3-5 aliados a mano. Al abrir a todos, cambiar default a True.
     jarvis_habilitado = Column(Boolean, default=False)
+
+    # --- JARVIS: prueba gratis de 7 días ---
+    # Hasta esta fecha, JARVIS es gratis (no descuenta créditos ni bloquea).
+    # Pasada la fecha, vuelve a cobrar créditos por acción y aplica el paywall.
+    # El default (callable) corre en cada INSERT → todo aliado nuevo, por
+    # cualquier vía de registro, arranca con 7 días de prueba sin tocar nada más.
+    # Los aliados ya registrados se rellenan al arranque (backfill en main.py).
+    jarvis_trial_fin = Column(DateTime, default=lambda: datetime.now() + timedelta(days=7))
 
     # --- PORTAL PÚBLICO ---
     portal_publico_activo = Column(Boolean, default=True)

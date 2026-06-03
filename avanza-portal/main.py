@@ -30,8 +30,17 @@ from auth import (
     JWT_REFRESH_WINDOW_HOURS,
 )
 import schemas
+
+# ─── BOOTSTRAP IA MULTI-PROVEEDOR (Gemini/Groq/OpenRouter reemplazan a Claude) ──
+# DEBE correr ANTES de importar los módulos jarvis_*, porque cada uno lee
+# ANTHROPIC_API_KEY en su propio import. install() configura el ruteo a los
+# proveedores con free tier y deja pasar los guards. Es reversible: si no hay
+# ninguna key gratis (GEMINI/GROQ/OPENROUTER), no toca nada y todo sigue como antes.
+import jarvis_llm
+jarvis_llm.install()
+
 import groq_ai  # IA opcional — si GROQ_API_KEY no está, todo cae a fallback heurístico
-import jarvis_routes         # JARVIS — motor de inteligencia comercial con Claude (Anthropic)
+import jarvis_routes         # JARVIS — motor de inteligencia comercial (multi-proveedor vía jarvis_llm)
 import jarvis_flywheel       # Motor del Flywheel Colectivo (Sección 6)
 import jarvis_whatsapp       # Integración WhatsApp con Twilio (Sección 8)
 import jarvis_api_publica    # JARVIS API pública v1 — autenticación por API key (Sección 9)
@@ -172,8 +181,30 @@ for col_sql in [
     "ALTER TABLE aliados ADD COLUMN canal1_wa_mensual_en TIMESTAMP",
     # v2.6 — JARVIS: gate de acceso (beta cerrada)
     "ALTER TABLE aliados ADD COLUMN jarvis_habilitado BOOLEAN DEFAULT FALSE",
+    # v2.7 — JARVIS: prueba gratis de 7 días (fecha de fin del trial)
+    "ALTER TABLE aliados ADD COLUMN jarvis_trial_fin TIMESTAMP",
 ]:
     _aplicar_migracion(col_sql)
+
+
+# ─── BACKFILL: 7 días de prueba gratis de JARVIS para aliados YA registrados ──
+# Los aliados nuevos reciben el trial automáticamente al registrarse (default
+# del modelo). A los que ya existían (columna NULL) les damos 7 días contados
+# desde este deploy, así "cualquier aliado registrado" tiene su semana gratis.
+# Best-effort e idempotente: sólo toca filas con jarvis_trial_fin IS NULL, y si
+# algo falla NO corta el arranque.
+try:
+    from sqlalchemy import update as _update_backfill
+    _fin_trial_backfill = datetime.now() + timedelta(days=7)
+    with engine.connect() as _conn_bf:
+        _conn_bf.execute(
+            _update_backfill(Aliado)
+            .where(Aliado.jarvis_trial_fin.is_(None))
+            .values(jarvis_trial_fin=_fin_trial_backfill)
+        )
+        _conn_bf.commit()
+except Exception as _e_bf:
+    print(f"[BACKFILL jarvis_trial_fin] omitido: {_e_bf}", file=sys.stderr)
 
 
 # ─── EMAIL HELPER ─────────────────────────────────────────────────────────────
@@ -5780,8 +5811,21 @@ def ver_creditos(codigo: str, db: Session = Depends(get_db), _owner=Depends(veri
     movimientos = db.query(TransaccionCredito).filter(
         TransaccionCredito.aliado_id == a.id
     ).order_by(TransaccionCredito.creado_en.desc()).limit(20).all()
+
+    # Estado de la prueba gratis de JARVIS (7 días). Si el trial sigue vigente,
+    # JARVIS es gratis y el frontend NO debe mostrar el paywall.
+    _trial_fin = getattr(a, "jarvis_trial_fin", None)
+    _ahora = datetime.now()
+    _trial_activo = bool(_trial_fin and _ahora <= _trial_fin)
+    _dias_restantes = 0
+    if _trial_activo:
+        _dias_restantes = max(0, (_trial_fin - _ahora).days + 1)
+
     return {
         "saldo": a.creditos or 0,
+        "jarvis_trial_activo": _trial_activo,
+        "jarvis_trial_dias_restantes": _dias_restantes,
+        "jarvis_trial_fin": _trial_fin.isoformat() if _trial_fin else None,
         "movimientos": [
             {"delta": m.delta, "motivo": m.motivo, "ref": m.referencia,
              "fecha": m.creado_en.strftime("%d/%m/%Y %H:%M") if m.creado_en else None}
@@ -9504,6 +9548,7 @@ def asignar_sponsor(
     request: Request,
     aliado_email: str = Body(..., description="Email del aliado a reparar"),
     sponsor_codigo: str = Body(..., description="Código del aliado que debe figurar como sponsor"),
+    force: bool = Body(False, description="Si True, sobreescribe un sponsor ya asignado"),
     _admin=Depends(current_admin_required),
     db: Session = Depends(get_db),
 ):
@@ -9520,10 +9565,13 @@ def asignar_sponsor(
     if not sponsor:
         raise HTTPException(404, f"Sponsor con código '{sponsor_codigo}' no encontrado.")
 
-    if aliado.sponsor_id is not None:
+    if aliado.id == sponsor.id:
+        raise HTTPException(400, "Un aliado no puede ser su propio sponsor.")
+
+    if aliado.sponsor_id is not None and not force:
         raise HTTPException(400,
             f"El aliado ya tiene un sponsor asignado (sponsor_id={aliado.sponsor_id}). "
-            "Si querés reemplazarlo igualmente, agregá force=true al body."
+            "Si querés reemplazarlo igualmente, agregá \"force\": true al body."
         )
 
     aliado.sponsor_id = sponsor.id
@@ -9535,6 +9583,58 @@ def asignar_sponsor(
         "aliado": {"id": aliado.id, "nombre": aliado.nombre, "email": aliado.email},
         "sponsor": {"id": sponsor.id, "nombre": sponsor.nombre, "codigo": sponsor.codigo},
         "mensaje": f"✅ '{aliado.nombre}' ahora figura en la red de '{sponsor.nombre}'.",
+    }
+
+
+@app.get("/admin/sin-sponsor")
+def listar_sin_sponsor(
+    request: Request,
+    desde: str = None,
+    hasta: str = None,
+    _admin=Depends(current_admin_required),
+    db: Session = Depends(get_db),
+):
+    """
+    Lista todos los aliados que NO tienen sponsor asignado (sponsor_id IS NULL).
+    Util para identificar quienes se registraron por el bug del link de reclutamiento.
+
+    Parametros opcionales de query string:
+      ?desde=2025-01-15   solo aliados registrados a partir de esa fecha
+      ?hasta=2025-06-01   solo aliados registrados hasta esa fecha
+
+    Temporal — puede eliminarse una vez corregidos todos los casos afectados.
+    """
+    q = db.query(Aliado).filter(Aliado.sponsor_id == None)
+
+    if desde:
+        try:
+            desde_dt = datetime.strptime(desde, "%Y-%m-%d")
+            q = q.filter(Aliado.creado_en >= desde_dt)
+        except ValueError:
+            raise HTTPException(400, "Formato de desde invalido. Usa YYYY-MM-DD.")
+
+    if hasta:
+        try:
+            hasta_dt = datetime.strptime(hasta, "%Y-%m-%d") + timedelta(days=1)
+            q = q.filter(Aliado.creado_en < hasta_dt)
+        except ValueError:
+            raise HTTPException(400, "Formato de hasta invalido. Usa YYYY-MM-DD.")
+
+    aliados = q.order_by(Aliado.creado_en.asc()).all()
+
+    return {
+        "total": len(aliados),
+        "aliados": [
+            {
+                "id":        a.id,
+                "codigo":    a.codigo,
+                "nombre":    a.nombre,
+                "email":     a.email,
+                "whatsapp":  a.whatsapp,
+                "creado_en": a.creado_en.isoformat() if a.creado_en else None,
+            }
+            for a in aliados
+        ],
     }
 
 

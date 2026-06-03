@@ -11351,7 +11351,7 @@ function jOcultarPaywall() {
   const pw = document.getElementById('j-paywall');
   if (pw) pw.classList.remove('show');
 }
-// Acceso abierto a TODOS: lo que habilita el uso es tener créditos (haber pagado).
+// Acceso: 7 días gratis para todos; después, lo habilita tener créditos.
 async function jChequearAcceso() {
   try {
     if (!aliado || !aliado.codigo) return;
@@ -11360,8 +11360,19 @@ async function jChequearAcceso() {
       const data = await res.json();
       const saldo = data.saldo ?? 0;
       J.saldo = saldo;
-      if (saldo < 1) {
-        jMostrarPaywall('JARVIS funciona con créditos y tu saldo es 0. Cargá créditos para empezar a usar tu asistente comercial.');
+      J.enTrial = data.jarvis_trial_activo === true;
+      J.diasTrial = data.jarvis_trial_dias_restantes ?? 0;
+
+      if (J.enTrial) {
+        // Prueba gratis activa: JARVIS es gratis, no se muestra el paywall y
+        // no se tocan los créditos (quedan para la bolsa de leads).
+        jOcultarPaywall();
+        const d = J.diasTrial;
+        const txt = d === 1 ? 'Último día de prueba gratis de JARVIS'
+                            : `Prueba gratis de JARVIS: te quedan ${d} días`;
+        if (typeof mostrarToast === 'function') mostrarToast(txt, 'blue');
+      } else if (saldo < 1) {
+        jMostrarPaywall('Tu prueba gratis terminó. JARVIS funciona con créditos y tu saldo es 0. Cargá créditos para seguir usando tu asistente comercial.');
       } else {
         jOcultarPaywall();
       }

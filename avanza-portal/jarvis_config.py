@@ -60,15 +60,30 @@ def modelo_para(tier: str) -> str:
 
 
 def is_enabled() -> bool:
-    """¿Hay API key de Anthropic configurada?"""
+    """¿Hay IA disponible? (proveedores gratis vía jarvis_llm, o Anthropic)."""
+    try:
+        import jarvis_llm
+        if jarvis_llm.llm_enabled():
+            return True
+    except Exception:
+        pass
     return bool(ANTHROPIC_API_KEY)
 
 
 def get_client():
     """
-    Devuelve un cliente Anthropic, o None si no hay API key.
+    Devuelve un cliente de IA, o None si no hay ninguna key configurada.
     NUNCA lanza: si algo falla, devuelve None y el llamador usa su fallback.
+
+    Prioridad: proveedores gratis (Gemini/Groq/OpenRouter) vía jarvis_llm.
+    Si no hay ninguno configurado, cae a Anthropic (comportamiento original).
     """
+    try:
+        import jarvis_llm
+        if jarvis_llm.llm_enabled():
+            return jarvis_llm.get_client()
+    except Exception:
+        pass
     if not ANTHROPIC_API_KEY:
         return None
     try:
