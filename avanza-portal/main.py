@@ -7309,259 +7309,6 @@ def alias_redirect(ref_code: str, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="Aliado no encontrado")
     return RedirectResponse(url=f"https://avanzadigital.digital/?ref={ref_code}", status_code=301)
 
-# === Bloque de video explicador para la pagina de ventas del aliado (/p/) ===
-# v2 (8+1 slides, init robusto). Si editas el deck, cambia AVX_VER para romper cache.
-AVX_VER = 'v2'
-AVX_CSS_PUBLIC = r'''/* ===== Avanza · Reproductor de explicadores de la Academia ===== */
-.av-explainer{position:relative;width:100%;max-width:880px;margin:6px auto 30px;border-radius:16px;overflow:hidden;border:1px solid rgba(255,255,255,0.15);background:#0a0a0c;box-shadow:0 30px 80px rgba(0,0,0,.6);font-family:'Inter',system-ui,sans-serif;}
-.av-explainer *{box-sizing:border-box;margin:0;}
-.av-tag{display:flex;align-items:center;gap:8px;padding:10px 16px;background:#0c0c10;border-bottom:1px solid rgba(255,255,255,0.08);font:600 .72rem/1 ui-monospace,'Courier New',monospace;letter-spacing:.14em;text-transform:uppercase;color:#71717a;}
-.av-tag i{color:#4ade80;}
-.av-stage{position:relative;width:100%;aspect-ratio:16/9;overflow:hidden;background:radial-gradient(120% 120% at 50% -12%,rgba(59,130,246,.16),transparent 55%),linear-gradient(160deg,#0c0c11,#0a0a0c);}
-.av-stage::before{content:'';position:absolute;right:-6%;bottom:-18%;width:48%;height:130%;background:linear-gradient(120deg,rgba(0,68,204,.18),rgba(0,204,204,.08));clip-path:polygon(0 0,55% 0,100% 50%,55% 100%,0 100%,45% 50%);opacity:.55;pointer-events:none;}
-@media(max-width:640px){.av-stage{aspect-ratio:4/5;}}
-.av-slide{position:absolute;inset:0;display:flex;flex-direction:column;justify-content:center;gap:14px;padding:7% 8%;opacity:0;pointer-events:none;transition:opacity .45s ease;}
-.av-slide.active{opacity:1;pointer-events:auto;}
-.av-slide.center{align-items:center;text-align:center;}
-.av-slide .r{opacity:0;}
-.av-slide.active .r{animation:avUp .55s cubic-bezier(.2,.75,.2,1) both;}
-.av-slide.active .d1{animation-delay:.05s}.av-slide.active .d2{animation-delay:.18s}.av-slide.active .d3{animation-delay:.31s}
-.av-slide.active .d4{animation-delay:.44s}.av-slide.active .d5{animation-delay:.57s}.av-slide.active .d6{animation-delay:.70s}.av-slide.active .d7{animation-delay:.83s}
-@keyframes avUp{from{opacity:0;transform:translateY(22px)}to{opacity:1;transform:none}}
-/* texto */
-.av-kicker{font:600 .72rem/1 ui-monospace,'Courier New',monospace;letter-spacing:.22em;text-transform:uppercase;color:#4ade80;}
-.av-h{font-weight:900;font-size:clamp(1.45rem,4.5vw,2.8rem);line-height:1.05;color:#fff;letter-spacing:-.02em;}
-.av-h .b{color:#3b82f6}.av-h .o{color:#4ade80}.av-h .g{color:#4ade80}
-.av-sub{font-size:clamp(.9rem,1.7vw,1.1rem);color:#a1a1aa;max-width:46ch;line-height:1.5;font-weight:400;}
-.av-slide.center .av-sub{margin:0 auto;}
-.av-eyebrow{font-weight:700;font-size:clamp(.95rem,1.8vw,1.15rem);color:#e7e7ea;}
-/* listas */
-.av-list{display:flex;flex-direction:column;gap:9px;}
-.av-li{display:flex;gap:10px;align-items:flex-start;font-size:clamp(.85rem,1.55vw,1.04rem);color:#e7e7ea;line-height:1.4;}
-.av-li i{color:#3b82f6;margin-top:.25em;flex:0 0 auto;font-size:.85em;}
-.av-li b{color:#fff;font-weight:700;}
-/* grids / cards */
-.av-grid{display:grid;gap:10px;}
-.av-grid.g2{grid-template-columns:repeat(2,1fr)}.av-grid.g3{grid-template-columns:repeat(3,1fr)}.av-grid.g4{grid-template-columns:repeat(4,1fr)}
-.av-card{background:rgba(255,255,255,.045);border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:13px 14px;display:flex;flex-direction:column;gap:5px;}
-.av-card .n{font-weight:900;font-size:1.45rem;color:#3b82f6;line-height:1;}
-.av-card .n.o{color:#4ade80}.av-card .n.g{color:#4ade80}
-.av-card .t{font-weight:800;color:#fff;font-size:.95rem;}
-.av-card .d{color:#a1a1aa;font-size:.8rem;line-height:1.35;}
-/* stat */
-.av-stat{font-weight:900;font-size:clamp(2.4rem,8.5vw,4.6rem);line-height:1;color:#fff;letter-spacing:-.03em;}
-.av-stat .o{color:#4ade80}.av-stat .b{color:#3b82f6}.av-stat .g{color:#4ade80}
-/* quote / callouts */
-.av-quote{border-left:3px solid #4ade80;background:rgba(74,222,128,.07);padding:13px 16px;border-radius:0 12px 12px 0;color:#f4f4f5;font-size:clamp(.86rem,1.55vw,1.05rem);line-height:1.5;}
-.av-quote .lab{display:block;font:600 .64rem/1 ui-monospace,monospace;letter-spacing:.16em;color:#4ade80;text-transform:uppercase;margin-bottom:7px;}
-.av-warn{border-left:3px solid #ef4444;background:rgba(239,68,68,.08);padding:13px 16px;border-radius:0 12px 12px 0;color:#fde2e2;font-size:clamp(.85rem,1.5vw,1.02rem);line-height:1.5;}
-.av-warn .lab{display:block;font:600 .64rem/1 ui-monospace,monospace;letter-spacing:.16em;color:#ef4444;text-transform:uppercase;margin-bottom:7px;}
-.av-ok{border-left:3px solid #4ade80;background:rgba(74,222,128,.08);padding:13px 16px;border-radius:0 12px 12px 0;color:#dcfce7;font-size:clamp(.85rem,1.5vw,1.02rem);line-height:1.5;}
-.av-ok .lab{display:block;font:600 .64rem/1 ui-monospace,monospace;letter-spacing:.16em;color:#4ade80;text-transform:uppercase;margin-bottom:7px;}
-/* dos columnas */
-.av-cols{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
-.av-col{border-radius:12px;padding:12px 14px;border:1px solid rgba(255,255,255,0.08);display:flex;flex-direction:column;gap:7px;}
-.av-col.bad{background:rgba(239,68,68,.06);border-color:rgba(239,68,68,.22)}
-.av-col.good{background:rgba(74,222,128,.06);border-color:rgba(74,222,128,.22)}
-.av-col .hd{font:600 .66rem/1 ui-monospace,monospace;letter-spacing:.14em;text-transform:uppercase;}
-.av-col.bad .hd{color:#ef4444}.av-col.good .hd{color:#4ade80}
-.av-col .it{font-size:.84rem;color:#e7e7ea;line-height:1.35;}
-/* pills / precios */
-.av-pill{display:inline-flex;align-items:center;gap:7px;align-self:flex-start;background:rgba(59,130,246,.14);border:1px solid rgba(59,130,246,.32);color:#93c5fd;font-weight:700;font-size:.78rem;padding:6px 12px;border-radius:999px;}
-.av-pill.o{background:rgba(74,222,128,.14);border-color:rgba(74,222,128,.32);color:#86efac;}
-.av-price{color:#4ade80;font-weight:900;}
-/* split (mock + texto) */
-.av-split{display:grid;grid-template-columns:1.02fr .98fr;gap:18px;align-items:center;}
-/* mock UI */
-.av-mock{border:1px solid rgba(255,255,255,0.15);border-radius:12px;overflow:hidden;background:#0b0b10;box-shadow:0 14px 34px rgba(0,0,0,.5);}
-.av-mock .mbar{display:flex;align-items:center;gap:5px;padding:8px 10px;background:#15151c;border-bottom:1px solid rgba(255,255,255,0.08);}
-.av-mock .mbar span{width:8px;height:8px;border-radius:50%;background:#3a3a45;}
-.av-mock .mbar .url{margin-left:8px;height:6px;flex:1;border-radius:3px;background:rgba(255,255,255,.07);}
-.av-mock .mbody{padding:12px;display:flex;flex-direction:column;gap:8px;}
-.av-row{display:flex;gap:8px;align-items:center;}
-.av-ln{height:8px;border-radius:4px;background:rgba(255,255,255,.1);}
-.av-ln.b{background:rgba(59,130,246,.55)}.av-ln.o{background:rgba(74,222,128,.6)}.av-ln.g{background:rgba(74,222,128,.55)}
-.w30{width:30%}.w40{width:40%}.w50{width:50%}.w60{width:60%}.w70{width:70%}.w85{width:85%}.w100{width:100%}
-.av-chip{font:600 .62rem/1 ui-monospace,monospace;letter-spacing:.06em;padding:5px 8px;border-radius:6px;background:rgba(255,255,255,.06);color:#a1a1aa;border:1px solid rgba(255,255,255,0.08);}
-.av-chip.g{background:rgba(74,222,128,.12);color:#4ade80;border-color:rgba(74,222,128,.25)}
-.av-chip.b{background:rgba(59,130,246,.12);color:#93c5fd;border-color:rgba(59,130,246,.25)}
-.av-chip.o{background:rgba(74,222,128,.12);color:#86efac;border-color:rgba(74,222,128,.25)}
-.av-kpi{display:flex;flex-direction:column;gap:2px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,0.08);border-radius:9px;padding:8px 10px;flex:1;}
-.av-kpi .v{font-weight:900;font-size:1.1rem;color:#4ade80;line-height:1;}
-.av-kpi .k{font-size:.62rem;color:#71717a;text-transform:uppercase;letter-spacing:.08em;}
-/* flujo de pasos */
-.av-flow{display:flex;align-items:stretch;gap:8px;flex-wrap:wrap;}
-.av-step{flex:1;min-width:120px;background:rgba(255,255,255,.045);border:1px solid rgba(255,255,255,0.08);border-radius:11px;padding:12px;display:flex;flex-direction:column;gap:5px;}
-.av-step .sn{font:700 .64rem/1 ui-monospace,monospace;color:#4ade80;letter-spacing:.1em;}
-.av-step .st{font-weight:800;color:#fff;font-size:.9rem;line-height:1.2;}
-.av-step .sd{color:#a1a1aa;font-size:.76rem;line-height:1.3;}
-/* timeline */
-.av-tl{display:flex;flex-direction:column;gap:8px;}
-.av-tl .tr{display:grid;grid-template-columns:64px 1fr;gap:10px;align-items:baseline;}
-.av-tl .tm{font:700 .72rem/1 ui-monospace,monospace;color:#3b82f6;}
-.av-tl .tx{font-size:.86rem;color:#e7e7ea;line-height:1.35;}
-.av-tl .tx b{color:#fff;}
-/* controles */
-.av-controls{display:flex;align-items:center;gap:11px;padding:10px 14px;background:#0c0c10;border-top:1px solid rgba(255,255,255,0.08);}
-.av-btn{appearance:none;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,0.08);color:#fff;width:34px;height:34px;border-radius:9px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:.82rem;transition:.15s;flex:0 0 auto;}
-.av-btn:hover{background:rgba(255,255,255,.14);border-color:rgba(255,255,255,0.15);}
-.av-btn.play{background:#4ade80;border-color:#4ade80;color:#0c0c10;}
-.av-btn.play:hover{background:#86efac;}
-.av-progress{position:relative;flex:1;height:4px;border-radius:3px;background:rgba(255,255,255,.09);overflow:hidden;}
-.av-progress-fill{position:absolute;left:0;top:0;height:100%;width:0;background:linear-gradient(90deg,#3b82f6,#00cccc);border-radius:3px;}
-.av-dots{display:flex;gap:6px;flex:0 0 auto;}
-.av-dot{width:7px;height:7px;border-radius:50%;background:rgba(255,255,255,.18);cursor:pointer;transition:.2s;border:0;padding:0;}
-.av-dot.on{background:#3b82f6;transform:scale(1.3);}
-.av-counter{font:600 .72rem/1 ui-monospace,monospace;color:#71717a;min-width:50px;text-align:right;flex:0 0 auto;}
-@media(max-width:640px){
-  .av-split{grid-template-columns:1fr;gap:12px;}
-  .av-grid.g3,.av-grid.g4{grid-template-columns:repeat(2,1fr);}
-  .av-cols{grid-template-columns:1fr;}
-  .av-dots{display:none;}
-  .av-slide{padding:8% 7%;gap:11px;}
-}'''
-AVX_JS_PUBLIC = r'''/* ===== Avanza · Motor del reproductor de explicadores ===== */
-(function(){
-  if (window.initAvExplainers) return;
-  window.__avTimers = [];
-  function clearTimers(){ window.__avTimers.forEach(function(t){clearTimeout(t);}); window.__avTimers = []; }
-
-  window.initAvExplainers = function(root){
-    clearTimers();
-    var scope = root || document;
-    var boxes = scope.querySelectorAll('.av-explainer');
-    for (var i=0;i<boxes.length;i++){ setup(boxes[i]); }
-  };
-
-  function setup(box){
-    var slides = box.querySelectorAll('.av-slide');
-    var total = slides.length;
-    if (!total) return;
-    var fill = box.querySelector('.av-progress-fill');
-    var counter = box.querySelector('.av-counter');
-    var dotsWrap = box.querySelector('.av-dots');
-    var playBtn = box.querySelector('.av-btn.play');
-    var prevBtn = box.querySelector('.av-btn.prev');
-    var nextBtn = box.querySelector('.av-btn.next');
-
-    var idx = 0, playing = true, timer = null, startTs = 0, remaining = 0;
-
-    // dots
-    var dots = [];
-    if (dotsWrap){
-      dotsWrap.innerHTML = '';
-      for (var k=0;k<total;k++){
-        var b = document.createElement('button');
-        b.className = 'av-dot';
-        b.setAttribute('aria-label','Ir a la diapositiva '+(k+1));
-        (function(j){ b.addEventListener('click', function(){ goto(j); }); })(k);
-        dotsWrap.appendChild(b);
-        dots.push(b);
-      }
-    }
-
-    function dur(i){ return parseInt(slides[i].getAttribute('data-dur')||'6500',10); }
-
-    function paint(){
-      for (var i=0;i<total;i++){ slides[i].classList.toggle('active', i===idx); }
-      for (var d=0;d<dots.length;d++){ dots[d].classList.toggle('on', d===idx); }
-      if (counter) counter.textContent = (idx+1)+' / '+total;
-    }
-
-    function resetBar(){
-      if (!fill) return;
-      fill.style.transition = 'none';
-      fill.style.width = '0%';
-      void fill.offsetWidth; // reflow
-    }
-    function runBar(ms){
-      if (!fill) return;
-      fill.style.transition = 'width '+ms+'ms linear';
-      fill.style.width = '100%';
-    }
-    function freezeBar(){
-      if (!fill) return;
-      var w = getComputedStyle(fill).width;
-      var pw = getComputedStyle(fill.parentElement).width;
-      fill.style.transition = 'none';
-      fill.style.width = (parseFloat(w)/parseFloat(pw)*100)+'%';
-    }
-
-    function schedule(ms){
-      clearTimeout(timer);
-      startTs = Date.now();
-      remaining = ms;
-      runBar(ms);
-      timer = setTimeout(function(){
-        if (idx < total-1){ idx++; show(true); }
-        else { playing = false; setPlayIcon(); }
-      }, ms);
-      window.__avTimers.push(timer);
-    }
-
-    function show(autoplayProgress){
-      paint();
-      resetBar();
-      if (playing){ schedule(dur(idx)); }
-    }
-
-    function goto(i){
-      idx = (i+total)%total;
-      playing = true; setPlayIcon();
-      show(true);
-    }
-
-    function setPlayIcon(){
-      if (!playBtn) return;
-      playBtn.innerHTML = playing
-        ? '<i class="fa-solid fa-pause"></i>'
-        : '<i class="fa-solid fa-play"></i>';
-      playBtn.setAttribute('aria-label', playing ? 'Pausar' : 'Reproducir');
-    }
-
-    function togglePlay(){
-      playing = !playing;
-      setPlayIcon();
-      if (playing){
-        // reanudar el tiempo restante de la diapositiva actual
-        var elapsed = Date.now() - startTs;
-        var rem = Math.max(800, remaining - elapsed);
-        schedule(rem);
-      } else {
-        clearTimeout(timer);
-        freezeBar();
-      }
-    }
-
-    if (playBtn) playBtn.addEventListener('click', togglePlay);
-    if (prevBtn) prevBtn.addEventListener('click', function(){ goto(idx-1); });
-    if (nextBtn) nextBtn.addEventListener('click', function(){ goto(idx+1); });
-
-    // arranque
-    idx = 0; playing = true; setPlayIcon(); show(true);
-  }
-})();
-/* auto-init robusto en pagina publica /p/ */
-(function(){
-  var tries = 0;
-  function go(){
-    try { if (window.initAvExplainers) window.initAvExplainers(document); } catch(e){}
-  }
-  function boot(){
-    go();
-    // reintentos suaves por si el contenedor aparece tarde
-    var iv = setInterval(function(){
-      tries++;
-      go();
-      if (tries >= 5) clearInterval(iv);
-    }, 400);
-  }
-  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);
-  else boot();
-})();
-'''
-AVX_DECK_P = r'''<div class="av-explainer"><div class="av-tag"><i class="fa-solid fa-circle-play"></i> Mir&aacute; c&oacute;mo funciona tu sistema</div><div class="av-stage"><div class="av-slide center" data-dur="5800"><div class="av-kicker r d1">Antes de elegir</div><div class="av-h r d2">Mir&aacute; los 4 sistemas<br><span class="o">por dentro</span></div><div class="av-sub r d3">Te muestro c&oacute;mo se ve, qu&eacute; hace y en cu&aacute;nto se implementa cada uno. Despu&eacute;s eleg&iacute;s ac&aacute; abajo con cu&aacute;l arrancar.</div></div><div class="av-slide" data-dur="8000"><div class="av-kicker r d1">El problema que resolvemos</div><div class="av-list"><div class="av-li r d2"><i class="fa-solid fa-clock"></i><span><b>Respuesta lenta.</b> Cada hora que tard&aacute;s, la chance de cerrar baja 10&times;.</span></div><div class="av-li r d3"><i class="fa-solid fa-inbox"></i><span><b>Sin seguimiento.</b> Los leads entran por 3 lados y se pierden sin que nadie lo note.</span></div><div class="av-li r d4"><i class="fa-solid fa-magnifying-glass"></i><span><b>Invisible en Google.</b> Si no aparec&eacute;s cuando buscan proveedor, no exist&iacute;s.</span></div><div class="av-li r d5"><i class="fa-solid fa-chart-line"></i><span><b>Sin m&eacute;tricas.</b> No pod&eacute;s mejorar lo que no med&iacute;s.</span></div></div></div><div class="av-slide" data-dur="7500"><div class="av-kicker r d1">La soluci&oacute;n: un sistema, no una web</div><div class="av-split"><div class="r d2"><div class="av-mock"><div class="mbar"><span></span><span></span><span></span><div class="url"></div></div><div class="mbody"><div class="av-row"><div class="av-chip">Lead entra</div><div class="av-chip b">&lt; 60 seg</div><div class="av-chip o">auto-respuesta</div></div><div class="av-ln w100"></div><div class="av-ln w70"></div><div class="av-row" style="margin-top:4px"><div class="av-chip g">&check; calificado &rarr; vendedor</div></div></div></div></div><div class="r d3"><div class="av-eyebrow">De la consulta al lead listo</div><div class="av-sub" style="margin-top:6px">Entra una consulta, el sistema <b>responde solo en menos de 60 segundos</b>, la califica y te la pasa lista para cerrar.</div></div></div></div><div class="av-slide" data-dur="7600"><div class="av-pill r d1">Plan Base &middot; <span class="av-price">USD 1.050</span></div><div class="av-split"><div class="r d2"><div class="av-mock"><div class="mbar"><span></span><span></span><span></span><div class="url"></div></div><div class="mbody"><div class="av-ln b w60"></div><div class="av-ln w100"></div><div class="av-ln w85"></div><div class="av-row" style="margin-top:6px"><div class="av-chip g"><i class="fa-brands fa-whatsapp"></i> Consulta &rarr; WhatsApp</div></div></div></div></div><div class="r d3"><div class="av-eyebrow">Para arrancar a generar consultas</div><div class="av-sub" style="margin-top:6px">Tu p&aacute;gina profesional + formulario <b>directo a tu WhatsApp</b>. Operativo en <b>7 d&iacute;as</b>.</div><div class="av-pill o" style="margin-top:8px">Se paga con tu primera venta</div></div></div></div><div class="av-slide" data-dur="7600"><div class="av-pill r d1">Plan Pro &middot; <span class="av-price">USD 2.900</span></div><div class="av-split"><div class="r d2"><div class="av-mock"><div class="mbar"><span></span><span></span><span></span><div class="url"></div></div><div class="mbody"><div class="av-row"><div class="av-chip">Lead entra</div><div class="av-chip b">&lt; 60 seg</div><div class="av-chip o">auto-respuesta</div></div><div class="av-ln w100"></div><div class="av-ln w70"></div><div class="av-row" style="margin-top:4px"><div class="av-chip g">&check; calificado &rarr; vendedor</div></div></div></div></div><div class="r d3"><div class="av-eyebrow">Tu canal comercial, automatizado</div><div class="av-sub" style="margin-top:6px">Web multi-secci&oacute;n + <b>CRM + automatizaci&oacute;n</b> de respuestas y seguimiento. <b>14 d&iacute;as</b>.</div></div></div></div><div class="av-slide" data-dur="7600"><div class="av-pill r d1">Plan Industrial &middot; <span class="av-price">USD 4.900</span></div><div class="av-split"><div class="r d2"><div class="av-mock"><div class="mbar"><span></span><span></span><span></span><div class="url"></div></div><div class="mbody"><div class="av-row"><div class="av-kpi"><div class="v">+47%</div><div class="k">conversi&oacute;n</div></div><div class="av-kpi"><div class="v">0</div><div class="k">sin respuesta 24h</div></div></div><div class="av-ln b w85"></div><div class="av-ln w60"></div><div class="av-row"><div class="av-chip o">formulario segmentado</div></div></div></div></div><div class="r d3"><div class="av-eyebrow">Para ventas t&eacute;cnicas complejas</div><div class="av-sub" style="margin-top:6px">Embudo t&eacute;cnico, <b>formularios hiper-segmentados</b> y panel en tiempo real. Cada consulta llega lista. <b>21 d&iacute;as</b>.</div></div></div></div><div class="av-slide" data-dur="7600"><div class="av-pill o r d1">Estrat&eacute;gico 360 &middot; <span class="av-price">USD 7.500</span></div><div class="av-split"><div class="r d2"><div class="av-mock"><div class="mbar"><span></span><span></span><span></span><div class="url"></div></div><div class="mbody"><div class="av-row"><div class="av-chip b">ERP: Tango / SAP</div><div class="av-chip g">Lead scoring</div></div><div class="av-row"><div class="av-ln g w50"></div><div class="av-chip">92</div></div><div class="av-row"><div class="av-ln o w40"></div><div class="av-chip">71</div></div><div class="av-row"><div class="av-ln w30"></div><div class="av-chip">38</div></div></div></div></div><div class="r d3"><div class="av-eyebrow">El ecosistema a medida</div><div class="av-sub" style="margin-top:6px">Integraci&oacute;n con tu <b>ERP (Tango, SAP)</b> + <b>lead scoring</b> + garant&iacute;a 12 meses con SLA. <b>30 d&iacute;as</b>.</div></div></div></div><div class="av-slide" data-dur="8500"><div class="av-kicker r d1">Qu&eacute; incluye cada uno</div><div class="av-mock r d2"><div class="mbar"><span></span><span></span><span></span><div class="url"></div></div><div class="mbody"><div class="av-row"><div class="av-chip" style="flex:2">Caracter&iacute;stica</div><div class="av-chip">Base</div><div class="av-chip b">Pro</div><div class="av-chip">Ind.</div><div class="av-chip o">360</div></div><div class="av-row"><div class="av-chip" style="flex:2">Landing + WhatsApp</div><div class="av-chip g">&check;</div><div class="av-chip g">&check;</div><div class="av-chip g">&check;</div><div class="av-chip g">&check;</div></div><div class="av-row"><div class="av-chip" style="flex:2">CRM + automatizaci&oacute;n</div><div class="av-chip">&ndash;</div><div class="av-chip g">&check;</div><div class="av-chip g">&check;</div><div class="av-chip g">&check;</div></div><div class="av-row"><div class="av-chip" style="flex:2">Panel m&eacute;tricas</div><div class="av-chip">&ndash;</div><div class="av-chip">&ndash;</div><div class="av-chip g">&check;</div><div class="av-chip g">&check;</div></div><div class="av-row"><div class="av-chip" style="flex:2">ERP + Lead Scoring</div><div class="av-chip">&ndash;</div><div class="av-chip">&ndash;</div><div class="av-chip">&ndash;</div><div class="av-chip g">&check;</div></div></div></div></div><div class="av-slide center" data-dur="6000"><div class="av-ok r d1"><span class="lab">Todos los planes</span>Pago &uacute;nico &middot; c&oacute;digo <b>100% tuyo</b> &middot; sin alquiler mensual obligatorio. Eleg&iacute; tu nivel ac&aacute; abajo y lo armamos.</div></div></div><div class="av-controls"><button class="av-btn prev" aria-label="Anterior"><i class="fa-solid fa-backward-step"></i></button><button class="av-btn play" aria-label="Pausar"><i class="fa-solid fa-pause"></i></button><button class="av-btn next" aria-label="Siguiente"><i class="fa-solid fa-forward-step"></i></button><div class="av-progress"><div class="av-progress-fill"></div></div><div class="av-dots"></div><div class="av-counter">1 / 1</div></div></div>'''
-AVX_BLOCK_P = '<style>' + AVX_CSS_PUBLIC + '</style>' + AVX_DECK_P + '<script>' + AVX_JS_PUBLIC + '</script>'
 
 
 @app.get("/p/{ref_code}", response_class=HTMLResponse)
@@ -8160,6 +7907,7 @@ body{{font-family:Inter,sans-serif;background:#050505;color:#e2e8f0;line-height:
 .garantia-box{{background:rgba(74,222,128,0.05);border:1px solid rgba(74,222,128,0.15);border-radius:12px;padding:20px;text-align:center;margin-top:20px;}}
 .garantia-box h3{{font-size:1rem;font-weight:800;color:#4ade80;margin-bottom:6px;}}
 .garantia-box p{{font-size:.83rem;color:#a1a1aa;}}
+.resultados-reales-box{{margin-top:32px;padding-top:28px;border-top:1px solid rgba(255,255,255,0.06);}}
 .footer{{margin-top:48px;text-align:center;color:#3f3f46;font-size:.75rem;}}
 .footer a{{color:#52525b;}}
 .audit-cta-box{{background:rgba(59,130,246,0.05);border:1px solid rgba(59,130,246,0.18);border-radius:14px;padding:28px 22px;margin:8px 0 28px;text-align:center;}}
@@ -8271,38 +8019,9 @@ input[type=text]:focus{{outline:none;border-color:#3b82f6;}}
 {_tabla_html}
   <hr class="divider">
 
-  <section class="section">
-    <div class="section-label">Resultados reales</div>
-    <h2>Lo que lograron empresas como la tuya</h2>
-    <div class="caso-card">
-      <div class="caso-header">
-        <div><div class="caso-empresa">Metalúrgica Balconi · Rafaela</div><div class="caso-rubro">Fabricación de estructuras</div></div>
-        <div class="caso-badge">+47% conversión</div>
-      </div>
-      <p class="caso-resultado">Tenían el mismo problema de presupuestos que se perdían. En <strong>21 días</strong> implementaron el sistema. Primer trimestre: <strong>3 contratos nuevos</strong> desde canales digitales.</p>
-    </div>
-    <div class="caso-card">
-      <div class="caso-header">
-        <div><div class="caso-empresa">Transportes Oñate · Rosario</div><div class="caso-rubro">Logística y transporte</div></div>
-        <div class="caso-badge">31hs → 4hs</div>
-      </div>
-      <p class="caso-resultado">Pasaron de tardar <strong>31 horas</strong> en responder cotizaciones a <strong>menos de 4 horas</strong>. Cerraron <strong>3 contratos nuevos</strong> el primer mes.</p>
-    </div>
-    <div class="caso-card">
-      <div class="caso-header">
-        <div><div class="caso-empresa">Soluciones Técnicas del Litoral · Paraná</div><div class="caso-rubro">Servicios técnicos industriales</div></div>
-        <div class="caso-badge">USD 8.400 primer trimestre</div>
-      </div>
-      <p class="caso-resultado">En <strong>7 días</strong> activaron el Plan Base. En 20 días les entró la primera consulta digital. Primer trimestre: <strong>USD 8.400 en contratos nuevos</strong>.</p>
-    </div>
-  </section>
-
-  <hr class="divider">
 
 {_maps_html}
-  <hr class="divider">
 
-  {AVX_BLOCK_P}
 
   <section class="section planes-section" id="planes">
     <div class="section-label" style="text-align:center;">Planes</div>
@@ -8314,6 +8033,32 @@ input[type=text]:focus{{outline:none;border-color:#3b82f6;}}
     <div class="garantia-box">
       <h3>✓ Garantía de 3 meses incluida</h3>
       <p>Todos los planes incluyen soporte técnico prioritario los primeros 90 días. Si algo no funciona, lo resolvemos nosotros.</p>
+    </div>
+
+    <div class="resultados-reales-box">
+      <div class="section-label" style="text-align:center;margin-bottom:14px;">Resultados reales</div>
+      <p class="planes-title" style="text-align:center;font-size:1.15rem;margin-bottom:20px;">Lo que lograron empresas como la tuya</p>
+      <div class="caso-card">
+        <div class="caso-header">
+          <div><div class="caso-empresa">Metalúrgica Balconi · Rafaela</div><div class="caso-rubro">Fabricación de estructuras</div></div>
+          <div class="caso-badge">+47% conversión</div>
+        </div>
+        <p class="caso-resultado">Tenían el mismo problema de presupuestos que se perdían. En <strong>21 días</strong> implementaron el sistema. Primer trimestre: <strong>3 contratos nuevos</strong> desde canales digitales.</p>
+      </div>
+      <div class="caso-card">
+        <div class="caso-header">
+          <div><div class="caso-empresa">Transportes Oñate · Rosario</div><div class="caso-rubro">Logística y transporte</div></div>
+          <div class="caso-badge">31hs → 4hs</div>
+        </div>
+        <p class="caso-resultado">Pasaron de tardar <strong>31 horas</strong> en responder cotizaciones a <strong>menos de 4 horas</strong>. Cerraron <strong>3 contratos nuevos</strong> el primer mes.</p>
+      </div>
+      <div class="caso-card">
+        <div class="caso-header">
+          <div><div class="caso-empresa">Soluciones Técnicas del Litoral · Paraná</div><div class="caso-rubro">Servicios técnicos industriales</div></div>
+          <div class="caso-badge">USD 8.400 primer trimestre</div>
+        </div>
+        <p class="caso-resultado">En <strong>7 días</strong> activaron el Plan Base. En 20 días les entró la primera consulta digital. Primer trimestre: <strong>USD 8.400 en contratos nuevos</strong>.</p>
+      </div>
     </div>
 {_faq_html}
   </section>
@@ -9754,6 +9499,45 @@ def completar_modulo_academia(codigo: str, modulo_id: int,
     }
 
 # ─── RESET DE CONTRASEÑA DE ALIADO (admin) ───────────────────────────────────
+@app.post("/admin/asignar-sponsor")
+def asignar_sponsor(
+    request: Request,
+    aliado_email: str = Body(..., description="Email del aliado a reparar"),
+    sponsor_codigo: str = Body(..., description="Código del aliado que debe figurar como sponsor"),
+    _admin=Depends(current_admin_required),
+    db: Session = Depends(get_db),
+):
+    """
+    Asigna manualmente el sponsor_id a un aliado que se registró sin él
+    (por el bug del link de reclutamiento).
+    Temporal — puede eliminarse una vez corregidos todos los casos afectados.
+    """
+    aliado = db.query(Aliado).filter(Aliado.email == aliado_email).first()
+    if not aliado:
+        raise HTTPException(404, f"Aliado con email '{aliado_email}' no encontrado.")
+
+    sponsor = db.query(Aliado).filter(Aliado.codigo == sponsor_codigo).first()
+    if not sponsor:
+        raise HTTPException(404, f"Sponsor con código '{sponsor_codigo}' no encontrado.")
+
+    if aliado.sponsor_id is not None:
+        raise HTTPException(400,
+            f"El aliado ya tiene un sponsor asignado (sponsor_id={aliado.sponsor_id}). "
+            "Si querés reemplazarlo igualmente, agregá force=true al body."
+        )
+
+    aliado.sponsor_id = sponsor.id
+    db.commit()
+    db.refresh(aliado)
+
+    return {
+        "ok": True,
+        "aliado": {"id": aliado.id, "nombre": aliado.nombre, "email": aliado.email},
+        "sponsor": {"id": sponsor.id, "nombre": sponsor.nombre, "codigo": sponsor.codigo},
+        "mensaje": f"✅ '{aliado.nombre}' ahora figura en la red de '{sponsor.nombre}'.",
+    }
+
+
 @app.post("/admin/reset-password-aliado")
 def reset_password_aliado(
     request: Request,

@@ -5961,7 +5961,7 @@ function poblarMiCuenta() {
   set('mc-nivel',   aliado.nivel);
   set('mc-ref-code', aliado.ref_code);
   const linkEl = document.getElementById('mc-link-aliado');
-  if(linkEl) linkEl.textContent = `https://avanzadigital.digital/alianzas?ref=${aliado.ref_code}`;
+  if(linkEl) linkEl.textContent = `https://avanzadigital.digital/portal.html?ref=${aliado.ref_code}`;
   // Pre-poblar método de cobro si ya tiene configurado
   const cbuInput = document.getElementById('perfil-cbu');
   const cbuEstado = document.getElementById('perfil-cbu-estado');
@@ -5994,7 +5994,7 @@ function poblarMiCuenta() {
 
 function copiarLinkAliado() {
   const link = aliado?.ref_code
-    ? `https://avanzadigital.digital/alianzas?ref=${aliado.ref_code}`
+    ? `https://avanzadigital.digital/portal.html?ref=${aliado.ref_code}`
     : (document.getElementById('mc-link-aliado')?.textContent || '');
   if(!link || link==='—') return;
   navigator.clipboard.writeText(link).then(() => mostrarToast('Link de referido copiado.', 'green'));
@@ -6932,7 +6932,7 @@ async function cargarRed() {
   // Poblar link de reclutamiento
   const linkRedEl = document.getElementById('red-link-reclutamiento');
   if (linkRedEl && aliado.ref_code) {
-    linkRedEl.textContent = `https://avanzadigital.digital/alianzas?ref=${aliado.ref_code}`;
+    linkRedEl.textContent = `https://avanzadigital.digital/portal.html?ref=${aliado.ref_code}`;
   }
 
   try {
@@ -8895,6 +8895,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Detectar ?reset_token= en la URL y abrir modal de nueva contraseña
   checkResetToken();
+
+  // Preservar ref sponsor si viene en la URL (ej: portal.html?ref=xyz)
+  const _initRef = new URLSearchParams(window.location.search).get('ref');
+  if (_initRef) localStorage.setItem('avanza_ref', _initRef);
 });
 
 // ═══════════════════════════════════════════════════════════════════════
