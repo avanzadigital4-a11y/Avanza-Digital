@@ -54,6 +54,7 @@ class ContratoBody(BaseModel):
     # Lugar / fecha de firma
     ciudad: Optional[str] = "Santa Fe"
     fecha: Optional[str] = None        # ISO 'YYYY-MM-DD'; si no, hoy
+    formato: Optional[str] = "pdf"     # "pdf" | "docx"
 
     class Config:
         extra = "allow"
@@ -64,13 +65,16 @@ def _body_to_extra(body: ContratoBody) -> dict:
     return {k: v for k, v in body.dict().items() if v is not None}
 
 
-def _pdf_response(datos: contratos.DatosContrato) -> StreamingResponse:
+def _file_response(datos: contratos.DatosContrato, formato: str = "pdf") -> StreamingResponse:
     import io
-    pdf = contratos.render_contrato_pdf(datos)
-    fname = contratos.nombre_archivo(datos)
+    formato = (formato or "pdf").lower()
+    if formato not in ("pdf", "docx"):
+        formato = "pdf"
+    data = contratos.render_contrato(datos, formato)
+    fname = contratos.nombre_archivo(datos, formato)
     return StreamingResponse(
-        io.BytesIO(pdf),
-        media_type="application/pdf",
+        io.BytesIO(data),
+        media_type=contratos.MIME[formato],
         headers={"Content-Disposition": f'attachment; filename="{fname}"'},
     )
 
@@ -103,7 +107,7 @@ def register(app, get_db_func, auth_dep, ajustar_creditos_fn=None):
 
         datos = contratos.datos_desde_venta(venta, extra=_body_to_extra(body))
         try:
-            return _pdf_response(datos)
+            return _file_response(datos, body.formato)
         except Exception as e:
             raise HTTPException(503, f"No se pudo generar el PDF: {e}")
 
@@ -120,6 +124,6 @@ def register(app, get_db_func, auth_dep, ajustar_creditos_fn=None):
             **{k: v for k, v in extra.items() if k != "cliente_razon_social"},
         )
         try:
-            return _pdf_response(datos)
+            return _file_response(datos, body.formato)
         except Exception as e:
             raise HTTPException(503, f"No se pudo generar el PDF: {e}")

@@ -5897,7 +5897,7 @@ function poblarMiCuenta() {
   set('mc-nivel',   aliado.nivel);
   set('mc-ref-code', aliado.ref_code);
   const linkEl = document.getElementById('mc-link-aliado');
-  if(linkEl) linkEl.textContent = `https://avanzadigital.digital/portal.html?ref=${aliado.ref_code}`;
+  if(linkEl) linkEl.textContent = `https://avanzadigital.digital/alianzas?ref=${aliado.ref_code}`;
   // Pre-poblar método de cobro si ya tiene configurado
   const cbuInput = document.getElementById('perfil-cbu');
   const cbuEstado = document.getElementById('perfil-cbu-estado');
@@ -5930,7 +5930,7 @@ function poblarMiCuenta() {
 
 function copiarLinkAliado() {
   const link = aliado?.ref_code
-    ? `https://avanzadigital.digital/portal.html?ref=${aliado.ref_code}`
+    ? `https://avanzadigital.digital/alianzas?ref=${aliado.ref_code}`
     : (document.getElementById('mc-link-aliado')?.textContent || '');
   if(!link || link==='—') return;
   navigator.clipboard.writeText(link).then(() => mostrarToast('Link de referido copiado.', 'green'));
@@ -6868,7 +6868,7 @@ async function cargarRed() {
   // Poblar link de reclutamiento
   const linkRedEl = document.getElementById('red-link-reclutamiento');
   if (linkRedEl && aliado.ref_code) {
-    linkRedEl.textContent = `https://avanzadigital.digital/portal.html?ref=${aliado.ref_code}`;
+    linkRedEl.textContent = `https://avanzadigital.digital/alianzas?ref=${aliado.ref_code}`;
   }
 
   try {
@@ -8832,7 +8832,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // Detectar ?reset_token= en la URL y abrir modal de nueva contraseña
   checkResetToken();
 
-  // Preservar ref sponsor si viene en la URL (ej: portal.html?ref=xyz)
+  // Preservar ref sponsor si viene en la URL (ej: alianzas?ref=xyz)
   const _initRef = new URLSearchParams(window.location.search).get('ref');
   if (_initRef) localStorage.setItem('avanza_ref', _initRef);
 });
@@ -9508,11 +9508,15 @@ const ACADEMIA_MODULOS = [
       <h3>Los 4 materiales oficiales</h3>
 
       <h3>Generar contrato</h3>
-      <p style="color:var(--text-dim);font-size:.85rem;margin:-4px 0 12px;">Gener&aacute; el contrato de servicio en PDF: el plan y los datos del cliente se completan, el Anexo se arma solo, queda listo para firmar.</p>
+      <p style="color:var(--text-dim);font-size:.85rem;margin:-4px 0 10px;">Gener&aacute; el contrato de servicio en <strong>PDF o Word</strong>: el plan y los datos del cliente se completan, el Anexo se arma solo, queda listo para firmar.</p>
+      <p style="color:var(--text-dim);font-size:.82rem;line-height:1.6;margin:-2px 0 14px;padding:10px 14px;background:rgba(59,130,246,.06);border-left:3px solid #3b82f6;border-radius:4px;">
+        <strong style="color:#fff;">El contrato es opcional</strong> &mdash; gener&aacute;lo solo si el cliente lo pide; no es obligaci&oacute;n hacerlo para todos los clientes.<br>
+        Para avanzar al pago, el cliente <strong>siempre abona desde tu link de p&aacute;gina de ventas personal</strong>: si no quiere contrato, mandale directo tu link; si pide contrato, igual paga desde ese mismo link (el contrato no reemplaza al pago).
+      </p>
       <div class="aca-downloads">
         <a class="aca-download" href="#" onclick="abrirModalContrato();return false;">
           <i class="fa-solid fa-file-signature" style="color:#1463ff;"></i>
-          <div><div class="dl-title">Generar contrato (PDF)</div><div class="dl-sub">Plan + datos del cliente &rarr; contrato listo</div></div>
+          <div><div class="dl-title">Generar contrato (PDF o Word)</div><div class="dl-sub">Solo si el cliente lo pide &middot; se completa solo</div></div>
         </a>
       </div>
 
@@ -12040,6 +12044,10 @@ function jMd(text) {
           <select id="c_iva"><option value="true" selected>Incluido</option><option value="false">+ IVA aparte</option></select>
         </div>
         <div>
+          <label>Formato</label>
+          <select id="c_formato"><option value="pdf" selected>PDF (final)</option><option value="docx">Word (editable)</option></select>
+        </div>
+        <div>
           <label>Anticipo (%)</label>
           <input id="c_anticipo" type="number" value="100" min="0" max="100">
         </div>
@@ -12089,6 +12097,7 @@ function jMd(text) {
         iva_incluido:         document.getElementById('c_iva').value === 'true',
         anticipo_pct:         parseInt(document.getElementById('c_anticipo').value) || 100,
         ciudad:               document.getElementById('c_ciudad').value,
+        formato:              document.getElementById('c_formato').value,
       };
       // Endpoint: usa la Venta si tiene id; si no, el preview ad-hoc.
       const url = (_ventaContrato && _ventaContrato.id)
@@ -12102,9 +12111,10 @@ function jMd(text) {
         return;
       }
       const blob = await res.blob();
+      const ext = body.formato === 'docx' ? 'docx' : 'pdf';
       const link = document.createElement('a');
       link.href = URL.createObjectURL(blob);
-      link.download = `contrato_${(body.cliente_razon_social || 'cliente').replace(/\W+/g,'_')}.pdf`;
+      link.download = `contrato_${(body.cliente_razon_social || 'cliente').replace(/\W+/g,'_')}.${ext}`;
       document.body.appendChild(link); link.click(); link.remove();
 
       cerrarModalContrato();
