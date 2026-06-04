@@ -1,0 +1,22 @@
+# nixpacks.toml — colocar en la raíz del proyecto avanza-portal (donde Railway hace el build).
+# WeasyPrint necesita librerías de sistema (Pango, Cairo, GDK-Pixbuf) + fuentes.
+# Estos son los paquetes apt para la imagen Debian bookworm que usa Nixpacks.
+
+[phases.setup]
+aptPkgs = [
+  "libpango-1.0-0",
+  "libpangocairo-1.0-0",
+  "libpangoft2-1.0-0",
+  "libgdk-pixbuf-2.0-0",
+  "libcairo2",
+  "libffi8",
+  "libharfbuzz0b",
+  "libjpeg62-turbo",
+  "libopenjp2-7",
+  "shared-mime-info",
+  "fonts-dejavu-core",
+]
+
+# Si Railway te corre con otra base y falla algún paquete por nombre,
+# las alternativas más comunes son: "libgdk-pixbuf2.0-0" (en lugar de -2.0-0)
+# y "libffi7" (en distros más viejas).

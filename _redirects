@@ -6,7 +6,6 @@
 /p/*          https://avanza-digital.onrender.com/p/:splat          301
 /api/*        https://avanza-digital.onrender.com/api/:splat        301
 /admin/*      https://avanza-digital.onrender.com/admin/:splat      200
-/portal.html    /portal.html    200
 /:ref_code    https://avanza-digital.onrender.com/alias/:ref_code   301
 /auditoria-digital  /auditoria-digital.html  200
 /calculadora-ineficiencia  /calculadora-ineficiencia.html  200

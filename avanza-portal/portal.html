@@ -1302,8 +1302,7 @@
       <button class="tab-btn tab-canal1" id="btn-tab-academia-primary" onclick="cambiarTab('academia',this)" style="background:rgba(249,115,22,0.12);border-color:rgba(249,115,22,0.3);color:#f97316;"><i class="fa-solid fa-graduation-cap"></i> Academia <span id="academia-progress-badge" style="display:none;background:rgba(249,115,22,0.8);color:#000;font-size:.6rem;font-weight:800;padding:2px 6px;border-radius:4px;margin-left:4px;"></span></button>
       <!-- C2: Kit de Ventas (primer tab al entrar) -->
       <button class="tab-btn tab-canal2" onclick="cambiarTab('kit-ventas',this)" style="display:none;background:rgba(74,222,128,0.12);border-color:rgba(74,222,128,0.3);color:#4ade80;"><i class="fa-solid fa-briefcase"></i> Kit de Ventas <span style="background:#4ade80;color:#000;font-size:.6rem;font-weight:800;padding:2px 6px;border-radius:4px;margin-left:4px;">C2</span></button>
-      <!-- C1: Referidos → redirige al Pipeline unificado -->
-      <button class="tab-btn tab-canal1" onclick="cambiarTab('prospectos',this)"><i class="fa-solid fa-user-plus"></i> Prospectos</button>
+      
       <!-- Pipeline unificado (ambos canales) -->
       <button class="tab-btn" id="btn-tab-pipeline" onclick="cambiarTab('pipeline',this)" title="Seguí el avance de cada lead desde el primer contacto hasta el cobro"><i class="fa-solid fa-bars-progress"></i> Mis Leads</button>
       <!-- Ambos: Comisiones -->
@@ -1317,7 +1316,7 @@
     <div class="tabs-extra-row" id="tabs-extra-row">
       <button class="tab-btn tab-canal2" onclick="cambiarTab('academia',this)" style="display:none;background:rgba(249,115,22,0.12);border-color:rgba(249,115,22,0.3);color:#f97316;"><i class="fa-solid fa-graduation-cap"></i> Academia</button>
       <button class="tab-btn tab-canal2" onclick="cambiarTab('selector-rubro',this)" style="display:none;background:rgba(74,222,128,0.12);border-color:rgba(74,222,128,0.3);color:#4ade80;"><i class="fa-solid fa-crosshairs"></i> Selector de Rubro</button>
-      <button class="tab-btn tab-canal2" onclick="cambiarTab('prospectos',this)" style="display:none;"><i class="fa-solid fa-bullseye"></i> Prospectos</button>
+      
       <button class="tab-btn" onclick="cambiarTab('ventas',this)"><i class="fa-solid fa-handshake"></i> Ventas</button>
       <button class="tab-btn" onclick="cambiarTab('cotizador',this)"><i class="fa-solid fa-file-invoice-dollar"></i> Cotizador</button>
       <button class="tab-btn" onclick="cambiarTab('herramientas',this)"><i class="fa-solid fa-magnifying-glass"></i> Auditorías</button>
@@ -2765,76 +2764,7 @@
       <!-- CBU y Zona de Peligro movidos a ⚙️ Mi Cuenta -->
     </div>
 
-    <div id="tab-prospectos" class="tab-panel">
-
-      <div id="prosp-alertas"></div>
-
-      <div class="bento-box" style="margin-bottom:24px;">
-        <h3 style="font-size:0.95rem;font-weight:700;margin-bottom:16px;"><i class="fa-solid fa-plus" style="color:var(--primary);"></i> &nbsp;Cargar nuevo prospecto manual</h3>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
-          <div>
-            <label style="font-size:.75rem;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;display:block;margin-bottom:6px;">Nombre / Empresa *</label>
-            <input type="text" id="np-nombre" placeholder="Ej: Metalúrgica San Martín" style="width:100%;background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px 14px;color:var(--text);font-size:.9rem;font-family:'Inter',sans-serif;outline:none;">
-          </div>
-          <div>
-            <label style="font-size:.75rem;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;display:block;margin-bottom:6px;">Contacto (WA / email)</label>
-            <input type="text" id="np-contacto" placeholder="3424000000 o mail@empresa.com" style="width:100%;background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px 14px;color:var(--text);font-size:.9rem;font-family:'Inter',sans-serif;outline:none;">
-          </div>
-          <div>
-            <label style="font-size:.75rem;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;display:block;margin-bottom:6px;">Plan de interés</label>
-            <select id="np-plan" style="width:100%;background:#111;border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px 14px;color:var(--text);font-size:.9rem;font-family:'Inter',sans-serif;outline:none;">
-              <option value="">— No sé aún —</option>
-              <option value="Plan Base">Plan Base (USD 1.050)</option>
-              <option value="Plan Pro">Plan Pro (USD 2.900)</option>
-              <option value="Plan Industrial">Plan Industrial (USD 4.900)</option>
-              <option value="Estrategico 360">Estratégico 360 (USD 7.500)</option>
-            </select>
-          </div>
-          <div>
-            <label style="font-size:.75rem;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;display:block;margin-bottom:6px;">Rubro del cliente</label>
-            <select id="np-rubro" style="width:100%;background:#111;border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px 14px;color:var(--text);font-size:.9rem;font-family:'Inter',sans-serif;outline:none;">
-              <option value="">— No sé aún —</option>
-              <option value="Metalúrgica / Manufactura">Metalúrgica / Manufactura</option>
-              <option value="Agro / Maquinaria agrícola">Agro / Maquinaria agrícola</option>
-              <option value="Logística / Transporte">Logística / Transporte</option>
-              <option value="Servicios B2B / Consultoría">Servicios B2B / Consultoría</option>
-              <option value="Comercio / Retail B2B">Comercio / Retail B2B</option>
-              <option value="Construcción / Obras">Construcción / Obras</option>
-              <option value="Salud / Clínicas">Salud / Clínicas</option>
-              <option value="Educación / Capacitación">Educación / Capacitación</option>
-              <option value="Tecnología / Software">Tecnología / Software</option>
-              <option value="Otro">Otro</option>
-            </select>
-          </div>
-          <div>
-            <label style="font-size:.75rem;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;display:block;margin-bottom:6px;">Nota inicial</label>
-            <input type="text" id="np-nota" placeholder="Ej: pide info, evalúa con socio..." style="width:100%;background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px 14px;color:var(--text);font-size:.9rem;font-family:'Inter',sans-serif;outline:none;">
-          </div>
-        </div>
-        <div style="margin-top:14px;display:flex;gap:10px;align-items:center;">
-          <button onclick="crearProspecto()" style="background:var(--primary);color:white;border:none;border-radius:var(--radius-sm);padding:10px 22px;font-size:.88rem;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif;">
-            <i class="fa-solid fa-plus"></i> &nbsp;Agregar prospecto
-          </button>
-          <span id="np-msg" style="font-size:.82rem;color:var(--green);display:none;"><i class="fa-solid fa-check"></i> Cargado correctamente</span>
-        </div>
-      </div>
-
-      <div class="table-wrap">
-        <div class="table-head">
-          <h3><i class="fa-solid fa-users" style="color:var(--primary);"></i> &nbsp;Mis prospectos</h3>
-          <div style="display:flex;gap:8px;flex-wrap:wrap;">
-            <button onclick="filtrarProspectos('todos',this)" id="pfiltro-todos" style="background:var(--primary);color:white;border:none;border-radius:6px;padding:5px 12px;font-size:.78rem;font-weight:600;cursor:pointer;">Todos</button>
-            <button onclick="filtrarProspectos('sin_contactar',this)" id="pfiltro-sin" style="background:transparent;color:var(--text-muted);border:1px solid var(--border);border-radius:6px;padding:5px 12px;font-size:.78rem;font-weight:600;cursor:pointer;">Sin contactar</button>
-            <button onclick="filtrarProspectos('contactado',this)" id="pfiltro-cont" style="background:transparent;color:var(--text-muted);border:1px solid var(--border);border-radius:6px;padding:5px 12px;font-size:.78rem;font-weight:600;cursor:pointer;">Contactados</button>
-            <button onclick="filtrarProspectos('propuesta_enviada',this)" id="pfiltro-prop" style="background:transparent;color:var(--text-muted);border:1px solid var(--border);border-radius:6px;padding:5px 12px;font-size:.78rem;font-weight:600;cursor:pointer;">Propuesta enviada</button>
-            <button onclick="filtrarProspectos('respondio',this)" id="pfiltro-resp" style="background:transparent;color:var(--text-muted);border:1px solid var(--border);border-radius:6px;padding:5px 12px;font-size:.78rem;font-weight:600;cursor:pointer;">Respondieron</button>
-          </div>
-        </div>
-        <div id="lista-prospectos" style="padding:0 4px 8px;"></div>
-      </div>
-
-    </div>
-
+    
     <div id="tab-red" class="tab-panel">
       <div class="bento-box" style="margin-bottom:24px; background:linear-gradient(135deg, rgba(250,204,21,0.05), transparent); border-color:rgba(250,204,21,0.2);">
         <h3 style="font-size:1.2rem;font-weight:900;margin-bottom:8px;color:var(--amber);"><i class="fa-solid fa-network-wired"></i> Construí tu Agencia Descentralizada</h3>
@@ -4967,13 +4897,19 @@ function copiarTexto(id) {
 }
 
 function irARegistrarProspecto(planPreseleccionado) {
-  cambiarTab('prospectos', document.querySelector('.tab-btn[onclick*="prospectos"]'));
+  cambiarTab('pipeline', document.getElementById('btn-tab-pipeline'));
   setTimeout(() => {
-    const selectPlan = document.getElementById('nuevo-plan');
-    if (selectPlan) selectPlan.value = planPreseleccionado;
-    const formNuevo = document.getElementById('form-nuevo-prospecto');
-    if (formNuevo) formNuevo.scrollIntoView({ behavior: 'smooth' });
-  }, 200);
+    const sel = document.getElementById('pl-np-plan');
+    if (sel) {
+      sel.value = planPreseleccionado;
+      if (!sel.value) {
+        const opt = Array.from(sel.options).find(o => /360/.test(o.value) && /360/.test(planPreseleccionado));
+        if (opt) sel.value = opt.value;
+      }
+    }
+    const campo = document.getElementById('pl-np-nombre');
+    if (campo) campo.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }, 250);
 }
 
 function irACotizadorConRubro(rubro, plan) {
@@ -5196,9 +5132,9 @@ function cerrarOnboarding() {
 // ── GATE SUAVE: Bolsa de Leads ────────────────────────────────────────────────
 function abrirModalGateBolsa(completadosReq) {
   const modConfig = [
-    { id: 1, label: 'Módulo 1 · Qué vendés y a quién' },
-    { id: 2, label: 'Módulo 2 · Cómo generar confianza' },
-    { id: 3, label: 'Módulo 3 · Cómo cerrar la venta' },
+    { id: 1, label: 'Módulo 1 · Cómo funciona el programa' },
+    { id: 2, label: 'Módulo 2 · Cómo detectar al cliente ideal' },
+    { id: 3, label: 'Módulo 3 · Cómo hacer el diagnóstico' },
   ];
   const progreso = getAcademiaProgreso ? getAcademiaProgreso() : [];
   const lista = document.getElementById('gate-modulos-lista');
@@ -9122,7 +9058,7 @@ const ACADEMIA_MODULOS = [
       <p><strong>Objetivo:</strong> bajarle la guardia. Si el cliente siente que no lo estás vendiendo, se abre más.</p>
 
       <h4>Minuto 2-6 · Las 4 preguntas de diagnóstico</h4>
-      <p>Las mismas del Módulo 2, pero acá con más profundidad:</p>
+      <p>Acá las hacés con el cliente en frente, para cuantificar el dolor:</p>
       <ol>
         <li><strong>Volumen:</strong> "¿Cuántas consultas reciben por mes?"</li>
         <li><strong>Canales:</strong> "¿Por dónde entran? ¿Qué porcentaje por cada uno?"</li>
@@ -9163,6 +9099,7 @@ const ACADEMIA_MODULOS = [
         <div class="text">"¿Te sirve algo así para tu empresa? ¿Querés que te pase el detalle del plan por WhatsApp?"</div>
       </div>
       <p>Si dice sí, pasaste al siguiente paso: mandás el brochure + detalle del plan, y coordinás la llamada técnica con el equipo de Avanza.</p>
+      <p>Acá, en el diagnóstico, solo abrís la puerta al cierre. El guión de cierre completo —paso a paso y con el pitch exacto por rubro— lo tenés en el módulo <strong>«Cómo cerrar con el guión por rubro»</strong>.</p>
 
       <div class="aca-warn">
         <div class="label">ERROR FRECUENTE</div>
@@ -9482,6 +9419,35 @@ const ACADEMIA_MODULOS = [
         <li>Cómo adaptar cada caso al cliente que tenés enfrente</li>
       </ul>
 
+      <h3>🔧 Soluciones Técnicas del Litoral S.R.L.</h3>
+      <p><strong>Perfil:</strong> Mantenimiento y calibración industrial · Paraná, Entre Ríos · 9 empleados</p>
+      <p><strong>Plan contratado:</strong> Base · USD 1.050 · Implementación 7 días</p>
+      <h4>Problema antes</h4>
+      <p>Empresa con 12 años en el mercado conseguía clientes <strong>exclusivamente por referidos</strong>. Sin presencia digital activa ni forma de recibir consultas online. Perdía trabajo frente a competidores más jóvenes posicionados en Google.</p>
+      <h4>Qué se implementó</h4>
+      <p>Canal digital operativo con página web técnica optimizada para búsquedas locales, formulario de solicitud de servicio con clasificación por tipo de mantenimiento y urgencia, e integración a WhatsApp Business.</p>
+      <h4>Resultados a 45 días</h4>
+      <ul>
+        <li><strong>3–4 clientes nuevos</strong> por mes desde canal digital</li>
+        <li><strong>1° puesto en Google local</strong> para su rubro en Paraná</li>
+        <li><strong>USD 8.400</strong> en contratos nuevos el primer trimestre</li>
+      </ul>
+
+      <h3>🚚 Transportes Oñate Hermanos S.A.</h3>
+      <p><strong>Perfil:</strong> Transporte de cargas regional · Rosario, Santa Fe · 22 empleados</p>
+      <p><strong>Plan contratado:</strong> Pro · USD 2.900 · Implementación 14 días</p>
+      <h4>Problema antes</h4>
+      <p>Solicitudes de cotización entraban por teléfono, email, Instagram y WhatsApp personal de tres empleados distintos. <strong>Pedidos duplicados o perdidos</strong>, con tiempos de respuesta superiores a 48 horas. Los clientes nuevos conseguían precio antes con la competencia.</p>
+      <h4>Qué se implementó</h4>
+      <p>Formulario inteligente de cotización segmentado por tipo de carga y destino, integrado al WhatsApp oficial. Respuesta automática con tiempo estimado y operador asignado. Panel con historial por CUIT.</p>
+      <h4>Resultados a 60 días</h4>
+      <ul>
+        <li><strong>–14 horas semanales</strong> de gestión manual de consultas</li>
+        <li><strong>+38%</strong> en tasa de cierre con clientes nuevos</li>
+        <li><strong>4.2 horas</strong> de primera respuesta (antes: 31 horas)</li>
+        <li><strong>3 contratos nuevos</strong> el primer mes</li>
+      </ul>
+
       <h3>🏭 Metalúrgica Balconi S.R.L.</h3>
       <p><strong>Perfil:</strong> Fabricación de equipos para agroindustria · Rafaela, Santa Fe · 38 empleados</p>
       <p><strong>Plan contratado:</strong> Industrial · USD 4.900 · Implementación 21 días</p>
@@ -9500,35 +9466,6 @@ const ACADEMIA_MODULOS = [
       <div class="aca-pitch-box">
         <div class="text">"Antes yo mismo revisaba el WhatsApp del vendedor. Hoy entro al panel y en dos minutos sé qué presupuesto está caliente." — Santiago Balconi, Socio Gerente</div>
       </div>
-
-      <h3>🚚 Transportes Oñate Hermanos S.A.</h3>
-      <p><strong>Perfil:</strong> Transporte de cargas regional · Rosario, Santa Fe · 22 empleados</p>
-      <p><strong>Plan contratado:</strong> Pro · USD 2.900 · Implementación 14 días</p>
-      <h4>Problema antes</h4>
-      <p>Solicitudes de cotización entraban por teléfono, email, Instagram y WhatsApp personal de tres empleados distintos. <strong>Pedidos duplicados o perdidos</strong>, con tiempos de respuesta superiores a 48 horas. Los clientes nuevos conseguían precio antes con la competencia.</p>
-      <h4>Qué se implementó</h4>
-      <p>Formulario inteligente de cotización segmentado por tipo de carga y destino, integrado al WhatsApp oficial. Respuesta automática con tiempo estimado y operador asignado. Panel con historial por CUIT.</p>
-      <h4>Resultados a 60 días</h4>
-      <ul>
-        <li><strong>–14 horas semanales</strong> de gestión manual de consultas</li>
-        <li><strong>+38%</strong> en tasa de cierre con clientes nuevos</li>
-        <li><strong>4.2 horas</strong> de primera respuesta (antes: 31 horas)</li>
-        <li><strong>3 contratos nuevos</strong> el primer mes</li>
-      </ul>
-
-      <h3>🔧 Soluciones Técnicas del Litoral S.R.L.</h3>
-      <p><strong>Perfil:</strong> Mantenimiento y calibración industrial · Paraná, Entre Ríos · 9 empleados</p>
-      <p><strong>Plan contratado:</strong> Base · USD 1.050 · Implementación 7 días</p>
-      <h4>Problema antes</h4>
-      <p>Empresa con 12 años en el mercado conseguía clientes <strong>exclusivamente por referidos</strong>. Sin presencia digital activa ni forma de recibir consultas online. Perdía trabajo frente a competidores más jóvenes posicionados en Google.</p>
-      <h4>Qué se implementó</h4>
-      <p>Canal digital operativo con página web técnica optimizada para búsquedas locales, formulario de solicitud de servicio con clasificación por tipo de mantenimiento y urgencia, e integración a WhatsApp Business.</p>
-      <h4>Resultados a 45 días</h4>
-      <ul>
-        <li><strong>3–4 clientes nuevos</strong> por mes desde canal digital</li>
-        <li><strong>1° puesto en Google local</strong> para su rubro en Paraná</li>
-        <li><strong>USD 8.400</strong> en contratos nuevos el primer trimestre</li>
-      </ul>
 
       <h3>🏗️ Parque Logístico Industrial · Norte Argentino (en curso)</h3>
       <p><strong>Perfil:</strong> 120 hectáreas · 89 lotes industriales · 4 empresas ancla instaladas</p>
@@ -9570,6 +9507,15 @@ const ACADEMIA_MODULOS = [
 
       <h3>Los 4 materiales oficiales</h3>
 
+      <h3>Generar contrato</h3>
+      <p style="color:var(--text-dim);font-size:.85rem;margin:-4px 0 12px;">Gener&aacute; el contrato de servicio en PDF: el plan y los datos del cliente se completan, el Anexo se arma solo, queda listo para firmar.</p>
+      <div class="aca-downloads">
+        <a class="aca-download" href="#" onclick="abrirModalContrato();return false;">
+          <i class="fa-solid fa-file-signature" style="color:#1463ff;"></i>
+          <div><div class="dl-title">Generar contrato (PDF)</div><div class="dl-sub">Plan + datos del cliente &rarr; contrato listo</div></div>
+        </a>
+      </div>
+
       <!-- ── CANAL 1 ── -->
       <div class="d-canal1-only">
         <h3>Materiales Canal 1</h3>
@@ -9607,15 +9553,15 @@ const ACADEMIA_MODULOS = [
           <i class="fa-brands fa-linkedin" style="color:#0a66c2;"></i>
           <div><div class="dl-title">Banner LinkedIn</div><div class="dl-sub">Portada lista para subir (1584×396). Subila sin recortar.</div></div>
         </a>
-        <a class="aca-download" href="#" onclick="descargarPDF('https://drive.google.com/uc?export=download&id=1lVEyODAaPh3cqQ1Jet_RuyFBwOLUbbMO','Avanza_Logo_FondoOscuro.png');return false;">
+        <a class="aca-download" href="#" onclick="descargarPDF('https://drive.google.com/uc?export=download&id=1KtG1HXXLfwLUdzwXkqO7sNh4B7Gti_h0','Avanza_Logo_FondoOscuro.png');return false;">
           <i class="fa-solid fa-image" style="color:#a1a1aa;"></i>
           <div><div class="dl-title">Logo — fondo oscuro</div><div class="dl-sub">Versión clara, para usar sobre fondos oscuros</div></div>
         </a>
-        <a class="aca-download" href="#" onclick="descargarPDF('https://drive.google.com/uc?export=download&id=1rXwgyjDcZqbzF2lcthCFhUTZMXPdt_Wo','Avanza_Logo_FondoClaro.png');return false;">
+        <a class="aca-download" href="#" onclick="descargarPDF('https://drive.google.com/uc?export=download&id=1Dznp8Wo9Ujrd9MXooNe_KnbiWAAwJNy-','Avanza_Logo_FondoClaro.png');return false;">
           <i class="fa-solid fa-image" style="color:#a1a1aa;"></i>
           <div><div class="dl-title">Logo — fondo claro</div><div class="dl-sub">Versión oscura, para usar sobre fondos claros</div></div>
         </a>
-        <a class="aca-download" href="#" onclick="descargarPDF('https://drive.google.com/uc?export=download&id=1i2K9bwbBqDPHrY-2hNv1lpEueXgnTLu2','Avanza_Isotipo.png');return false;">
+        <a class="aca-download" href="#" onclick="descargarPDF('https://drive.google.com/uc?export=download&id=1Ue-To0velBm8YZF4SnYXDdPF275aFzmI','Avanza_Isotipo.png');return false;">
           <i class="fa-solid fa-shapes" style="color:#06b6d4;"></i>
           <div><div class="dl-title">Isotipo</div><div class="dl-sub">Solo el símbolo (las flechas), fondo transparente</div></div>
         </a>
@@ -9976,6 +9922,179 @@ const ACADEMIA_MODULOS = [
         <div class="text">Antes de cerrar este módulo: (1) actualizá tu titular de LinkedIn con la estructura que aprendiste, (2) identificá 10 prospectos con el filtro de búsqueda, (3) mandá 5 solicitudes de conexión personalizadas hoy. El momentum empieza con las primeras 5.</div>
       </div>
     `
+  },
+  {
+    id: 11,
+    canal: 'canal1',
+    num: 'MÓDULO 10',
+    title: 'Setting B2B: cómo llegar al que decide',
+    desc: 'Identificá al que firma, pasá la recepción sin que te filtren y ganate los primeros 30 segundos con el dueño.',
+    tiempo: '9 min',
+    icon: 'fa-key',
+    content: `
+    <div class="av-explainer"><div class="av-tag"><i class="fa-solid fa-circle-play"></i> Setting B2B &middot; M&Oacute;DULO 10</div><div class="av-stage">
+
+      <div class="av-slide center" data-dur="6000">
+        <div class="av-kicker r d1">Avanza Partner Network &middot; Canal 1</div>
+        <div class="av-h r d2">No le vend&eacute;s a una empresa.<br><span class="b">Lleg&aacute;s a una persona.</span></div>
+        <div class="av-sub r d3">La mayor&iacute;a de los closers se queda trabado en la recepci&oacute;n. Este m&oacute;dulo es para pasar ese filtro y hablar con el que firma.</div>
+      </div>
+
+      <div class="av-slide" data-dur="8000">
+        <div class="av-kicker r d1">Qui&eacute;n decide en una PYME industrial</div>
+        <div class="av-grid g2">
+          <div class="av-card r d2"><div class="t">Due&ntilde;o / Socio gerente</div><div class="d">En empresas de 10 a 50 personas, casi siempre firma &eacute;l. <b>Tu objetivo #1.</b></div></div>
+          <div class="av-card r d3"><div class="t">Gerente comercial</div><div class="d">Decide o influye fuerte. V&aacute;lido si no lleg&aacute;s al due&ntilde;o.</div></div>
+          <div class="av-card r d4"><div class="t">Encargado de compras</div><div class="d">Compra insumos, <b>no</b> decide invertir en un sistema. No pierdas tiempo ac&aacute;.</div></div>
+          <div class="av-card r d5"><div class="t">Hijo/a o sucesi&oacute;n</div><div class="d">Suele empujar lo digital. Aliado interno valioso.</div></div>
+        </div>
+      </div>
+
+      <div class="av-slide" data-dur="7500">
+        <div class="av-kicker r d1">La recepci&oacute;n te filtra si son&aacute;s a vendedor</div>
+        <div class="av-warn r d2"><span class="lab">Frases que te queman</span>&ldquo;&iquest;C&oacute;mo est&aacute; usted hoy?&rdquo; &middot; &ldquo;Le hablo para ofrecerle&hellip;&rdquo; &middot; &ldquo;&iquest;Es el encargado de compras?&rdquo; &middot; cualquier pitch dicho a la recepci&oacute;n.</div>
+        <div class="av-ok r d3"><span class="lab">Lo que s&iacute; pasa el filtro</span>Nombre de pila del que decide + tono de quien ya lo conoce + un motivo que la recepci&oacute;n <b>no puede evaluar</b>.</div>
+      </div>
+
+      <div class="av-slide" data-dur="8000">
+        <div class="av-kicker r d1">Los primeros 10 segundos con el due&ntilde;o</div>
+        <div class="av-flow">
+          <div class="av-step r d2"><div class="sn">01</div><div class="st">Nombre + micro-permiso</div><div class="sd">&ldquo;Santiago, te robo 30 segundos y vos me dec&iacute;s si sigo o corto.&rdquo;</div></div>
+          <div class="av-step r d3"><div class="sn">02</div><div class="st">Problema, no producto</div><div class="sd">Nombr&aacute;s el dolor (no el sistema): presupuestos sin seguimiento, invisibles en Google.</div></div>
+          <div class="av-step r d4"><div class="sn">03</div><div class="st">Pregunta que abre</div><div class="sd">&ldquo;&iquest;Te suena el problema o ya lo tienen resuelto?&rdquo;</div></div>
+        </div>
+      </div>
+
+      <div class="av-slide" data-dur="7500">
+        <div class="av-kicker r d1">Si te bloquean, no cortes: sac&aacute; informaci&oacute;n</div>
+        <div class="av-row r d2" style="gap:8px">
+          <div class="av-kpi"><div class="v">Nombre</div><div class="k">del que decide</div></div>
+          <div class="av-kpi"><div class="v">Mail</div><div class="k">directo, no info@</div></div>
+          <div class="av-kpi"><div class="v">Horario</div><div class="k">en que lo encontr&aacute;s</div></div>
+          <div class="av-kpi"><div class="v">WhatsApp</div><div class="k">para el toque 2</div></div>
+        </div>
+        <div class="av-sub r d3" style="margin-top:2px">Una llamada &ldquo;fallida&rdquo; que te deja el nombre y el horario es una llamada ganada.</div>
+      </div>
+
+      <div class="av-slide center" data-dur="6000">
+        <div class="av-kicker r d1">Regla de oro del setting</div>
+        <div class="av-h r d2">Nunca llames <span class="b">sin el nombre</span> del que decide.</div>
+        <div class="av-sub r d3">Saber el nombre de pila antes de marcar es lo que m&aacute;s sube tu tasa de &ldquo;pasame con&hellip;&rdquo;. Se consigue en 3 minutos.</div>
+      </div>
+
+    </div><div class="av-controls"><button class="av-btn prev" aria-label="Anterior"><i class="fa-solid fa-backward-step"></i></button><button class="av-btn play" aria-label="Pausar"><i class="fa-solid fa-pause"></i></button><button class="av-btn next" aria-label="Siguiente"><i class="fa-solid fa-forward-step"></i></button><div class="av-progress"><div class="av-progress-fill"></div></div><div class="av-dots"></div><div class="av-counter">1 / 1</div></div></div>
+
+    <h3>Lo que vas a aprender</h3>
+    <ul>
+      <li>Quién decide de verdad en una PYME industrial (y a quién NO le pierdas tiempo)</li>
+      <li>Cómo conseguir el nombre del que firma en 3 minutos, antes de llamar</li>
+      <li>Cómo pasar la recepción sin que te corten con "mandá un mail"</li>
+      <li>Qué decir en los primeros 10 segundos con el dueño para ganarte 30 más</li>
+      <li>El plan B multicanal cuando no llegás por teléfono</li>
+    </ul>
+
+    <p><strong>Por qué este módulo:</strong> en B2B no contactás a una persona, contactás a una empresa. Y entre vos y el que firma casi siempre hay un filtro humano —recepción, secretaría— cuyo trabajo, literal, es no pasarte. El setting es el arte de llegar al que decide. Es el paso donde se cae la mayoría de los closers, y por eso es donde más rápido vas a notar la diferencia en tu cierre.</p>
+
+    <h3>Paso 1 — Identificá al que decide (antes de marcar)</h3>
+    <p>En una PYME industrial de 10 a 50 personas, el que tiene la lapicera para invertir en un sistema casi siempre es el <strong>dueño o socio gerente</strong>. El encargado de compras compra chapa o repuestos: no decide una inversión digital. Apuntá arriba.</p>
+
+    <table class="aca-table">
+      <thead><tr><th>Rol</th><th>¿Decide la compra?</th><th>Qué hacés</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Dueño / Socio gerente</strong></td><td>Sí (objetivo #1)</td><td>Apuntás directo a él</td></tr>
+        <tr><td>Gerente comercial</td><td>Decide o influye fuerte</td><td>Válido si no llegás al dueño</td></tr>
+        <tr><td>Hijo/a en la sucesión</td><td>Empuja lo digital</td><td>Aliado interno: te abre la puerta</td></tr>
+        <tr><td>Encargado de compras / administración</td><td>No</td><td>Lo usás solo para conseguir datos del que decide</td></tr>
+      </tbody>
+    </table>
+
+    <p><strong>Conseguí el nombre en 3 minutos</strong> (esto es lo que más sube tu tasa de "pasame con…"):</p>
+    <ol>
+      <li><strong>LinkedIn:</strong> buscá la empresa &rarr; "Personas" &rarr; filtrá por "Propietario", "Socio Gerente", "Director Comercial".</li>
+      <li><strong>Web de la empresa:</strong> la sección "Quiénes somos" / "Nosotros" suele tener nombre y a veces foto.</li>
+      <li><strong>Google:</strong> <code>"nombre de la empresa" dueño OR gerente OR socio</code> — aparecen notas, cámaras industriales, premios.</li>
+      <li><strong>Instagram / Facebook de la empresa:</strong> en PYMEs industriales el dueño suele aparecer firmando posts o en fotos de planta.</li>
+    </ol>
+
+    <div class="aca-highlight">
+      <div class="label">REGLA DE ORO</div>
+      <div class="text">Nunca llames sin el <strong>nombre de pila</strong> del que decide. Pedir "con el gerente" te delata como vendedor frío. Pedir "con Santiago" suena a que ya lo conocés.</div>
+    </div>
+
+    <h3>Paso 2 — Pasá la recepción sin que te filtren</h3>
+    <p>La persona que atiende está entrenada para filtrar vendedores. Si le vendés a ella, perdiste: su trabajo es cortarte. El truco no es "engañarla", es <strong>no darle motivos para filtrarte</strong> y, cuando se puede, hacerla tu aliada.</p>
+
+    <p><strong>Las 5 técnicas que funcionan:</strong></p>
+    <ol>
+      <li><strong>Nombre de pila + tono de familiaridad.</strong> "Hola, ¿me pasás con Santiago?" — calmado, sin apuro, como quien llama todos los días. El apuro y la formalidad excesiva gritan "vendedor".</li>
+      <li><strong>Pedí ayuda en vez de pedir permiso.</strong> A los vendedores los cortan; a quien pide ayuda lo ayudan: "Hola, capaz me podés ayudar vos… estoy buscando a la persona que ve el tema comercial / digital de la empresa, ¿con quién sería?"</li>
+      <li><strong>Un motivo que no pueda evaluar.</strong> Si te pregunta "¿de qué se trata?", no pitchees. "Es por un tema puntual de la parte comercial, ¿está Santiago?" Lo que ella no puede juzgar, lo pasa.</li>
+      <li><strong>Llamá en horario sin filtro.</strong> Antes de las 9, después de las 18, o en el horario de almuerzo. En PYMEs industriales el dueño suele atender el teléfono directo cuando la recepción no está.</li>
+      <li><strong>Evitá las frases-bandera.</strong> Nada de "¿cómo está usted hoy?", "le hablo de [empresa] para ofrecerle…", "¿es el encargado de compras?". Cada una de esas te manda directo al filtro.</li>
+    </ol>
+
+    <p><strong>Banco de respuestas (cuando te bloquean):</strong></p>
+    <table class="aca-table">
+      <thead><tr><th>Te dicen</th><th>Respondés</th></tr></thead>
+      <tbody>
+        <tr><td>"¿De parte de quién?"</td><td>Tu nombre, tranquilo, y seguís: "…¿está Santiago?" (sin agregar empresa ni motivo).</td></tr>
+        <tr><td>"¿De qué se trata?"</td><td>"Un tema puntual de la parte comercial / digital. ¿Lo tenés ahí?" No abras el pitch.</td></tr>
+        <tr><td>"Mandá un mail a info@…"</td><td>"Dale, lo mando. ¿Cuál es el mail directo de Santiago así no se pierde entre todo lo que les llega?" (conseguís el mail real).</td></tr>
+        <tr><td>"Está en reunión / no está"</td><td>"Perfecto, no lo molesto. ¿En qué horario lo encuentro mejor? Y de paso, ¿con quién hablo yo así te lo nombro cuando vuelva a llamar?" (horario + nombre de la recepción para el toque 2).</td></tr>
+        <tr><td>"Ya trabajamos con alguien"</td><td>"Buenísimo, no vengo a reemplazar a nadie. Justo por eso quería hablar 2 minutos con Santiago. ¿Me lo pasás o le dejo un mensaje?"</td></tr>
+      </tbody>
+    </table>
+
+    <h3>Paso 3 — Ganate los primeros 30 segundos con el que decide</h3>
+    <p>Cuando te pasan, tenés ~10 segundos antes de que decida si te escucha o te corta. La estructura ganadora: <strong>nombre + micro-permiso + problema (no producto) + pregunta que abre</strong>. Hablás del dolor, nunca del sistema.</p>
+
+    <p><strong>Guion — Metalúrgica:</strong><br>
+    "Santiago, te robo 30 segundos y vos me decís si sigo o corto. Trabajo con metalúrgicas de la zona que estaban perdiendo presupuestos porque las consultas llegaban por WhatsApp y mail y nadie les hacía seguimiento. ¿Te suena ese problema o ya lo tienen resuelto?"</p>
+
+    <p><strong>Guion — Logística / Agro:</strong><br>
+    "Hola Martín, 30 segundos y me decís si te interesa o lo dejamos. Ayudo a empresas como la tuya a que cuando un cliente las busca en Google aparezcan primero y la consulta entre ordenada, en vez de perderse. ¿Hoy cómo les llegan los pedidos nuevos?"</p>
+
+    <p><strong>Guion — Genérico:</strong><br>
+    "Hola [nombre], te robo medio minuto. Trabajo con PYMEs que reciben consultas por varios canales pero no tienen forma de saber cuántas se cierran ni cuántas se pierden. ¿Eso lo tienen medido o es más a ojo?"</p>
+
+    <div class="aca-warn">
+      <div class="label">QUÉ NO HACER EN ESOS 30 SEGUNDOS</div>
+      <div class="text">No largues el pitch completo, no expliques los planes, no preguntes "¿cómo está hoy?". El objetivo del opener NO es vender: es ganarte permiso para los próximos 2 minutos. Si te dice "contame", ganaste — y ahí pasás al guion de cierre por rubro y al manejo de objeciones que ya viste en la Academia.</div>
+    </div>
+
+    <h3>Plan B — Si no llegás por teléfono</h3>
+    <p>El teléfono es el canal más rápido, pero no el único. Los dueños de PYMEs industriales están en WhatsApp y muchos en LinkedIn (donde tenés el módulo dedicado). Secuencia de toques recomendada:</p>
+    <ol>
+      <li><strong>Toque 1 — Llamada.</strong> Intentás pasar la recepción. Si no, conseguís nombre + horario + el mail directo.</li>
+      <li><strong>Toque 2 — WhatsApp directo</strong> (si conseguiste el número): mensaje corto, mismo enfoque de problema. "Hola Santiago, soy [nombre]. Trabajo con metalúrgicas que estaban perdiendo presupuestos por falta de seguimiento. ¿Te muestro en 2 min cómo lo resolvieron? Si no es para vos, sin drama."</li>
+      <li><strong>Toque 3 — LinkedIn:</strong> conectás y mandás una nota breve con el mismo ángulo. Sirve además para que te vea como profesional, no como spam.</li>
+      <li><strong>Toque 4 — Volvés a llamar</strong> en el horario que te dieron, nombrando a la recepción ("Hola, me dijo [recepción] que a esta hora lo encontraba a Santiago").</li>
+    </ol>
+
+    <h3>Ficha de setting (completala antes de cada llamada)</h3>
+    <ul>
+      <li><strong>Empresa:</strong> _______ &nbsp;&middot;&nbsp; <strong>Rubro:</strong> _______</li>
+      <li><strong>Nombre del que decide:</strong> _______ &nbsp;&middot;&nbsp; <strong>Rol:</strong> _______</li>
+      <li><strong>Dolor más probable</strong> (según rubro): _______</li>
+      <li><strong>Frase de apertura</strong> elegida: _______</li>
+      <li><strong>Si me filtran:</strong> objetivo = nombre + horario + mail directo</li>
+    </ul>
+
+    <h3>Errores que te queman</h3>
+    <ul>
+      <li>Llamar sin el nombre del que decide.</li>
+      <li>Pitchear a la recepción.</li>
+      <li>Hablar de "un sistema / una web" en vez del problema del cliente.</li>
+      <li>Pedir "con el gerente / el encargado" en lugar del nombre de pila.</li>
+      <li>Cortar cuando te dicen "no está", sin sacar nombre ni horario.</li>
+      <li>Soltar el pitch completo en los primeros 10 segundos.</li>
+    </ul>
+
+    <div class="aca-highlight">
+      <div class="label">MEDÍ TU SETTING</div>
+      <div class="text">Llevá tres números por semana: <strong>llamadas hechas &rarr; "pasame con…" logrados &rarr; decisores con los que hablaste</strong>. Cuando suba el del medio, sabés que tu manejo de la recepción está mejorando. Es el embudo antes del embudo.</div>
+    </div>
+  `
   }
 ];
 
@@ -11828,6 +11947,175 @@ function jMd(text) {
     idx = 0; playing = true; setPlayIcon(); show(true);
   }
 })();
+</script>
+
+
+<!-- ===== Generador de contrato (Avanza) ===== -->
+<style>
+  #modalContrato { position:fixed; inset:0; background:rgba(11,27,58,.55); display:none;
+                   align-items:center; justify-content:center; z-index:9999; padding:16px; }
+  #modalContrato.abierto { display:flex; }
+  #modalContrato .mc-card { background:#fff; border-radius:14px; max-width:560px; width:100%;
+                   max-height:92vh; overflow:auto; box-shadow:0 24px 60px rgba(0,0,0,.3); }
+  #modalContrato .mc-head { padding:18px 22px; border-bottom:1px solid #eef2f7;
+                   display:flex; justify-content:space-between; align-items:center; }
+  #modalContrato .mc-head h3 { margin:0; font-size:17px; color:#0b1b3a; }
+  #modalContrato .mc-x { background:none; border:none; font-size:22px; cursor:pointer; color:#94a3b8; }
+  #modalContrato .mc-body { padding:18px 22px; }
+  #modalContrato .mc-grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+  #modalContrato label { font-size:12px; font-weight:600; color:#475569; display:block; margin-bottom:4px; }
+  #modalContrato input, #modalContrato select { width:100%; padding:9px 11px; border:1px solid #d7dee8;
+                   border-radius:8px; font-size:14px; }
+  #modalContrato .mc-full { grid-column:1 / -1; }
+  #modalContrato .mc-hint { font-size:11.5px; color:#94a3b8; margin-top:10px; }
+  #modalContrato .mc-foot { padding:16px 22px; border-top:1px solid #eef2f7; display:flex; gap:10px;
+                   justify-content:flex-end; }
+  #modalContrato .mc-btn { padding:10px 18px; border-radius:9px; border:none; font-weight:700; cursor:pointer; }
+  #modalContrato .mc-btn.primary { background:#1463ff; color:#fff; }
+  #modalContrato .mc-btn.ghost { background:#eef2f7; color:#334155; }
+  #modalContrato .mc-btn[disabled] { opacity:.6; cursor:wait; }
+  .btn-contrato { background:#0b1b3a; color:#fff; border:none; border-radius:8px; padding:8px 14px;
+                  font-weight:600; cursor:pointer; }
+</style>
+
+<div id="modalContrato" role="dialog" aria-modal="true">
+  <div class="mc-card">
+    <div class="mc-head">
+      <h3>Generar contrato</h3>
+      <button class="mc-x" onclick="cerrarModalContrato()">&times;</button>
+    </div>
+    <div class="mc-body">
+      <div class="mc-grid">
+        <div class="mc-full">
+          <label>Razón social del cliente</label>
+          <input id="c_razon" placeholder="Razón social">
+        </div>
+        <div>
+          <label>CUIT</label>
+          <input id="c_cuit" placeholder="30-XXXXXXXX-X">
+        </div>
+        <div>
+          <label>Factura</label>
+          <select id="c_factura"><option value="A">A</option><option value="B" selected>B</option></select>
+        </div>
+        <div class="mc-full">
+          <label>Domicilio</label>
+          <input id="c_domicilio" placeholder="Calle, número, ciudad, provincia">
+        </div>
+        <div>
+          <label>Representante</label>
+          <input id="c_rep" placeholder="Nombre y apellido">
+        </div>
+        <div>
+          <label>Cargo</label>
+          <input id="c_cargo" placeholder="Socio Gerente, etc.">
+        </div>
+        <div class="mc-full">
+          <label>Email del cliente</label>
+          <input id="c_email" placeholder="cliente@empresa.com">
+        </div>
+        <div>
+          <label>Plan</label>
+          <select id="c_plan">
+            <option>Plan Base</option><option>Plan Pro</option>
+            <option>Plan Industrial</option><option>Estrategico 360</option>
+          </select>
+        </div>
+        <div>
+          <label>Moneda de pago</label>
+          <select id="c_moneda" onchange="mcToggleArs()">
+            <option value="USD" selected>USD</option><option value="ARS">ARS (pesos)</option>
+          </select>
+        </div>
+        <div id="mc_ars_tc" style="display:none;">
+          <label>Tipo de cambio</label>
+          <input id="c_tc" type="number" placeholder="1150">
+        </div>
+        <div>
+          <label>Ciudad de firma</label>
+          <input id="c_ciudad" value="Santa Fe">
+        </div>
+        <div>
+          <label>IVA</label>
+          <select id="c_iva"><option value="true" selected>Incluido</option><option value="false">+ IVA aparte</option></select>
+        </div>
+        <div>
+          <label>Anticipo (%)</label>
+          <input id="c_anticipo" type="number" value="100" min="0" max="100">
+        </div>
+      </div>
+      <p class="mc-hint">El plan y el precio vienen precargados desde la venta. Solo completá los datos fiscales
+      que el sistema no tiene. El alcance del Anexo se arma solo según el plan.</p>
+    </div>
+    <div class="mc-foot">
+      <button class="mc-btn ghost" onclick="cerrarModalContrato()">Cancelar</button>
+      <button class="mc-btn primary" id="mc_gen" onclick="generarContratoPDF()">Generar PDF</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  let _ventaContrato = null;
+
+  function abrirModalContrato(venta) {
+    _ventaContrato = venta || {};
+    document.getElementById('c_razon').value    = _ventaContrato.nombre_cliente || '';
+    if (_ventaContrato.plan) document.getElementById('c_plan').value = _ventaContrato.plan;
+    document.getElementById('modalContrato').classList.add('abierto');
+  }
+  function cerrarModalContrato() {
+    document.getElementById('modalContrato').classList.remove('abierto');
+  }
+  function mcToggleArs() {
+    document.getElementById('mc_ars_tc').style.display =
+      document.getElementById('c_moneda').value === 'ARS' ? 'block' : 'none';
+  }
+
+  async function generarContratoPDF() {
+    const btn = document.getElementById('mc_gen');
+    btn.disabled = true; btn.textContent = 'Generando…';
+    try {
+      const body = {
+        cliente_razon_social: document.getElementById('c_razon').value,
+        cliente_cuit:         document.getElementById('c_cuit').value,
+        cliente_domicilio:    document.getElementById('c_domicilio').value,
+        cliente_representante:document.getElementById('c_rep').value,
+        cliente_cargo:        document.getElementById('c_cargo').value,
+        cliente_email:        document.getElementById('c_email').value,
+        plan:                 document.getElementById('c_plan').value,
+        moneda:               document.getElementById('c_moneda').value,
+        tipo_cambio:          parseFloat(document.getElementById('c_tc').value) || null,
+        factura_tipo:         document.getElementById('c_factura').value,
+        iva_incluido:         document.getElementById('c_iva').value === 'true',
+        anticipo_pct:         parseInt(document.getElementById('c_anticipo').value) || 100,
+        ciudad:               document.getElementById('c_ciudad').value,
+      };
+      // Endpoint: usa la Venta si tiene id; si no, el preview ad-hoc.
+      const url = (_ventaContrato && _ventaContrato.id)
+        ? `/ventas/${_ventaContrato.id}/contrato`
+        : `/contratos/preview`;
+
+      const res = await apiFetch(url, { method: 'POST', body });
+      if (!res.ok) {
+        const txt = await res.text();
+        alert('No se pudo generar el contrato: ' + txt);
+        return;
+      }
+      const blob = await res.blob();
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = `contrato_${(body.cliente_razon_social || 'cliente').replace(/\W+/g,'_')}.pdf`;
+      document.body.appendChild(link); link.click(); link.remove();
+
+      cerrarModalContrato();
+      // Opcional: abrir WhatsApp con un mensaje (el PDF se adjunta a mano, ya descargado)
+      // window.open('https://wa.me/?text=' + encodeURIComponent('Te paso el contrato de Avanza Digital 📄'), '_blank');
+    } catch (e) {
+      alert('Error al generar el contrato: ' + e);
+    } finally {
+      btn.disabled = false; btn.textContent = 'Generar PDF';
+    }
+  }
 </script>
 
 </body>

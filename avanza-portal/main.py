@@ -47,6 +47,7 @@ import jarvis_api_publica    # JARVIS API pública v1 — autenticación por API
 import jarvis_integraciones  # Integraciones CRM/Gmail/Calendar/Slack (Sección 10)
 import jarvis_canal1         # Secuencia WhatsApp Canal 1 (onboarding, disparos, recurrentes)
 import jarvis_setter         # JARVIS Setter — embudo WhatsApp-first de cara al prospecto (Funnelchat-style)
+import jarvis_contratos_routes  # Generador de contratos de servicio en PDF (WeasyPrint)
 
 Base.metadata.create_all(bind=engine)
 
@@ -1335,6 +1336,7 @@ jarvis_api_publica.register(app, get_db, current_aliado_required, engine=engine)
 jarvis_integraciones.register_integration_routes(app, get_db, current_aliado_required)  # Fix: integraciones/estado
 jarvis_setter.register(app, get_db, current_aliado_required)   # Setter: /l/{slug}, /jarvis/setter/*
 jarvis_setter.run_migrations(engine)                           # Crea setter_sesiones / setter_enlaces si no existen
+jarvis_contratos_routes.register(app, get_db, current_aliado_required)  # POST /ventas/{id}/contrato y /contratos/preview → PDF del contrato
 
 # ─── RUTAS ADMIN ─────────────────────────────────────────────────────────────
 # Solo se usan para el middleware de fallback con X-API-Key (legacy).
