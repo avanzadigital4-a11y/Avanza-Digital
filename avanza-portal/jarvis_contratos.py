@@ -4,7 +4,7 @@ jarvis_contratos.py — Generador de contratos de prestación de servicios (PDF)
 
 Mismo mecanismo que jarvis_propuestas.py: toma datos (cliente + plan + datos
 fiscales) y devuelve un documento armado. Acá el documento final es un PDF
-renderizado con WeasyPrint a partir de una plantilla HTML+CSS.
+renderizado con xhtml2pdf (pisa) a partir de una plantilla HTML+CSS.
 
 Uso típico desde una ruta FastAPI (ver jarvis_contratos_routes.py):
 
@@ -659,13 +659,20 @@ def _clausulas(d) -> list:
 
 
 # ──────────────────────────────────────────────────────────────────────────────
-# CSS (impresión / WeasyPrint)
+# CSS (impresión / xhtml2pdf)
 # ──────────────────────────────────────────────────────────────────────────────
 CSS = """
-@page { size: A4; margin: 22mm 20mm 20mm 20mm;
-  @bottom-center { content: "Avanza Digital · avanzadigital.digital · Santa Fe, Argentina";
-    font-size: 7.5pt; color: #9aa3b2; letter-spacing: .3px; }
-  @bottom-right { content: "Página " counter(page) " de " counter(pages); font-size: 7.5pt; color: #9aa3b2; } }
+@page {
+  size: A4;
+  margin: 22mm 20mm 28mm 20mm;
+  @frame footer {
+    -pdf-frame-content: pdf_footer;
+    bottom: 8pt;
+    left: 20mm;
+    right: 20mm;
+    height: 16pt;
+  }
+}
 * { box-sizing: border-box; }
 body { font-family: "DejaVu Sans", "Inter", Arial, sans-serif; font-size: 9.6pt; line-height: 1.5; color: #1f2733; margin: 0; }
 .header { border-bottom: 2px solid #1463ff; padding-bottom: 10px; margin-bottom: 16px; }
@@ -775,6 +782,19 @@ lugar y fecha indicados.</p>
   asesoramiento legal.</p>
 </div>
 {anexo2_html}
+<!-- Footer fijo para xhtml2pdf -->
+<div id="pdf_footer">
+  <table style="width:100%;border-collapse:collapse;">
+    <tr>
+      <td style="font-size:7.5pt;color:#9aa3b2;letter-spacing:.3px;">
+        Avanza Digital &middot; avanzadigital.digital &middot; Santa Fe, Argentina
+      </td>
+      <td style="font-size:7.5pt;color:#9aa3b2;text-align:right;">
+        P&aacute;gina <pdf:pagenumber> de <pdf:pagecount>
+      </td>
+    </tr>
+  </table>
+</div>
 </body></html>"""
 
 
@@ -948,8 +968,15 @@ def render_contrato_docx(d) -> bytes:
 # DISPATCHER + PDF + nombre de archivo
 # ──────────────────────────────────────────────────────────────────────────────
 def render_contrato_pdf(datos) -> bytes:
-    from weasyprint import HTML
-    return HTML(string=render_html(datos)).write_pdf()
+    import io
+    from xhtml2pdf import pisa
+
+    html_content = render_html(datos)
+    buffer = io.BytesIO()
+    result = pisa.CreatePDF(io.StringIO(html_content), dest=buffer, encoding="utf-8")
+    if result.err:
+        raise RuntimeError(f"Error generando PDF con xhtml2pdf: {result.err}")
+    return buffer.getvalue()
 
 
 def render_contrato(datos, formato: str = "pdf") -> bytes:
