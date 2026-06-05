@@ -166,6 +166,85 @@ def normalizar_plan(plan: Optional[str]) -> str:
 
 
 # ──────────────────────────────────────────────────────────────────────────────
+# 3.bis) TERMINOLOGÍA FISCAL / IDENTIFICATORIA POR PAÍS
+#   Resuelve el "¿qué es el CUIT?": cada país nombra distinto el identificador
+#   tributario de una EMPRESA y el documento de una PERSONA. El contrato muestra
+#   el término local del CLIENTE; AVANZA (prestador argentino) sigue usando CUIT.
+# ──────────────────────────────────────────────────────────────────────────────
+IDENT_FISCAL_POR_PAIS = {
+    "Argentina":  {"empresa": "CUIT",            "persona": "DNI",       "ej": "30-71234567-8"},
+    "Mexico":     {"empresa": "RFC",             "persona": "CURP / INE","ej": "ABC120101AB1"},
+    "Peru":       {"empresa": "RUC",             "persona": "DNI",       "ej": "20123456789"},
+    "Chile":      {"empresa": "RUT",             "persona": "RUN",       "ej": "76.123.456-7"},
+    "Colombia":   {"empresa": "NIT",             "persona": "Cédula",    "ej": "900.123.456-7"},
+    "Costa Rica": {"empresa": "Cédula jurídica", "persona": "Cédula",    "ej": "3-101-123456"},
+    "Venezuela":  {"empresa": "RIF",             "persona": "Cédula",    "ej": "J-12345678-9"},
+    "Uruguay":    {"empresa": "RUT",             "persona": "C.I.",      "ej": "212345670019"},
+    "Paraguay":   {"empresa": "RUC",             "persona": "C.I.",      "ej": "80012345-6"},
+    "Ecuador":    {"empresa": "RUC",             "persona": "Cédula",    "ej": "1790012345001"},
+    "Bolivia":    {"empresa": "NIT",             "persona": "C.I.",      "ej": "1234567890"},
+    "España":     {"empresa": "CIF / NIF",       "persona": "DNI / NIE", "ej": "B12345678"},
+}
+_IDENT_DEFAULT = {"empresa": "identificación tributaria",
+                  "persona": "documento de identidad", "ej": ""}
+
+
+def ident_fiscal(pais):
+    """Términos fiscales/identificatorios locales para un país.
+    Tolerante a acentos y mayúsculas. Si no se reconoce el país, cae a un
+    término genérico ("identificación tributaria" / "documento de identidad")."""
+    if not pais:
+        return dict(IDENT_FISCAL_POR_PAIS["Argentina"])
+    clave = _strip_accents(pais).strip().lower()
+    for nombre, datos in IDENT_FISCAL_POR_PAIS.items():
+        if _strip_accents(nombre).lower() == clave:
+            return dict(datos)
+    return dict(_IDENT_DEFAULT)
+
+
+# ──────────────────────────────────────────────────────────────────────────────
+# 3.ter) PLANES DE MANTENIMIENTO (OPCIONALES) — espejo de PLANES_CONTINUIDAD
+#   Sirven para el Anexo II. El mantenimiento NUNCA es obligatorio; solo aparece
+#   en el contrato si el aliado lo marca (incluir_mantenimiento=True).
+# ──────────────────────────────────────────────────────────────────────────────
+MANTENIMIENTO_INFO = {
+    "Plan Cuidado": {"precio": 80.0, "items": [
+        "Hosting profesional de alta velocidad",
+        "Dominio profesional (.com, .com.ar o local) y Certificado SSL",
+        "Backups automáticos semanales",
+        "Seguridad y monitoreo 24/7",
+        "Soporte técnico por fallas del sistema",
+        "Reporte básico mensual"]},
+    "Plan Crecimiento": {"precio": 170.0, "items": [
+        "Todo lo del Plan Cuidado, más:",
+        "1 ajuste mensual de optimización",
+        "Revisión de formularios y CTA",
+        "Ajuste de textos comerciales",
+        "Métricas de conversión mensuales",
+        "Reunión trimestral de estrategia"]},
+    "Plan Escala": {"precio": 280.0, "items": [
+        "Todo lo del Plan Crecimiento, más:",
+        "2 ajustes mensuales de optimización",
+        "Integración y revisión técnica de CRM",
+        "Automatizaciones de seguimiento",
+        "Revisión profunda de embudos",
+        "Reporte avanzado de rendimiento"]},
+    "Plan Liderazgo": {"precio": 450.0, "items": [
+        "Todo lo del Plan Escala, más:",
+        "Soporte técnico prioritario (SLA 4 hs)",
+        "4 ajustes mensuales de optimización",
+        "Reunión estratégica quincenal",
+        "Gestión de campañas de automatización",
+        "Mantenimiento de integraciones ERP complejas"]},
+}
+
+
+def mantenimiento_info(plan):
+    return MANTENIMIENTO_INFO.get((plan or "Plan Cuidado").strip(),
+                                  MANTENIMIENTO_INFO["Plan Cuidado"])
+
+
+# ──────────────────────────────────────────────────────────────────────────────
 # 3) NÚMERO A LETRAS (es) — para "monto en letras". Cubre enteros hasta millones.
 # ──────────────────────────────────────────────────────────────────────────────
 _UNID = ["", "uno", "dos", "tres", "cuatro", "cinco", "seis", "siete", "ocho", "nueve",
@@ -229,6 +308,9 @@ class DatosContrato:
     cliente_representante: str = ""
     cliente_cargo: str = ""
     cliente_email: str = ""
+    cliente_pais: str = "Argentina"          # país del cliente (define la terminología fiscal)
+    cliente_condicion_fiscal: str = ""       # situación tributaria (varía por país)
+    cliente_dni: str = ""                    # documento del firmante (persona física)
 
     # Operación
     plan: str = "Plan Pro"
@@ -241,6 +323,14 @@ class DatosContrato:
     forma_pago: str = "pago único, sin costo mensual obligatorio"
     anticipo_pct: int = 100                      # 100 = todo por adelantado
     link_pago: str = ""
+
+    # Mantenimiento opcional (Anexo II) — solo aparece si incluir_mantenimiento=True
+    incluir_mantenimiento: bool = False
+    plan_mantenimiento: str = "Plan Cuidado"
+    mantenimiento_precio: Optional[float] = None   # si None, se toma de MANTENIMIENTO_INFO
+    # Mora/punitorios opcional — útil cuando hay anticipo + saldo (anticipo_pct < 100)
+    incluir_mora: bool = False
+    interes_mora_mensual: float = 3.0              # % mensual
 
     # Lugar y fecha de firma
     ciudad: str = "Santa Fe"
@@ -255,6 +345,7 @@ class DatosContrato:
     # Metadatos
     aliado_nombre: str = ""
     venta_id: Optional[int] = None
+    numero_contrato: str = ""                # se autogenera si queda vacío
 
     def __post_init__(self):
         self.plan = normalizar_plan(self.plan)
@@ -271,6 +362,15 @@ class DatosContrato:
             self.entregables = list(info["entregables"])
         if self.fecha is None:
             self.fecha = datetime.date.today()
+        if not self.numero_contrato:
+            _anio = (self.fecha or datetime.date.today()).year
+            if self.venta_id:
+                self.numero_contrato = f"AV-{_anio}-{int(self.venta_id):04d}"
+            else:
+                import random as _r
+                self.numero_contrato = f"AV-{_anio}-{_r.randint(1000, 9999)}"
+        if self.mantenimiento_precio is None:
+            self.mantenimiento_precio = mantenimiento_info(self.plan_mantenimiento)["precio"]
 
 
 def datos_desde_venta(venta, extra: Optional[dict] = None) -> DatosContrato:
@@ -295,6 +395,15 @@ def datos_desde_venta(venta, extra: Optional[dict] = None) -> DatosContrato:
         cliente_representante= extra.get("cliente_representante", ""),
         cliente_cargo        = extra.get("cliente_cargo", ""),
         cliente_email        = extra.get("cliente_email", ""),
+        cliente_pais             = extra.get("cliente_pais", "Argentina"),
+        cliente_condicion_fiscal = extra.get("cliente_condicion_fiscal", ""),
+        cliente_dni              = extra.get("cliente_dni", ""),
+        numero_contrato          = extra.get("numero_contrato", ""),
+        incluir_mantenimiento    = bool(extra.get("incluir_mantenimiento", False)),
+        plan_mantenimiento       = extra.get("plan_mantenimiento", "Plan Cuidado") or "Plan Cuidado",
+        mantenimiento_precio     = extra.get("mantenimiento_precio"),
+        incluir_mora             = bool(extra.get("incluir_mora", False)),
+        interes_mora_mensual     = float(extra.get("interes_mora_mensual", 3.0) or 3.0),
         plan                 = getattr(venta, "plan", "Plan Pro") or "Plan Pro",
         precio_usd           = extra.get("precio_usd", getattr(venta, "valor_usd", None)),
         moneda               = extra.get("moneda", "USD"),
@@ -330,6 +439,27 @@ def _campo(valor: str, etiqueta: str) -> str:
     if valor:
         return f"<strong>{_esc(valor)}</strong>"
     return f'<span class="pendiente">[completar: {_esc(etiqueta)}]</span>'
+
+
+def _es_placeholder(v) -> bool:
+    """True si el dato de Avanza no fue cargado (vacío o placeholder '[...]')."""
+    v = (v or "").strip()
+    return (not v) or v.startswith("[")
+
+
+def _avanza_campo(valor, etiqueta) -> str:
+    """Igual que _campo pero para datos del PRESTADOR: si falta la env var,
+    se marca en rojo para que NUNCA salga un contrato con '[CUIT de Avanza]'."""
+    if _es_placeholder(valor):
+        return f'<span class="pendiente">[completar config: {_esc(etiqueta)}]</span>'
+    return _esc(valor)
+
+
+def _avanza_txt(valor, etiqueta) -> str:
+    """Versión texto plano (para DOCX)."""
+    if _es_placeholder(valor):
+        return f"«COMPLETAR CONFIG: {etiqueta}»"
+    return str(valor)
 
 
 def _inline_html(text: str) -> str:
@@ -388,7 +518,12 @@ def _derivados(d) -> dict:
                 "comienzo una vez acreditado el anticipo.")
     link = (f" a través del enlace de pago provisto por el asesor de AVANZA ({d.link_pago})" if d.link_pago else
             " a través del enlace de pago provisto por el asesor de AVANZA, o por el medio que AVANZA indique")
-    return {"iva": iva, "cambio": cambio, "sla": sla, "cap": cap_txt, "anticipo": anticipo, "link": link}
+    pais_norm = _strip_accents(d.cliente_pais or "Argentina").strip().lower()
+    if pais_norm in ("argentina", "", "ar"):
+        comprobante = f"la factura tipo **{d.factura_tipo}**"
+    else:
+        comprobante = "el comprobante fiscal que corresponda según la normativa vigente"
+    return {"iva": iva, "cambio": cambio, "sla": sla, "cap": cap_txt, "anticipo": anticipo, "link": link, "comprobante": comprobante}
 
 
 def _clausulas(d) -> list:
@@ -411,7 +546,7 @@ def _clausulas(d) -> list:
             "provisión de dichos elementos extenderán el plazo en igual medida."]),
         ("CLÁUSULA CUARTA — PRECIO Y FORMA DE PAGO", [
             f"El precio total del servicio es de **{precio}**, en concepto de {d.forma_pago}. {x['iva']}{x['cambio']}",
-            f"{x['anticipo']} El pago se efectuará{x['link']}. EL CLIENTE recibirá la factura tipo **{d.factura_tipo}** "
+            f"{x['anticipo']} El pago se efectuará{x['link']}. EL CLIENTE recibirá {x['comprobante']} "
             "correspondiente.",
             "Nota: los planes de mantenimiento y evolución posteriores son opcionales y se contratan por separado, sin "
             "permanencia mínima; no son requisito para el funcionamiento del sistema."]),
@@ -505,7 +640,22 @@ def _clausulas(d) -> list:
             "Las Partes constituyen domicilio en los indicados en el encabezamiento, donde se tendrán por válidas todas "
             "las notificaciones, así como en los correos electrónicos que declaren a tal efecto (AVANZA: "
             f"{AVANZA['email']}" + (f"; EL CLIENTE: {d.cliente_email}" if d.cliente_email else "") + ")."]),
-    ]
+        ("CLÁUSULA VIGÉSIMA SEGUNDA — INSTRUMENTACIÓN Y FIRMA", [
+            "El presente Contrato podrá instrumentarse y celebrarse válidamente por medios electrónicos. Las "
+            "Partes acuerdan que su firma mediante firma electrónica o firma digital, así como la aceptación por "
+            "intercambio de correos electrónicos o la suscripción de ejemplares en formato PDF remitidos entre las "
+            "Partes, tendrá plena validez y eficacia jurídica y se tendrá por expresión auténtica del "
+            "consentimiento, conforme a la Ley N.º 25.506 de Firma Digital y a los artículos 286 y 288 del Código "
+            "Civil y Comercial de la Nación. Las Partes renuncian a objetar la validez o fuerza probatoria del "
+            "Contrato por el solo hecho de haberse celebrado o suscripto por medios electrónicos."]),
+    ] + ([
+        ("CLÁUSULA VIGÉSIMA TERCERA — MORA E INTERESES", [
+            f"La falta de pago en término de cualquier suma adeudada —en particular, el saldo posterior al "
+            f"anticipo previsto en la Cláusula Cuarta— devengará de pleno derecho, sin necesidad de interpelación "
+            f"previa, un interés moratorio del {d.interes_mora_mensual:g}% (por ciento) mensual sobre el importe "
+            "impago, desde su vencimiento y hasta su efectiva cancelación. La mora faculta a AVANZA a suspender "
+            "la implementación hasta la regularización del pago, sin que ello genere responsabilidad a su cargo."])]
+        if d.incluir_mora else [])
 
 
 # ──────────────────────────────────────────────────────────────────────────────
@@ -541,6 +691,7 @@ li { margin: 2px 0; }
 .anexo h1 { text-align: left; font-size: 12pt; border-bottom: 1px solid #dbe6ff; padding-bottom: 6px; }
 .anexo-meta { background: #f5f8ff; border: 1px solid #dbe6ff; border-radius: 6px; padding: 8px 12px; margin: 8px 0 12px; font-size: 9pt; }
 .disclaimer { margin-top: 16px; font-size: 7.6pt; color: #94a3b8; font-style: italic; text-align: center; }
+.nrocontrato { text-align: center; font-size: 8.5pt; color: #1463ff; font-weight: 700; margin: 0 0 12px; letter-spacing: .5px; }
 """
 
 
@@ -551,6 +702,25 @@ def render_html(d) -> str:
     fecha = d.fecha
     dia, mes, anio = fecha.day, MESES_ES[fecha.month], fecha.year
     cargo = f" — {_esc(d.cliente_cargo)}" if d.cliente_cargo else ""
+    ident = ident_fiscal(d.cliente_pais)
+    cond_html = f" ({_esc(d.cliente_condicion_fiscal)})" if d.cliente_condicion_fiscal else ""
+    pais_html = f", {_esc(d.cliente_pais)}" if (d.cliente_pais and _strip_accents(d.cliente_pais).strip().lower() not in ("argentina", "")) else ""
+    dni_html = f" ({_esc(ident['persona'])}: {_campo(d.cliente_dni, ident['persona'] + ' del firmante')})"
+    anexo2_html = ""
+    if d.incluir_mantenimiento:
+        _mi = mantenimiento_info(d.plan_mantenimiento)
+        _pm = d.mantenimiento_precio if d.mantenimiento_precio is not None else _mi["precio"]
+        _items2 = "".join(f"<li>{_esc(it)}</li>" for it in _mi["items"])
+        anexo2_html = (
+            '<div class="anexo"><h1>ANEXO II — PLAN DE MANTENIMIENTO (OPCIONAL)</h1>'
+            f'<div class="anexo-meta"><strong>Plan:</strong> {_esc(d.plan_mantenimiento)} &nbsp;·&nbsp;'
+            f'<strong>Abono mensual:</strong> USD {_pm:,.0f} / mes &nbsp;·&nbsp;'
+            '<strong>Permanencia:</strong> sin permanencia mínima</div>'
+            '<p>El presente plan de mantenimiento es <strong>opcional</strong> y se contrata por separado del '
+            'servicio de la Cláusula Cuarta. No es requisito para el funcionamiento del sistema entregado. '
+            f'Incluye:</p><ul>{_items2}</ul>'
+            '<p style="font-size:8pt;color:#6b7280;">El abono podrá actualizarse periódicamente. EL CLIENTE '
+            'podrá darlo de baja en cualquier momento sin penalidad, con un preaviso de 30 (treinta) días.</p></div>')
     clausulas_html = "".join(
         f"<h2>{_esc(t)}</h2>" + "".join(f"<p>{_inline_html(p)}</p>" for p in cuerpo)
         for t, cuerpo in _clausulas(d)
@@ -563,31 +733,34 @@ def render_html(d) -> str:
 <div class="header">{_logo_html()}</div>
 <h1>CONTRATO DE PRESTACIÓN DE SERVICIOS</h1>
 <p class="subtitulo">Implementación de sistema comercial digital</p>
+<p class="nrocontrato">Contrato N.º {_esc(d.numero_contrato)}</p>
 <p class="intro">En la ciudad de {_campo(d.ciudad, "ciudad")}, a los <strong>{dia}</strong> días del mes de
 <strong>{mes}</strong> de <strong>{anio}</strong>, entre las partes que a continuación se identifican, se celebra el
 presente Contrato de Prestación de Servicios (en adelante, el «Contrato»):</p>
 <div class="partes">
-  <p><strong>EL PRESTADOR:</strong> {_esc(AVANZA['razon_social'])}, CUIT {_esc(AVANZA['cuit'])}, con domicilio en
-     {_esc(AVANZA['domicilio'])}, representada en este acto por {_esc(AVANZA['representante'])}
+  <p><strong>EL PRESTADOR:</strong> {_esc(AVANZA['razon_social'])}, CUIT {_avanza_campo(AVANZA['cuit'], 'CUIT de Avanza · env AVANZA_CUIT')}, con domicilio en
+     {_esc(AVANZA['domicilio'])}, representada en este acto por {_avanza_campo(AVANZA['representante'], 'representante · env AVANZA_REPRESENTANTE')}
      ({_esc(AVANZA['cargo'])}) (en adelante, «AVANZA»).</p>
   <p><strong>EL CLIENTE:</strong> {_campo(d.cliente_razon_social, "razón social del cliente")},
-     CUIT {_campo(d.cliente_cuit, "CUIT del cliente")}, con domicilio en {_campo(d.cliente_domicilio, "domicilio del cliente")},
-     representada en este acto por {_campo(d.cliente_representante, "representante")}{cargo} (en adelante, «EL CLIENTE»).</p>
+     {_esc(ident['empresa'])} {_campo(d.cliente_cuit, ident['empresa'] + " del cliente")}{cond_html}, con domicilio en {_campo(d.cliente_domicilio, "domicilio del cliente")}{pais_html},
+     representada en este acto por {_campo(d.cliente_representante, "representante")}{dni_html}{cargo} (en adelante, «EL CLIENTE»).</p>
 </div>
 <p>AVANZA y EL CLIENTE se denominarán conjuntamente «las Partes». Las Partes acuerdan celebrar el presente Contrato
 conforme a las siguientes cláusulas:</p>
 {clausulas_html}
-<p style="margin-top:12px;">En prueba de conformidad, las Partes firman dos ejemplares de un mismo tenor y a un solo
-efecto, en el lugar y fecha indicados.</p>
+<p style="margin-top:12px;">En prueba de conformidad, las Partes suscriben el presente —sea en dos ejemplares de un
+mismo tenor y a un solo efecto, sea por medios electrónicos conforme la Cláusula de Instrumentación y Firma— en el
+lugar y fecha indicados.</p>
 <table class="firma-tabla"><tr>
   <td><div class="rol">P/ AVANZA DIGITAL</div>
-    <div class="firma-linea">Aclaración: {_esc(AVANZA['representante'])}</div>
-    <div>Cargo: {_esc(AVANZA['cargo'])}</div><div>DNI/CUIT: {_esc(AVANZA['cuit'])}</div>
+    <div class="firma-linea">Aclaración: {_avanza_campo(AVANZA['representante'], 'representante · env AVANZA_REPRESENTANTE')}</div>
+    <div>Cargo: {_esc(AVANZA['cargo'])}</div><div>CUIT: {_avanza_campo(AVANZA['cuit'], 'CUIT de Avanza · env AVANZA_CUIT')}</div>
     <div>Fecha: ____ / ____ / ______</div></td>
   <td><div class="rol">P/ EL CLIENTE</div>
     <div class="firma-linea">Aclaración: {_esc(d.cliente_representante) or '________________________'}</div>
     <div>Cargo: {_esc(d.cliente_cargo) or '________________________'}</div>
-    <div>DNI/CUIT: {_esc(d.cliente_cuit) or '________________________'}</div>
+    <div>{_esc(ident['empresa'])}: {_esc(d.cliente_cuit) or '________________________'}</div>
+    <div>{_esc(ident['persona'])}: {_esc(d.cliente_dni) or '________________________'}</div>
     <div>Fecha: ____ / ____ / ______</div></td>
 </tr></table>
 <div class="anexo">
@@ -601,6 +774,7 @@ efecto, en el lugar y fecha indicados.</p>
   <p class="disclaimer">Documento generado automáticamente por Avanza Digital. Modelo de base; ante dudas, consulte
   asesoramiento legal.</p>
 </div>
+{anexo2_html}
 </body></html>"""
 
 
@@ -664,6 +838,8 @@ def render_contrato_docx(d) -> bytes:
     tt = titulo.add_run("CONTRATO DE PRESTACIÓN DE SERVICIOS"); tt.bold = True; tt.font.size = Pt(14); tt.font.color.rgb = NAVY
     sub = doc.add_paragraph(); sub.alignment = WD_ALIGN_PARAGRAPH.CENTER
     sr = sub.add_run("Implementación de sistema comercial digital"); sr.font.size = Pt(9); sr.font.color.rgb = RGBColor(0x6B, 0x72, 0x80)
+    nro = doc.add_paragraph(); nro.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    nrr = nro.add_run(f"Contrato N.º {d.numero_contrato}"); nrr.bold = True; nrr.font.size = Pt(8.5); nrr.font.color.rgb = AZUL
 
     intro = doc.add_paragraph()
     intro.add_run("En la ciudad de ")
@@ -671,14 +847,27 @@ def render_contrato_docx(d) -> bytes:
     intro.add_run(f", a los {dia} días del mes de {mes} de {anio}, entre las partes que a continuación se identifican, "
                   "se celebra el presente Contrato de Prestación de Servicios (en adelante, el «Contrato»):")
 
+    _av_cuit = _avanza_txt(AVANZA["cuit"], "CUIT de Avanza · env AVANZA_CUIT")
+    _av_rep  = _avanza_txt(AVANZA["representante"], "representante · env AVANZA_REPRESENTANTE")
     p1 = doc.add_paragraph(); p1.add_run("EL PRESTADOR: ").bold = True
-    p1.add_run(f"{AVANZA['razon_social']}, CUIT {AVANZA['cuit']}, con domicilio en {AVANZA['domicilio']}, representada "
-               f"en este acto por {AVANZA['representante']} ({AVANZA['cargo']}) (en adelante, «AVANZA»).")
+    p1.add_run(f"{AVANZA['razon_social']}, CUIT {_av_cuit}, con domicilio en {AVANZA['domicilio']}, representada "
+               f"en este acto por {_av_rep} ({AVANZA['cargo']}) (en adelante, «AVANZA»).")
+    ident = ident_fiscal(d.cliente_pais)
     p2 = doc.add_paragraph(); p2.add_run("EL CLIENTE: ").bold = True
-    _docx_campo(p2, d.cliente_razon_social, "razón social del cliente"); p2.add_run(", CUIT ")
-    _docx_campo(p2, d.cliente_cuit, "CUIT del cliente"); p2.add_run(", con domicilio en ")
-    _docx_campo(p2, d.cliente_domicilio, "domicilio del cliente"); p2.add_run(", representada en este acto por ")
+    _docx_campo(p2, d.cliente_razon_social, "razón social del cliente")
+    p2.add_run(f", {ident['empresa']} ")
+    _docx_campo(p2, d.cliente_cuit, ident['empresa'] + " del cliente")
+    if d.cliente_condicion_fiscal:
+        p2.add_run(f" ({d.cliente_condicion_fiscal})")
+    p2.add_run(", con domicilio en ")
+    _docx_campo(p2, d.cliente_domicilio, "domicilio del cliente")
+    if d.cliente_pais and _strip_accents(d.cliente_pais).strip().lower() not in ("argentina", ""):
+        p2.add_run(f", {d.cliente_pais}")
+    p2.add_run(", representada en este acto por ")
     _docx_campo(p2, d.cliente_representante, "representante")
+    p2.add_run(f" ({ident['persona']}: ")
+    _docx_campo(p2, d.cliente_dni, ident['persona'] + " del firmante")
+    p2.add_run(")")
     if d.cliente_cargo:
         p2.add_run(f" — {d.cliente_cargo}")
     p2.add_run(" (en adelante, «EL CLIENTE»).")
@@ -692,20 +881,22 @@ def render_contrato_docx(d) -> bytes:
         for parr in cuerpo:
             pp = doc.add_paragraph(); _docx_runs(pp, parr)
 
-    doc.add_paragraph("En prueba de conformidad, las Partes firman dos ejemplares de un mismo tenor y a un solo efecto, "
-                      "en el lugar y fecha indicados.").paragraph_format.space_before = Pt(10)
+    doc.add_paragraph("En prueba de conformidad, las Partes suscriben el presente —sea en dos ejemplares de un mismo "
+                      "tenor y a un solo efecto, sea por medios electrónicos conforme la Cláusula de Instrumentación y "
+                      "Firma— en el lugar y fecha indicados.").paragraph_format.space_before = Pt(10)
 
     # Tabla de firmas
     tabla = doc.add_table(rows=1, cols=2); tabla.style = "Table Grid"
     izq, der = tabla.rows[0].cells
     izq.paragraphs[0].add_run("P/ AVANZA DIGITAL").bold = True
-    for t in [f"\nAclaración: {AVANZA['representante']}", f"Cargo: {AVANZA['cargo']}",
-              f"DNI/CUIT: {AVANZA['cuit']}", "Fecha: ____ / ____ / ______"]:
+    for t in [f"\nAclaración: {_av_rep}", f"Cargo: {AVANZA['cargo']}",
+              f"CUIT: {_av_cuit}", "Fecha: ____ / ____ / ______"]:
         izq.add_paragraph(t)
     der.paragraphs[0].add_run("P/ EL CLIENTE").bold = True
     for t in [f"\nAclaración: {d.cliente_representante or '________________________'}",
               f"Cargo: {d.cliente_cargo or '________________________'}",
-              f"DNI/CUIT: {d.cliente_cuit or '________________________'}", "Fecha: ____ / ____ / ______"]:
+              f"{ident['persona']}: {d.cliente_dni or '________________________'}",
+              f"{ident['empresa']}: {d.cliente_cuit or '________________________'}", "Fecha: ____ / ____ / ______"]:
         der.add_paragraph(t)
 
     # Anexo I (página nueva)
@@ -723,6 +914,24 @@ def render_contrato_docx(d) -> bytes:
     dis = doc.add_paragraph(); dr = dis.add_run(
         "Documento generado automáticamente por Avanza Digital. Modelo de base; ante dudas, consulte asesoramiento legal.")
     dr.italic = True; dr.font.size = Pt(8); dr.font.color.rgb = RGBColor(0x94, 0xA3, 0xB8)
+
+    if d.incluir_mantenimiento:
+        _mi = mantenimiento_info(d.plan_mantenimiento)
+        _pm = d.mantenimiento_precio if d.mantenimiento_precio is not None else _mi["precio"]
+        doc.add_page_break()
+        a2 = doc.add_paragraph(); a2r = a2.add_run("ANEXO II — PLAN DE MANTENIMIENTO (OPCIONAL)")
+        a2r.bold = True; a2r.font.size = Pt(12); a2r.font.color.rgb = NAVY
+        m2 = doc.add_paragraph()
+        m2.add_run("Plan: ").bold = True; m2.add_run(f"{d.plan_mantenimiento}    ·    ")
+        m2.add_run("Abono mensual: ").bold = True; m2.add_run(f"USD {_pm:,.0f} / mes    ·    ")
+        m2.add_run("Permanencia: ").bold = True; m2.add_run("sin permanencia mínima")
+        doc.add_paragraph("Este plan de mantenimiento es opcional y se contrata por separado del servicio de la "
+                          "Cláusula Cuarta; no es requisito para el funcionamiento del sistema. Incluye:")
+        for _it in _mi["items"]:
+            doc.add_paragraph(_it, style="List Bullet")
+        n2 = doc.add_paragraph(); n2r = n2.add_run("El abono podrá actualizarse periódicamente. EL CLIENTE podrá "
+                          "darlo de baja en cualquier momento sin penalidad, con un preaviso de 30 (treinta) días.")
+        n2r.font.size = Pt(8); n2r.font.color.rgb = RGBColor(0x6B, 0x72, 0x80)
 
     # Pie de página con numeración
     foot = doc.sections[0].footer.paragraphs[0]

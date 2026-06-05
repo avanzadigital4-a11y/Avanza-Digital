@@ -3213,6 +3213,16 @@ async def capturar_lead(
     return {"ok": True}
 
 
+@app.get("/admin/jarvis/uso")
+def admin_jarvis_uso(_admin=Depends(current_admin_required)):
+    """Uso del motor de IA (tokens, llamadas, caché, errores) por modelo.
+    Datos en memoria desde el último reinicio. Para histórico persistente,
+    ver jarvis_llm.register_usage_sink()."""
+    stats = jarvis_llm.usage_stats()
+    stats["proveedores_activos"] = jarvis_llm.active_provider_label()
+    return stats
+
+
 @app.get("/admin/auditorias")
 def admin_auditorias(db: Session = Depends(get_db)):
     """Métricas de uso de la herramienta para el admin."""

@@ -38,6 +38,16 @@ class ContratoBody(BaseModel):
     cliente_representante: Optional[str] = ""
     cliente_cargo: Optional[str] = ""
     cliente_email: Optional[str] = ""
+    cliente_pais: Optional[str] = "Argentina"      # define la terminología fiscal (CUIT/RUC/RFC/cédula…)
+    cliente_condicion_fiscal: Optional[str] = ""   # situación tributaria del cliente
+    cliente_dni: Optional[str] = ""                # documento del firmante (persona física)
+    numero_contrato: Optional[str] = ""            # opcional; se autogenera si va vacío
+    # Mantenimiento opcional (Anexo II) y mora (cláusula condicional)
+    incluir_mantenimiento: Optional[bool] = False
+    plan_mantenimiento: Optional[str] = "Plan Cuidado"
+    mantenimiento_precio: Optional[float] = None
+    incluir_mora: Optional[bool] = False
+    interes_mora_mensual: Optional[float] = 3.0
 
     # Operación (opcionales; se autocompletan desde la Venta / PLAN_INFO)
     plan: Optional[str] = None
