@@ -1,3 +1,5 @@
+/contratos/*    https://avanza-digital.onrender.com/contratos/:splat    200
+/ventas/*       https://avanza-digital.onrender.com/ventas/:splat       200
 /aliados/*      https://avanza-digital.onrender.com/aliados/:splat      200
 /leads/*        https://avanza-digital.onrender.com/leads/:splat        200
 /auditorias/*   https://avanza-digital.onrender.com/auditorias/:splat   200

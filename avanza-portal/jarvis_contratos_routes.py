@@ -129,9 +129,12 @@ def register(app, get_db_func, auth_dep, ajustar_creditos_fn=None):
     ):
         """Genera el contrato sin Venta (útil para ad-hoc o pruebas)."""
         extra = _body_to_extra(body)
+        # 'formato' pertenece a _file_response, no a DatosContrato.
+        # Excluirlo evita TypeError (campo inesperado en el dataclass) que
+        # propagaba un 500 sin CORS headers antes del try/except.
         datos = contratos.DatosContrato(
             cliente_razon_social=extra.get("cliente_razon_social", ""),
-            **{k: v for k, v in extra.items() if k != "cliente_razon_social"},
+            **{k: v for k, v in extra.items() if k not in ("cliente_razon_social", "formato")},
         )
         try:
             return _file_response(datos, body.formato)
