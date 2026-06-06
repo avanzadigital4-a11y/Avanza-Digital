@@ -636,9 +636,9 @@ def _clausulas(d) -> list:
             "El presente Contrato se rige por las leyes de la República Argentina. Para toda controversia derivada del "
             f"mismo, las Partes se someten a la jurisdicción de los tribunales ordinarios de {AVANZA['jurisdiccion']}, "
             "renunciando a cualquier otro fuero o jurisdicción que pudiera corresponder."]),
-        ("CLÁUSULA VIGÉSIMA PRIMERA — DOMICILIOS Y NOTIFICACIONES", [
-            "Las Partes constituyen domicilio en los indicados en el encabezamiento, donde se tendrán por válidas todas "
-            "las notificaciones, así como en los correos electrónicos que declaren a tal efecto (AVANZA: "
+        ("CLÁUSULA VIGÉSIMA PRIMERA — NOTIFICACIONES", [
+            "Las Partes acuerdan que todas las notificaciones vinculadas a este Contrato se tendrán por válidas "
+            "si se cursan a las direcciones de correo electrónico que declaran a tal efecto (AVANZA: "
             f"{AVANZA['email']}" + (f"; EL CLIENTE: {d.cliente_email}" if d.cliente_email else "") + ")."]),
         ("CLÁUSULA VIGÉSIMA SEGUNDA — INSTRUMENTACIÓN Y FIRMA", [
             "El presente Contrato podrá instrumentarse y celebrarse válidamente por medios electrónicos. Las "
@@ -745,11 +745,10 @@ def render_html(d) -> str:
 <strong>{mes}</strong> de <strong>{anio}</strong>, entre las partes que a continuación se identifican, se celebra el
 presente Contrato de Prestación de Servicios (en adelante, el «Contrato»):</p>
 <div class="partes">
-  <p><strong>EL PRESTADOR:</strong> {_esc(AVANZA['razon_social'])}, CUIT {_avanza_campo(AVANZA['cuit'], 'CUIT de Avanza · env AVANZA_CUIT')}, con domicilio en
-     {_esc(AVANZA['domicilio'])}, representada en este acto por {_avanza_campo(AVANZA['representante'], 'representante · env AVANZA_REPRESENTANTE')}
+  <p><strong>EL PRESTADOR:</strong> {_esc(AVANZA['razon_social'])}, CUIT {_avanza_campo(AVANZA['cuit'], 'CUIT de Avanza · env AVANZA_CUIT')}, representada en este acto por {_avanza_campo(AVANZA['representante'], 'representante · env AVANZA_REPRESENTANTE')}
      ({_esc(AVANZA['cargo'])}) (en adelante, «AVANZA»).</p>
   <p><strong>EL CLIENTE:</strong> {_campo(d.cliente_razon_social, "razón social del cliente")},
-     {_esc(ident['empresa'])} {_campo(d.cliente_cuit, ident['empresa'] + " del cliente")}{cond_html}, con domicilio en {_campo(d.cliente_domicilio, "domicilio del cliente")}{pais_html},
+     {_esc(ident['empresa'])} {_campo(d.cliente_cuit, ident['empresa'] + " del cliente")}{cond_html}{pais_html},
      representada en este acto por {_campo(d.cliente_representante, "representante")}{dni_html}{cargo} (en adelante, «EL CLIENTE»).</p>
 </div>
 <p>AVANZA y EL CLIENTE se denominarán conjuntamente «las Partes». Las Partes acuerdan celebrar el presente Contrato
@@ -870,7 +869,7 @@ def render_contrato_docx(d) -> bytes:
     _av_cuit = _avanza_txt(AVANZA["cuit"], "CUIT de Avanza · env AVANZA_CUIT")
     _av_rep  = _avanza_txt(AVANZA["representante"], "representante · env AVANZA_REPRESENTANTE")
     p1 = doc.add_paragraph(); p1.add_run("EL PRESTADOR: ").bold = True
-    p1.add_run(f"{AVANZA['razon_social']}, CUIT {_av_cuit}, con domicilio en {AVANZA['domicilio']}, representada "
+    p1.add_run(f"{AVANZA['razon_social']}, CUIT {_av_cuit}, representada "
                f"en este acto por {_av_rep} ({AVANZA['cargo']}) (en adelante, «AVANZA»).")
     ident = ident_fiscal(d.cliente_pais)
     p2 = doc.add_paragraph(); p2.add_run("EL CLIENTE: ").bold = True
@@ -879,8 +878,6 @@ def render_contrato_docx(d) -> bytes:
     _docx_campo(p2, d.cliente_cuit, ident['empresa'] + " del cliente")
     if d.cliente_condicion_fiscal:
         p2.add_run(f" ({d.cliente_condicion_fiscal})")
-    p2.add_run(", con domicilio en ")
-    _docx_campo(p2, d.cliente_domicilio, "domicilio del cliente")
     if d.cliente_pais and _strip_accents(d.cliente_pais).strip().lower() not in ("argentina", ""):
         p2.add_run(f", {d.cliente_pais}")
     p2.add_run(", representada en este acto por ")
