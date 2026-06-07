@@ -1,6 +1,15 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
+    <!-- Consent Mode v2 (default denied) — debe ir ANTES de GTM -->
+    <script>
+    window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}
+    gtag('consent','default',{ad_storage:'denied',analytics_storage:'denied',ad_user_data:'denied',ad_personalization:'denied',functionality_storage:'granted',security_storage:'granted',wait_for_update:500});
+    try{var _c=localStorage.getItem('avz_consent');if(_c==='granted'){gtag('consent','update',{ad_storage:'granted',analytics_storage:'granted',ad_user_data:'granted',ad_personalization:'granted'});}}catch(e){}
+    </script>
+    <script src="/consent.js" defer></script>
+    <script src="/events.js" defer></script>
+    
     <script type="application/ld+json">
     [
       {
@@ -165,7 +174,8 @@
     <!-- Preload del LCP -->
     <link rel="preload" as="image" href="/demo-tecnico.webp" fetchpriority="high">
     
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" media="print" onload="this.media='all'">
+    <noscript><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"></noscript>
     <link rel="stylesheet" href="style.min.css">
 
     <style>
@@ -370,6 +380,14 @@
     }
     </style>
     <!-- MailerLite: deferred to body -->
+    <!-- hreflang internacional (es-AR es x-default) -->
+    <link rel="alternate" hreflang="es-AR" href="https://avanzadigital.digital/">
+    <link rel="alternate" hreflang="es-MX" href="https://avanzadigital.digital/mexico/">
+    <link rel="alternate" hreflang="es-CO" href="https://avanzadigital.digital/colombia/">
+    <link rel="alternate" hreflang="es-CL" href="https://avanzadigital.digital/chile/">
+    <link rel="alternate" hreflang="es-PE" href="https://avanzadigital.digital/peru/">
+    <link rel="alternate" hreflang="es-VE" href="https://avanzadigital.digital/venezuela/">
+    <link rel="alternate" hreflang="x-default" href="https://avanzadigital.digital/">
 </head>
 <body>
 <!-- SVG icon sprite — replaces Font Awesome CDN (-390 KB) -->
@@ -456,12 +474,12 @@
                     v = r < 0.34 ? 'A' : r < 0.67 ? 'B' : 'C';
                     sessionStorage.setItem(KEY, v);
                   }
-                  var el = document.getElementById('hero-h1-ab');
+                  var el = document.querySelector('#hero-h1-ab h1');
                   if (el) {
                     if (v === 'B') {
-                      el.innerHTML = '<h1 style="font-size:clamp(2rem,4.5vw,3.4rem);line-height:1.15;margin-bottom:20px;">¿Tu PYME B2B genera <span class="highlight">leads calificados?</span><br>El canal de ventas que trabaja mientras duermes.</h1>';
+                      el.innerHTML = '¿Tu PYME B2B genera <span class="highlight">leads calificados?</span><br>El canal de ventas que trabaja mientras duermes.';
                     } else if (v === 'C') {
-                      el.innerHTML = '<h1 style="font-size:clamp(2rem,4.5vw,3.4rem);line-height:1.15;margin-bottom:20px;">¿Consigues clientes solo por recomendación?<br><span class="highlight">Hay un sistema más predecible.</span></h1>';
+                      el.innerHTML = '¿Consigues clientes solo por recomendación?<br><span class="highlight">Hay un sistema más predecible.</span>';
                     }
                   }
                   window.dataLayer = window.dataLayer || [];

@@ -1,0 +1,42 @@
+# Dependencias y entornos
+node_modules/
+.env
+.env.local
+.env.*.local
+venv/
+__pycache__/
+*.pyc
+*.pyo
+
+# Bases de datos y archivos sensibles
+*.db
+*.sqlite
+*.sqlite3
+*.sql
+
+# Archivos de sistema
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Logs
+*.log
+npm-debug.log*
+
+# Build / temporales
+dist/
+build/
+*.tmp
+*.bak
+*.swp
+
+# IDE
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# Backend (no deployar con el frontend)
+avanza-portal/__pycache__/
+avanza-portal/*.db
+avanza-portal/*.sqlite

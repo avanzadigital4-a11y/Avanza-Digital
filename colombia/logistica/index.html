@@ -1,6 +1,15 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
+    <!-- Consent Mode v2 (default denied) — debe ir ANTES de GTM -->
+    <script>
+    window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}
+    gtag('consent','default',{ad_storage:'denied',analytics_storage:'denied',ad_user_data:'denied',ad_personalization:'denied',functionality_storage:'granted',security_storage:'granted',wait_for_update:500});
+    try{var _c=localStorage.getItem('avz_consent');if(_c==='granted'){gtag('consent','update',{ad_storage:'granted',analytics_storage:'granted',ad_user_data:'granted',ad_personalization:'granted'});}}catch(e){}
+    </script>
+    <script src="/consent.js" defer></script>
+    <script src="/events.js" defer></script>
+    
     <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
 new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
 j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
@@ -59,9 +68,9 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
     <link rel="canonical" href="https://avanzadigital.digital/colombia/logistica/">
 
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><path d=%22M10 20 L40 50 L10 80 L30 80 L60 50 L30 20 Z%22 fill=%22%230044cc%22/><path d=%22M45 20 L75 50 L45 80 L65 80 L95 50 L65 20 Z%22 fill=%22%2300cccc%22/></svg>">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <link rel="preload" href="/fonts/inter-400.woff2" as="font" type="font/woff2" crossorigin>
+    <link rel="preload" href="/fonts/inter-600.woff2" as="font" type="font/woff2" crossorigin>
+    <link rel="stylesheet" href="/fonts.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" media="print" onload="this.media='all'">
     <noscript><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"></noscript>
     <link rel="stylesheet" href="../../style.min.css">
@@ -117,6 +126,14 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
         @media (max-width: 992px) { .mobile-cta-link { display: block; } }
         @media (max-width: 768px) { .hero-rubro { padding: 100px 0 50px; } .caso-box { padding: 28px 20px; } .cta-final { padding: 40px 20px; } .demo-wrapper { height: 400px; } }
     </style>
+    <!-- hreflang internacional (es-AR es x-default) -->
+    <link rel="alternate" hreflang="es-AR" href="https://avanzadigital.digital/logistica.html">
+    <link rel="alternate" hreflang="es-MX" href="https://avanzadigital.digital/mexico/logistica/">
+    <link rel="alternate" hreflang="es-CO" href="https://avanzadigital.digital/colombia/logistica/">
+    <link rel="alternate" hreflang="es-CL" href="https://avanzadigital.digital/chile/logistica/">
+    <link rel="alternate" hreflang="es-PE" href="https://avanzadigital.digital/peru/logistica/">
+    <link rel="alternate" hreflang="es-VE" href="https://avanzadigital.digital/venezuela/logistica/">
+    <link rel="alternate" hreflang="x-default" href="https://avanzadigital.digital/logistica.html">
 </head>
 <body>
 

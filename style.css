@@ -111,13 +111,6 @@ ul { list-style: none; }
     padding-bottom: 50px;
 }
 
-.hero-grid {
-    display: grid;
-    grid-template-columns: 2fr 1fr; /* 2 columnas (Texto ancho | Stats) */
-    grid-template-rows: auto auto;
-    gap: 20px;
-}
-
 .hero-text {
     grid-row: span 2; /* El texto ocupa todo el alto */
     justify-content: center;
@@ -163,14 +156,7 @@ ul { list-style: none; }
 .btn-text:hover { opacity: 0.8; padding-left: 5px; }
 
 /* Cajitas de Stats */
-.hero-stat-1, .hero-stat-2 {
-    align-items: center;
-    justify-content: center;
-    text-align: center;
-}
 .icon-stat { font-size: 2rem; color: var(--primary-color); margin-bottom: 10px; }
-.hero-stat-1 h3, .hero-stat-2 h3 { font-size: 2rem; font-weight: 700; }
-.hero-stat-1 p, .hero-stat-2 p { color: var(--accent-dim); font-size: 0.9rem; }
 
 /* =========================================
    6. PLANES (GRID ASIMÉTRICA)
@@ -245,12 +231,6 @@ ul { list-style: none; }
 /* =========================================
    7. STEPS & PORTAFOLIO
    ========================================= */
-.steps-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-    gap: 20px;
-}
-.step-num { font-size: 3rem; font-weight: 800; color: #333; margin-bottom: 10px; }
 
 .portfolio-grid {
     display: grid;
@@ -271,8 +251,6 @@ ul { list-style: none; }
 }
 .project-info h3 { font-size: 1.5rem; }
 .project-info span { font-size: 0.9rem; color: var(--accent-dim); }
-
-.p-large { grid-column: span 2; }
 
 /* =========================================
    8. CONTACTO Y FOOTER
@@ -308,11 +286,6 @@ input:focus, textarea:focus {
 .socials a { margin-left: 20px; font-size: 1.2rem; }
 
 /* Estilos para el enlace de Legales */
-.footer-left {
-    display: flex;
-    gap: 20px;
-    align-items: center;
-}
 
 .legal-link {
     font-size: 0.85rem;
@@ -446,8 +419,6 @@ input:checked + .slider:before { transform: translateX(26px); }
 @media (max-width: 768px) {
     .navbar-floating { width: 95%; padding: 10px 20px; }
     .nav-links { display: none; }
-    
-    .hero-grid { grid-template-columns: 1fr; }
     .hero-text { padding: 30px; }
     .hero-text h1 { font-size: 2.5rem; }
     
@@ -455,7 +426,6 @@ input:checked + .slider:before { transform: translateX(26px); }
     .plan-pro { grid-column: span 1; }
     
     .portfolio-grid { grid-template-columns: 1fr; }
-    .p-large { grid-column: span 1; }
     
     .form-row { flex-direction: column; }
 
@@ -468,10 +438,6 @@ input:checked + .slider:before { transform: translateX(26px); }
         flex-direction: column;
         gap: 20px;
         text-align: center;
-    }
-    .footer-left {
-        flex-direction: column;
-        gap: 10px;
     }
 }
 /* =========================================
@@ -519,13 +485,6 @@ input:checked + .slider:before { transform: translateX(26px); }
 }
 
 /* Texto pequeño de aclaración */
-.disclaimer {
-    text-align: center;
-    color: #444; /* Gris oscuro para que no distraiga */
-    margin-top: 40px;
-    font-size: 0.85rem;
-    font-style: italic;
-}
 /* =========================================
    SECCIÓN TESTIMONIOS
    ========================================= */
@@ -533,18 +492,6 @@ input:checked + .slider:before { transform: translateX(26px); }
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
     gap: 20px;
-}
-
-.testimonial-card {
-    justify-content: space-between; /* Empuja el autor hacia abajo */
-    height: 100%; /* Para que todas midan lo mismo */
-}
-
-.stars {
-    color: var(--primary-color); /* Azul corporativo */
-    font-size: 1.1rem;
-    margin-bottom: 20px;
-    letter-spacing: 2px;
 }
 
 .quote {
@@ -593,25 +540,6 @@ input:checked + .slider:before { transform: translateX(26px); }
 /* =========================================
    MINI SECCIÓN: CONFIANZA (TRUST BAR)
    ========================================= */
-   .trust-bar {
-    text-align: center;
-    background: #0a0a0a; /* Fondo bien oscuro para diferenciar */
-    border: 1px solid rgba(255,255,255,0.08);
-    padding: 40px;
-}
-
-.trust-bar h3 {
-    font-size: 1.5rem;
-    color: white;
-    margin-bottom: 30px;
-}
-
-.trust-icons {
-    display: flex;
-    justify-content: space-around; /* Distribuye el espacio equitativamente */
-    flex-wrap: wrap; /* Permite que bajen en pantallas chicas */
-    gap: 30px;
-}
 
 .trust-item {
     display: flex;
@@ -635,11 +563,6 @@ input:checked + .slider:before { transform: translateX(26px); }
 
 /* Ajuste Mobile */
 @media (max-width: 768px) {
-    .trust-icons {
-        display: grid;
-        grid-template-columns: repeat(2, 1fr); /* 2 columnas en celular */
-        gap: 20px;
-    }
     /* El último ítem ocupa el ancho completo para que quede centrado */
     .trust-item:last-child {
         grid-column: span 2;
@@ -653,33 +576,7 @@ input:checked + .slider:before { transform: translateX(26px); }
     overflow-x: auto; /* Para que haga scroll en celular */
 }
 
-.comparison-table {
-    width: 100%;
-    border-collapse: collapse;
-    min-width: 600px; /* Asegura que no se rompa en pantallas muy chicas */
-    text-align: center;
-}
-
-.comparison-table th, 
-.comparison-table td {
-    padding: 20px 15px;
-    border-bottom: 1px solid rgba(255,255,255,0.08);
-}
-
 /* Encabezados */
-.comparison-table thead th {
-    background: rgba(255,255,255,0.02);
-    padding-top: 30px;
-    padding-bottom: 30px;
-    vertical-align: bottom;
-}
-
-.feature-col {
-    text-align: left;
-    width: 25%;
-    font-size: 1.1rem;
-    color: var(--accent-dim);
-}
 
 .plan-name {
     font-size: 1.2rem;
@@ -688,61 +585,16 @@ input:checked + .slider:before { transform: translateX(26px); }
     margin-bottom: 5px;
 }
 
-.plan-price-small {
-    font-size: 0.9rem;
-    color: var(--accent-dim);
-}
-
 /* Columna Destacada (Plan Negocio) */
-.highlight-col {
-    background: rgba(59, 130, 246, 0.05); /* Luz azul muy sutil */
-    border-left: 1px solid rgba(255,255,255,0.05);
-    border-right: 1px solid rgba(255,255,255,0.05);
-}
-
-.feature-label {
-    text-align: left;
-    font-weight: 500;
-    color: white;
-}
 
 /* Íconos y Textos */
-.check-ok { color: var(--primary-color); font-size: 1.2rem; }
-.text-dim { color: #444; font-size: 1.5rem; line-height: 0; }
 
 /* Botones pequeños para la tabla */
-.btn-sm {
-    padding: 8px 20px;
-    font-size: 0.85rem;
-    width: 100%;
-    display: inline-block;
-}
 
 /* Ajustes Responsive para la tabla */
-@media (max-width: 768px) {
-    .feature-col { 
-        position: sticky; 
-        left: 0; 
-        background: var(--bg-card); /* Tapar el scroll al deslizar */
-        z-index: 2;
-        border-right: 1px solid rgba(255,255,255,0.1);
-    }
-    .comparison-table th, .comparison-table td {
-        font-size: 0.85rem;
-        padding: 15px 10px;
-    }
-}
 /* --- DETALLES Y JUSTIFICACIÓN DE VALOR --- */
 
 /* Texto pequeño debajo de los items de la lista */
-.detail-text {
-    display: block;            /* Fuerza a que baje de renglón */
-    font-size: 0.85rem;        /* Más chico que el texto normal */
-    color: var(--accent-dim);  /* Color grisáceo para no saturar */
-    margin-top: 4px;           /* Espacio con el item superior */
-    margin-left: 24px;         /* Sangría para alinearse con el texto, no con el check */
-    font-weight: 400;
-}
 
 /* Ajuste para las tarjetas de pasos (Steps) */
 .step-card p {
@@ -757,19 +609,8 @@ input:checked + .slider:before { transform: translateX(26px); }
 /* --- MEJORA DE TESTIMONIOS (MÉTRICAS Y FOTOS) --- */
 
 /* Cabecera para separar estrellas y métrica */
-.testimonial-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 20px;
-    width: 100%;
-}
 
 /* Ajuste para que las estrellas no tengan margen inferior en este diseño */
-.testimonial-header .stars {
-    margin-bottom: 0;
-    font-size: 1rem;
-}
 
 /* La etiqueta de resultado (Métrica) */
 .metric-badge {
@@ -787,14 +628,6 @@ input:checked + .slider:before { transform: translateX(26px); }
 }
 
 /* Imagen de perfil real */
-.avatar-img {
-    width: 50px;
-    height: 50px;
-    border-radius: 50%;
-    object-fit: cover;
-    border: 2px solid rgba(255,255,255,0.2); /* Borde sutil */
-    box-shadow: 0 4px 10px rgba(0,0,0,0.3);
-}
 
 /* Ajuste de la cita para darle más aire */
 .quote {
@@ -966,82 +799,24 @@ input:checked + .slider:before { transform: translateX(26px); }
     position: absolute; top: 15px; right: 20px;
     font-size: 1.5rem; color: #666; cursor: pointer;
 }
-.close-modal:hover { color: white; }
-
-.payment-option {
-    display: flex; align-items: center; gap: 15px;
-    background: rgba(255,255,255,0.05);
-    padding: 15px; border-radius: 8px;
-    margin-bottom: 10px;
-    text-decoration: none; color: white;
-    border: 1px solid transparent;
-    transition: 0.3s;
-}
-
-.payment-option:hover {
-    background: rgba(255,255,255,0.1);
-    border-color: var(--primary-color);
-    transform: translateX(5px);
-}
-
-.pay-icon {
-    font-size: 1.5rem; width: 40px; text-align: center;
-}
-.mp .pay-icon { color: #009EE3; } /* Azul Mercado Pago */
-.stripe .pay-icon { color: #635BFF; } /* Violeta Stripe */
+.close-modal:hover { color: white; } /* Azul Mercado Pago */ /* Violeta Stripe */
 
 @keyframes zoomIn {
     from { transform: scale(0.9); opacity: 0; }
     to { transform: scale(1); opacity: 1; }
 }
 /* Estilos para descargas técnicas */
-.btn-tech-download {
-    font-size: 0.8rem;
-    color: #666;
-    border: 1px solid #ddd;
-    padding: 5px 10px;
-    border-radius: 4px;
-    background: #f9f9f9;
-    transition: 0.2s;
-}
-.btn-tech-download:hover {
-    background: var(--ind-blue);
-    color: white;
-    border-color: var(--ind-blue);
-}
 
 /* Modal de Login Simulado */
-.login-modal {
-    display: none;
-    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-    background: rgba(0,0,0,0.6);
-    z-index: 2000;
-    justify-content: center; align-items: center;
-}
 .login-box {
     background: white; padding: 40px; border-radius: 8px; width: 350px;
     text-align: center; box-shadow: 0 20px 50px rgba(0,0,0,0.3);
-}
-.login-input {
-    width: 100%; padding: 12px; margin-bottom: 15px;
-    border: 1px solid #ddd; border-radius: 4px;
 }
 .btn-login {
     width: 100%; padding: 12px; background: var(--ind-blue);
     color: white; border: none; font-weight: bold; cursor: pointer;
 }
 /* === SECCIÓN DE RECURSOS ESTRATÉGICOS === */
-.resources-section {
-    padding: 80px 10%;
-    background: #f8f9fa;
-}
-
-.resources-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-    gap: 30px;
-    margin-top: 40px;
-}
 
 .resource-card {
     background: white;
@@ -1060,18 +835,7 @@ input:checked + .slider:before { transform: translateX(26px); }
     border-color: var(--primary); /* Asegúrate de tener definida esta variable o usa un color fijo */
 }
 
-.card-tag {
-    font-size: 0.75rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-    color: #666;
-    margin-bottom: 15px;
-    display: block;
-}
-
-.tag-interactive { color: #2563EB; } /* Azul */
-.tag-download { color: #DC2626; } /* Rojo */
+.tag-interactive { color: #2563EB; } /* Azul */ /* Rojo */
 
 .resource-card h3 {
     font-size: 1.4rem;
@@ -1086,39 +850,7 @@ input:checked + .slider:before { transform: translateX(26px); }
     line-height: 1.6;
 }
 
-.btn-resource {
-    display: inline-flex;
-    align-items: center;
-    gap: 10px;
-    font-weight: 600;
-    text-decoration: none;
-    color: #1a1a1a;
-    transition: 0.2s;
-}
-
-.btn-resource:hover {
-    color: #2563EB;
-    gap: 15px; /* Animación de flecha */
-}
-
 /* MODAL DE CALCULADORA */
-.roi-modal {
-    display: none;
-    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-    background: rgba(0,0,0,0.6);
-    z-index: 5000;
-    justify-content: center; align-items: center;
-    backdrop-filter: blur(5px);
-}
-
-.roi-content {
-    background: white;
-    width: 90%; max-width: 500px;
-    padding: 40px;
-    border-radius: 16px;
-    box-shadow: 0 25px 50px rgba(0,0,0,0.25);
-    position: relative;
-}
 
 .roi-input-group { margin-bottom: 15px; }
 .roi-input-group label { display: block; font-size: 0.9rem; font-weight: 600; margin-bottom: 5px; }

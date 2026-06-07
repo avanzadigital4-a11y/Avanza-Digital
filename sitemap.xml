@@ -4,7 +4,7 @@
   <!-- ======================= HOME ======================= -->
   <url>
     <loc>https://avanzadigital.digital/</loc>
-    <lastmod>2026-05-21</lastmod>
+    <lastmod>2026-06-07</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
   </url>
@@ -12,7 +12,7 @@
   <!-- ============= PÁGINAS COMERCIALES PRINCIPALES ============= -->
   <url>
     <loc>https://avanzadigital.digital/alianzas.html</loc>
-    <lastmod>2026-05-09</lastmod>
+    <lastmod>2026-06-07</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.9</priority>
   </url>
@@ -110,19 +110,19 @@
   <!-- ============= LANDINGS POR RUBRO ============= -->
   <url>
     <loc>https://avanzadigital.digital/metalurgica.html</loc>
-    <lastmod>2026-05-21</lastmod>
+    <lastmod>2026-06-07</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
     <loc>https://avanzadigital.digital/agro.html</loc>
-    <lastmod>2026-05-21</lastmod>
+    <lastmod>2026-06-07</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
     <loc>https://avanzadigital.digital/logistica.html</loc>
-    <lastmod>2026-05-21</lastmod>
+    <lastmod>2026-06-07</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.9</priority>
   </url>
@@ -131,12 +131,6 @@
     <lastmod>2026-05-21</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.9</priority>
-  </url>
-  <url>
-    <loc>https://avanzadigital.digital/clinica.html</loc>
-    <lastmod>2026-05-21</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.7</priority>
   </url>
 
   <!-- ============= PROGRAMA DE ALIADOS (CANALES) ============= -->
@@ -185,31 +179,31 @@
   <!-- ============= HUBS POR PAÍS — LATAM ============= -->
   <url>
     <loc>https://avanzadigital.digital/mexico/</loc>
-    <lastmod>2026-05-22</lastmod>
+    <lastmod>2026-06-07</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.85</priority>
   </url>
   <url>
     <loc>https://avanzadigital.digital/colombia/</loc>
-    <lastmod>2026-05-22</lastmod>
+    <lastmod>2026-06-07</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.85</priority>
   </url>
   <url>
     <loc>https://avanzadigital.digital/chile/</loc>
-    <lastmod>2026-05-22</lastmod>
+    <lastmod>2026-06-07</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.85</priority>
   </url>
   <url>
     <loc>https://avanzadigital.digital/peru/</loc>
-    <lastmod>2026-05-22</lastmod>
+    <lastmod>2026-06-07</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.85</priority>
   </url>
   <url>
     <loc>https://avanzadigital.digital/venezuela/</loc>
-    <lastmod>2026-05-29</lastmod>
+    <lastmod>2026-06-07</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.85</priority>
   </url>
@@ -217,91 +211,91 @@
   <!-- ============= LANDINGS RUBRO + PAÍS ============= -->
   <url>
     <loc>https://avanzadigital.digital/mexico/metalurgica/</loc>
-    <lastmod>2026-05-22</lastmod>
+    <lastmod>2026-06-07</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://avanzadigital.digital/mexico/agro/</loc>
-    <lastmod>2026-05-22</lastmod>
+    <lastmod>2026-06-07</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://avanzadigital.digital/mexico/logistica/</loc>
-    <lastmod>2026-05-22</lastmod>
+    <lastmod>2026-06-07</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://avanzadigital.digital/colombia/metalurgica/</loc>
-    <lastmod>2026-05-22</lastmod>
+    <lastmod>2026-06-07</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://avanzadigital.digital/colombia/agro/</loc>
-    <lastmod>2026-05-22</lastmod>
+    <lastmod>2026-06-07</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://avanzadigital.digital/colombia/logistica/</loc>
-    <lastmod>2026-05-22</lastmod>
+    <lastmod>2026-06-07</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://avanzadigital.digital/chile/metalurgica/</loc>
-    <lastmod>2026-05-22</lastmod>
+    <lastmod>2026-06-07</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://avanzadigital.digital/chile/agro/</loc>
-    <lastmod>2026-05-22</lastmod>
+    <lastmod>2026-06-07</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://avanzadigital.digital/chile/logistica/</loc>
-    <lastmod>2026-05-22</lastmod>
+    <lastmod>2026-06-07</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://avanzadigital.digital/peru/metalurgica/</loc>
-    <lastmod>2026-05-22</lastmod>
+    <lastmod>2026-06-07</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://avanzadigital.digital/peru/agro/</loc>
-    <lastmod>2026-05-22</lastmod>
+    <lastmod>2026-06-07</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://avanzadigital.digital/peru/logistica/</loc>
-    <lastmod>2026-05-22</lastmod>
+    <lastmod>2026-06-07</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://avanzadigital.digital/venezuela/metalurgica/</loc>
-    <lastmod>2026-05-29</lastmod>
+    <lastmod>2026-06-07</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://avanzadigital.digital/venezuela/agro/</loc>
-    <lastmod>2026-05-29</lastmod>
+    <lastmod>2026-06-07</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://avanzadigital.digital/venezuela/logistica/</loc>
-    <lastmod>2026-05-29</lastmod>
+    <lastmod>2026-06-07</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
