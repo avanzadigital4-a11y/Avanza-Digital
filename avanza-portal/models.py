@@ -251,7 +251,53 @@ class Prospecto(Base):
     automation_ultimo_en = Column(DateTime, nullable=True)
     automation_activa_desde = Column(DateTime, nullable=True)
 
-    aliado = relationship("Aliado", back_populates="prospectos")
+    # --- CRM v3.0: contacto estructurado, valor, cierre, etiquetas, próxima acción ---
+    email             = Column(String, nullable=True)
+    telefono          = Column(String, nullable=True)
+    whatsapp          = Column(String, nullable=True)
+    valor_usd         = Column(Float, nullable=True)
+    fecha_cierre      = Column(DateTime, nullable=True)
+    motivo_cierre     = Column(String, nullable=True)
+    etiquetas         = Column(String, nullable=True)
+    proxima_accion_en = Column(DateTime, nullable=True)
+
+    aliado      = relationship("Aliado", back_populates="prospectos")
+    actividades = relationship("ActividadProspecto", back_populates="prospecto", cascade="all, delete-orphan")
+    contactos   = relationship("ContactoProspecto", back_populates="prospecto", cascade="all, delete-orphan")
+
+
+# ─── ACTIVIDAD DE PROSPECTO (CRM v3.0: timeline + tareas) ─────────────────────
+class ActividadProspecto(Base):
+    __tablename__ = "actividades_prospecto"
+
+    id            = Column(Integer, primary_key=True, index=True)
+    prospecto_id  = Column(Integer, ForeignKey("prospectos.id"), index=True, nullable=False)
+    aliado_id     = Column(Integer, ForeignKey("aliados.id"), index=True)
+    tipo          = Column(String, nullable=False, default="nota")   # nota|llamada|whatsapp|email|reunion|tarea|sistema
+    canal         = Column(String, nullable=True)
+    descripcion   = Column(Text, nullable=True)
+    creado_en     = Column(DateTime, default=func.now())
+    # --- solo para tipo 'tarea' ---
+    vence_en      = Column(DateTime, nullable=True)
+    completada    = Column(Boolean, default=False)
+    completada_en = Column(DateTime, nullable=True)
+
+    prospecto = relationship("Prospecto", back_populates="actividades")
+
+# ─── CONTACTO DE PROSPECTO (CRM v3.0 · Salto 3: varios interlocutores) ────────
+class ContactoProspecto(Base):
+    __tablename__ = "contactos_prospecto"
+
+    id           = Column(Integer, primary_key=True, index=True)
+    prospecto_id = Column(Integer, ForeignKey("prospectos.id"), index=True, nullable=False)
+    nombre       = Column(String, nullable=False)
+    rol          = Column(String, nullable=True)   # ej: Dueño, Compras, Técnico
+    email        = Column(String, nullable=True)
+    telefono     = Column(String, nullable=True)
+    whatsapp     = Column(String, nullable=True)
+    creado_en    = Column(DateTime, default=func.now())
+
+    prospecto = relationship("Prospecto", back_populates="contactos")
 
 
 # ─── AUDITORÍA LOG ───────────────────────────────────────────────────────────

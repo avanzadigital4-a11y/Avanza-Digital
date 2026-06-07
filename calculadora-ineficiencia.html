@@ -376,7 +376,7 @@
             </div>
         </div>
         <div class="loss-info">
-            <div class="loss-tag"><i class="fa-solid fa-arrow-trend-down"></i> &nbsp;Pérdida operativa estimada</div>
+            <div class="loss-tag"><i class="fa-solid fa-arrow-trend-down"></i> &nbsp;Pérdida estimada al año</div>
             <div class="loss-amount" id="lossAnnual">USD 0</div>
             <div class="loss-period">≈ <b id="lossMonthly">USD 0</b> por mes que se escapan de tu operación comercial.</div>
             <div class="loss-verdict" id="lossVerdict"></div>
@@ -427,13 +427,13 @@
     <!-- GATE: desbloquea plan + recomendaciones -->
     <div class="gate-block" id="gate-block">
         <div style="font-size:2rem;margin-bottom:10px;">🔓</div>
-        <h3>Tu plan de recuperación está listo</h3>
-        <p>Dejá tu email y te enviamos el informe completo con <b style="color:#fff;">cuánto podés recuperar</b>, el plan recomendado y los pasos concretos para tu rubro.</p>
+        <h3>Tu diagnóstico ya está arriba ☝️</h3>
+        <p>¿Querés el <b style="color:#fff;">plan completo</b>? Te lo enviamos por email: cuánto podés recuperar, el plan recomendado y los pasos concretos para tu rubro.</p>
         <div class="gate-form">
             <input type="text" id="gate-name" class="gate-input" placeholder="Tu nombre" autocomplete="off">
             <input type="email" id="gate-email" class="gate-input" placeholder="tu@email.com" autocomplete="off">
-            <button id="gate-btn" class="btn-gate" onclick="desbloquear()">Ver mi plan de recuperación →</button>
-            <p class="gate-fine">Sin spam. Te llega el informe a tu correo. Podés darte de baja cuando quieras.</p>
+            <button id="gate-btn" class="btn-gate" onclick="desbloquear()">Enviarme el plan completo →</button>
+            <p class="gate-fine">Sin spam. Te llega el informe a tu correo. Podés darte de baja cuando quieras.</p><a href="#" onclick="verIgual();return false;" style="display:block;margin-top:12px;color:#9aa3ad;font-size:0.85rem;text-decoration:underline;cursor:pointer;">Prefiero ver el plan sin dejar mi email</a>
         </div>
     </div>
 
@@ -800,6 +800,14 @@
     }
 
     // ── Compartir ───────────────────────────────────────────────────────────────
+    // ── Ver el plan sin dejar email (gate suave) ──────────────────
+    function verIgual(){
+        document.getElementById('gate-block').style.display = 'none';
+        document.getElementById('locked-zone').classList.remove('locked');
+        document.getElementById('locked-zone').scrollIntoView({ behavior:'smooth', block:'start' });
+        if(window.dataLayer){ window.dataLayer.push({event:'calc_ver_sin_email'}); }
+    }
+
     function compartirWpp(){
         var txt = 'Calculé la ineficiencia comercial de mi empresa con la herramienta de Avanza Digital: pérdida estimada de ' + fmt(R.perdidaAnual) + '/año. Probala gratis: ' + window.location.href;
         window.open('https://wa.me/?text=' + encodeURIComponent(txt), '_blank');

@@ -10,7 +10,7 @@ from pydantic import BaseModel
 from typing import Optional
 from models import (
     Aliado, Admin, AdminAuditLog, Venta, Referido, Prospecto, AuditoriaLog, LeadBolsa,
-    TransaccionCredito, PostComunidad, ComentarioComunidad, AutomationLog,
+    TransaccionCredito, PostComunidad, ComentarioComunidad, AutomationLog, ActividadProspecto, ContactoProspecto,
     LinkPago, Comision, AcademiaModulo, AliadoModuloCompletado,
     SolicitudCompraCreditos, ReporteMalContacto,
     PlanContinuidadActivo, PasswordResetToken,
@@ -184,6 +184,15 @@ for col_sql in [
     "ALTER TABLE aliados ADD COLUMN jarvis_habilitado BOOLEAN DEFAULT FALSE",
     # v2.7 — JARVIS: prueba gratis de 7 días (fecha de fin del trial)
     "ALTER TABLE aliados ADD COLUMN jarvis_trial_fin TIMESTAMP",
+    # v3.0 — CRM: contacto estructurado, valor, cierre, etiquetas, próxima acción
+    "ALTER TABLE prospectos ADD COLUMN email VARCHAR",
+    "ALTER TABLE prospectos ADD COLUMN telefono VARCHAR",
+    "ALTER TABLE prospectos ADD COLUMN whatsapp VARCHAR",
+    "ALTER TABLE prospectos ADD COLUMN valor_usd FLOAT",
+    "ALTER TABLE prospectos ADD COLUMN fecha_cierre TIMESTAMP",
+    "ALTER TABLE prospectos ADD COLUMN motivo_cierre VARCHAR",
+    "ALTER TABLE prospectos ADD COLUMN etiquetas VARCHAR",
+    "ALTER TABLE prospectos ADD COLUMN proxima_accion_en TIMESTAMP",
 ]:
     _aplicar_migracion(col_sql)
 
@@ -3272,6 +3281,211 @@ def _get_prospecto(id, db):
     if not p: raise HTTPException(404, "Prospecto no encontrado.")
     return p
 
+# ═══════════════════════════════════════════════════════════════════════════
+# CRM v3.0 — Timeline de actividad + tareas/recordatorios por prospecto
+# ═══════════════════════════════════════════════════════════════════════════
+_ACT_TIPOS = {"nota", "llamada", "whatsapp", "email", "reunion", "tarea", "sistema"}
+
+def _actividad_row(a):
+    return {
+        "id": a.id, "prospecto_id": a.prospecto_id, "tipo": a.tipo,
+        "canal": a.canal, "descripcion": a.descripcion,
+        "creado_en": a.creado_en.isoformat() if a.creado_en else None,
+        "vence_en": a.vence_en.isoformat() if a.vence_en else None,
+        "completada": bool(a.completada),
+        "completada_en": a.completada_en.isoformat() if a.completada_en else None,
+    }
+
+def _parse_dt_crm(s):
+    if not s:
+        return None
+    try:
+        return datetime.fromisoformat(str(s).replace("Z", ""))
+    except Exception:
+        try:
+            return datetime.strptime(str(s)[:10], "%Y-%m-%d")
+        except Exception:
+            return None
+
+def _recalcular_proxima_accion(p, db):
+    pend = (db.query(ActividadProspecto)
+              .filter(ActividadProspecto.prospecto_id == p.id,
+                      ActividadProspecto.tipo == "tarea",
+                      ActividadProspecto.completada == False,
+                      ActividadProspecto.vence_en != None)
+              .order_by(ActividadProspecto.vence_en.asc())
+              .first())
+    p.proxima_accion_en = pend.vence_en if pend else None
+
+
+@app.post("/prospectos/{id}/actividad")
+def log_actividad(id: int, request: Request, tipo: str = "nota",
+                  descripcion: str = "", canal: str = "",
+                  db: Session = Depends(get_db)):
+    """Registra una interacción en el timeline del prospecto (nota/llamada/whatsapp/email/reunion)."""
+    p = _get_prospecto_owned_or_admin(id, request, db)
+    tipo = (tipo or "nota").lower()
+    if tipo not in _ACT_TIPOS or tipo == "tarea":
+        tipo = "nota"  # las tareas se crean por /tarea, no por acá
+    act = ActividadProspecto(prospecto_id=p.id, aliado_id=p.aliado_id,
+                             tipo=tipo, canal=(canal or None),
+                             descripcion=(descripcion or None))
+    db.add(act); db.commit(); db.refresh(act)
+    return {"mensaje": "Actividad registrada.", "actividad": _actividad_row(act)}
+
+
+@app.get("/prospectos/{id}/actividades")
+def listar_actividades(id: int, request: Request, db: Session = Depends(get_db)):
+    """Timeline completo del prospecto (más reciente primero)."""
+    p = _get_prospecto_owned_or_admin(id, request, db)
+    acts = (db.query(ActividadProspecto)
+              .filter(ActividadProspecto.prospecto_id == p.id)
+              .order_by(ActividadProspecto.creado_en.desc())
+              .all())
+    return [_actividad_row(a) for a in acts]
+
+
+@app.post("/prospectos/{id}/tarea")
+def crear_tarea(id: int, request: Request, descripcion: str = "",
+                vence_en: str = "", db: Session = Depends(get_db)):
+    """Crea una tarea/recordatorio con fecha de vencimiento opcional (ISO o YYYY-MM-DD)."""
+    p = _get_prospecto_owned_or_admin(id, request, db)
+    if not (descripcion or "").strip():
+        raise HTTPException(400, "La tarea necesita una descripción.")
+    act = ActividadProspecto(prospecto_id=p.id, aliado_id=p.aliado_id,
+                             tipo="tarea", descripcion=descripcion.strip(),
+                             vence_en=_parse_dt_crm(vence_en), completada=False)
+    db.add(act); db.commit()
+    _recalcular_proxima_accion(p, db); db.commit(); db.refresh(act)
+    return {"mensaje": "Tarea creada.", "actividad": _actividad_row(act)}
+
+
+@app.patch("/actividades/{act_id}/completar")
+def completar_tarea(act_id: int, request: Request, db: Session = Depends(get_db)):
+    act = db.query(ActividadProspecto).filter(ActividadProspecto.id == act_id).first()
+    if not act:
+        raise HTTPException(404, "Actividad no encontrada.")
+    p = _get_prospecto_owned_or_admin(act.prospecto_id, request, db)  # valida pertenencia
+    act.completada = True
+    act.completada_en = datetime.now()
+    db.commit()
+    _recalcular_proxima_accion(p, db); db.commit()
+    return {"mensaje": "Tarea completada.", "id": act.id}
+
+
+# ── NOTA DE DISEÑO ────────────────────────────────────────────────────────────
+# Este endpoint existe y funciona, pero NO tiene aún una pantalla en el portal
+# que lo consuma. Es un hook deliberadamente pre-construido para un futuro
+# "Panel de Tareas del Día" del aliado. NO es un bug ni un pendiente urgente;
+# el contrato de API ya está definido y estable.
+# ──────────────────────────────────────────────────────────────────────────────
+@app.get("/prospectos/tareas/pendientes")
+def tareas_pendientes(request: Request,
+                      aliado: Aliado = Depends(current_aliado_required),
+                      db: Session = Depends(get_db)):
+    """Todas las tareas pendientes del aliado (para recordatorios / dashboard), por vencimiento."""
+    acts = (db.query(ActividadProspecto)
+              .filter(ActividadProspecto.aliado_id == aliado.id,
+                      ActividadProspecto.tipo == "tarea",
+                      ActividadProspecto.completada == False)
+              .order_by(ActividadProspecto.vence_en.asc())
+              .all())
+    out = []
+    for a in acts:
+        row = _actividad_row(a)
+        pr = db.query(Prospecto).filter(Prospecto.id == a.prospecto_id).first()
+        row["prospecto_nombre"] = pr.nombre if pr else ""
+        out.append(row)
+    return out
+
+
+@app.patch("/prospectos/{id}/contacto-datos")
+def actualizar_contacto_prospecto(id: int, request: Request,
+                               email: str | None = None, telefono: str | None = None,
+                               whatsapp: str | None = None, etiquetas: str | None = None,
+                               valor_usd: float | None = None,
+                               db: Session = Depends(get_db)):
+    """Actualiza contacto estructurado, etiquetas y valor del deal (todos opcionales)."""
+    p = _get_prospecto_owned_or_admin(id, request, db)
+    if email is not None:     p.email = email.strip() or None
+    if telefono is not None:  p.telefono = telefono.strip() or None
+    if whatsapp is not None:  p.whatsapp = whatsapp.strip() or None
+    if etiquetas is not None: p.etiquetas = etiquetas.strip() or None
+    if valor_usd is not None: p.valor_usd = valor_usd
+    db.commit()
+    return {"mensaje": "Datos actualizados."}
+
+
+# ── NOTA DE DISEÑO ────────────────────────────────────────────────────────────
+# "Marcar ganado" es exclusivamente un cambio de estado de pipeline (CRM).
+# NO crea comisión ni registro de venta. Eso lo dispara el flujo de pago
+# (link de pago → verificación USDT/transferencia → job_generar_comisiones).
+# Mantener separados estos dos conceptos es intencional: un prospecto puede
+# cerrarse manualmente sin que el pago haya sido procesado todavía.
+# ──────────────────────────────────────────────────────────────────────────────
+@app.patch("/prospectos/{id}/ganado")
+def marcar_ganado(id: int, request: Request, valor_usd: float | None = None,
+                  motivo: str = "", db: Session = Depends(get_db)):
+    """Marca el prospecto como GANADO (cierre manual) y lo registra en el timeline."""
+    p = _get_prospecto_owned_or_admin(id, request, db)
+    p.estado = "ganado"
+    p.fecha_cierre = datetime.now()
+    if valor_usd is not None:
+        p.valor_usd = valor_usd
+    if (motivo or "").strip():
+        p.motivo_cierre = motivo.strip()
+    db.add(ActividadProspecto(
+        prospecto_id=p.id, aliado_id=p.aliado_id, tipo="sistema",
+        descripcion="Marcado como GANADO" + (f" — {motivo.strip()}" if (motivo or '').strip() else "")))
+    db.commit()
+    return {"mensaje": "Marcado como ganado.", "estado": p.estado}
+
+
+# ═══════════════════════════════════════════════════════════════════════════
+# SALTO 3 — Empresa ↔ contactos: varios interlocutores por prospecto
+# ═══════════════════════════════════════════════════════════════════════════
+def _contacto_row(c):
+    return {
+        "id": c.id, "prospecto_id": c.prospecto_id, "nombre": c.nombre,
+        "rol": c.rol, "email": c.email, "telefono": c.telefono, "whatsapp": c.whatsapp,
+    }
+
+
+@app.get("/prospectos/{id}/contactos")
+def listar_contactos(id: int, request: Request, db: Session = Depends(get_db)):
+    p = _get_prospecto_owned_or_admin(id, request, db)
+    cs = (db.query(ContactoProspecto)
+            .filter(ContactoProspecto.prospecto_id == p.id)
+            .order_by(ContactoProspecto.creado_en.asc())
+            .all())
+    return [_contacto_row(c) for c in cs]
+
+
+@app.post("/prospectos/{id}/contactos")
+def crear_contacto(id: int, request: Request, nombre: str = "", rol: str = "",
+                   email: str = "", telefono: str = "", whatsapp: str = "",
+                   db: Session = Depends(get_db)):
+    p = _get_prospecto_owned_or_admin(id, request, db)
+    if not (nombre or "").strip():
+        raise HTTPException(400, "El contacto necesita un nombre.")
+    c = ContactoProspecto(
+        prospecto_id=p.id, nombre=nombre.strip(), rol=(rol.strip() or None),
+        email=(email.strip() or None), telefono=(telefono.strip() or None),
+        whatsapp=(whatsapp.strip() or None))
+    db.add(c); db.commit(); db.refresh(c)
+    return {"mensaje": "Contacto agregado.", "contacto": _contacto_row(c)}
+
+
+@app.delete("/contactos/{contacto_id}")
+def eliminar_contacto(contacto_id: int, request: Request, db: Session = Depends(get_db)):
+    c = db.query(ContactoProspecto).filter(ContactoProspecto.id == contacto_id).first()
+    if not c:
+        raise HTTPException(404, "Contacto no encontrado.")
+    _get_prospecto_owned_or_admin(c.prospecto_id, request, db)  # valida pertenencia
+    db.delete(c); db.commit()
+    return {"mensaje": "Contacto eliminado."}
+
+
 def _prospecto_row(p):
     # --- INTELIGENCIA DE VENTAS: "Next Best Action" ---
     next_action = ""
@@ -3313,6 +3527,16 @@ def _prospecto_row(p):
         "plan_recomendado": getattr(p, "plan_recomendado", None),
         "pitch_sugerido": getattr(p, "pitch_sugerido", None),
         "automation_paso": getattr(p, "automation_paso", 0) or 0,
+        # CRM v3.0
+        "email": getattr(p, "email", None),
+        "telefono": getattr(p, "telefono", None),
+        "whatsapp": getattr(p, "whatsapp", None),
+        "valor_usd": getattr(p, "valor_usd", None),
+        "etiquetas": getattr(p, "etiquetas", None),
+        "fecha_cierre": p.fecha_cierre.strftime("%d/%m/%Y") if getattr(p, "fecha_cierre", None) else None,
+        "motivo_cierre": getattr(p, "motivo_cierre", None),
+        "proxima_accion_en": p.proxima_accion_en.isoformat() if getattr(p, "proxima_accion_en", None) else None,
+        "tareas_pendientes": sum(1 for _a in (getattr(p, "actividades", None) or []) if _a.tipo == "tarea" and not _a.completada),
     }
 
 def _aliado_row(a):
@@ -3704,6 +3928,34 @@ async def crear_checkout(request: Request, plan: str,
             print(f"[CHECKOUT] No pude guardar email/WA en LinkPago: {e}")
 
     return resultado
+
+
+@app.get("/checkout/ultimo-link")
+def checkout_ultimo_link(codigo: str = "", db: Session = Depends(get_db)):
+    """Devuelve el último link de pago ACTIVO del aliado (buscado por su código),
+    para que el cotizador lo recupere al reabrir. 404 si no hay ninguno (el front lo trata
+    en silencio). Forma de respuesta esperada por recuperarUltimoLinkActivo() en portal.html."""
+    if not codigo:
+        raise HTTPException(404, "Sin código.")
+    a = db.query(Aliado).filter(Aliado.codigo == codigo).first()
+    if not a:
+        raise HTTPException(404, "Aliado no encontrado.")
+    lp = (db.query(LinkPago)
+            .filter(LinkPago.aliado_id == a.id, LinkPago.estado == "activo")
+            .order_by(LinkPago.created_at.desc())
+            .first())
+    if not lp:
+        raise HTTPException(404, "Sin link previo.")
+    return {
+        "link_id":      lp.id,
+        "checkout_url": lp.checkout_url,
+        "moneda":       lp.moneda,
+        "expires_at":   lp.expires_at.isoformat() if lp.expires_at else None,
+        "plan":         lp.plan,
+        "precio_usd":   lp.precio_usd,
+        "precio_ars":   lp.precio_ars,
+        "tipo_cambio":  lp.tipo_cambio,
+    }
 
 
 @app.get("/checkout/exitoso")
@@ -5708,6 +5960,81 @@ def job_piloto_automatico():
 
 # Lo registramos en el scheduler que ya existe
 scheduler.add_job(job_piloto_automatico, "interval", hours=1)
+
+# ═══════════════════════════════════════════════════════════════════════════
+# SALTO 2 — Regla liviana sobre JARVIS: detectar leads fríos y generar tarea
+# ═══════════════════════════════════════════════════════════════════════════
+LEADS_FRIOS_DIAS = 3  # sin movimiento N días → se considera frío
+
+# ── NOTA DE DISEÑO ────────────────────────────────────────────────────────────
+# Las sugerencias de JARVIS generadas por el cron son PLANTILLAS POR ETAPA,
+# no llamadas al LLM (Anthropic/Claude). Decisión de costo: job_revisar_leads_frios
+# puede correr sobre cientos o miles de prospectos diariamente; una inferencia
+# LLM por prospecto sería prohibitivamente cara. El LLM se reserva para
+# interacciones explícitas iniciadas por el aliado (contexto bajo demanda,
+# baja frecuencia). Esta función es determinística a propósito.
+# ──────────────────────────────────────────────────────────────────────────────
+def _sugerencia_lead_frio(p) -> str:
+    e = p.estado
+    if e == "sin_contactar":
+        return "JARVIS: hacé el primer contacto hoy, antes de que se enfríe."
+    if e == "contactado":
+        return "JARVIS: mandale la propuesta o un caso de éxito de su rubro."
+    if e == "propuesta_enviada":
+        return "JARVIS: seguimiento corto preguntando si tuvo dudas con la propuesta."
+    if e == "respondio":
+        return "JARVIS: proponé cerrar — pasale el link de pago con tu atribución."
+    return "JARVIS: retomá el contacto con un mensaje breve."
+
+def job_revisar_leads_frios():
+    """Diario. Lead abierto, sin tarea pendiente y sin movimiento hace N días
+       → crea una tarea de reactivación (con sugerencia de JARVIS) + nota de sistema.
+       Idempotente: si ya hay una tarea pendiente, no genera otra."""
+    from database import SessionLocal
+    db = SessionLocal()
+    try:
+        ahora  = datetime.now()
+        limite = ahora - timedelta(days=LEADS_FRIOS_DIAS)
+        abiertos = db.query(Prospecto).filter(
+            Prospecto.estado.in_(["sin_contactar", "contactado", "propuesta_enviada", "respondio"])
+        ).all()
+        creadas = 0
+        for p in abiertos:
+            # ¿ya tiene una tarea pendiente? entonces no agregamos otra
+            tiene_tarea = db.query(ActividadProspecto).filter(
+                ActividadProspecto.prospecto_id == p.id,
+                ActividadProspecto.tipo == "tarea",
+                ActividadProspecto.completada == False
+            ).first()
+            if tiene_tarea:
+                continue
+            # última señal de actividad
+            ult = db.query(ActividadProspecto).filter(
+                ActividadProspecto.prospecto_id == p.id
+            ).order_by(ActividadProspecto.creado_en.desc()).first()
+            ultima = (ult.creado_en if ult else None) or p.fecha_contacto or p.creado_en
+            if not ultima or ultima > limite:
+                continue  # tuvo movimiento reciente
+            dias = int((ahora - ultima).total_seconds() // 86400)
+            db.add(ActividadProspecto(
+                prospecto_id=p.id, aliado_id=p.aliado_id, tipo="tarea",
+                descripcion=f"Reactivar — sin movimiento hace {dias} días. {_sugerencia_lead_frio(p)}",
+                vence_en=ahora, completada=False))
+            db.add(ActividadProspecto(
+                prospecto_id=p.id, aliado_id=p.aliado_id, tipo="sistema",
+                descripcion=f"JARVIS detectó este lead frío ({dias} días sin movimiento) y generó una tarea."))
+            p.proxima_accion_en = ahora
+            creadas += 1
+        db.commit()
+        if creadas:
+            print(f"[LEADS-FRIOS] {creadas} tareas de reactivación generadas.")
+    except Exception as e:
+        print(f"[LEADS-FRIOS ERROR] {e}")
+    finally:
+        db.close()
+
+scheduler.add_job(job_revisar_leads_frios, "interval", hours=24)
+
 
 
 @app.get("/aliados/{codigo}/automation-log")
@@ -7888,6 +8215,7 @@ function pvVerMensual(){ var t=document.getElementById('pv-pricing-toggle'); if(
     html = f"""<!DOCTYPE html>
 <html lang="es"><head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><path d=%22M10 20 L40 50 L10 80 L30 80 L60 50 L30 20 Z%22 fill=%22%230044cc%22/><path d=%22M45 20 L75 50 L45 80 L65 80 L95 50 L65 20 Z%22 fill=%22%2300cccc%22/></svg>">
 <title>{_seo_title}</title>
 <meta name="description" content="{_seo_desc}">
 <link rel="canonical" href="{_canonical_url}">

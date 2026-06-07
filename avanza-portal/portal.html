@@ -1009,6 +1009,110 @@
 }
 </style>
 
+
+<style id="avz-sidebar-css">
+:root{ --avz-sb:264px; --avz-tb:58px; }
+html.avz-collapsed{ --avz-sb:76px; }
+
+/* restos del layout viejo, por las dudas */
+.navbar-floating,.tabs,.tabs-extra-row{ display:none !important; }
+#portal-screen .page-wrap{ max-width:none !important; margin:0 !important; padding:0 !important; }
+
+/* ===== SIDEBAR ===== */
+#avz-sidebar{ position:fixed; top:0; left:0; bottom:0; width:var(--avz-sb); z-index:1200; background:#0a0a0a; border-right:1px solid var(--border); display:flex; flex-direction:column; transition:width .25s cubic-bezier(.4,0,.2,1),transform .28s cubic-bezier(.4,0,.2,1); }
+#avz-sidebar .avz-sb-head{ height:var(--avz-tb); display:flex; align-items:center; gap:10px; padding:0 16px; border-bottom:1px solid var(--border); flex-shrink:0; }
+#avz-sidebar .avz-logo{ display:flex; align-items:center; gap:9px; font-weight:800; font-size:1.02rem; white-space:nowrap; overflow:hidden; text-decoration:none; color:var(--text); }
+#avz-sidebar .avz-logo .mk{ width:28px; height:28px; border-radius:8px; background:linear-gradient(135deg,var(--primary),#00cccc); display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+#avz-sidebar .avz-logo .mk i{ color:#fff; font-size:.8rem; }
+#avz-sidebar .avz-logo .wd{ transition:opacity .2s; }
+html.avz-collapsed #avz-sidebar .avz-logo .wd{ opacity:0; width:0; }
+#avz-sidebar .avz-collapse{ margin-left:auto; width:28px; height:28px; border-radius:7px; border:1px solid var(--border); background:transparent; color:var(--text-muted); cursor:pointer; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+#avz-sidebar .avz-collapse i{ transition:transform .25s; }
+html.avz-collapsed #avz-sidebar .avz-collapse i{ transform:rotate(180deg); }
+
+#avz-sidebar .avz-nav{ flex:1; overflow-y:auto; overflow-x:hidden; padding:10px 11px; }
+#avz-sidebar .avz-nav::-webkit-scrollbar{ width:6px; }
+#avz-sidebar .avz-nav::-webkit-scrollbar-thumb{ background:rgba(255,255,255,.12); border-radius:6px; }
+#avz-sidebar .avz-grp{ font-size:.58rem; letter-spacing:.13em; text-transform:uppercase; color:var(--text-dim); font-weight:800; padding:14px 12px 6px; white-space:nowrap; transition:opacity .2s; }
+html.avz-collapsed #avz-sidebar .avz-grp{ opacity:0; height:9px; padding:5px 0; }
+html.avz-collapsed #avz-sidebar .avz-grp::after{ content:""; display:block; width:20px; height:1px; background:var(--border); margin:3px auto 0; }
+
+#avz-sidebar .avz-nav-item{ display:flex; align-items:center; gap:13px; width:100%; padding:10px 12px !important; border-radius:var(--radius-sm) !important; margin-bottom:2px; color:var(--text-muted); background:transparent !important; border:1px solid transparent !important; cursor:pointer; font:600 .85rem/1 'Inter',sans-serif; white-space:nowrap; text-align:left; position:relative; transition:background .18s,color .18s; }
+#avz-sidebar .avz-nav-item i{ width:20px; text-align:center; font-size:.97rem; flex-shrink:0; }
+#avz-sidebar .avz-nav-item .lb{ flex:1; overflow:hidden; transition:opacity .2s; }
+#avz-sidebar .avz-nav-item:hover{ background:rgba(255,255,255,.05) !important; color:var(--text); }
+#avz-sidebar .avz-nav-item.active{ background:var(--primary) !important; color:#fff !important; box-shadow:0 4px 16px -7px var(--primary-glow); }
+#avz-sidebar .avz-nav-item[data-c="1"]{ color:var(--orange); }
+#avz-sidebar .avz-nav-item[data-c="1"]:hover{ background:rgba(249,115,22,.12) !important; }
+#avz-sidebar .avz-nav-item[data-c="1"].active{ background:var(--orange) !important; color:#000 !important; }
+#avz-sidebar .avz-nav-item[data-tab="academia"]{ color:var(--orange); }
+#avz-sidebar .avz-nav-item[data-tab="academia"]:hover{ background:rgba(249,115,22,.12) !important; }
+#avz-sidebar .avz-nav-item[data-tab="academia"].active{ background:var(--orange) !important; color:#000 !important; }
+#avz-sidebar .avz-nav-item .pill{ font-size:.55rem; font-weight:800; padding:2px 6px; border-radius:5px; flex-shrink:0; transition:opacity .2s; }
+html.avz-collapsed #avz-sidebar .avz-nav-item{ justify-content:center; padding:11px 0 !important; }
+html.avz-collapsed #avz-sidebar .avz-nav-item .lb,
+html.avz-collapsed #avz-sidebar .avz-nav-item .pill{ opacity:0; width:0; overflow:hidden; }
+#avz-sidebar .avz-nav-item .tip{ display:none; }
+html.avz-collapsed #avz-sidebar .avz-nav-item:hover .tip{ display:block; position:absolute; left:calc(100% + 10px); top:50%; transform:translateY(-50%); background:#111; border:1px solid var(--border-h); color:#fff; padding:5px 10px; border-radius:7px; font-size:.76rem; font-weight:600; white-space:nowrap; z-index:90; box-shadow:0 8px 24px rgba(0,0,0,.5); }
+
+#avz-sidebar .avz-foot{ border-top:1px solid var(--border); padding:11px; flex-shrink:0; }
+#avz-sidebar .avz-user{ display:flex; align-items:center; gap:11px; padding:7px 9px; border-radius:var(--radius-sm); }
+#avz-sidebar .avz-user .av{ width:33px; height:33px; border-radius:50%; background:linear-gradient(135deg,var(--primary),#7c3aed); display:flex; align-items:center; justify-content:center; color:#fff; font-size:.8rem; flex-shrink:0; }
+#avz-sidebar .avz-user .mt{ overflow:hidden; transition:opacity .2s; }
+#avz-sidebar .avz-user .mt .nm{ font-size:.8rem; font-weight:700; white-space:nowrap; color:var(--text); }
+#avz-sidebar .avz-user .mt .lv{ font-size:.62rem; color:var(--primary); font-weight:800; letter-spacing:.04em; }
+html.avz-collapsed #avz-sidebar .avz-user .mt{ opacity:0; width:0; }
+#avz-sidebar .avz-exit{ margin-top:5px; width:100%; display:flex; align-items:center; gap:11px; padding:9px 12px; border:1px solid var(--border); background:transparent; color:var(--text-muted); border-radius:var(--radius-sm); cursor:pointer; font:600 .8rem 'Inter',sans-serif; white-space:nowrap; transition:all .2s; }
+#avz-sidebar .avz-exit:hover{ border-color:var(--red); color:var(--red); background:rgba(239,68,68,.1); }
+html.avz-collapsed #avz-sidebar .avz-exit{ justify-content:center; }
+html.avz-collapsed #avz-sidebar .avz-exit span{ display:none; }
+
+/* ===== TOPBAR ===== */
+#avz-topbar{ position:fixed; top:0; left:var(--avz-sb); right:0; height:var(--avz-tb); z-index:1100; display:flex; align-items:center; gap:13px; padding:0 22px; background:rgba(5,5,5,0.82); backdrop-filter:blur(12px); border-bottom:1px solid var(--border); transition:left .25s cubic-bezier(.4,0,.2,1); }
+#avz-hamb{ display:none; width:38px; height:38px; border-radius:9px; border:1px solid var(--border); background:transparent; color:#fff; cursor:pointer; align-items:center; justify-content:center; flex-shrink:0; }
+#avz-topbar .tb-brand{ font-weight:800; font-size:.96rem; letter-spacing:-.2px; }
+#avz-topbar .tb-brand span{ color:var(--primary); }
+#avz-topbar .tb-right{ margin-left:auto; display:flex; align-items:center; gap:10px; }
+#avz-topbar .tb-sup{ display:inline-flex; align-items:center; gap:7px; background:rgba(74,222,128,.1); border:1px solid rgba(74,222,128,.25); color:var(--green); padding:7px 13px; border-radius:9px; font-size:.78rem; font-weight:700; text-decoration:none; }
+
+/* ===== EMPUJE DEL CONTENIDO (cualquier panel activo, esté donde esté en el DOM) ===== */
+#portal-screen .tab-panel.active{ margin-left:var(--avz-sb); padding:calc(var(--avz-tb) + 26px) clamp(18px,3.4vw,46px) 90px; min-height:100vh; transition:margin-left .25s cubic-bezier(.4,0,.2,1); }
+
+/* overlay drawer (mobile) */
+#avz-overlay{ display:none; position:fixed; inset:0; background:rgba(0,0,0,.6); z-index:1150; backdrop-filter:blur(2px); }
+
+@media(max-width:860px){
+  #avz-sidebar{ transform:translateX(-100%); width:264px; box-shadow:6px 0 30px rgba(0,0,0,.5); }
+  html.avz-drawer #avz-sidebar{ transform:translateX(0); }
+  html.avz-drawer #avz-overlay{ display:block; }
+  #avz-sidebar .avz-collapse{ display:none; }
+  html.avz-collapsed #avz-sidebar .avz-logo .wd,
+  html.avz-collapsed #avz-sidebar .avz-nav-item .lb,
+  html.avz-collapsed #avz-sidebar .avz-nav-item .pill,
+  html.avz-collapsed #avz-sidebar .avz-user .mt{ opacity:1; width:auto; }
+  html.avz-collapsed #avz-sidebar .avz-nav-item{ justify-content:flex-start; padding:10px 12px !important; }
+  #avz-topbar{ left:0; padding:0 14px; }
+  #avz-hamb{ display:flex; }
+  #portal-screen .tab-panel.active{ margin-left:0; padding:calc(var(--avz-tb) + 16px) 15px 80px; max-width:100%; overflow-x:hidden; }
+  /* evitar que se deslice TODA la pantalla de costado en celular */
+  html, body{ overflow-x:hidden; }
+  /* tablas anchas: que scrolleen dentro de su propia caja, no que empujen la pantalla */
+  #portal-screen .tab-panel.active table{ display:block; max-width:100%; overflow-x:auto; -webkit-overflow-scrolling:touch; }
+  #portal-screen .tab-panel.active img,
+  #portal-screen .tab-panel.active iframe,
+  #portal-screen .tab-panel.active pre{ max-width:100%; }
+}
+
+/* ===== Fix JARVIS: encajar su layout de 3 columnas dentro del sidebar ===== */
+#portal-screen #tab-jarvis.tab-panel.active{ margin-top:var(--avz-tb); height:calc(100vh - var(--avz-tb)) !important; min-height:0 !important; overflow:hidden; }
+@media(max-width:860px){
+  #portal-screen #tab-jarvis.tab-panel.active{ height:auto !important; min-height:calc(100vh - var(--avz-tb)) !important; overflow:visible; }
+  #tab-jarvis .j-layout{ display:flex !important; flex-direction:column !important; grid-template-columns:none !important; height:auto !important; }
+  #tab-jarvis .j-sidebar{ display:none !important; }
+  #tab-jarvis .j-chat{ order:1; min-height:60vh; border-right:none !important; width:auto !important; }
+  #tab-jarvis .j-right{ order:2; border-right:none !important; border-top:1px solid rgba(255,255,255,0.08); width:auto !important; }
+}
+</style>
 </head>
 <body>
 
@@ -1282,48 +1386,59 @@
 </div>
 
 <div id="portal-screen">
-  <nav class="navbar-floating">
-    <a href="index.html" class="nav-logo"><i class="fa-solid fa-layer-group"></i> Avanza</a>
-    <div class="nav-divider"></div>
-    <span class="nav-nivel" id="nav-nivel">BASIC</span>
-    <span class="nav-nombre" id="nav-nombre">Aliado</span>
-    <a href="https://wa.me/5493424392759" target="_blank" class="btn-nav-support"><i class="fa-brands fa-whatsapp"></i> <span>Soporte</span></a>
-    <button class="btn-nav" onclick="cerrarSesion()"><i class="fa-solid fa-right-from-bracket"></i> <span class="nav-btn-text">Salir</span></button>
-  </nav>
+  <aside id="avz-sidebar">
+    <div class="avz-sb-head">
+      <a href="#" onclick="document.querySelector('.tab-btn[data-tab=dashboard]').click();return false;" class="avz-logo"><span class="mk"><i class="fa-solid fa-layer-group"></i></span><span class="wd">Avanza</span></a>
+      <button class="avz-collapse" onclick="avzCollapse()" title="Colapsar / expandir"><i class="fa-solid fa-angles-left"></i></button>
+    </div>
+
+    <nav class="avz-nav">
+      <div class="avz-grp">Principal</div>
+      <button class="avz-nav-item tab-btn active" data-tab="dashboard" onclick="cambiarTab('dashboard',this)"><i class="fa-solid fa-chart-line"></i><span class="lb">Dashboard</span><span class="tip">Dashboard</span></button>
+
+      <div class="avz-grp">Ventas</div>
+      <button class="avz-nav-item tab-btn tab-canal1" data-tab="bolsa" data-c="1" onclick="cambiarTab('bolsa',this)"><i class="fa-solid fa-bullhorn"></i><span class="lb">Bolsa de Leads</span><span class="pill" style="background:var(--green);color:#000;">NUEVO</span><span class="tip">Bolsa de Leads</span></button>
+      <button class="avz-nav-item tab-btn tab-canal2" data-tab="kit-ventas" data-c="2" onclick="cambiarTab('kit-ventas',this)"><i class="fa-solid fa-briefcase"></i><span class="lb">Kit de Ventas</span><span class="pill" style="background:var(--green);color:#000;">C2</span><span class="tip">Kit de Ventas</span></button>
+      <button class="avz-nav-item tab-btn tab-canal2" data-tab="selector-rubro" data-c="2" onclick="cambiarTab('selector-rubro',this)"><i class="fa-solid fa-crosshairs"></i><span class="lb">Selector de Rubro</span><span class="tip">Selector de Rubro</span></button>
+      <button class="avz-nav-item tab-btn" id="btn-tab-pipeline" data-tab="pipeline" onclick="cambiarTab('pipeline',this)"><i class="fa-solid fa-bars-progress"></i><span class="lb">Mi CRM</span><span class="tip">Mi CRM</span></button>
+      <button class="avz-nav-item tab-btn" data-tab="ventas" onclick="cambiarTab('ventas',this)"><i class="fa-solid fa-handshake"></i><span class="lb">Ventas</span><span class="tip">Ventas</span></button>
+      <button class="avz-nav-item tab-btn" data-tab="comisiones" onclick="cambiarTab('comisiones',this)"><i class="fa-solid fa-dollar-sign"></i><span class="lb">Comisiones</span><span class="tip">Comisiones</span></button>
+      <button class="avz-nav-item tab-btn" data-tab="cotizador" onclick="cambiarTab('cotizador',this)"><i class="fa-solid fa-file-invoice-dollar"></i><span class="lb">Cotizador</span><span class="tip">Cotizador</span></button>
+
+      <div class="avz-grp">Recursos</div>
+      <button class="avz-nav-item tab-btn" id="btn-tab-academia-primary" data-tab="academia" onclick="cambiarTab('academia',this)"><i class="fa-solid fa-graduation-cap"></i><span class="lb">Academia</span><span id="academia-progress-badge" class="pill" style="display:none;background:var(--orange);color:#000;"></span><span class="tip">Academia</span></button>
+      <button class="avz-nav-item tab-btn" data-tab="herramientas" onclick="cambiarTab('herramientas',this)"><i class="fa-solid fa-magnifying-glass"></i><span class="lb">Auditorías</span><span class="tip">Auditorías</span></button>
+      <button class="avz-nav-item tab-btn" data-tab="red" onclick="cambiarTab('red',this)"><i class="fa-solid fa-users-rays"></i><span class="lb">Mi Red</span><span class="tip">Mi Red</span></button>
+      <button class="avz-nav-item tab-btn" data-tab="comunidad" onclick="cambiarTab('comunidad',this)"><i class="fa-solid fa-comments"></i><span class="lb">Comunidad</span><span class="tip">Comunidad</span></button>
+      <button class="avz-nav-item tab-btn" data-tab="jarvis" onclick="cambiarTab('jarvis',this)"><i class="fa-solid fa-bolt" style="color:#7fd8ff;"></i><span class="lb">JARVIS IA</span><span class="tip">JARVIS IA</span></button>
+    </nav>
+
+    <div class="avz-foot">
+      <button class="avz-nav-item tab-btn" id="btn-tab-mi-cuenta" data-tab="mi-cuenta" onclick="cambiarTab('mi-cuenta',this)" style="margin-bottom:6px;"><i class="fa-solid fa-gear"></i><span class="lb">Mi Cuenta</span><span class="tip">Mi Cuenta</span></button>
+      <div class="avz-user">
+        <div class="av"><i class="fa-solid fa-user"></i></div>
+        <div class="mt"><div class="nm" id="nav-nombre">Aliado</div><div class="lv" id="nav-nivel">BASIC</div></div>
+      </div>
+      <button class="avz-exit" onclick="cerrarSesion()"><i class="fa-solid fa-right-from-bracket"></i><span>Cerrar sesión</span></button>
+    </div>
+  </aside>
+
+  <header id="avz-topbar">
+    <button id="avz-hamb" onclick="avzDrawer(true)" aria-label="Menú"><i class="fa-solid fa-bars"></i></button>
+    <div class="tb-brand">Portal de <span>Aliados</span></div>
+    <div class="tb-right">
+      <a href="https://wa.me/5493424392759" target="_blank" class="tb-sup"><i class="fa-brands fa-whatsapp"></i> Soporte</a>
+    </div>
+  </header>
+
+  <div id="avz-overlay" onclick="avzDrawer(false)"></div>
 
   <div class="page-wrap">
 
-    <div class="tabs" id="main-tabs">
-      <!-- ── PRIMARIOS (siempre visibles) ── -->
-      <button class="tab-btn active" onclick="cambiarTab('dashboard',this)"><i class="fa-solid fa-chart-line"></i> Dashboard</button>
-      <!-- C1: Bolsa de Leads -->
-      <button class="tab-btn tab-canal1" onclick="cambiarTab('bolsa',this)"><i class="fa-solid fa-bullhorn"></i> Bolsa de Leads <span style="background:var(--green);color:#000;font-size:.6rem;font-weight:800;padding:2px 6px;border-radius:4px;margin-left:4px;">NUEVO</span></button>
-      <!-- C1: Academia — tab primario para Canal 1 (crítico: aliados nuevos deben verlo) -->
-      <button class="tab-btn tab-canal1" id="btn-tab-academia-primary" onclick="cambiarTab('academia',this)" style="background:rgba(249,115,22,0.12);border-color:rgba(249,115,22,0.3);color:#f97316;"><i class="fa-solid fa-graduation-cap"></i> Academia <span id="academia-progress-badge" style="display:none;background:rgba(249,115,22,0.8);color:#000;font-size:.6rem;font-weight:800;padding:2px 6px;border-radius:4px;margin-left:4px;"></span></button>
-      <!-- C2: Kit de Ventas (primer tab al entrar) -->
-      <button class="tab-btn tab-canal2" onclick="cambiarTab('kit-ventas',this)" style="display:none;background:rgba(74,222,128,0.12);border-color:rgba(74,222,128,0.3);color:#4ade80;"><i class="fa-solid fa-briefcase"></i> Kit de Ventas <span style="background:#4ade80;color:#000;font-size:.6rem;font-weight:800;padding:2px 6px;border-radius:4px;margin-left:4px;">C2</span></button>
-      
-      <!-- Pipeline unificado (ambos canales) -->
-      <button class="tab-btn" id="btn-tab-pipeline" onclick="cambiarTab('pipeline',this)" title="Seguí el avance de cada lead desde el primer contacto hasta el cobro"><i class="fa-solid fa-bars-progress"></i> Mis Leads</button>
-      <!-- Ambos: Comisiones -->
-      <button class="tab-btn" onclick="cambiarTab('comisiones',this)"><i class="fa-solid fa-dollar-sign"></i> Comisiones</button>
-      <!-- Toggle herramientas secundarias -->
-      <button class="tab-btn" onclick="cambiarTab('mi-cuenta',this)" id="btn-tab-mi-cuenta" title="Mi Cuenta"><i class="fa-solid fa-gear"></i> Mi Cuenta</button>
-      <button class="tab-btn tab-btn-mas" id="btn-mas-tabs" onclick="toggleMasTabsRow()" title="Más herramientas"><i class="fa-solid fa-grid-2"></i> Herramientas</button>
-    </div>
+    
 
     <!-- ── FILA SECUNDARIA (togglable) ── -->
-    <div class="tabs-extra-row" id="tabs-extra-row">
-      <button class="tab-btn tab-canal2" onclick="cambiarTab('academia',this)" style="display:none;background:rgba(249,115,22,0.12);border-color:rgba(249,115,22,0.3);color:#f97316;"><i class="fa-solid fa-graduation-cap"></i> Academia</button>
-      <button class="tab-btn tab-canal2" onclick="cambiarTab('selector-rubro',this)" style="display:none;background:rgba(74,222,128,0.12);border-color:rgba(74,222,128,0.3);color:#4ade80;"><i class="fa-solid fa-crosshairs"></i> Selector de Rubro</button>
-      
-      <button class="tab-btn" onclick="cambiarTab('ventas',this)"><i class="fa-solid fa-handshake"></i> Ventas</button>
-      <button class="tab-btn" onclick="cambiarTab('cotizador',this)"><i class="fa-solid fa-file-invoice-dollar"></i> Cotizador</button>
-      <button class="tab-btn" onclick="cambiarTab('herramientas',this)"><i class="fa-solid fa-magnifying-glass"></i> Auditorías</button>
-      <button class="tab-btn" onclick="cambiarTab('red',this)"><i class="fa-solid fa-users-rays" style="color:var(--amber);"></i> Mi Red</button>
-      <button class="tab-btn" onclick="cambiarTab('comunidad',this)"><i class="fa-solid fa-comments" style="color:#c084fc;"></i> Comunidad <span style="background:#c084fc;color:#000;font-size:.6rem;font-weight:800;padding:2px 6px;border-radius:4px;margin-left:4px;">NUEVO</span></button>
-      <button class="tab-btn" id="btn-tab-jarvis" onclick="cambiarTab('jarvis',this)" style="background:linear-gradient(135deg,rgba(0,196,255,0.12),rgba(0,80,200,0.06));border-color:rgba(0,196,255,0.30);color:#7fd8ff;" title="JARVIS IA"><i class="fa-solid fa-bolt"></i> JARVIS IA</button>
-    </div>
+    
 
     <div id="tab-dashboard" class="tab-panel active">
 
@@ -2440,7 +2555,7 @@
 
       <div class="welcome-header">
         <div>
-          <div class="welcome-name">Mis Leads <span style="font-size:1rem;font-weight:500;color:var(--text-muted);">— de primer contacto a cobro en un solo lugar</span></div>
+          <div class="welcome-name">Mi CRM <span style="font-size:1rem;font-weight:500;color:var(--text-muted);">— de primer contacto a cobro en un solo lugar</span></div>
           <div class="welcome-sub">Seguí el avance de cada lead: Prospectos → Registrar (paso crítico) → Ventas confirmadas</div>
         </div>
       </div>
@@ -2516,6 +2631,7 @@
             <button onclick="plFiltrarProspectos('respondio',this)" id="pl-pfiltro-resp" style="background:transparent;color:var(--text-muted);border:1px solid var(--border);border-radius:6px;padding:5px 12px;font-size:.75rem;font-weight:600;cursor:pointer;">Respondieron</button>
           </div>
         </div>
+        <div id="pl-metricas" style="padding:4px 4px 14px;"></div>
         <div id="pl-lista-prospectos" style="padding:0 4px 8px;"></div>
       </div>
 
@@ -3324,6 +3440,80 @@
 <!-- ══════════════════════════════════════════════════════════════════════
      MODAL — NUEVA CONTRASEÑA (después de click en el link del email)
      ══════════════════════════════════════════════════════════════════════ -->
+<!-- ════════════════════════════════════════════════════════════════════════
+     MODAL — FICHA DEL LEAD (CRM v3.0: timeline de actividad + tareas)
+     ════════════════════════════════════════════════════════════════════════ -->
+<div class="modal-overlay" id="modal-ficha-lead">
+  <div class="onboarding-box" style="max-width:600px; max-height:92vh; overflow-y:auto; padding:22px;">
+    <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:14px;">
+      <div>
+        <h3 style="font-size:1.1rem; font-weight:800;"><i class="fa-solid fa-address-card" style="color:var(--primary);"></i> <span id="ficha-lead-nombre">Lead</span></h3>
+        <div id="ficha-lead-estado" style="font-size:.78rem; color:var(--text-muted); margin-top:2px; text-transform:capitalize;"></div>
+      </div>
+      <button onclick="document.getElementById('modal-ficha-lead').classList.remove('open')" style="background:transparent; border:none; color:var(--text-muted); font-size:1.4rem; cursor:pointer;">&times;</button>
+    </div>
+
+    <!-- Contacto + deal (CRM v3.0 · Fase C) -->
+    <div style="background:rgba(255,255,255,0.02); border:1px solid var(--border); border-radius:10px; padding:14px; margin-bottom:14px;">
+      <div style="font-size:.72rem; color:var(--text-dim); text-transform:uppercase; letter-spacing:.06em; font-weight:700; margin-bottom:8px;">Contacto y deal</div>
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
+        <input id="ficha-telefono" type="text" placeholder="Teléfono" style="background:#111; border:1px solid var(--border); color:white; padding:9px; border-radius:8px; font-size:.84rem;">
+        <input id="ficha-whatsapp" type="text" placeholder="WhatsApp" style="background:#111; border:1px solid var(--border); color:white; padding:9px; border-radius:8px; font-size:.84rem;">
+        <input id="ficha-email" type="email" placeholder="Email" style="grid-column:1 / -1; background:#111; border:1px solid var(--border); color:white; padding:9px; border-radius:8px; font-size:.84rem;">
+        <input id="ficha-valor" type="number" placeholder="Valor del deal (USD)" style="background:#111; border:1px solid var(--border); color:white; padding:9px; border-radius:8px; font-size:.84rem;">
+        <input id="ficha-etiquetas" type="text" placeholder="Etiquetas (coma)" style="background:#111; border:1px solid var(--border); color:white; padding:9px; border-radius:8px; font-size:.84rem;">
+      </div>
+      <div style="display:flex; gap:6px; flex-wrap:wrap; margin-top:8px;">
+        <button onclick="guardarContactoFicha()" style="background:rgba(59,130,246,0.15); color:var(--primary); border:1px solid rgba(59,130,246,0.3); border-radius:8px; padding:8px 14px; font-size:.8rem; font-weight:700; cursor:pointer;"><i class="fa-solid fa-floppy-disk"></i> Guardar</button>
+        <button onclick="marcarGanadoFicha()" style="background:rgba(74,222,128,0.15); color:var(--green); border:1px solid rgba(74,222,128,0.3); border-radius:8px; padding:8px 14px; font-size:.8rem; font-weight:700; cursor:pointer;"><i class="fa-solid fa-trophy"></i> Marcar ganado</button>
+      </div>
+      <div id="ficha-contacto-acciones" style="margin-top:10px;"></div>
+    </div>
+    <!-- Contactos de la empresa (CRM v3.0 · Salto 3) -->
+    <div style="background:rgba(255,255,255,0.02); border:1px solid var(--border); border-radius:10px; padding:14px; margin-bottom:14px;">
+      <div style="font-size:.72rem; color:var(--text-dim); text-transform:uppercase; letter-spacing:.06em; font-weight:700; margin-bottom:8px;"><i class="fa-solid fa-users"></i> Contactos de la empresa</div>
+      <div id="ficha-contactos"></div>
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:6px; margin-top:10px;">
+        <input id="fc-nuevo-nombre" type="text" placeholder="Nombre" style="background:#111; border:1px solid var(--border); color:white; padding:8px; border-radius:8px; font-size:.82rem;">
+        <input id="fc-nuevo-rol" type="text" placeholder="Rol (Dueño, Compras...)" style="background:#111; border:1px solid var(--border); color:white; padding:8px; border-radius:8px; font-size:.82rem;">
+        <input id="fc-nuevo-tel" type="text" placeholder="Teléfono" style="background:#111; border:1px solid var(--border); color:white; padding:8px; border-radius:8px; font-size:.82rem;">
+        <input id="fc-nuevo-wa" type="text" placeholder="WhatsApp" style="background:#111; border:1px solid var(--border); color:white; padding:8px; border-radius:8px; font-size:.82rem;">
+        <input id="fc-nuevo-email" type="email" placeholder="Email" style="grid-column:1 / -1; background:#111; border:1px solid var(--border); color:white; padding:8px; border-radius:8px; font-size:.82rem;">
+      </div>
+      <button onclick="agregarContactoFicha()" style="margin-top:8px; background:rgba(59,130,246,0.15); color:var(--primary); border:1px solid rgba(59,130,246,0.3); border-radius:8px; padding:8px 14px; font-size:.8rem; font-weight:700; cursor:pointer;"><i class="fa-solid fa-user-plus"></i> Agregar contacto</button>
+    </div>
+    <!-- Registrar interacción -->
+    <div style="background:rgba(255,255,255,0.02); border:1px solid var(--border); border-radius:10px; padding:14px; margin-bottom:14px;">
+      <div style="font-size:.72rem; color:var(--text-dim); text-transform:uppercase; letter-spacing:.06em; font-weight:700; margin-bottom:8px;">Registrar interacción</div>
+      <textarea id="ficha-log-texto" rows="2" placeholder="¿Qué pasó? Ej: 'Llamé, pidió que le mande la propuesta el lunes'" style="width:100%; background:#111; border:1px solid var(--border); color:white; padding:10px; border-radius:8px; font-family:inherit; resize:vertical; font-size:.85rem;"></textarea>
+      <div style="display:flex; gap:6px; flex-wrap:wrap; margin-top:8px;">
+        <button onclick="logActividadFicha('llamada')"  style="background:rgba(59,130,246,0.12); color:#60a5fa; border:1px solid rgba(59,130,246,0.3); border-radius:7px; padding:7px 11px; font-size:.78rem; font-weight:700; cursor:pointer;"><i class="fa-solid fa-phone"></i> Llamada</button>
+        <button onclick="logActividadFicha('whatsapp')" style="background:rgba(74,222,128,0.12); color:var(--green); border:1px solid rgba(74,222,128,0.3); border-radius:7px; padding:7px 11px; font-size:.78rem; font-weight:700; cursor:pointer;"><i class="fa-brands fa-whatsapp"></i> WhatsApp</button>
+        <button onclick="logActividadFicha('email')"    style="background:rgba(255,255,255,0.05); color:var(--text-muted); border:1px solid var(--border); border-radius:7px; padding:7px 11px; font-size:.78rem; font-weight:700; cursor:pointer;"><i class="fa-solid fa-envelope"></i> Email</button>
+        <button onclick="logActividadFicha('reunion')"  style="background:rgba(168,85,247,0.12); color:#c084fc; border:1px solid rgba(168,85,247,0.3); border-radius:7px; padding:7px 11px; font-size:.78rem; font-weight:700; cursor:pointer;"><i class="fa-solid fa-handshake"></i> Reunión</button>
+        <button onclick="logActividadFicha('nota')"     style="background:rgba(245,158,11,0.12); color:var(--amber); border:1px solid rgba(245,158,11,0.3); border-radius:7px; padding:7px 11px; font-size:.78rem; font-weight:700; cursor:pointer;"><i class="fa-solid fa-note-sticky"></i> Nota</button>
+      </div>
+    </div>
+
+    <!-- Tareas / recordatorios -->
+    <div style="margin-bottom:16px;">
+      <div style="font-size:.72rem; color:var(--text-dim); text-transform:uppercase; letter-spacing:.06em; font-weight:700; margin-bottom:8px;"><i class="fa-regular fa-clock"></i> Tareas / recordatorios</div>
+      <div id="ficha-tareas"></div>
+      <div style="display:flex; gap:6px; flex-wrap:wrap; margin-top:10px;">
+        <input id="ficha-tarea-desc" type="text" placeholder="Nueva tarea (ej: 'Llamar para cerrar')" style="flex:1; min-width:150px; background:#111; border:1px solid var(--border); color:white; padding:9px; border-radius:8px; font-size:.84rem;">
+        <input id="ficha-tarea-fecha" type="date" style="background:#111; border:1px solid var(--border); color:white; padding:9px; border-radius:8px; font-size:.84rem;">
+        <button onclick="crearTareaFicha()" class="btn-primary" style="padding:9px 14px; font-size:.82rem;"><i class="fa-solid fa-plus"></i> Agregar</button>
+      </div>
+    </div>
+
+    <!-- Historial / timeline -->
+    <div>
+      <div style="font-size:.72rem; color:var(--text-dim); text-transform:uppercase; letter-spacing:.06em; font-weight:700; margin-bottom:6px;">Historial</div>
+      <div id="ficha-timeline"></div>
+    </div>
+  </div>
+</div>
+
 <div class="modal-overlay" id="modal-nueva-pass">
   <div class="onboarding-box" style="max-width:460px;padding:0;">
     <div style="border-bottom:1px solid var(--border);padding:18px 24px;">
@@ -4234,44 +4424,9 @@ function pct(nivel) {
   return 0.10;
 }
 
-// LOGICA DEL COTIZADOR
-function actualizarCotizador() {
-  if(!aliado) return;
-  const plan = document.getElementById('cot-plan').value;
-  const resDiv = document.getElementById('cot-resultado');
-  
-  if(!plan) { 
-    resDiv.style.display = 'none'; 
-    return; 
-  }
-
-  const precio = PLANES[plan];
-  const nivel = aliado.nivel_calculado || aliado.nivel_actual || 'BASIC';
-  const porcentaje = pct(nivel);
-  const comision = Math.round(precio * porcentaje);
-
-  document.getElementById('cot-precio').textContent = 'USD ' + precio.toLocaleString();
-  document.getElementById('cot-comision').textContent = 'USD ' + comision.toLocaleString();
-  document.getElementById('cot-pct-badge').textContent = (porcentaje * 100) + '%';
-
-  // Genera el link apuntando a tu página de checkout genérica con el ref pegado
-  const link = `https://avanzadigital.digital/contratar?plan=${encodeURIComponent(plan)}&ref=${aliado.ref_code}`;
-  document.getElementById('cot-link').value = link;
-
-  resDiv.style.display = 'block';
-}
-
-function copiarCotizacion() {
-  const link = document.getElementById('cot-link').value;
-  const cliente = document.getElementById('cot-cliente').value || 'tu empresa';
-  const plan = document.getElementById('cot-plan').value;
-  
-  const texto = `Hola, te dejo el link directo con la propuesta del ${plan} para ${cliente}. Podés avanzar con la contratación desde ahí de forma segura:\n\n${link}\n\nCualquier consulta, avisame.`;
-  
-  navigator.clipboard.writeText(texto).then(() => {
-    mostrarToast('¡Link y mensaje listos para enviar por WhatsApp!', 'green');
-  });
-}
+// Lógica del cotizador consolidada más abajo: actualizarCotizador() + copiarCotizacion()
+// (versión única con checkout dual ARS/USDT). Las entradas por canal son
+// irACotizadorConRubro() [Canal 2] e irACotizador() [Canal 1].
 
 function mostrarRegistro() {
   document.getElementById('login-screen').style.display = 'none';
@@ -6146,8 +6301,8 @@ function renderProspectos() {
     return;
   }
 
-  const estadoLabel = { sin_contactar:'Sin contactar', contactado:'Contactado', propuesta_enviada:'Propuesta enviada', respondio:'Respondió', perdido:'Perdido' };
-  const estadoColor = { sin_contactar:'var(--red)', contactado:'var(--amber)', propuesta_enviada:'var(--primary)', respondio:'var(--green)', perdido:'#71717a' };
+  const estadoLabel = { sin_contactar:'Sin contactar', contactado:'Contactado', propuesta_enviada:'Propuesta enviada', respondio:'Respondió', ganado:'Ganado', perdido:'Perdido' };
+  const estadoColor = { sin_contactar:'var(--red)', contactado:'var(--amber)', propuesta_enviada:'var(--primary)', respondio:'var(--green)', ganado:'var(--green)', perdido:'#71717a' };
 
   contenedor.innerHTML = lista.map(p=>`
     <div id="prosp-card-${p.id}" style="border-bottom:1px solid var(--border);padding:16px 8px;display:grid;gap:10px; ${p.estado==='perdido'?'opacity:0.62;':''}">
@@ -6267,6 +6422,8 @@ function plFiltrarProspectos(filtro, btn) {
 }
 
 function plRenderProspectos() {
+  if (typeof plRenderMetricas === 'function') plRenderMetricas();
+  if (window._plVista === 'kanban') { plRenderKanban(); return; }
   const lista = filtroProspPipelineActivo==='todos'
     ? todosProspectosPipeline
     : todosProspectosPipeline.filter(p=>p.estado===filtroProspPipelineActivo);
@@ -6278,8 +6435,8 @@ function plRenderProspectos() {
     </div>`;
     return;
   }
-  const estadoLabel = { sin_contactar:'Sin contactar', contactado:'Contactado', propuesta_enviada:'Propuesta enviada', respondio:'Respondió', perdido:'Perdido' };
-  const estadoColor = { sin_contactar:'var(--red)', contactado:'var(--amber)', propuesta_enviada:'var(--primary)', respondio:'var(--green)', perdido:'#71717a' };
+  const estadoLabel = { sin_contactar:'Sin contactar', contactado:'Contactado', propuesta_enviada:'Propuesta enviada', respondio:'Respondió', ganado:'Ganado', perdido:'Perdido' };
+  const estadoColor = { sin_contactar:'var(--red)', contactado:'var(--amber)', propuesta_enviada:'var(--primary)', respondio:'var(--green)', ganado:'var(--green)', perdido:'#71717a' };
   contenedor.innerHTML = lista.map(p=>`
     <div style="border-bottom:1px solid var(--border);padding:14px 8px;display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap;${p.estado==='perdido'?'opacity:0.62;':''}">
       <div style="flex:1;min-width:0;">
@@ -6290,14 +6447,377 @@ function plRenderProspectos() {
         </div>
         ${p.plan_interes?`<div style="font-size:.78rem;color:var(--text-muted);margin-top:3px;"><i class="fa-solid fa-tag" style="font-size:.68rem;"></i> ${p.plan_interes}</div>`:''}
         ${p.nota?`<div style="font-size:.78rem;color:var(--text-muted);margin-top:3px;">${p.nota}</div>`:''}
+        ${p.proxima_accion_en?`<div style="font-size:.74rem;color:var(--amber);margin-top:4px;"><i class="fa-regular fa-clock"></i> Próxima acción: ${_fmtFechaCRM(p.proxima_accion_en)}</div>`:''}
+        ${p.tareas_pendientes?`<div style="font-size:.72rem;color:var(--text-dim);margin-top:2px;"><i class="fa-solid fa-list-check"></i> ${p.tareas_pendientes} tarea(s) pendiente(s)</div>`:''}
       </div>
       <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;">
+        <button onclick="abrirFichaLead(${p.id})" style="background:rgba(59,130,246,0.12);color:var(--primary);border:1px solid rgba(59,130,246,0.3);border-radius:8px;padding:7px 12px;font-size:.76rem;font-weight:700;cursor:pointer;white-space:nowrap;"><i class="fa-solid fa-address-card"></i> Ficha</button>
         ${p.estado==='sin_contactar'?`<button onclick="accionProspecto(${p.id},'contactar');cargarProspectosPipeline()" style="background:var(--primary);color:white;border:none;border-radius:8px;padding:7px 13px;font-size:.76rem;font-weight:700;cursor:pointer;white-space:nowrap;"><i class="fa-solid fa-paper-plane"></i> Contacté</button>`:''}
         ${p.estado==='contactado'?`<button onclick="accionProspecto(${p.id},'propuesta_enviada');cargarProspectosPipeline()" style="background:rgba(59,130,246,0.15);color:var(--primary);border:1px solid rgba(59,130,246,0.35);border-radius:8px;padding:7px 13px;font-size:.76rem;font-weight:700;cursor:pointer;white-space:nowrap;"><i class="fa-solid fa-file-invoice"></i> Envié propuesta</button>`:''}
         ${p.estado!=='perdido'?`<button onclick="abrirMarcarPerdido(${p.id},'${(p.nombre||'').replace(/'/g,"\\'")}');setTimeout(cargarProspectosPipeline,500)" title="Marcar como perdido" style="background:rgba(113,113,122,0.12);color:#a1a1aa;border:1px solid rgba(113,113,122,0.3);border-radius:8px;padding:7px 12px;font-size:.76rem;cursor:pointer;"><i class="fa-solid fa-circle-xmark"></i></button>`:''}
       </div>
     </div>
   `).join('');
+}
+
+// ─── CRM v3.0: FICHA DEL LEAD (timeline + tareas) ────────────────────────────
+let _fichaLeadId = null;
+
+function _fmtFechaCRM(iso, conHora) {
+  if (!iso) return '';
+  const d = new Date(iso);
+  if (isNaN(d.getTime())) return '';
+  const f = d.toLocaleDateString('es-AR', { day: '2-digit', month: 'short' });
+  return conHora ? (f + ' ' + d.toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' })) : f;
+}
+
+function _iconoActividad(tipo) {
+  return ({ nota: 'fa-note-sticky', llamada: 'fa-phone', whatsapp: 'fa-comment-dots',
+            email: 'fa-envelope', reunion: 'fa-handshake', tarea: 'fa-clock',
+            sistema: 'fa-circle-info' })[tipo] || 'fa-circle';
+}
+
+function abrirFichaLead(id) {
+  _fichaLeadId = id;
+  const p = (typeof todosProspectosPipeline !== 'undefined' && todosProspectosPipeline)
+    ? todosProspectosPipeline.find(x => x.id === id) : null;
+  document.getElementById('ficha-lead-nombre').textContent = (p && p.nombre) ? p.nombre : 'Lead';
+  document.getElementById('ficha-lead-estado').textContent = (p && p.estado) ? p.estado.replace(/_/g, ' ') : '';
+  document.getElementById('ficha-log-texto').value = '';
+  document.getElementById('ficha-tarea-desc').value = '';
+  document.getElementById('ficha-tarea-fecha').value = '';
+  document.getElementById('ficha-tareas').innerHTML = '';
+  document.getElementById('ficha-telefono').value  = (p && p.telefono)  ? p.telefono  : '';
+  document.getElementById('ficha-whatsapp').value  = (p && p.whatsapp)  ? p.whatsapp  : '';
+  document.getElementById('ficha-email').value     = (p && p.email)     ? p.email     : '';
+  document.getElementById('ficha-valor').value     = (p && (p.valor_usd != null)) ? p.valor_usd : '';
+  document.getElementById('ficha-etiquetas').value = (p && p.etiquetas) ? p.etiquetas : '';
+  _fichaLeadNombre = (p && p.nombre) ? p.nombre : '';
+  _renderAccionesFicha();
+  document.getElementById('ficha-timeline').innerHTML = '<div style="color:var(--text-dim);font-size:.82rem;padding:10px 0;">Cargando…</div>';
+  document.getElementById('modal-ficha-lead').classList.add('open');
+  cargarFichaLead(id);
+  cargarContactosFicha(id);
+}
+
+async function cargarFichaLead(id) {
+  try {
+    const res = await apiFetch(`${API}/prospectos/${id}/actividades`);
+    if (!res.ok) throw new Error('no_ok');
+    const acts = await res.json();
+    const tareas = acts.filter(a => a.tipo === 'tarea' && !a.completada);
+    const tl     = acts.filter(a => a.tipo !== 'tarea' || a.completada);
+
+    const tdiv = document.getElementById('ficha-tareas');
+    if (!tareas.length) {
+      tdiv.innerHTML = '<div style="color:var(--text-dim);font-size:.8rem;">Sin tareas pendientes.</div>';
+    } else {
+      tdiv.innerHTML = tareas.map(t => {
+        const vence = t.vence_en ? _fmtFechaCRM(t.vence_en) : '';
+        const vencida = t.vence_en && (new Date(t.vence_en) < new Date());
+        return `<div style="display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid var(--border);">
+          <button onclick="completarTareaFicha(${t.id})" title="Completar tarea" style="background:rgba(74,222,128,0.15);color:var(--green);border:1px solid rgba(74,222,128,0.3);border-radius:6px;width:26px;height:26px;cursor:pointer;flex-shrink:0;"><i class="fa-solid fa-check"></i></button>
+          <div style="flex:1;min-width:0;font-size:.84rem;color:var(--text);">${t.descripcion || ''}</div>
+          ${vence ? `<span style="font-size:.72rem;font-weight:700;white-space:nowrap;color:${vencida ? 'var(--red)' : 'var(--amber)'};"><i class="fa-regular fa-clock"></i> ${vence}</span>` : ''}
+        </div>`;
+      }).join('');
+    }
+
+    const tldiv = document.getElementById('ficha-timeline');
+    if (!tl.length) {
+      tldiv.innerHTML = '<div style="color:var(--text-dim);font-size:.82rem;padding:8px 0;">Todavía no hay actividad registrada.</div>';
+    } else {
+      tldiv.innerHTML = tl.map(a => `
+        <div style="display:flex;gap:10px;padding:8px 0;border-bottom:1px solid rgba(255,255,255,0.04);">
+          <div style="color:var(--text-dim);font-size:.8rem;width:18px;text-align:center;flex-shrink:0;padding-top:1px;"><i class="fa-solid ${_iconoActividad(a.tipo)}"></i></div>
+          <div style="flex:1;min-width:0;">
+            <div style="font-size:.84rem;color:var(--text);">${a.descripcion || ('(' + a.tipo + ')')}</div>
+            <div style="font-size:.7rem;color:var(--text-dim);margin-top:2px;text-transform:capitalize;">${a.tipo}${a.completada ? ' · completada' : ''} · ${_fmtFechaCRM(a.completada_en || a.creado_en, true)}</div>
+          </div>
+        </div>`).join('');
+    }
+  } catch (e) {
+    document.getElementById('ficha-timeline').innerHTML = '<div style="color:var(--text-dim);font-size:.82rem;padding:8px 0;">No se pudo cargar la actividad. Probá de nuevo en un momento.</div>';
+  }
+}
+
+async function logActividadFicha(tipo) {
+  if (!_fichaLeadId) return;
+  const txt = (document.getElementById('ficha-log-texto').value || '').trim();
+  if (!txt) { mostrarToast('Escribí qué pasó antes de registrar.', 'amber'); return; }
+  try {
+    const res = await apiFetch(`${API}/prospectos/${_fichaLeadId}/actividad?tipo=${encodeURIComponent(tipo)}&descripcion=${encodeURIComponent(txt)}`, { method: 'POST' });
+    if (res.ok) {
+      document.getElementById('ficha-log-texto').value = '';
+      mostrarToast('Actividad registrada.', 'green');
+      cargarFichaLead(_fichaLeadId);
+    } else { mostrarToast('No se pudo registrar.', 'red'); }
+  } catch { mostrarToast('Error de conexión.', 'red'); }
+}
+
+async function crearTareaFicha() {
+  if (!_fichaLeadId) return;
+  const desc  = (document.getElementById('ficha-tarea-desc').value || '').trim();
+  const fecha = document.getElementById('ficha-tarea-fecha').value || '';
+  if (!desc) { mostrarToast('Describí la tarea.', 'amber'); return; }
+  try {
+    const res = await apiFetch(`${API}/prospectos/${_fichaLeadId}/tarea?descripcion=${encodeURIComponent(desc)}&vence_en=${encodeURIComponent(fecha)}`, { method: 'POST' });
+    if (res.ok) {
+      document.getElementById('ficha-tarea-desc').value = '';
+      document.getElementById('ficha-tarea-fecha').value = '';
+      mostrarToast('Tarea creada.', 'green');
+      cargarFichaLead(_fichaLeadId);
+      if (typeof cargarProspectosPipeline === 'function') cargarProspectosPipeline();
+    } else { mostrarToast('No se pudo crear la tarea.', 'red'); }
+  } catch { mostrarToast('Error de conexión.', 'red'); }
+}
+
+async function completarTareaFicha(actId) {
+  try {
+    const res = await apiFetch(`${API}/actividades/${actId}/completar`, { method: 'PATCH' });
+    if (res.ok) {
+      mostrarToast('Tarea completada.', 'green');
+      cargarFichaLead(_fichaLeadId);
+      if (typeof cargarProspectosPipeline === 'function') cargarProspectosPipeline();
+    } else { mostrarToast('No se pudo completar.', 'red'); }
+  } catch { mostrarToast('Error de conexión.', 'red'); }
+}
+
+// ─── CRM v3.0 (Fase C): contacto estructurado + multicanal + ganado ──────────
+let _fichaLeadNombre = null;
+
+function _renderAccionesFicha() {
+  const cont = document.getElementById('ficha-contacto-acciones');
+  if (!cont) return;
+  const tel   = (document.getElementById('ficha-telefono').value || '').trim();
+  const waRaw = (document.getElementById('ficha-whatsapp').value || tel || '').trim();
+  const mail  = (document.getElementById('ficha-email').value || '').trim();
+  const pais  = (typeof aliado !== 'undefined' && aliado && aliado.pais) ? aliado.pais : 'AR';
+  const wa    = (typeof _waNumeroBolsa === 'function') ? _waNumeroBolsa(waRaw, pais) : waRaw.replace(/\D/g, '');
+  const telD  = (tel || waRaw).replace(/[^\d+]/g, '');
+  const nombre = _fichaLeadNombre || 'tu empresa';
+  const msg  = encodeURIComponent('Hola, te contacto de Avanza Digital por ' + nombre + '. ¿Tenés un minuto para una consulta rápida?');
+  const subj = encodeURIComponent('Avanza Digital — ' + nombre);
+  const btns = [];
+  if (wa)   btns.push('<a href="https://wa.me/' + wa + '?text=' + msg + '" target="_blank" rel="noopener" onclick="_logEnvioFicha(\'whatsapp\')" style="flex:1;min-width:100px;text-align:center;padding:8px;font-size:.8rem;font-weight:700;text-decoration:none;background:var(--green);color:#000;border-radius:8px;"><i class="fa-brands fa-whatsapp"></i> WhatsApp</a>');
+  if (telD) btns.push('<a href="tel:' + telD + '" onclick="_logEnvioFicha(\'llamada\')" style="flex:1;min-width:80px;text-align:center;padding:8px;font-size:.8rem;font-weight:700;text-decoration:none;background:rgba(59,130,246,0.15);color:#60a5fa;border:1px solid rgba(59,130,246,0.3);border-radius:8px;"><i class="fa-solid fa-phone"></i> Llamar</a>');
+  if (mail) btns.push('<a href="mailto:' + mail + '?subject=' + subj + '" onclick="_logEnvioFicha(\'email\')" style="flex:1;min-width:80px;text-align:center;padding:8px;font-size:.8rem;font-weight:700;text-decoration:none;background:rgba(255,255,255,0.06);color:var(--text-muted);border:1px solid var(--border);border-radius:8px;"><i class="fa-solid fa-envelope"></i> Email</a>');
+  cont.innerHTML = btns.length
+    ? '<div style="display:flex;gap:6px;flex-wrap:wrap;">' + btns.join('') + '</div>'
+    : '<div style="font-size:.76rem;color:var(--text-dim);">Cargá teléfono, WhatsApp o email para contactar de un toque.</div>';
+}
+
+// Salto 1: registra en el timeline el toque enviado desde la ficha (fire-and-forget)
+function _logEnvioFicha(tipo) {
+  if (!_fichaLeadId) return;
+  const txt = ({ whatsapp: 'WhatsApp enviado', email: 'Email enviado', llamada: 'Llamada iniciada' })[tipo] || 'Contacto';
+  try {
+    apiFetch(`${API}/prospectos/${_fichaLeadId}/actividad?tipo=${encodeURIComponent(tipo)}&descripcion=${encodeURIComponent(txt)}`, { method: 'POST' });
+  } catch (e) {}
+  setTimeout(() => { if (typeof cargarFichaLead === 'function' && _fichaLeadId) cargarFichaLead(_fichaLeadId); }, 1200);
+}
+
+async function guardarContactoFicha() {
+  if (!_fichaLeadId) return;
+  const email     = (document.getElementById('ficha-email').value || '').trim();
+  const telefono  = (document.getElementById('ficha-telefono').value || '').trim();
+  const whatsapp  = (document.getElementById('ficha-whatsapp').value || '').trim();
+  const etiquetas = (document.getElementById('ficha-etiquetas').value || '').trim();
+  const valorRaw  = (document.getElementById('ficha-valor').value || '').trim();
+  let q = `${API}/prospectos/${_fichaLeadId}/contacto-datos?email=${encodeURIComponent(email)}&telefono=${encodeURIComponent(telefono)}&whatsapp=${encodeURIComponent(whatsapp)}&etiquetas=${encodeURIComponent(etiquetas)}`;
+  if (valorRaw !== '') q += `&valor_usd=${encodeURIComponent(valorRaw)}`;
+  try {
+    const res = await apiFetch(q, { method: 'PATCH' });
+    if (res.ok) {
+      mostrarToast('Datos guardados.', 'green');
+      const p = (typeof todosProspectosPipeline !== 'undefined' && todosProspectosPipeline) ? todosProspectosPipeline.find(x => x.id === _fichaLeadId) : null;
+      if (p) { p.email = email; p.telefono = telefono; p.whatsapp = whatsapp; p.etiquetas = etiquetas; if (valorRaw !== '') p.valor_usd = parseFloat(valorRaw); }
+      _renderAccionesFicha();
+      if (typeof cargarProspectosPipeline === 'function') cargarProspectosPipeline();
+    } else { mostrarToast('No se pudo guardar.', 'red'); }
+  } catch { mostrarToast('Error de conexión.', 'red'); }
+}
+
+async function marcarGanadoFicha() {
+  if (!_fichaLeadId) return;
+  if (!confirm('¿Marcar este lead como GANADO? Queda registrado el cierre en el historial.')) return;
+  const valorRaw = (document.getElementById('ficha-valor').value || '').trim();
+  let q = `${API}/prospectos/${_fichaLeadId}/ganado`;
+  if (valorRaw !== '') q += `?valor_usd=${encodeURIComponent(valorRaw)}`;
+  try {
+    const res = await apiFetch(q, { method: 'PATCH' });
+    if (res.ok) {
+      mostrarToast('¡Marcado como ganado!', 'green');
+      document.getElementById('modal-ficha-lead').classList.remove('open');
+      if (typeof cargarProspectosPipeline === 'function') cargarProspectosPipeline();
+    } else { mostrarToast('No se pudo marcar.', 'red'); }
+  } catch { mostrarToast('Error de conexión.', 'red'); }
+}
+
+// ─── CRM v3.0 (Fase D): métricas del embudo + vista kanban ───────────────────
+window._plVista = window._plVista || 'lista';
+
+function _plLeads() {
+  return (typeof todosProspectosPipeline !== 'undefined' && todosProspectosPipeline) ? todosProspectosPipeline : [];
+}
+function _fmtUSD(n) {
+  n = Number(n) || 0;
+  return 'US$ ' + n.toLocaleString('es-AR');
+}
+function plCambiarVista(v) {
+  window._plVista = v;
+  if (typeof plRenderProspectos === 'function') plRenderProspectos();
+}
+
+const _PL_ETAPAS = [
+  { key: 'sin_contactar',     label: 'Sin contactar',     color: 'var(--red)' },
+  { key: 'contactado',        label: 'Contactado',        color: 'var(--amber)' },
+  { key: 'propuesta_enviada', label: 'Propuesta enviada', color: 'var(--primary)' },
+  { key: 'respondio',         label: 'Respondió',         color: '#22d3ee' },
+  { key: 'ganado',            label: 'Ganado',            color: 'var(--green)' },
+  { key: 'perdido',           label: 'Perdido',           color: '#71717a' },
+];
+const _PL_ABIERTAS = ['sin_contactar', 'contactado', 'propuesta_enviada', 'respondio'];
+
+function plRenderMetricas() {
+  const cont = document.getElementById('pl-metricas');
+  if (!cont) return;
+  const leads = _plLeads();
+  const porEstado = {};
+  let valorPipeline = 0, valorGanado = 0, ganados = 0, perdidos = 0;
+  leads.forEach(p => {
+    porEstado[p.estado] = (porEstado[p.estado] || 0) + 1;
+    const v = Number(p.valor_usd) || 0;
+    if (_PL_ABIERTAS.indexOf(p.estado) >= 0) valorPipeline += v;
+    if (p.estado === 'ganado') { valorGanado += v; ganados++; }
+    if (p.estado === 'perdido') perdidos++;
+  });
+  const cerrados = ganados + perdidos;
+  const winRate = cerrados ? Math.round(ganados / cerrados * 100) : 0;
+  const activos = leads.length - (porEstado['ganado'] || 0) - (porEstado['perdido'] || 0);
+
+  const toggle = `
+    <div style="display:inline-flex;background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:8px;overflow:hidden;">
+      <button onclick="plCambiarVista('lista')" style="background:${window._plVista === 'lista' ? 'var(--primary)' : 'transparent'};color:${window._plVista === 'lista' ? '#fff' : 'var(--text-muted)'};border:none;padding:6px 14px;font-size:.78rem;font-weight:700;cursor:pointer;"><i class="fa-solid fa-list"></i> Lista</button>
+      <button onclick="plCambiarVista('kanban')" style="background:${window._plVista === 'kanban' ? 'var(--primary)' : 'transparent'};color:${window._plVista === 'kanban' ? '#fff' : 'var(--text-muted)'};border:none;padding:6px 14px;font-size:.78rem;font-weight:700;cursor:pointer;"><i class="fa-solid fa-table-columns"></i> Kanban</button>
+    </div>`;
+
+  const tile = (label, valor, color) => `
+    <div style="flex:1;min-width:115px;background:rgba(255,255,255,0.02);border:1px solid var(--border);border-radius:10px;padding:11px 13px;">
+      <div style="font-size:.66rem;color:var(--text-dim);text-transform:uppercase;letter-spacing:.06em;font-weight:700;">${label}</div>
+      <div style="font-size:1.1rem;font-weight:800;color:${color || 'var(--text)'};margin-top:3px;">${valor}</div>
+    </div>`;
+
+  const funnel = _PL_ETAPAS.map(e => `
+    <div style="flex:1;min-width:64px;text-align:center;padding:8px 4px;background:rgba(255,255,255,0.02);border-radius:8px;border-top:3px solid ${e.color};">
+      <div style="font-size:1.05rem;font-weight:800;color:var(--text);">${porEstado[e.key] || 0}</div>
+      <div style="font-size:.62rem;color:var(--text-dim);margin-top:2px;">${e.label}</div>
+    </div>`).join('');
+
+  cont.innerHTML = `
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:12px;">
+      <div style="font-size:.8rem;color:var(--text-muted);font-weight:700;"><i class="fa-solid fa-chart-simple" style="color:var(--primary);"></i> Embudo</div>
+      ${toggle}
+    </div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;">
+      ${tile('Leads activos', activos, 'var(--text)')}
+      ${tile('Pipeline abierto', _fmtUSD(valorPipeline), 'var(--amber)')}
+      ${tile('Ganado', _fmtUSD(valorGanado), 'var(--green)')}
+      ${tile('Win rate', winRate + '%' + (cerrados ? ` · ${ganados}/${cerrados}` : ''), 'var(--primary)')}
+    </div>
+    <div style="display:flex;gap:6px;flex-wrap:wrap;">${funnel}</div>`;
+}
+
+function plRenderKanban() {
+  const cont = document.getElementById('pl-lista-prospectos');
+  if (!cont) return;
+  const leads = _plLeads();
+  const cols = _PL_ETAPAS.map(e => {
+    const items = leads.filter(p => p.estado === e.key);
+    const suma = items.reduce((a, p) => a + (Number(p.valor_usd) || 0), 0);
+    const cards = items.length ? items.map(p => {
+      const prox = p.proxima_accion_en ? `<div style="font-size:.68rem;color:var(--amber);margin-top:4px;"><i class="fa-regular fa-clock"></i> ${_fmtFechaCRM(p.proxima_accion_en)}</div>` : '';
+      const val  = (p.valor_usd != null && p.valor_usd !== '') ? `<span style="font-size:.72rem;color:var(--green);font-weight:700;white-space:nowrap;">${_fmtUSD(p.valor_usd)}</span>` : '';
+      return `<div onclick="abrirFichaLead(${p.id})" style="background:#111;border:1px solid var(--border);border-radius:8px;padding:9px 10px;margin-bottom:7px;cursor:pointer;">
+        <div style="display:flex;justify-content:space-between;gap:6px;align-items:flex-start;">
+          <div style="font-size:.83rem;font-weight:700;color:var(--text);min-width:0;">${p.nombre || '—'}</div>
+          ${val}
+        </div>
+        ${p.plan_interes ? `<div style="font-size:.7rem;color:var(--text-dim);margin-top:2px;">${p.plan_interes}</div>` : ''}
+        ${prox}
+      </div>`;
+    }).join('') : `<div style="font-size:.72rem;color:var(--text-dim);padding:8px 2px;">—</div>`;
+    return `<div style="flex:0 0 220px;background:rgba(255,255,255,0.015);border:1px solid var(--border);border-radius:10px;padding:10px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;border-bottom:2px solid ${e.color};padding-bottom:7px;margin-bottom:9px;">
+        <span style="font-size:.76rem;font-weight:800;color:var(--text);">${e.label}</span>
+        <span style="font-size:.68rem;color:var(--text-dim);white-space:nowrap;">${items.length}${suma ? ' · ' + _fmtUSD(suma) : ''}</span>
+      </div>
+      ${cards}
+    </div>`;
+  }).join('');
+  cont.innerHTML = `<div style="display:flex;gap:10px;overflow-x:auto;padding:4px 0 10px;">${cols}</div>`;
+}
+
+// ─── CRM v3.0 (Salto 3): contactos de la empresa (varios interlocutores) ─────
+async function cargarContactosFicha(id) {
+  const cont = document.getElementById('ficha-contactos');
+  if (!cont) return;
+  const pais = (typeof aliado !== 'undefined' && aliado && aliado.pais) ? aliado.pais : 'AR';
+  try {
+    const res = await apiFetch(`${API}/prospectos/${id}/contactos`);
+    if (!res.ok) throw new Error('no_ok');
+    const cs = await res.json();
+    if (!cs.length) {
+      cont.innerHTML = '<div style="font-size:.78rem;color:var(--text-dim);">Sin contactos adicionales. Agregá los otros interlocutores de la empresa (dueño, compras, técnico...).</div>';
+      return;
+    }
+    cont.innerHTML = cs.map(c => {
+      const wa   = (typeof _waNumeroBolsa === 'function') ? _waNumeroBolsa(c.whatsapp || c.telefono || '', pais) : '';
+      const telD = (c.telefono || c.whatsapp || '').replace(/[^\d+]/g, '');
+      const mail = (c.email || '').trim();
+      const acc = [];
+      if (wa)   acc.push('<a href="https://wa.me/' + wa + '" target="_blank" rel="noopener" onclick="_logEnvioFicha(\'whatsapp\')" style="padding:5px 10px;font-size:.74rem;font-weight:700;text-decoration:none;background:rgba(74,222,128,0.12);color:var(--green);border:1px solid rgba(74,222,128,0.3);border-radius:6px;"><i class="fa-brands fa-whatsapp"></i> WhatsApp</a>');
+      if (telD) acc.push('<a href="tel:' + telD + '" onclick="_logEnvioFicha(\'llamada\')" style="padding:5px 10px;font-size:.74rem;font-weight:700;text-decoration:none;background:rgba(59,130,246,0.12);color:#60a5fa;border:1px solid rgba(59,130,246,0.3);border-radius:6px;"><i class="fa-solid fa-phone"></i> Llamar</a>');
+      if (mail) acc.push('<a href="mailto:' + mail + '" onclick="_logEnvioFicha(\'email\')" style="padding:5px 10px;font-size:.74rem;font-weight:700;text-decoration:none;background:rgba(255,255,255,0.05);color:var(--text-muted);border:1px solid var(--border);border-radius:6px;"><i class="fa-solid fa-envelope"></i> Email</a>');
+      return `<div style="border:1px solid var(--border);border-radius:8px;padding:9px 10px;margin-bottom:7px;">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;">
+          <div style="font-size:.85rem;color:var(--text);min-width:0;"><strong>${c.nombre}</strong>${c.rol ? ` · <span style="color:var(--text-muted);font-size:.78rem;">${c.rol}</span>` : ''}</div>
+          <button onclick="eliminarContactoFicha(${c.id})" title="Eliminar contacto" style="background:transparent;border:none;color:var(--text-dim);cursor:pointer;font-size:1.1rem;line-height:1;flex-shrink:0;">&times;</button>
+        </div>
+        ${acc.length ? `<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:7px;">${acc.join('')}</div>` : '<div style="font-size:.72rem;color:var(--text-dim);margin-top:4px;">Sin datos de contacto.</div>'}
+      </div>`;
+    }).join('');
+  } catch (e) {
+    cont.innerHTML = '<div style="font-size:.78rem;color:var(--text-dim);">No se pudieron cargar los contactos.</div>';
+  }
+}
+
+async function agregarContactoFicha() {
+  if (!_fichaLeadId) return;
+  const nombre = (document.getElementById('fc-nuevo-nombre').value || '').trim();
+  if (!nombre) { mostrarToast('Poné al menos el nombre.', 'amber'); return; }
+  const rol  = (document.getElementById('fc-nuevo-rol').value || '').trim();
+  const tel  = (document.getElementById('fc-nuevo-tel').value || '').trim();
+  const wa   = (document.getElementById('fc-nuevo-wa').value || '').trim();
+  const mail = (document.getElementById('fc-nuevo-email').value || '').trim();
+  const q = `${API}/prospectos/${_fichaLeadId}/contactos?nombre=${encodeURIComponent(nombre)}&rol=${encodeURIComponent(rol)}&telefono=${encodeURIComponent(tel)}&whatsapp=${encodeURIComponent(wa)}&email=${encodeURIComponent(mail)}`;
+  try {
+    const res = await apiFetch(q, { method: 'POST' });
+    if (res.ok) {
+      ['fc-nuevo-nombre', 'fc-nuevo-rol', 'fc-nuevo-tel', 'fc-nuevo-wa', 'fc-nuevo-email'].forEach(i => document.getElementById(i).value = '');
+      mostrarToast('Contacto agregado.', 'green');
+      cargarContactosFicha(_fichaLeadId);
+    } else { mostrarToast('No se pudo agregar.', 'red'); }
+  } catch { mostrarToast('Error de conexión.', 'red'); }
+}
+
+async function eliminarContactoFicha(cid) {
+  if (!confirm('¿Eliminar este contacto?')) return;
+  try {
+    const res = await apiFetch(`${API}/contactos/${cid}`, { method: 'DELETE' });
+    if (res.ok) { mostrarToast('Contacto eliminado.', 'green'); cargarContactosFicha(_fichaLeadId); }
+    else { mostrarToast('No se pudo eliminar.', 'red'); }
+  } catch { mostrarToast('Error de conexión.', 'red'); }
 }
 
 async function plCrearProspecto() {
@@ -6379,7 +6899,7 @@ function plRenderVentas() {
 }
 
 async function accionProspecto(id, accion) {
-  const endpointMap = { seguimiento: 'contactar', propuesta_enviada: 'propuesta_enviada' };
+  const endpointMap = { seguimiento: 'contactar', propuesta_enviada: 'propuesta-enviada' };
   const endpoint = endpointMap[accion] ?? accion;
   try {
     const res = await apiFetch(`${API}/prospectos/${id}/${endpoint}`,{method:'PATCH'});
@@ -6539,6 +7059,43 @@ async function renderLeaderboard() {
 }
 // ── BOLSA DE LEADS (ALIADO) ──────────────────────────────────────────────────
 
+// ── Bolsa Canal 1: WhatsApp normalizado a formato internacional para wa.me ────
+function _waNumeroBolsa(raw, pais) {
+  let d = (raw || '').replace(/\D/g, '');
+  if (!d) return '';
+  if (d.indexOf('00') === 0) d = d.slice(2);
+  const DIAL = { AR:'54', UY:'598', CL:'56', PY:'595', BO:'591', BR:'55', PE:'51', CO:'57', EC:'593', VE:'58', MX:'52', US:'1', ES:'34', CR:'506', PA:'507', GT:'502', HN:'504', SV:'503', NI:'505', DO:'1', CU:'53' };
+  const code = DIAL[(pais || 'AR').toUpperCase()] || '54';
+  if (d.indexOf(code) === 0) return d;
+  d = d.replace(/^0+/, '');
+  if (code === '54') { d = d.replace(/^15/, ''); return '549' + d; }
+  return code + d;
+}
+
+// ── Bolsa Canal 1: bloque "Contactá ahora" adaptado al dato disponible ────────
+function _contactoAccionesBolsa(l) {
+  const wa   = _waNumeroBolsa(l.whatsapp || l.telefono, l.pais);
+  const tel  = (l.telefono || l.whatsapp || '').replace(/[^\d+]/g, '');
+  const mail = (l.email || '').trim();
+  const nombre = l.nombre_contacto ? String(l.nombre_contacto).split(' ')[0] : '';
+  const saludo = nombre ? ('Hola ' + nombre) : 'Hola';
+  const empresa = l.empresa || 'tu empresa';
+  const msg  = encodeURIComponent(saludo + ', te contacto de Avanza Digital por ' + empresa + '. ¿Tenés un minuto para una consulta rápida?');
+  const subj = encodeURIComponent('Avanza Digital — ' + empresa);
+  const body = encodeURIComponent(saludo + '. Te escribo de Avanza Digital: ayudamos a PYMEs como ' + empresa + ' a que su presencia digital genere clientes. ¿Tenés unos minutos esta semana?');
+  const btns = [];
+  if (wa)   btns.push('<a href="https://wa.me/' + wa + '?text=' + msg + '" target="_blank" rel="noopener" style="flex:1;min-width:110px;text-align:center;padding:9px;font-size:.82rem;font-weight:700;text-decoration:none;background:var(--green);color:#000;border-radius:8px;"><i class="fa-brands fa-whatsapp"></i> WhatsApp</a>');
+  if (tel)  btns.push('<a href="tel:' + tel + '" style="flex:1;min-width:90px;text-align:center;padding:9px;font-size:.82rem;font-weight:700;text-decoration:none;background:rgba(59,130,246,0.15);color:#60a5fa;border:1px solid rgba(59,130,246,0.3);border-radius:8px;"><i class="fa-solid fa-phone"></i> Llamar</a>');
+  if (mail) btns.push('<a href="mailto:' + mail + '?subject=' + subj + '&body=' + body + '" style="flex:1;min-width:90px;text-align:center;padding:9px;font-size:.82rem;font-weight:700;text-decoration:none;background:rgba(255,255,255,0.06);color:var(--text-muted);border:1px solid var(--border);border-radius:8px;"><i class="fa-solid fa-envelope"></i> Email</a>');
+  if (!btns.length) {
+    return '<div style="margin-top:10px;background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.25);border-radius:8px;padding:10px 12px;font-size:.8rem;color:var(--amber);"><i class="fa-solid fa-circle-info"></i> Sin datos de contacto directos — buscá la empresa online para conseguir un canal.</div>';
+  }
+  const mejor = wa ? 'WhatsApp' : (l.telefono ? 'teléfono' : 'email');
+  return '<div style="margin-top:12px;border-top:1px solid rgba(255,255,255,0.05);padding-top:12px;">' +
+    '<div style="font-size:.72rem;color:var(--text-dim);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px;"><i class="fa-solid fa-paper-plane"></i> Contactá ahora · mejor canal: <strong style="color:var(--green);">' + mejor + '</strong></div>' +
+    '<div style="display:flex;gap:8px;flex-wrap:wrap;">' + btns.join('') + '</div></div>';
+}
+
 async function cargarBolsa() {
   if(!aliado) return;
   try {
@@ -6611,6 +7168,7 @@ async function cargarBolsa() {
           ${fila('📞','Teléfono', l.telefono||'')}
           ${fila('📱','WhatsApp', l.whatsapp && l.whatsapp !== l.telefono ? l.whatsapp : '', 'var(--green)')}
           ${fila('✉️','Email', l.email)}
+          ${_contactoAccionesBolsa(l)}
           ${l.web ? `
           <div style="margin-top:6px;display:flex;align-items:center;gap:6px;">
             <span style="font-size:.8rem;color:var(--text-dim);">🌐</span>
@@ -6630,11 +7188,11 @@ async function cargarBolsa() {
           ${!l.web ? (() => {
             if (l.tiene_web && l.tiene_redes) {
               return `<div style="margin-top:8px;background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.25);border-radius:8px;padding:10px 12px;font-size:.8rem;color:var(--amber);line-height:1.5;">
-                <i class="fa-solid fa-lightbulb"></i> Esta empresa tiene sitio web y redes sociales — buscala en Google antes de llamar para llegar mejor preparado.
+                <i class="fa-solid fa-lightbulb"></i> Esta empresa tiene sitio web y redes sociales — buscala en Google antes de contactar para llegar mejor preparado.
               </div>`;
             } else if (l.tiene_web) {
               return `<div style="margin-top:8px;background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.25);border-radius:8px;padding:10px 12px;font-size:.8rem;color:var(--amber);line-height:1.5;">
-                <i class="fa-solid fa-lightbulb"></i> Esta empresa tiene sitio web — buscala en Google antes de llamar.
+                <i class="fa-solid fa-lightbulb"></i> Esta empresa tiene sitio web — buscala en Google antes de contactar.
               </div>`;
             } else if (l.tiene_redes) {
               return `<div style="margin-top:8px;background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.25);border-radius:8px;padding:10px 12px;font-size:.8rem;color:var(--amber);line-height:1.5;">
@@ -12224,5 +12782,15 @@ function jMd(text) {
   }
 </script>
 
+
+<script>
+/* ===== Sidebar: colapsar (PC) y drawer (mobile) — NO modifica la lógica existente ===== */
+function avzCollapse(){ document.documentElement.classList.toggle('avz-collapsed'); }
+function avzDrawer(open){ document.documentElement.classList.toggle('avz-drawer', !!open); }
+document.addEventListener('click', function(e){
+  var it = e.target.closest ? e.target.closest('#avz-sidebar .avz-nav-item') : null;
+  if(it){ avzDrawer(false); }
+}, false);
+</script>
 </body>
 </html>
