@@ -763,6 +763,39 @@ tr:hover td { background:rgba(255,255,255,0.02); }
           <div class="form-row"><label>Ciudad / Localidad</label><input type="text" id="bl-ciudad" placeholder="Ej: Rafaela, Santa Fe"></div>
         </div>
         <div class="form-2col">
+          <div class="form-row">
+            <label>País</label>
+            <select id="bl-pais" onchange="document.getElementById('bl-pais-otro').style.display = this.value==='OTRO' ? 'block':'none';" style="background:#111; border:1px solid var(--border); color:white; padding:10px; border-radius:8px; width:100%;">
+              <option value="AR">🇦🇷 Argentina (AR)</option>
+              <option value="US">🇺🇸 Estados Unidos (US)</option>
+              <option value="MX">🇲🇽 México (MX)</option>
+              <option value="CO">🇨🇴 Colombia (CO)</option>
+              <option value="CL">🇨🇱 Chile (CL)</option>
+              <option value="UY">🇺🇾 Uruguay (UY)</option>
+              <option value="PE">🇵🇪 Perú (PE)</option>
+              <option value="EC">🇪🇨 Ecuador (EC)</option>
+              <option value="BO">🇧🇴 Bolivia (BO)</option>
+              <option value="PY">🇵🇾 Paraguay (PY)</option>
+              <option value="VE">🇻🇪 Venezuela (VE)</option>
+              <option value="CR">🇨🇷 Costa Rica (CR)</option>
+              <option value="PA">🇵🇦 Panamá (PA)</option>
+              <option value="GT">🇬🇹 Guatemala (GT)</option>
+              <option value="HN">🇭🇳 Honduras (HN)</option>
+              <option value="SV">🇸🇻 El Salvador (SV)</option>
+              <option value="NI">🇳🇮 Nicaragua (NI)</option>
+              <option value="DO">🇩🇴 Rep. Dominicana (DO)</option>
+              <option value="CU">🇨🇺 Cuba (CU)</option>
+              <option value="BR">🇧🇷 Brasil (BR)</option>
+              <option value="ES">🇪🇸 España (ES)</option>
+              <option value="OTRO">🌎 Otro (escribir código ISO)</option>
+            </select>
+          </div>
+          <div class="form-row">
+            <label>Código ISO si elegiste "Otro"</label>
+            <input type="text" id="bl-pais-otro" placeholder="2 letras, ej: PR, CA, IT" maxlength="2" style="display:none;text-transform:uppercase;">
+          </div>
+        </div>
+        <div class="form-2col">
           <div class="form-row"><label>Teléfono *</label><input type="text" id="bl-telefono" placeholder="+54 9 342..."></div>
           <div class="form-row"><label>WhatsApp (si es diferente)</label><input type="text" id="bl-whatsapp" placeholder="+54 9 342..."></div>
         </div>
@@ -770,19 +803,21 @@ tr:hover td { background:rgba(255,255,255,0.02); }
           <div class="form-row"><label>Email</label><input type="email" id="bl-email" placeholder="contacto@empresa.com"></div>
           <div class="form-row"><label>Notas internas</label><input type="text" id="bl-notas" placeholder="Ej: Ya pidió presupuesto, budget confirmado"></div>
         </div>
-        <!-- v1.3: Tier + costo -->
+        <!-- Tier = calidad del dato (todos los leads son GRATIS) -->
         <div class="form-2col">
           <div class="form-row">
-            <label>Tier del lead</label>
+            <label>Tier del lead <span style="font-size:.72rem; color:var(--text-dim);">(calidad del dato — todos gratis)</span></label>
             <select id="bl-tier" onchange="actualizarCostoLead()" style="background:#111; border:1px solid var(--border); color:white; padding:10px; border-radius:8px; width:100%;">
-              <option value="basico">🆓 Básico (gratis, free-for-all)</option>
-              <option value="calificado">⭐ Calificado (se paga con créditos)</option>
-              <option value="premium">💎 Premium (más datos, más caro)</option>
+              <option value="basico">🆓 Básico (datos mínimos)</option>
+              <option value="calificado">⭐ Calificado (presencia digital + contacto)</option>
+              <option value="premium">💎 Premium (datos completos, alta calidad)</option>
             </select>
           </div>
           <div class="form-row">
-            <label>Costo en créditos <span id="bl-costo-hint" style="font-size:.72rem; color:var(--text-dim);">(deja 0 si es básico)</span></label>
-            <input type="number" id="bl-costo" placeholder="0" min="0" value="0">
+            <label>Score de calidad rápido</label>
+            <div style="padding:10px;border:1px dashed var(--border);border-radius:8px;color:var(--text-muted);font-size:.8rem;background:rgba(34,197,94,0.06);">
+              <i class="fa-solid fa-unlock" style="color:#4ade80;"></i> Reclamo gratis. Los créditos son solo para Jarvis IA.
+            </div>
           </div>
         </div>
         <div class="form-2col">
@@ -835,10 +870,12 @@ tr:hover td { background:rgba(255,255,255,0.02); }
         <div style="background:rgba(255,255,255,0.03);border:1px dashed var(--border);border-radius:8px;padding:14px;font-size:.78rem;color:var(--text-muted);margin-bottom:18px;line-height:1.9;">
           <strong style="color:var(--text); display:block; margin-bottom:6px;">📋 Columnas requeridas (separadas por punto y coma):</strong>
           <code style="background:rgba(0,0,0,0.4);padding:6px 10px;border-radius:6px;display:block;font-size:.77rem;color:#93c5fd;margin-bottom:8px;">
-            empresa ; rubro ; nombre_contacto ; ciudad ; pais ; telefono ; whatsapp ; email ; web ; instagram ; tiene_web ; tiene_redes ; observacion ; tier ; costo_creditos ; score_calidad
+            empresa ; rubro ; nombre_contacto ; ciudad ; pais ; telefono ; whatsapp ; email ; web ; instagram ; tiene_web ; tiene_redes ; observacion ; tier ; score_calidad
           </code>
+          <span style="color:#4ade80;">✓ Todos los leads se reclaman GRATIS.</span> El <code>tier</code> ya solo indica la <strong>calidad del dato</strong> (los créditos quedaron solo para Jarvis IA).<br>
           <span style="color:var(--amber);">⚠️ tier</span> solo acepta: <code>basico</code> | <code>calificado</code> | <code>premium</code><br>
-          <span style="color:var(--amber);">⚠️ costo_creditos</span>: 0 para básico · 10 para calificado · 20 para premium<br>
+          <span style="color:var(--amber);">⚠️ pais</span>: código ISO de 2 letras (<code>AR</code>, <code>US</code>, <code>MX</code>, <code>CL</code>…). Acepta nombres y los normaliza.<br>
+          <span style="color:var(--amber);">⚠️ costo_creditos</span> es opcional: si el CSV lo trae, se ignora (los leads son gratis).<br>
           <span style="color:var(--amber);">⚠️ score_calidad</span>: número entre 0 y 100 — La primera fila (encabezado) se ignora automáticamente.<br>
           <span style="color:var(--amber);">⚠️ tiene_web / tiene_redes</span>: poner <code>1</code> si tiene, <code>0</code> si no tiene<br>
           <span style="color:var(--amber);">⚠️ web / instagram</span>: URL o usuario (@empresa), dejar vacío si no se tiene<br>
@@ -2885,36 +2922,119 @@ function setModoCarga(modo) {
   }
 }
 
+// Normaliza el país a un código ISO de 2 letras. Acepta nombres completos y
+// abreviaturas comunes (incluido el clásico "EU" = Estados Unidos → "US").
+function _normalizarPais(raw) {
+  // Soporta CUALQUIER país: un código ISO de 2 letras se acepta tal cual
+  // (AR, CR, PA, GT, DO, BR, ...). Además mapeamos nombres completos y algunas
+  // abreviaturas/quirks comunes. NO inventa ni recorta códigos válidos.
+  let v = (raw || '').toUpperCase()
+    .normalize('NFD').replace(/[\u0300-\u036f]/g, '') // sin acentos
+    .replace(/[._\-]/g, ' ').replace(/\s+/g, ' ').trim();
+  if (!v) return 'AR';
+  // Quirks de 2 letras que SÍ hay que remapear (deben ir antes del passthrough):
+  const remap2 = { 'EU':'US', 'UK':'GB', 'UE':'US' };
+  if (remap2[v]) return remap2[v];
+  if (v.length === 2) return v;                 // cualquier ISO-2 pasa tal cual
+  const map = {
+    'EEUU':'US','EE UU':'US','USA':'US','ESTADOS UNIDOS':'US','UNITED STATES':'US',
+    'ARGENTINA':'AR','ARG':'AR',
+    'MEXICO':'MX','COLOMBIA':'CO','CHILE':'CL','URUGUAY':'UY','PERU':'PE',
+    'ECUADOR':'EC','BOLIVIA':'BO','PARAGUAY':'PY','VENEZUELA':'VE',
+    'BRASIL':'BR','BRAZIL':'BR','ESPANA':'ES','SPAIN':'ES',
+    'PANAMA':'PA','GUATEMALA':'GT','HONDURAS':'HN','EL SALVADOR':'SV',
+    'NICARAGUA':'NI','COSTA RICA':'CR','CUBA':'CU','PUERTO RICO':'PR',
+    'REPUBLICA DOMINICANA':'DO','DOMINICAN REPUBLIC':'DO'
+  };
+  if (map[v]) return map[v];
+  return v.slice(0, 2); // último recurso (el prompt ya pide código ISO de 2 letras)
+}
+
+// Parser robusto y guiado por la CABECERA.
+// - Mapea columnas por NOMBRE (acepta el CSV con o sin la columna costo_creditos).
+// - 'observacion' es el único campo de texto libre que puede traer el separador:
+//   si una fila tiene columnas de más/menos, anclamos por ambos extremos
+//   (campos fijos del frente + campos fijos del final) y todo lo del medio es
+//   la observación. Así no se corren las columnas tier/score aunque la IA meta
+//   un ';' de más.
 function parsearCSVMasivo(texto) {
-  const lineas = texto.split(/\r?\n/).map(l => l.trim()).filter(l => l.length > 3);
+  const lineas = texto.split(/\r?\n/)
+    .map(l => l.replace(/\uFEFF/g, '').replace(/\s+$/,''))
+    .filter(l => l.trim().length > 3);
   if (lineas.length < 2) return [];
-  const sep = lineas[0].includes(';') ? ';' : ',';
-  const filas = lineas.slice(1); // saltar encabezado
+
+  const sep = (lineas[0].match(/;/g) || []).length >= (lineas[0].match(/,/g) || []).length ? ';' : ',';
+  const limpiar = c => (c == null ? '' : String(c)).trim().replace(/^["']|["']$/g, '');
+
+  // Cabecera (o fallback al orden canónico si la primera fila ya es data)
+  let header = lineas[0].split(sep).map(h => h.trim().toLowerCase());
+  let dataLines;
+  if (header.includes('empresa')) {
+    dataLines = lineas.slice(1);
+  } else {
+    header = ['empresa','rubro','nombre_contacto','ciudad','pais','telefono','whatsapp',
+              'email','web','instagram','tiene_web','tiene_redes','observacion','tier',
+              'costo_creditos','score_calidad'];
+    dataLines = lineas; // no hay cabecera que saltar
+  }
+
+  const obsIdx  = header.indexOf('observacion');
+  const nBefore = obsIdx === -1 ? header.length : obsIdx;
+  const nAfter  = obsIdx === -1 ? 0 : (header.length - obsIdx - 1);
+  const sepRe   = new RegExp('\\' + sep, 'g');
+
   const leads = [];
-  for (const fila of filas) {
-    const cols = fila.split(sep).map(c => c.trim().replace(/^["']|["']$/g, ''));
-    if (cols.length < 5) continue;
-    // Si falta observacion (15 cols en lugar de 16), insertarla vacía en pos 12
-    if (cols.length === 15 && !['basico','calificado','premium'].includes((cols[13]||'').toLowerCase())) {
-      cols.splice(12, 0, '');
+  for (const fila of dataLines) {
+    const parts = fila.split(sep);
+    if (parts.length < Math.max(3, nBefore)) continue;
+
+    const rec = {};
+    if (obsIdx === -1 || parts.length === header.length) {
+      header.forEach((h, i) => { rec[h] = limpiar(parts[i]); });
+    } else {
+      // Anclaje por extremos: el medio (todo lo que sobra) es la observación.
+      for (let i = 0; i < nBefore; i++) rec[header[i]] = limpiar(parts[i]);
+      const trailing = nAfter ? parts.slice(parts.length - nAfter) : [];
+      for (let j = 0; j < nAfter; j++) rec[header[obsIdx + 1 + j]] = limpiar(trailing[j]);
+      let obs = parts.slice(nBefore, parts.length - nAfter).join(sep);
+      if (!obs.replace(sepRe, '').trim()) obs = ''; // sólo separadores → vacío
+      rec['observacion'] = limpiar(obs);
     }
-    const [empresa, rubro, nombre_contacto, ciudad, pais, telefono, whatsapp,
-           email, web, instagram, tiene_web_raw, tiene_redes_raw,
-           observacion, tier_raw, costo_raw, score_raw] = cols;
-    if (!empresa || !rubro || !telefono) continue;
-    const tier = ['basico','calificado','premium'].includes((tier_raw||'').toLowerCase())
-      ? tier_raw.toLowerCase() : 'basico';
-    const costo_creditos = parseInt(costo_raw || '0') || 0;
-    const score_calidad  = Math.min(100, Math.max(0, parseInt(score_raw || '50') || 50));
-    leads.push({ empresa, rubro, nombre_contacto: nombre_contacto||'', ciudad: ciudad||'',
-      pais: (pais||'AR').toUpperCase() || 'AR',
-      telefono, whatsapp: whatsapp||telefono, email: email||'', tier,
-      costo_creditos, score_calidad, notas_calificacion: '',
-      web: web||'',
-      instagram: instagram||'',
-      tiene_web: tiene_web_raw === '1' || tiene_web_raw === 'true',
-      tiene_redes: tiene_redes_raw === '1' || tiene_redes_raw === 'true',
-      observacion: observacion||'' });
+
+    const empresa  = rec['empresa']  || '';
+    const rubro    = rec['rubro']    || '';
+    const telefono = rec['telefono'] || '';
+    if (!empresa) continue;  // único campo realmente obligatorio
+    const _falta = [];
+    if (!rubro)    _falta.push('rubro');
+    if (!telefono) _falta.push('teléfono');
+
+    const tier = ['basico','calificado','premium'].includes((rec['tier'] || '').toLowerCase())
+      ? rec['tier'].toLowerCase() : 'basico';
+    const score_calidad = Math.min(100, Math.max(0, parseInt(rec['score_calidad'] || '50') || 50));
+    const tw = (rec['tiene_web']   || '').toLowerCase();
+    const tr = (rec['tiene_redes'] || '').toLowerCase();
+
+    leads.push({
+      empresa, rubro,
+      nombre_contacto: rec['nombre_contacto'] || '',
+      ciudad: rec['ciudad'] || '',
+      pais: _normalizarPais(rec['pais']),
+      telefono,
+      whatsapp: rec['whatsapp'] || telefono,
+      email: rec['email'] || '',
+      tier,
+      costo_creditos: 0,                 // leads gratis: el costo quedó deprecado
+      score_calidad,
+      notas_calificacion: '',
+      web: rec['web'] || '',
+      instagram: rec['instagram'] || '',
+      tiene_web:   tw === '1' || tw === 'true' || tw === 'si' || tw === 'sí',
+      tiene_redes: tr === '1' || tr === 'true' || tr === 'si' || tr === 'sí',
+      observacion: rec['observacion'] || '',
+      _incompleto: _falta.length > 0,
+      _falta
+    });
   }
   return leads;
 }
@@ -2960,13 +3080,13 @@ function procesarCSVTexto(texto, nombre) {
   const tierIcon  = { basico: '', calificado: '⭐', premium: '💎' };
 
   tbody.innerHTML = _leadsMasivos.map(l => `
-    <tr style="border-bottom:1px solid rgba(255,255,255,0.05);">
-      <td style="padding:7px 10px;font-weight:700;color:var(--text);">${l.empresa}</td>
-      <td style="padding:7px 10px;color:var(--text-muted);">${l.rubro}</td>
+    <tr style="border-bottom:1px solid rgba(255,255,255,0.05);${l._incompleto ? 'background:rgba(245,158,11,0.06);border-left:2px solid var(--amber);' : ''}">
+      <td style="padding:7px 10px;font-weight:700;color:var(--text);">${l.empresa}${l._incompleto ? ` <span title="Falta: ${l._falta.join(', ')}" style="color:var(--amber);font-size:.72rem;font-weight:700;">⚠ falta ${l._falta.join(', ')}</span>` : ''}</td>
+      <td style="padding:7px 10px;color:var(--text-muted);">${l.rubro||'—'}</td>
       <td style="padding:7px 10px;color:var(--text-muted);">${l.nombre_contacto||'—'}</td>
       <td style="padding:7px 10px;color:var(--text-muted);">${l.ciudad||'—'}</td>
       <td style="padding:7px 10px;color:var(--text-muted);font-size:.85rem;">${l.pais||'AR'}</td>
-      <td style="padding:7px 10px;">${l.telefono}</td>
+      <td style="padding:7px 10px;${l.telefono ? '' : 'color:var(--amber);'}">${l.telefono||'— sin teléfono'}</td>
       <td style="padding:7px 10px;color:var(--text-muted);font-size:.75rem;">
         ${l.web ? `<a href="${l.web.startsWith('http') ? l.web : 'https://'+l.web}" target="_blank" style="color:var(--primary);">web</a>` : l.tiene_web ? '🌐' : '—'}
       </td>
@@ -2983,7 +3103,10 @@ function procesarCSVTexto(texto, nombre) {
   `).join('');
 
   count.textContent = _leadsMasivos.length;
-  status.textContent = `✅ ${_leadsMasivos.length} leads detectados. Revisá y confirmá.`;
+  const _inc = _leadsMasivos.filter(l => l._incompleto).length;
+  status.textContent = _inc
+    ? `✅ ${_leadsMasivos.length} leads detectados (${_inc} incompleto${_inc>1?'s':''}, marcados en ámbar). Revisá y confirmá.`
+    : `✅ ${_leadsMasivos.length} leads detectados. Revisá y confirmá.`;
   preview.style.display = 'block';
   btnImp.style.display  = 'inline-flex';
   btnLimp.style.display = 'inline-flex';
@@ -3105,11 +3228,13 @@ async function cargarLeadBolsa() {
   const rubro = document.getElementById('bl-rubro').value.trim();
   const nombre_contacto = document.getElementById('bl-nombre-contacto').value.trim();
   const ciudad = document.getElementById('bl-ciudad').value.trim();
+  const _paisSel = document.getElementById('bl-pais').value;
+  const pais = _normalizarPais(_paisSel === 'OTRO' ? document.getElementById('bl-pais-otro').value : _paisSel);
   const telefono = document.getElementById('bl-telefono').value.trim();
   const whatsapp = document.getElementById('bl-whatsapp').value.trim();
   const email = document.getElementById('bl-email').value.trim();
   const tier = document.getElementById('bl-tier').value;
-  const costo_creditos = parseInt(document.getElementById('bl-costo').value || '0');
+  const costo_creditos = 0; // leads gratis: el costo quedó deprecado
   const score_calidad = parseInt(document.getElementById('bl-score').value || '50');
   const notas = document.getElementById('bl-notas').value.trim();
   const notas_calificacion = document.getElementById('bl-notas-calificacion').value.trim();
@@ -3124,17 +3249,12 @@ async function cargarLeadBolsa() {
     mostrarToast('Empresa, Rubro y Teléfono son obligatorios.', 'amber');
     return;
   }
-  if (tier !== 'basico' && costo_creditos <= 0) {
-    mostrarToast('Los leads calificados y premium deben tener costo > 0.', 'amber');
-    return;
-  }
-
   try {
     const res = await apiFetch(`${API}/admin/bolsa-v2`, {
       method: 'POST',
       headers: {'Content-Type': 'application/json'},
       body: JSON.stringify({
-        empresa, rubro, nombre_contacto, ciudad, telefono, whatsapp, email,
+        empresa, rubro, nombre_contacto, ciudad, pais, telefono, whatsapp, email,
         notas, tier, costo_creditos, score_calidad, notas_calificacion,
         web, instagram, tiene_web, tiene_redes, observacion
       })
@@ -3145,9 +3265,11 @@ async function cargarLeadBolsa() {
       ['bl-empresa','bl-rubro','bl-nombre-contacto','bl-ciudad','bl-telefono',
        'bl-whatsapp','bl-email','bl-notas','bl-notas-calificacion',
        'bl-web','bl-instagram','bl-observacion'].forEach(id => document.getElementById(id).value = '');
-      document.getElementById('bl-costo').value = '0';
       document.getElementById('bl-score').value = '50';
       document.getElementById('bl-tier').value = 'basico';
+      document.getElementById('bl-pais').value = 'AR';
+      document.getElementById('bl-pais-otro').style.display = 'none';
+      document.getElementById('bl-pais-otro').value = '';
       document.getElementById('bl-tiene-web').checked = false;
       document.getElementById('bl-tiene-redes').checked = false;
       actualizarCostoLead();
@@ -3159,23 +3281,11 @@ async function cargarLeadBolsa() {
 }
 
 function actualizarCostoLead() {
+  // Los leads son gratis: el tier solo define la CALIDAD del dato. Esta función
+  // solo muestra/oculta los campos extra (web/redes/observación) según el tier.
   const tier = document.getElementById('bl-tier').value;
-  const costoInput = document.getElementById('bl-costo');
-  const hint = document.getElementById('bl-costo-hint');
   const camposPremium = document.getElementById('bl-campos-premium');
-
-  if (tier === 'basico') {
-    costoInput.value = 0;
-    costoInput.disabled = true;
-    if (hint) hint.textContent = '(los básicos son gratis)';
-    if (camposPremium) camposPremium.style.display = 'none';
-  } else {
-    costoInput.disabled = false;
-    const sugerido = tier === 'premium' ? 20 : 10;
-    if (parseInt(costoInput.value||'0') === 0) costoInput.value = sugerido;
-    if (hint) hint.textContent = `(sugerido: ${sugerido})`;
-    if (camposPremium) camposPremium.style.display = 'block';
-  }
+  if (camposPremium) camposPremium.style.display = (tier === 'basico') ? 'none' : 'block';
 }
 
 async function asignarCreditosAliado(codigo, nombre) {

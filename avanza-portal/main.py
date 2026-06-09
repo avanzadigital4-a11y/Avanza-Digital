@@ -984,12 +984,12 @@ def job_onboarding_sequence():
                 <div style="font-family:Inter,sans-serif;background:#050505;color:#e2e8f0;padding:40px;max-width:600px;margin:0 auto;border-radius:12px;border:1px solid #1e1e1e;">
                   <span style="background:#1e3a8a;color:#93c5fd;font-size:.75rem;font-weight:700;padding:4px 10px;border-radius:99px;letter-spacing:.5px;text-transform:uppercase;">Día 1 · Tu primer lead</span>
                   <h2 style="margin:18px 0 12px;font-size:1.4rem;color:#fff;">¡Bienvenido al portal, {nombre_corto}!</h2>
-                  <p style="color:#a1a1aa;line-height:1.6;">Lo más importante para arrancar: <strong style="color:#fff;">no necesitás gastar tus créditos todavía</strong>.</p>
+                  <p style="color:#a1a1aa;line-height:1.6;">Lo más importante para arrancar: <strong style="color:#fff;">todos los leads de la bolsa son gratis</strong>. No gastás un solo crédito en reclamarlos.</p>
                   <div style="background:#0f1d12;border:1px solid #14532d;border-radius:8px;padding:18px;margin:20px 0;">
                     <p style="margin:0 0 6px;color:#86efac;font-weight:700;">🎁 Empezá con un lead BÁSICO gratis</p>
-                    <p style="margin:0;color:#a1a1aa;line-height:1.5;">Los leads básicos no consumen créditos. Son ideales para que practiques el guión de venta sin gastar nada. Andá a la "Bolsa de Leads" y filtrá por tier "Básico".</p>
+                    <p style="margin:0;color:#a1a1aa;line-height:1.5;">Reclamalo desde la "Bolsa de Leads". Ningún lead consume créditos — básicos, calificados y premium se reclaman gratis. Empezá por un básico para practicar el guión.</p>
                   </div>
-                  <p style="color:#a1a1aa;line-height:1.6;font-size:.92rem;">Tus 100 créditos de bienvenida son para los leads <strong style="color:#fff;">calificados</strong> y <strong style="color:#fff;">premium</strong> — esos los abrimos en el próximo email cuando ya hayas probado uno básico.</p>
+                  <p style="color:#a1a1aa;line-height:1.6;font-size:.92rem;">Tus 100 créditos de bienvenida son para <strong style="color:#fff;">Jarvis IA</strong>: tu asistente de ventas (analiza leads, arma propuestas, redacta seguimientos y maneja objeciones). Los leads no gastan créditos.</p>
                   <a href="{PORTAL_URL}/portal.html#bolsa" style="display:inline-block;padding:14px 28px;background:#3b82f6;color:#fff;border-radius:8px;text-decoration:none;font-weight:800;font-size:1rem;margin-top:12px;">Ver leads básicos →</a>
                 </div>
                 """
@@ -1008,7 +1008,7 @@ def job_onboarding_sequence():
                 <div style="font-family:Inter,sans-serif;background:#050505;color:#e2e8f0;padding:40px;max-width:600px;margin:0 auto;border-radius:12px;border:1px solid #1e1e1e;">
                   <span style="background:#3b0764;color:#c084fc;font-size:.75rem;font-weight:700;padding:4px 10px;border-radius:99px;letter-spacing:.5px;text-transform:uppercase;">Día 3 · Leads calificados</span>
                   <h2 style="margin:18px 0 12px;font-size:1.4rem;color:#fff;">Listo, ahora sí: leads calificados</h2>
-                  <p style="color:#a1a1aa;line-height:1.6;">Tenés <strong style="color:#c084fc;">{saldo} créditos</strong> en tu saldo. Te alcanzan para 1-2 leads del tier "Calificado", que son contactos pre-filtrados por nosotros.</p>
+                  <p style="color:#a1a1aa;line-height:1.6;">Ya probaste un básico. Ahora dale a los del tier <strong style="color:#c084fc;">"Calificado"</strong>: contactos pre-filtrados por nosotros, también <strong style="color:#c084fc;">gratis</strong>, con mayor tasa de cierre.</p>
                   <div style="background:#1a0a2e;border:1px solid #3b0764;border-radius:8px;padding:18px;margin:20px 0;">
                     <p style="margin:0 0 8px;color:#c084fc;font-weight:700;">Cómo elegir bien tu primer calificado:</p>
                     <ul style="margin:0;padding-left:18px;color:#a1a1aa;line-height:1.7;font-size:.92rem;">
@@ -1017,7 +1017,7 @@ def job_onboarding_sequence():
                       <li>Mirá si <strong style="color:#fff;">tiene web/redes</strong>: te da contexto para personalizar el pitch</li>
                     </ul>
                   </div>
-                  <p style="color:#a1a1aa;line-height:1.5;font-size:.9rem;">Tip: si el contacto que comprás resulta inválido, podés reportarlo dentro de las 72hs y te devolvemos los créditos.</p>
+                  <p style="color:#a1a1aa;line-height:1.5;font-size:.9rem;">Tip: si un contacto que reclamás resulta inválido, podés reportarlo dentro de las 72hs y lo liberamos de tu cupo de reclamos activos.</p>
                   <a href="{PORTAL_URL}/portal.html#bolsa" style="display:inline-block;padding:14px 28px;background:#a855f7;color:#fff;border-radius:8px;text-decoration:none;font-weight:800;font-size:1rem;margin-top:12px;">Ver leads calificados →</a>
                 </div>
                 """
@@ -1030,29 +1030,29 @@ def job_onboarding_sequence():
                     print(f"[ONBOARDING D3 ERROR] {a.codigo}: {e}")
 
             # ── DÍA 7 ───────────────────────────────────────────────────────
-            # Solo si NO compró ningún lead premium todavía (gastó 0 créditos en compra_lead).
+            # Solo si todavía NO usó Jarvis IA (no gastó créditos en jarvis).
             if dias_desde_registro >= 7 and not getattr(a, "onboarding_email_d7_en", None):
-                gasto_premium = db.query(TransaccionCredito).filter(
+                uso_jarvis = db.query(TransaccionCredito).filter(
                     TransaccionCredito.aliado_id == a.id,
-                    TransaccionCredito.motivo == "compra_lead",
+                    TransaccionCredito.motivo.like("jarvis%"),
                 ).count()
-                if gasto_premium == 0:
+                if uso_jarvis == 0:
                     saldo = a.creditos or 0
                     html = f"""
                     <div style="font-family:Inter,sans-serif;background:#050505;color:#e2e8f0;padding:40px;max-width:600px;margin:0 auto;border-radius:12px;border:1px solid #1e1e1e;">
-                      <span style="background:#1c1917;color:#fdba74;font-size:.75rem;font-weight:700;padding:4px 10px;border-radius:99px;letter-spacing:.5px;text-transform:uppercase;">Día 7 · No los desperdicies</span>
-                      <h2 style="margin:18px 0 12px;font-size:1.4rem;color:#fff;">{nombre_corto}, todavía tenés tus créditos sin usar</h2>
-                      <p style="color:#a1a1aa;line-height:1.6;">Pasó una semana y tu saldo de <strong style="color:#fb923c;">{saldo} créditos</strong> sigue intacto. Eso es plata digital esperando por vos.</p>
+                      <span style="background:#1c1917;color:#fdba74;font-size:.75rem;font-weight:700;padding:4px 10px;border-radius:99px;letter-spacing:.5px;text-transform:uppercase;">Día 7 · Activá a Jarvis IA</span>
+                      <h2 style="margin:18px 0 12px;font-size:1.4rem;color:#fff;">{nombre_corto}, todavía no usaste a Jarvis IA</h2>
+                      <p style="color:#a1a1aa;line-height:1.6;">Pasó una semana y tu saldo de <strong style="color:#fb923c;">{saldo} créditos</strong> sigue intacto. Esos créditos son para Jarvis IA, tu asistente de ventas: que te analice un lead o te arme una propuesta antes de la próxima llamada.</p>
                       <div style="background:#1a1a1a;border:1px solid #2a2a2a;border-radius:8px;padding:18px;margin:20px 0;">
                         <p style="margin:0 0 8px;color:#fff;font-weight:700;">¿Qué te frena?</p>
-                        <p style="margin:0;color:#a1a1aa;line-height:1.6;font-size:.92rem;">Si no encontrás leads que te cierren por rubro/zona, respondé este email y te ayudamos. Si lo que falta es práctica, en la Academia hay guiones probados.</p>
+                        <p style="margin:0;color:#a1a1aa;line-height:1.6;font-size:.92rem;">Pedile a Jarvis que analice uno de tus leads reclamados o que te arme el guión para un rubro puntual. Si lo que falta es práctica, en la Academia hay guiones probados.</p>
                       </div>
-                      <p style="color:#a1a1aa;line-height:1.5;font-size:.9rem;">Recordá: 1 lead premium cerrado paga 10x el costo en créditos. Es el riesgo más asimétrico del programa.</p>
-                      <a href="{PORTAL_URL}/portal.html#bolsa" style="display:inline-block;padding:14px 28px;background:#f97316;color:#000;border-radius:8px;text-decoration:none;font-weight:800;font-size:1rem;margin-top:12px;">Ver leads premium →</a>
+                      <p style="color:#a1a1aa;line-height:1.5;font-size:.9rem;">Recordá: los leads son gratis, y Jarvis IA te ayuda a cerrarlos. Una propuesta bien armada paga muchas veces lo que cuesta generarla.</p>
+                      <a href="{PORTAL_URL}/portal.html#jarvis" style="display:inline-block;padding:14px 28px;background:#f97316;color:#000;border-radius:8px;text-decoration:none;font-weight:800;font-size:1rem;margin-top:12px;">Abrir Jarvis IA →</a>
                     </div>
                     """
                     try:
-                        enviar_email(a.email, f"⏳ {nombre_corto}, tus {saldo} créditos siguen sin usar", html)
+                        enviar_email(a.email, f"⏳ {nombre_corto}, tus {saldo} créditos de Jarvis IA siguen sin usar", html)
                         a.onboarding_email_d7_en = ahora
                         db.commit()
                         enviados_d7 += 1
@@ -6202,8 +6202,10 @@ def ver_marketplace(codigo_aliado: str = "",
                     pais: str = "",
                     aliado: Aliado = Depends(current_aliado_required),
                     db: Session = Depends(get_db)):
-    """Lista los leads calificados/premium disponibles con su costo en créditos.
+    """Lista los leads calificados/premium disponibles para reclamar GRATIS.
 
+    Los leads ya no consumen créditos (los créditos son sólo para Jarvis IA),
+    así que el costo viaja siempre en 0 por compatibilidad con el front.
     SECURITY: usa el aliado del JWT, no acepta `codigo_aliado` para spoofing.
     """
     a = aliado  # del JWT
@@ -6216,7 +6218,7 @@ def ver_marketplace(codigo_aliado: str = "",
     )
     if pais:
         q = q.filter(LeadBolsa.pais == pais.upper())
-    leads = q.order_by(LeadBolsa.costo_creditos.desc(), LeadBolsa.fecha_carga.desc()).all()
+    leads = q.order_by(LeadBolsa.score_calidad.desc(), LeadBolsa.fecha_carga.desc()).all()
 
     return {
         "saldo_creditos": a.creditos or 0,
@@ -6228,7 +6230,7 @@ def ver_marketplace(codigo_aliado: str = "",
                 "ciudad": l.ciudad or "",
                 "pais": l.pais or "AR",
                 "tier": l.tier,
-                "costo_creditos": l.costo_creditos or 0,
+                "costo_creditos": 0,  # leads gratis: el costo quedó deprecado
                 "score_calidad": l.score_calidad or 50,
                 # Notas internas del admin que califica — texto público para el aliado
                 # va por `observacion`. Mantenemos `notas` por compatibilidad con
@@ -6255,7 +6257,15 @@ def comprar_lead(id: int,
                  codigo_aliado: str = "",  # legacy
                  aliado: Aliado = Depends(current_aliado_required),
                  db: Session = Depends(get_db)):
-    """Compra un lead premium/calificado usando créditos del aliado autenticado."""
+    """Reclama un lead calificado/premium SIN costo en créditos.
+
+    Histórico: este endpoint cobraba créditos por los leads calificados y
+    premium. Desde la unificación de la bolsa TODOS los leads son gratis y los
+    créditos quedaron reservados exclusivamente para Jarvis IA. Mantenemos el
+    endpoint (y la ruta `/comprar`) por compatibilidad con el front y los links
+    viejos, pero ahora se comporta como un reclamo gratuito que desbloquea el
+    contacto del lead.
+    """
     a = aliado
     if (getattr(a, "tipo_aliado", "canal1") or "canal1") == "canal2":
         raise HTTPException(403, "El marketplace de leads no está disponible para aliados Canal 2.")
@@ -6265,46 +6275,16 @@ def comprar_lead(id: int,
     if not lead:
         raise HTTPException(400, "Ese lead ya no está disponible.")
 
-    if (lead.tier or "basico") == "basico":
-        raise HTTPException(400, "Este lead es gratuito. Usá el endpoint /bolsa/{id}/reclamar.")
-
-    costo = lead.costo_creditos or 0
-    if (a.creditos or 0) < costo:
-        # Error estructurado — el front lo agarra y lo muestra como modal con CTA,
-        # no como toast rojo. La idea: convertir el "no podés" en una oferta clara.
-        saldo_actual = a.creditos or 0
-        raise HTTPException(400, detail={
-            "code": "saldo_insuficiente",
-            "mensaje": f"Te faltan {costo - saldo_actual} créditos para este lead.",
-            "necesitas": costo,
-            "tenes": saldo_actual,
-            "faltan": costo - saldo_actual,
-            "alternativas": [
-                {
-                    "tipo": "leads_basicos",
-                    "label": "Ver leads básicos gratis",
-                    "descripcion": "Los leads del tier básico no consumen créditos.",
-                    "accion": "ir_a_bolsa_basicos",
-                },
-                {
-                    "tipo": "recargar",
-                    "label": "Recargar desde USD 10",
-                    "descripcion": "Paquete Impulso: 100 créditos por USD 10.",
-                    "accion": "abrir_modal_recarga",
-                },
-            ],
-        })
-
     reclamos_activos = db.query(LeadBolsa).filter(
         LeadBolsa.aliado_id == a.id, LeadBolsa.estado == "reclamado"
     ).count()
     if reclamos_activos >= LIMITE_RECLAMOS_ACTIVOS:
-        raise HTTPException(400, f"Ya tenés {LIMITE_RECLAMOS_ACTIVOS} leads reclamados activos.")
+        raise HTTPException(400, f"Ya tenés {LIMITE_RECLAMOS_ACTIVOS} leads reclamados activos. Marcá al menos uno como contactado antes de reclamar otro.")
 
     # --- CLAIM ATÓMICO DEL LEAD (anti-TOCTOU) ─────────────────────────────────
     # Dos aliados pueden haber pasado las validaciones de arriba al mismo tiempo.
-    # Acá nos aseguramos de que SOLO uno se quede con el lead: el UPDATE
-    # condicional WHERE estado='disponible' falla con rowcount=0 para el segundo.
+    # El UPDATE condicional WHERE estado='disponible' falla con rowcount=0 para
+    # el segundo, así sólo uno se queda con el lead.
     from sqlalchemy import update as _sa_update
     res_claim = db.execute(
         _sa_update(LeadBolsa)
@@ -6316,68 +6296,15 @@ def comprar_lead(id: int,
         )
     )
     if res_claim.rowcount == 0:
-        # Otro aliado nos ganó de mano (race condition). Devolvemos 409
-        # para que el front pueda refrescar la lista y mostrar un toast amable.
-        raise HTTPException(409, "Otro aliado acaba de comprar este lead — refrescá la bolsa.")
-
-    # Refrescamos la instancia local para mantener consistencia.
-    db.refresh(lead)
-
-    # Descuento atómico de créditos. Si por algún motivo extremo (compras
-    # paralelas con varios leads) el saldo ya no alcanza, _ajustar_creditos
-    # lanza 400. En ese caso revertimos el reclamo del lead antes de propagar.
-    try:
-        _ajustar_creditos(db, a, -costo, "compra_lead", f"lead:{lead.id}")
-    except HTTPException:
-        # Rollback explícito del reclamo del lead, para no dejarlo "vendido" sin cobrar.
-        db.execute(
-            _sa_update(LeadBolsa)
-            .where(LeadBolsa.id == id, LeadBolsa.aliado_id == a.id)
-            .values(estado="disponible", aliado_id=None, fecha_reclamo=None)
-        )
-        db.commit()
-        raise
+        # Otro aliado nos ganó de mano (race condition).
+        raise HTTPException(409, "Otro aliado acaba de reclamar este lead — refrescá la bolsa.")
 
     db.commit()
-
-    # --- AVISO SALDO BAJO (no bloquea la respuesta) ─────────────────────────
-    # Mensaje de "rampa de salida": no espantar, recordar que los leads
-    # `basico` siguen siendo gratis y el portal sigue 100% utilizable.
-    UMBRAL_SALDO_BAJO = 30
-    aviso_saldo_bajo = (a.creditos or 0) < UMBRAL_SALDO_BAJO
-
-    if aviso_saldo_bajo and a.email:
-        nombre_corto = a.nombre.split()[0] if a.nombre else "Aliado"
-        saldo_actual = a.creditos or 0
-        html_aviso = f"""
-        <div style="font-family:Inter,sans-serif;background:#050505;color:#e2e8f0;padding:40px;max-width:600px;margin:0 auto;border-radius:12px;border:1px solid #1e1e1e;">
-          <span style="background:#1c1917;color:#fdba74;font-size:.75rem;font-weight:700;padding:4px 10px;border-radius:99px;letter-spacing:.5px;text-transform:uppercase;">💡 Heads up</span>
-          <h2 style="margin:18px 0 12px;font-size:1.4rem;color:#fb923c;">Te quedan {saldo_actual} créditos, {nombre_corto}</h2>
-          <p style="color:#a1a1aa;line-height:1.6;">Bien por reservar otro lead — pero queremos avisarte antes de que te encuentres con saldo en cero.</p>
-          <div style="background:#0f1d12;border:1px solid #14532d;border-radius:8px;padding:18px;margin:20px 0;">
-            <p style="margin:0 0 6px;font-weight:700;color:#86efac;">✅ Lo que NO cambia:</p>
-            <p style="margin:0;color:#a1a1aa;line-height:1.6;">Los <strong style="color:#fff;">leads básicos siguen siendo 100% gratis</strong>. Los créditos solo se usan para acceder al tier calificado y premium del marketplace.</p>
-          </div>
-          <div style="background:#111;border:1px solid #2a2a2a;border-radius:8px;padding:18px;margin:20px 0;">
-            <p style="margin:0 0 8px;font-weight:600;color:#fff;">Si querés seguir con leads premium:</p>
-            <p style="margin:0;color:#a1a1aa;line-height:1.6;font-size:.92rem;">El paquete más chico (Impulso) son 100 créditos por USD 10 — 1-2 leads premium que se pagan solos con la primera comisión que cierres.</p>
-          </div>
-          <a href="{PORTAL_URL}/portal.html" style="display:inline-block;padding:14px 28px;background:#f97316;color:#000;border-radius:8px;text-decoration:none;font-weight:800;font-size:1rem;margin-top:8px;">Ir al portal →</a>
-          <p style="margin-top:28px;font-size:.75rem;color:#3f3f46;">Este aviso lo enviamos cuando tu saldo baja de {UMBRAL_SALDO_BAJO}. Avanza Digital · Partner Network.</p>
-        </div>
-        """
-        background_tasks.add_task(
-            enviar_email,
-            a.email,
-            f"💡 Te quedan {saldo_actual} créditos — pero el portal sigue activo",
-            html_aviso,
-        )
+    db.refresh(lead)
 
     return {
-        "mensaje": f"¡Lead premium comprado! Te descontamos {costo} créditos.",
+        "mensaje": "¡Lead reclamado gratis! Ya tenés el contacto desbloqueado.",
         "saldo_restante": a.creditos,
-        "aviso_saldo_bajo": aviso_saldo_bajo,
-        "umbral_saldo_bajo": UMBRAL_SALDO_BAJO,
         "lead": {
             "id": lead.id, "empresa": lead.empresa, "rubro": lead.rubro,
             "telefono": lead.telefono, "email": lead.email,
@@ -6412,9 +6339,10 @@ def reportar_mal_contacto(id: int,
                           aliado: Aliado = Depends(current_aliado_required),
                           db: Session = Depends(get_db)):
     """El aliado dueño del lead reporta que el contacto era inválido.
-    Solo se acepta dentro de las 72hs posteriores a la compra (lead.fecha_reclamo).
-    No devuelve créditos automáticamente — queda en estado 'pendiente' para
-    que el admin revise."""
+    Solo se acepta dentro de las 72hs posteriores al reclamo (lead.fecha_reclamo).
+    Queda en estado 'pendiente' para que el admin revise. Si lo aprueba, se
+    descarta el lead y se libera el cupo de reclamo del aliado (los leads son
+    gratis; el reembolso de créditos sólo aplica a leads históricos pagos)."""
     a = aliado
 
     # Validar motivo
@@ -6436,10 +6364,7 @@ def reportar_mal_contacto(id: int,
         raise HTTPException(404, "Lead no encontrado.")
     if lead.aliado_id != a.id:
         raise HTTPException(403, "Este lead no es tuyo.")
-    if (lead.tier or "basico") == "basico":
-        raise HTTPException(400, "Los leads básicos son gratis — no hay créditos que devolver.")
-
-    # Validar ventana de 72hs desde la compra
+    # Validar ventana de 72hs desde el reclamo
     if not lead.fecha_reclamo:
         raise HTTPException(400, "El lead no tiene fecha de reclamo registrada.")
     horas_desde_compra = (datetime.now() - lead.fecha_reclamo).total_seconds() / 3600
@@ -6486,7 +6411,7 @@ def reportar_mal_contacto(id: int,
               <h3 style="color:#fbbf24;">Reporte pendiente de revisión</h3>
               <p><strong>Aliado:</strong> {a.nombre} ({a.codigo}) — {a.email}</p>
               <p><strong>Lead:</strong> #{lead.id} — {lead.empresa} ({lead.rubro})</p>
-              <p><strong>Costo del lead:</strong> {lead.costo_creditos} créditos</p>
+              <p><strong>Tier del lead:</strong> {lead.tier}</p>
               <p><strong>Motivo:</strong> {r.motivo}</p>
               {f"<p><strong>Detalle:</strong> {r.detalle}</p>" if r.detalle else ""}
               <p style="font-size:.85rem;color:#a1a1aa;">Revisar en: /admin/reportes-mal-contacto</p>
@@ -6496,10 +6421,10 @@ def reportar_mal_contacto(id: int,
         print(f"[REPORTE MAL CONTACTO] Email admin falló: {e}")
 
     return {
-        "mensaje": "Reporte enviado. Te avisamos por email cuando lo revisemos.",
+        "mensaje": "Reporte enviado. Si lo aprobamos, descartamos el lead y te liberamos el cupo.",
         "reporte_id": r.id,
         "estado": r.estado,
-        "creditos_a_devolver_si_aprobado": lead.costo_creditos or 0,
+        "creditos_a_devolver_si_aprobado": lead.costo_creditos or 0,  # legacy: 0 en leads nuevos
     }
 
 
@@ -6580,9 +6505,9 @@ class ResolverReporteIn(BaseModel):
 def admin_aprobar_reporte(id: int,
                           body: ResolverReporteIn | None = Body(default=None),
                           db: Session = Depends(get_db)):
-    """Aprueba un reporte: devuelve 100% de los créditos al aliado y libera
-    el lead (lo manda a 'descartado' para que no vuelva al pool ni cuente
-    como un reclamo activo)."""
+    """Aprueba un reporte: descarta el lead y libera el cupo de reclamo del
+    aliado (lo manda a 'descartado' para que no vuelva al pool ni cuente como
+    reclamo activo). Si el lead era histórico y costó créditos, los reintegra."""
     r = db.query(ReporteMalContacto).filter(ReporteMalContacto.id == id).first()
     if not r:
         raise HTTPException(404, "Reporte no encontrado.")
@@ -6594,13 +6519,14 @@ def admin_aprobar_reporte(id: int,
     if not aliado or not lead:
         raise HTTPException(500, "Aliado o lead asociado no existe.")
 
+    # Los leads nuevos son gratis: sólo hay créditos para devolver en leads
+    # históricos (legacy) comprados cuando el marketplace cobraba créditos.
     creditos_a_devolver = lead.costo_creditos or 0
-
-    # Devolver créditos
-    _ajustar_creditos(
-        db, aliado, creditos_a_devolver,
-        "devolucion_lead_invalido", f"reporte:{r.id}:lead:{lead.id}"
-    )
+    if creditos_a_devolver > 0:
+        _ajustar_creditos(
+            db, aliado, creditos_a_devolver,
+            "devolucion_lead_invalido", f"reporte:{r.id}:lead:{lead.id}"
+        )
 
     # Marcar el lead como descartado (sale del flujo del aliado)
     lead.estado = "descartado"
@@ -6615,19 +6541,26 @@ def admin_aprobar_reporte(id: int,
 
     db.commit()
 
-    # Notificar al aliado
+    # Notificar al aliado — el mensaje cambia según haya reembolso o sólo cupo
     try:
         if aliado.email:
+            if creditos_a_devolver > 0:
+                asunto = f"✅ Reporte aprobado: te devolvimos {creditos_a_devolver} créditos"
+                bloque = f"""<h2 style=\"color:#4ade80;margin:0 0 12px;\">¡Te devolvimos los créditos!</h2>
+                  <p style=\"color:#a1a1aa;line-height:1.6;\">Revisamos tu reporte sobre el lead <strong style=\"color:#fff;\">{lead.empresa}</strong> y le dimos la razón. Descartamos el lead, te liberamos el cupo y reintegramos <strong style=\"color:#4ade80;\">{creditos_a_devolver} créditos</strong> a tu saldo.</p>
+                  <div style=\"background:#0f1d12;border:1px solid #14532d;border-radius:8px;padding:14px;margin:18px 0;\">
+                    <p style=\"margin:0;color:#86efac;font-weight:700;\">Saldo nuevo: {aliado.creditos or 0} créditos</p>
+                  </div>"""
+            else:
+                asunto = "✅ Reporte aprobado: te liberamos el cupo"
+                bloque = f"""<h2 style=\"color:#4ade80;margin:0 0 12px;\">¡Listo, lo descartamos!</h2>
+                  <p style=\"color:#a1a1aa;line-height:1.6;\">Revisamos tu reporte sobre el lead <strong style=\"color:#fff;\">{lead.empresa}</strong> y le dimos la razón. Lo sacamos de tus reclamos activos, así que <strong style=\"color:#86efac;\">ya podés reclamar otro lead</strong> en su lugar — sin costo, como siempre.</p>"""
             enviar_email(
                 aliado.email,
-                f"✅ Reporte aprobado: te devolvimos {creditos_a_devolver} créditos",
+                asunto,
                 f"""<div style="font-family:Inter,sans-serif;background:#050505;color:#e2e8f0;padding:32px;max-width:560px;margin:0 auto;border-radius:12px;border:1px solid #1e1e1e;">
-                  <h2 style="color:#4ade80;margin:0 0 12px;">¡Te devolvimos los créditos!</h2>
-                  <p style="color:#a1a1aa;line-height:1.6;">Revisamos tu reporte sobre el lead <strong style="color:#fff;">{lead.empresa}</strong> y le dimos la razón. Acabamos de devolver <strong style="color:#4ade80;">{creditos_a_devolver} créditos</strong> a tu saldo.</p>
-                  <div style="background:#0f1d12;border:1px solid #14532d;border-radius:8px;padding:14px;margin:18px 0;">
-                    <p style="margin:0;color:#86efac;font-weight:700;">Saldo nuevo: {aliado.creditos or 0} créditos</p>
-                  </div>
-                  <p style="color:#a1a1aa;font-size:.9rem;">Gracias por reportarlo — nos ayuda a mejorar la calidad de los leads premium.</p>
+                  {bloque}
+                  <p style="color:#a1a1aa;font-size:.9rem;">Gracias por reportarlo — nos ayuda a mejorar la calidad de los leads.</p>
                   <a href="{PORTAL_URL}/portal.html" style="display:inline-block;margin-top:8px;padding:12px 24px;background:#3b82f6;color:#fff;border-radius:8px;text-decoration:none;font-weight:700;">Ver mi portal →</a>
                 </div>"""
             )
@@ -6635,7 +6568,8 @@ def admin_aprobar_reporte(id: int,
         print(f"[REPORTE APROBADO] Email aliado falló: {e}")
 
     return {
-        "mensaje": "Reporte aprobado y créditos devueltos.",
+        "mensaje": ("Reporte aprobado: lead descartado y cupo liberado."
+                    + (f" Se reintegraron {creditos_a_devolver} créditos." if creditos_a_devolver > 0 else "")),
         "reporte_id": r.id,
         "creditos_devueltos": creditos_a_devolver,
         "saldo_aliado": aliado.creditos or 0,
@@ -6646,7 +6580,8 @@ def admin_aprobar_reporte(id: int,
 def admin_rechazar_reporte(id: int,
                             body: ResolverReporteIn | None = Body(default=None),
                             db: Session = Depends(get_db)):
-    """Rechaza un reporte: NO devuelve créditos, deja registro auditable."""
+    """Rechaza un reporte: el lead sigue ocupando el cupo del aliado y no hay
+    reintegro de créditos. Deja registro auditable."""
     r = db.query(ReporteMalContacto).filter(ReporteMalContacto.id == id).first()
     if not r:
         raise HTTPException(404, "Reporte no encontrado.")
@@ -6670,7 +6605,7 @@ def admin_rechazar_reporte(id: int,
                 f"Reporte revisado: {empresa}",
                 f"""<div style="font-family:Inter,sans-serif;background:#050505;color:#e2e8f0;padding:32px;max-width:560px;margin:0 auto;border-radius:12px;border:1px solid #1e1e1e;">
                   <h2 style="color:#fbbf24;margin:0 0 12px;">Revisamos tu reporte</h2>
-                  <p style="color:#a1a1aa;line-height:1.6;">Sobre el lead <strong style="color:#fff;">{empresa}</strong>: después de revisar, decidimos no aprobar la devolución.</p>
+                  <p style="color:#a1a1aa;line-height:1.6;">Sobre el lead <strong style="color:#fff;">{empresa}</strong>: después de revisar, decidimos no descartarlo. Sigue en tus reclamos activos.</p>
                   <div style="background:#1a1a1a;border:1px solid #2a2a2a;border-radius:8px;padding:14px;margin:18px 0;">
                     <p style="margin:0 0 6px;color:#a1a1aa;font-size:.85rem;text-transform:uppercase;">Nota del admin:</p>
                     <p style="margin:0;color:#fff;">{r.notas_admin}</p>
@@ -6690,25 +6625,26 @@ def admin_rechazar_reporte(id: int,
 
 # ─── MÉTRICAS DE COHORTE Y USO DE CRÉDITOS ───────────────────────────────────
 # Endpoints solo-admin para detectar la cohorte de fuga (aliados que gastaron
-# créditos sin cerrar venta) y para auditar el uso general del sistema.
+# créditos en Jarvis IA sin cerrar venta) y para auditar el uso general.
+# NOTA: los leads son gratis; el ÚNICO sink de créditos es Jarvis IA.
 
 @app.get("/admin/cohorte-fuga")
 def admin_cohorte_fuga(umbral_gasto: int = 80,
                         db: Session = Depends(get_db)):
     """Devuelve los aliados que gastaron al menos `umbral_gasto` créditos
-    en el marketplace y tienen 0 ventas confirmadas.
+    en Jarvis IA y tienen 0 ventas confirmadas.
     Esta es la cohorte clave para detectar fuga: si son pocos (2-3 de 37),
     el problema es individual y conviene contactarlos uno por uno. Si son
-    muchos, el problema es sistémico — calidad de leads, matching, o
-    capacitación insuficiente — y meterles más créditos no va a arreglarlo.
+    muchos, el problema es sistémico — calidad de los leads, capacitación o
+    el propio Jarvis — y meterles más créditos no va a arreglarlo.
     """
     aliados = db.query(Aliado).filter(Aliado.activo == True).all()
     cohorte = []
     for a in aliados:
-        # Total de créditos GASTADOS (sumar deltas negativos en compra_lead)
+        # Total de créditos GASTADOS en Jarvis IA (único sink de créditos)
         gastados = db.query(TransaccionCredito).filter(
             TransaccionCredito.aliado_id == a.id,
-            TransaccionCredito.motivo == "compra_lead",
+            TransaccionCredito.motivo.like("jarvis%"),
         ).all()
         total_gastado = sum(-t.delta for t in gastados if t.delta < 0)
 
@@ -6726,7 +6662,7 @@ def admin_cohorte_fuga(umbral_gasto: int = 80,
                 "whatsapp": a.whatsapp,
                 "creditos_actuales": a.creditos or 0,
                 "creditos_gastados": total_gastado,
-                "leads_premium_comprados": len(gastados),
+                "acciones_jarvis": len(gastados),
                 "creado_en": a.creado_en.isoformat() if a.creado_en else None,
                 "ultimo_login": a.ultimo_login.isoformat() if getattr(a, "ultimo_login", None) else None,
                 "dias_desde_registro": (datetime.now() - a.creado_en).days if a.creado_en else None,
@@ -6740,7 +6676,7 @@ def admin_cohorte_fuga(umbral_gasto: int = 80,
         "porcentaje_fuga":    round(100 * len(cohorte) / len(aliados), 1) if aliados else 0,
         "interpretacion":     (
             "Cohorte chica → problema individual, contactá uno por uno." if len(cohorte) <= 3
-            else "Cohorte grande → problema sistémico (calidad de leads o capacitación). Más créditos no arreglan."
+            else "Cohorte grande → problema sistémico (calidad de leads, Jarvis o capacitación). Más créditos no arreglan."
         ),
         "aliados": cohorte,
     }
@@ -6834,7 +6770,7 @@ def cargar_lead_bolsa_v2(lead: LeadBolsaCreateAdv, db: Session = Depends(get_db)
         whatsapp=lead.whatsapp or None,
         email=lead.email or None,
         estado="disponible",
-        tier=lead.tier, costo_creditos=lead.costo_creditos,
+        tier=lead.tier, costo_creditos=0,  # leads gratis: el costo quedó deprecado
         score_calidad=lead.score_calidad, notas_calificacion=lead.notas_calificacion,
         # v1.6 — presencia digital
         web=lead.web or None,
@@ -7369,7 +7305,7 @@ def cargar_leads_bulk(payload: LeadBolsaBulkPayload, db: Session = Depends(get_d
             whatsapp=lead.whatsapp or None,
             email=lead.email or None,
             estado="disponible",
-            tier=tier, costo_creditos=lead.costo_creditos,
+            tier=tier, costo_creditos=0,  # leads gratis: el costo quedó deprecado
             score_calidad=lead.score_calidad, notas_calificacion=lead.notas_calificacion,
             # v1.6 — presencia digital
             web=lead.web or None,
@@ -7995,12 +7931,22 @@ def portal_publico_aliado(ref_code: str, db: Session = Depends(get_db)):
         ".cp-result .cp-lead{font-size:.78rem;color:#fca5a5;text-transform:uppercase;letter-spacing:1px;font-weight:700;}"
         ".cp-result .cp-monto{font-size:2.3rem;font-weight:900;color:#f87171;margin:8px 0;}"
         ".cp-result .cp-foot{font-size:.82rem;color:#a1a1aa;}"
-        ".tabla-comp{width:100%;border-collapse:collapse;margin-top:18px;font-size:.86rem;}"
-        ".tabla-comp th,.tabla-comp td{padding:12px 14px;text-align:left;border-bottom:1px solid rgba(255,255,255,0.07);}"
-        ".tabla-comp thead th{font-size:.68rem;text-transform:uppercase;letter-spacing:1px;color:#71717a;font-weight:700;}"
-        ".tabla-comp td.col-avanza{color:#e2e8f0;font-weight:700;}"
-        ".tabla-comp td.col-trad{color:#71717a;}"
-        ".tabla-comp th.col-avanza{color:#93c5fd;}"
+        ".tabla-comp{width:100%;border-collapse:separate;border-spacing:0;margin-top:18px;font-size:.86rem;border-radius:14px;overflow:hidden;border:1px solid rgba(255,255,255,0.07);}"
+        ".tabla-comp th,.tabla-comp td{padding:13px 16px;text-align:left;border-bottom:1px solid rgba(255,255,255,0.06);}"
+        ".tabla-comp tbody tr:last-child td{border-bottom:none;}"
+        ".tabla-comp thead th{font-size:.68rem;text-transform:uppercase;letter-spacing:1px;font-weight:800;padding:14px 16px;}"
+        ".tabla-comp th.col-feat{color:#71717a;background:#0a0a0a;}"
+        ".tabla-comp td.col-feat{color:#cbd5e1;background:#0a0a0a;font-size:.83rem;}"
+        ".tabla-comp th.col-avanza{color:#fff;background:rgba(59,130,246,0.22);border-left:2px solid rgba(59,130,246,0.5);border-right:2px solid rgba(59,130,246,0.5);border-top:2px solid rgba(59,130,246,0.5);}"
+        ".tabla-comp td.col-avanza{color:#e2e8f0;font-weight:700;background:rgba(59,130,246,0.07);border-left:2px solid rgba(59,130,246,0.25);border-right:2px solid rgba(59,130,246,0.25);}"
+        ".tabla-comp tbody tr:last-child td.col-avanza{border-bottom:2px solid rgba(59,130,246,0.5);}"
+        ".tabla-comp th.col-trad{color:#52525b;background:#0a0a0a;}"
+        ".tabla-comp td.col-trad{color:#52525b;background:#050505;}"
+        ".tabla-comp tbody tr:hover td{filter:brightness(1.12);}"
+        ".tc-check{color:#4ade80;margin-right:6px;font-weight:900;}"
+        ".tc-cross{color:#ef4444;margin-right:6px;font-weight:900;}"
+        ".tc-avanza-header{display:flex;flex-direction:column;align-items:flex-start;gap:4px;}"
+        ".tc-avanza-badge{display:inline-block;background:#3b82f6;color:#fff;font-size:.58rem;font-weight:900;letter-spacing:1px;text-transform:uppercase;padding:2px 8px;border-radius:20px;}"
         ".faq-item{border:1px solid rgba(255,255,255,0.08);border-radius:10px;margin-bottom:10px;background:#0a0a0a;overflow:hidden;}"
         ".faq-item summary{padding:16px 18px;font-weight:700;font-size:.9rem;cursor:pointer;list-style:none;display:flex;justify-content:space-between;align-items:center;gap:10px;}"
         ".faq-item summary::-webkit-details-marker{display:none;}"
@@ -8013,8 +7959,8 @@ def portal_publico_aliado(ref_code: str, db: Session = Depends(get_db)):
     _calc_html = """
   <div class="cp-box">
     <span class="section-label">🧮 Calculadora gratuita</span>
-    <h3>¿Cuánto pierde tu empresa por vender de forma manual?</h3>
-    <p class="cp-intro">Calcula en 10 segundos lo que cuesta cada semana buscar precios, armar presupuestos a mano y responder tarde.</p>
+    <h3>Calcula la pérdida real de tu empresa por procesos de venta manuales.</h3>
+    <p class="cp-intro">Te entregamos plan de recuperación y proyección a 3 años.</p>
     <div class="cp-field">
       <label>Cantidad de vendedores</label>
       <input type="number" id="cp-vendedores" min="0" placeholder="Ej: 3">
@@ -8053,18 +7999,49 @@ def portal_publico_aliado(ref_code: str, db: Session = Depends(get_db)):
   <section class="section">
     <div class="section-label">Por qué elegir este sistema</div>
     <h2>Avanza vs. una agencia web tradicional</h2>
+    <div style="overflow-x:auto;margin-top:18px;">
     <table class="tabla-comp">
       <thead>
-        <tr><th>Característica</th><th class="col-trad">Agencia tradicional</th><th class="col-avanza">Avanza Digital</th></tr>
+        <tr>
+          <th class="col-feat">Característica</th>
+          <th class="col-avanza">
+            <div class="tc-avanza-header">
+              <span class="tc-avanza-badge">✦ Recomendado</span>
+              Avanza Digital
+            </div>
+          </th>
+          <th class="col-trad">Agencia tradicional</th>
+        </tr>
       </thead>
       <tbody>
-        <tr><td>Objetivo principal</td><td class="col-trad">Diseño estético</td><td class="col-avanza">Generación de clientes</td></tr>
-        <tr><td>Propiedad del código</td><td class="col-trad">Licencia de alquiler</td><td class="col-avanza">100% tuyo (pago único)</td></tr>
-        <tr><td>Integración WhatsApp y CRM</td><td class="col-trad">Plugin básico</td><td class="col-avanza">Conexión nativa</td></tr>
-        <tr><td>Tiempo de implementación</td><td class="col-trad">2 a 3 meses</td><td class="col-avanza">7 a 30 días</td></tr>
-        <tr><td>Cotizaciones</td><td class="col-trad">Manuales</td><td class="col-avanza">Automáticas</td></tr>
+        <tr>
+          <td class="col-feat">Objetivo principal</td>
+          <td class="col-avanza"><span class="tc-check">✓</span>Generación de clientes</td>
+          <td class="col-trad"><span class="tc-cross">✗</span>Diseño estético</td>
+        </tr>
+        <tr>
+          <td class="col-feat">Propiedad del código</td>
+          <td class="col-avanza"><span class="tc-check">✓</span>100% tuyo (pago único)</td>
+          <td class="col-trad"><span class="tc-cross">✗</span>Licencia de alquiler</td>
+        </tr>
+        <tr>
+          <td class="col-feat">Integración WhatsApp y CRM</td>
+          <td class="col-avanza"><span class="tc-check">✓</span>Conexión nativa</td>
+          <td class="col-trad"><span class="tc-cross">✗</span>Plugin básico</td>
+        </tr>
+        <tr>
+          <td class="col-feat">Tiempo de implementación</td>
+          <td class="col-avanza"><span class="tc-check">✓</span>7 a 30 días</td>
+          <td class="col-trad"><span class="tc-cross">✗</span>2 a 3 meses</td>
+        </tr>
+        <tr>
+          <td class="col-feat">Cotizaciones</td>
+          <td class="col-avanza"><span class="tc-check">✓</span>Automáticas</td>
+          <td class="col-trad"><span class="tc-cross">✗</span>Manuales</td>
+        </tr>
       </tbody>
     </table>
+    </div>
   </section>
 """
 

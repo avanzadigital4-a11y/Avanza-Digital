@@ -17,6 +17,10 @@
 # Los dos HTML del portal son públicos e intentionales — van ANTES del bloqueo.
 /avanza-portal/portal.html    /avanza-portal/portal.html    200
 /avanza-portal/admin.html     /avanza-portal/admin.html     200
+# Mismas páginas SIN .html (URLs viejas / bookmarks) — Netlify ya no las resuelve
+# solo porque el bloqueo de abajo se aplica antes; las habilitamos explícitamente.
+/avanza-portal/portal         /avanza-portal/portal.html    200
+/avanza-portal/admin          /avanza-portal/admin.html     200
 # Todo lo demás (código fuente .py, .db, configs) → 404 duro.
 /avanza-portal/*              /404.html                     404!
 

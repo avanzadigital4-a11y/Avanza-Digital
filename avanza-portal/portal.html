@@ -1101,6 +1101,18 @@ html.avz-collapsed #avz-sidebar .avz-exit span{ display:none; }
   #portal-screen .tab-panel.active img,
   #portal-screen .tab-panel.active iframe,
   #portal-screen .tab-panel.active pre{ max-width:100%; }
+  /* Bolsa de leads: que las tarjetas no desborden ni se corten a la derecha en celular */
+  #tab-bolsa, #tab-bolsa *{ min-width:0; overflow-wrap:anywhere; }
+  #tab-bolsa .table-wrap, #tab-bolsa .bento-box{ max-width:100%; box-sizing:border-box; }
+}
+
+@media (max-width:600px){
+  /* Bolsa de leads en celular: forzar una sola columna en las grillas de tarjetas */
+  #tab-bolsa #tabla-mis-reclamos,
+  #tab-bolsa #tabla-bolsa-disponibles,
+  #tab-bolsa [style*="repeat(auto-fit"],
+  #tab-bolsa [style*="repeat(auto-fill"]{ grid-template-columns:1fr !important; }
+  #tab-bolsa #historial-kpis.metrics-grid{ grid-template-columns:1fr 1fr !important; gap:10px !important; }
 }
 
 /* ===== Fix JARVIS: encajar su layout de 3 columnas dentro del sidebar ===== */
@@ -1618,10 +1630,10 @@ html.avz-collapsed #avz-sidebar .avz-exit span{ display:none; }
           </div>
 
           <div style="min-width:140px; text-align:right;">
-            <h3 style="font-size:0.85rem;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;">Créditos Bolsa</h3>
+            <h3 style="font-size:0.85rem;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;">Créditos Jarvis IA</h3>
             <div id="d-creditos-wrap">
               <div style="font-size:2rem; font-weight:900; color:var(--amber);" id="d-creditos">0</div>
-              <p style="font-size:0.72rem; color:var(--text-dim); margin-top:4px;" id="d-creditos-sub">Para comprar leads Premium</p>
+              <p style="font-size:0.72rem; color:var(--text-dim); margin-top:4px;" id="d-creditos-sub">Para usar Jarvis IA</p>
               <div id="d-creditos-cta" style="display:none; margin-top:8px;">
                 <button onclick="abrirModalComprarCreditos()" style="background:rgba(245,158,11,0.15);color:var(--amber);border:1px solid rgba(245,158,11,0.4);border-radius:8px;padding:6px 12px;font-size:.72rem;font-weight:800;cursor:pointer;white-space:nowrap;letter-spacing:.3px;">
                   <i class="fa-solid fa-plus"></i> Comprar créditos
@@ -1638,11 +1650,11 @@ html.avz-collapsed #avz-sidebar .avz-exit span{ display:none; }
           <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:8px; margin-bottom:16px;">
             <div style="background:rgba(239,68,68,0.08); border:1px solid rgba(239,68,68,0.2); border-radius:8px; padding:10px 12px;">
               <div style="font-size:.72rem; font-weight:800; color:#ef4444; text-transform:uppercase; letter-spacing:.6px; margin-bottom:4px;">0 – 49 · Inicial</div>
-              <div style="font-size:.76rem; color:var(--text-muted); line-height:1.4;">Acceso solo a leads básicos gratuitos. Sin prioridad en asignación.</div>
+              <div style="font-size:.76rem; color:var(--text-muted); line-height:1.4;">Sin prioridad en la asignación de leads nuevos.</div>
             </div>
             <div style="background:rgba(245,158,11,0.08); border:1px solid rgba(245,158,11,0.25); border-radius:8px; padding:10px 12px;">
               <div style="font-size:.72rem; font-weight:800; color:var(--amber); text-transform:uppercase; letter-spacing:.6px; margin-bottom:4px;">50 – 69 · Confiable</div>
-              <div style="font-size:.76rem; color:var(--text-muted); line-height:1.4;">Acceso a leads calificados. Visible en el leaderboard interno.</div>
+              <div style="font-size:.76rem; color:var(--text-muted); line-height:1.4;">Prioridad media en la asignación. Visible en el leaderboard interno.</div>
             </div>
             <div style="background:rgba(74,222,128,0.08); border:1px solid rgba(74,222,128,0.2); border-radius:8px; padding:10px 12px;">
               <div style="font-size:.72rem; font-weight:800; color:var(--green); text-transform:uppercase; letter-spacing:.6px; margin-bottom:4px;">70 – 84 · Destacado</div>
@@ -3063,10 +3075,8 @@ html.avz-collapsed #avz-sidebar .avz-exit span{ display:none; }
         <div id="onboard-creditos-card" style="background:rgba(250,204,21,0.07);border:1px solid rgba(250,204,21,0.25);border-radius:10px;padding:14px 16px;">
           <div style="font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:1.4px;color:#facc15;margin-bottom:8px;"><i class="fa-solid fa-coins"></i> &nbsp;Tus créditos de bienvenida</div>
           <p style="font-size:.82rem;color:#e4e4e7;line-height:1.55;margin:0;">
-            Tenés <strong id="onboard-creditos-num" style="color:#facc15;">—</strong> créditos cargados.
-            Los leads <strong style="color:var(--green);">Básicos son gratis</strong>.
-            Los <strong style="color:#facc15;">Calificados y Premium se pagan con créditos</strong>
-            y tienen mayor tasa de cierre porque ya fueron filtrados y tienen contacto verificado.
+            Tenés <strong id="onboard-creditos-num" style="color:#facc15;">—</strong> créditos cargados para <strong style="color:#facc15;">Jarvis IA</strong>, tu asistente de ventas (análisis de leads, propuestas, seguimientos y objeciones).
+            <strong style="color:var(--green);">Todos los leads de la bolsa son gratis</strong> — básicos, calificados y premium se reclaman sin gastar créditos.
           </p>
         </div>
 
@@ -3597,7 +3607,7 @@ html.avz-collapsed #avz-sidebar .avz-exit span{ display:none; }
     <!-- ── VISTA 1: ELEGIR PAQUETE ─────────────────────────────────────── -->
     <div id="creditos-vista-paquetes" style="padding:24px;">
       <p style="color:var(--text-muted); font-size:.88rem; margin:0 0 14px; line-height:1.5;">
-        Los créditos se usan para comprar leads premium. <strong style="color:var(--text);">No vencen</strong> y son acumulables.
+        Los créditos se usan para Jarvis IA, tu asistente de ventas. <strong style="color:var(--text);">No vencen</strong> y son acumulables.
         Elegí cómo querés pagar y un paquete.
       </p>
 
@@ -3867,12 +3877,10 @@ html.avz-collapsed #avz-sidebar .avz-exit span{ display:none; }
       <div style="text-align:center; margin-bottom:20px;">
         <h3 style="font-size:1.25rem; font-weight:800; color:var(--text); margin-bottom:6px;">¿Qué tipo de leads querés ver?</h3>
         <p style="font-size:.85rem; color:var(--text-muted);">Elegí una categoría para ver las empresas disponibles.</p>
-        <div style="margin-top:10px; display:inline-flex; align-items:center; gap:10px; background:rgba(0,0,0,0.25); border:1px solid var(--border); border-radius:10px; padding:8px 14px; font-size:.82rem;">
-          <span style="color:var(--text-muted);">Saldo:</span>
-          <strong id="mkt-saldo" style="color:var(--amber);">— créditos</strong>
-          <button onclick="abrirModalComprarCreditos()" style="background:var(--amber); color:#000; border:none; padding:5px 10px; border-radius:6px; font-size:.72rem; font-weight:800; cursor:pointer;">
-            <i class="fa-solid fa-plus"></i> Cargar
-          </button>
+        <div style="margin-top:10px; display:inline-flex; align-items:center; gap:8px; background:rgba(34,197,94,0.1); border:1px solid rgba(34,197,94,0.35); border-radius:10px; padding:8px 16px; font-size:.82rem;">
+          <i class="fa-solid fa-unlock" style="color:var(--green);"></i>
+          <strong style="color:var(--green);">Todos los leads son gratis</strong>
+          <span style="color:var(--text-muted);">— reclamá los que quieras</span>
         </div>
       </div>
 
@@ -3898,7 +3906,7 @@ html.avz-collapsed #avz-sidebar .avz-exit span{ display:none; }
              style="background:linear-gradient(135deg, rgba(59,130,246,0.10), rgba(59,130,246,0.02)); border:1.5px solid rgba(59,130,246,0.35); border-radius:16px; padding:24px 20px; cursor:pointer; transition:all .2s; position:relative; overflow:hidden;"
              onmouseover="this.style.transform='translateY(-3px)'; this.style.borderColor='rgba(59,130,246,0.7)';"
              onmouseout="this.style.transform='translateY(0)'; this.style.borderColor='rgba(59,130,246,0.35)';">
-          <div style="position:absolute; top:12px; right:12px; background:rgba(59,130,246,0.2); color:#93c5fd; font-size:.65rem; font-weight:900; padding:3px 8px; border-radius:4px; letter-spacing:.05em;">CON CRÉDITOS</div>
+          <div style="position:absolute; top:12px; right:12px; background:var(--green); color:#000; font-size:.65rem; font-weight:900; padding:3px 8px; border-radius:4px; letter-spacing:.05em;">GRATIS</div>
           <div style="font-size:2.2rem; margin-bottom:10px;"><i class="fa-solid fa-medal" style="color:#60a5fa;"></i></div>
           <h4 style="font-size:1.1rem; font-weight:800; color:var(--text); margin-bottom:6px;">Leads Calificados</h4>
           <p style="font-size:.82rem; color:var(--text-muted); line-height:1.5; margin-bottom:14px;">Empresas con presencia digital verificada y contacto identificado.</p>
@@ -3913,7 +3921,7 @@ html.avz-collapsed #avz-sidebar .avz-exit span{ display:none; }
              style="background:linear-gradient(135deg, rgba(250,204,21,0.10), rgba(250,204,21,0.02)); border:1.5px solid rgba(250,204,21,0.35); border-radius:16px; padding:24px 20px; cursor:pointer; transition:all .2s; position:relative; overflow:hidden;"
              onmouseover="this.style.transform='translateY(-3px)'; this.style.borderColor='rgba(250,204,21,0.7)';"
              onmouseout="this.style.transform='translateY(0)'; this.style.borderColor='rgba(250,204,21,0.35)';">
-          <div style="position:absolute; top:12px; right:12px; background:var(--amber); color:#000; font-size:.65rem; font-weight:900; padding:3px 8px; border-radius:4px; letter-spacing:.05em;">EXCLUSIVO</div>
+          <div style="position:absolute; top:12px; right:12px; background:var(--green); color:#000; font-size:.65rem; font-weight:900; padding:3px 8px; border-radius:4px; letter-spacing:.05em;">GRATIS</div>
           <div style="font-size:2.2rem; margin-bottom:10px;"><i class="fa-solid fa-gem" style="color:var(--amber);"></i></div>
           <h4 style="font-size:1.1rem; font-weight:800; color:var(--text); margin-bottom:6px;">Leads Premium</h4>
           <p style="font-size:.82rem; color:var(--text-muted); line-height:1.5; margin-bottom:14px;">Lo más jugoso: pitch sugerido por IA, score de calidad alto, mayor tasa de cierre.</p>
@@ -3957,13 +3965,10 @@ html.avz-collapsed #avz-sidebar .avz-exit span{ display:none; }
             <button onclick="volverASelectorBolsa()" style="background:transparent; border:1px solid var(--border); color:var(--text-muted); border-radius:8px; padding:6px 12px; font-size:.8rem; cursor:pointer;"><i class="fa-solid fa-arrow-left"></i> Categorías</button>
             <h3 style="margin:0;"><i class="fa-solid fa-medal" style="color:#60a5fa;"></i> Leads Calificados</h3>
           </div>
-          <div style="display:flex; align-items:center; gap:10px;">
-            <span style="font-size:.78rem; color:var(--text-muted);">Saldo: <strong id="mkt-saldo-cal" style="color:var(--amber);">— cr.</strong></span>
-            <button onclick="abrirModalComprarCreditos()" style="background:var(--amber); color:#000; border:none; padding:6px 12px; border-radius:6px; font-size:.75rem; font-weight:800; cursor:pointer;"><i class="fa-solid fa-plus"></i> Cargar</button>
-          </div>
+          <span style="font-size:.72rem; font-weight:800; color:#000; background:var(--green); padding:4px 10px; border-radius:6px;">GRATIS</span>
         </div>
         <div style="padding:14px 20px; font-size:.82rem; color:var(--text-muted); border-bottom:1px solid var(--border);">
-          Empresas con presencia digital y contacto verificado. Se pagan con créditos.
+          Empresas con presencia digital y contacto verificado. Reclamalos gratis, igual que los básicos.
         </div>
         <div id="grid-calificado" style="padding:16px;display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px;">
           <div style="text-align:center;padding:24px;color:var(--text-dim);grid-column:1/-1;">Cargando...</div>
@@ -3979,12 +3984,9 @@ html.avz-collapsed #avz-sidebar .avz-exit span{ display:none; }
         <div class="table-head" style="border-bottom-color:rgba(250,204,21,0.15);">
           <div style="display:flex; align-items:center; gap:12px;">
             <button onclick="volverASelectorBolsa()" style="background:transparent; border:1px solid var(--border); color:var(--text-muted); border-radius:8px; padding:6px 12px; font-size:.8rem; cursor:pointer;"><i class="fa-solid fa-arrow-left"></i> Categorías</button>
-            <h3 style="margin:0;"><i class="fa-solid fa-gem" style="color:var(--amber);"></i> Leads Premium <span style="font-size:.7rem;font-weight:700;color:var(--amber);background:rgba(250,204,21,0.12);padding:3px 8px;border-radius:4px;margin-left:6px;">EXCLUSIVO</span></h3>
+            <h3 style="margin:0;"><i class="fa-solid fa-gem" style="color:var(--amber);"></i> Leads Premium <span style="font-size:.7rem;font-weight:800;color:#000;background:var(--green);padding:3px 8px;border-radius:4px;margin-left:6px;">GRATIS</span></h3>
           </div>
-          <div style="display:flex; align-items:center; gap:10px;">
-            <span style="font-size:.78rem; color:var(--text-muted);">Saldo: <strong id="mkt-saldo-prem" style="color:var(--amber);">— cr.</strong></span>
-            <button onclick="abrirModalComprarCreditos()" style="background:var(--amber); color:#000; border:none; padding:6px 12px; border-radius:6px; font-size:.75rem; font-weight:800; cursor:pointer;"><i class="fa-solid fa-plus"></i> Cargar</button>
-          </div>
+          <span style="font-size:.72rem; font-weight:800; color:#000; background:var(--green); padding:4px 10px; border-radius:6px;">GRATIS</span>
         </div>
         <div style="padding:14px 20px; font-size:.82rem; color:var(--text-muted); border-bottom:1px solid var(--border);">
           Lo más jugoso: pitch sugerido por IA, presencia digital verificada. <strong>Mayor tasa de cierre.</strong>
@@ -4106,6 +4108,11 @@ html.avz-collapsed #avz-sidebar .avz-exit span{ display:none; }
               <span style="font-size:1.3rem;">💳</span>
               <span>Payoneer</span>
             </button>
+            <button type="button" onclick="seleccionarMetodoPago('airtm')" id="pm-btn-airtm"
+              style="display:flex;flex-direction:column;align-items:center;gap:4px;padding:12px 8px;border-radius:10px;border:2px solid var(--border);background:rgba(255,255,255,0.03);cursor:pointer;transition:all .15s;font-size:.78rem;font-weight:700;color:var(--text-muted);">
+              <span style="font-size:1.3rem;">💸</span>
+              <span>Airtm</span>
+            </button>
           </div>
         </div>
 
@@ -4134,6 +4141,13 @@ html.avz-collapsed #avz-sidebar .avz-exit span{ display:none; }
           <label style="font-size:.75rem; font-weight:600; color:var(--text-muted); text-transform:uppercase; letter-spacing:1px; display:block; margin-bottom:6px;">Email de tu cuenta Payoneer</label>
           <input type="text" id="pm-input-payoneer" placeholder="Ej: tu@email.com"
                  style="width:100%; background:rgba(255,255,255,0.04); border:1px solid var(--border); border-radius:var(--radius-sm); padding:12px 14px; color:var(--text); font-size:.9rem; font-family:'Inter',sans-serif; outline:none; box-sizing:border-box;">
+        </div>
+
+        <div id="pm-fields-airtm" class="pm-fields" style="display:none; margin-bottom:14px;">
+          <label style="font-size:.75rem; font-weight:600; color:var(--text-muted); text-transform:uppercase; letter-spacing:1px; display:block; margin-bottom:6px;">Email o usuario de tu cuenta Airtm</label>
+          <input type="text" id="pm-input-airtm" placeholder="Ej: tu@email.com  o  @usuario"
+                 style="width:100%; background:rgba(255,255,255,0.04); border:1px solid var(--border); border-radius:var(--radius-sm); padding:12px 14px; color:var(--text); font-size:.9rem; font-family:'Inter',sans-serif; outline:none; box-sizing:border-box;">
+          <div style="font-size:.72rem; color:var(--text-dim); margin-top:6px;">Te depositamos en tu balance Airtm en USD. Verificá que el email/usuario sea el de tu cuenta Airtm.</div>
         </div>
 
         <!-- Input oculto para compatibilidad (perfil-cbu) -->
@@ -5967,7 +5981,7 @@ let _metodoPagoActual = null;
 function seleccionarMetodoPago(metodo) {
   _metodoPagoActual = metodo;
   // Resaltar botón seleccionado
-  ['usdt_trc20','wise','transferencia','payoneer'].forEach(m => {
+  ['usdt_trc20','wise','transferencia','payoneer','airtm'].forEach(m => {
     const btn = document.getElementById('pm-btn-' + m);
     if(!btn) return;
     if(m === metodo) {
@@ -6008,7 +6022,7 @@ async function guardarMetodoPago() {
   }
 
   // Armar cbu_alias para compat con admin (legible)
-  const metodosLabel = { usdt_trc20:'USDT TRC20', wise:'Wise', transferencia:'Transferencia bancaria', payoneer:'Payoneer' };
+  const metodosLabel = { usdt_trc20:'USDT TRC20', wise:'Wise', transferencia:'Transferencia bancaria', payoneer:'Payoneer', airtm:'Airtm' };
   const cbuAlias = `[${metodosLabel[_metodoPagoActual]}] ${detail}`;
 
   btn.innerHTML = '<span class="spinner"></span> Guardando...';
@@ -6452,12 +6466,42 @@ function plRenderProspectos() {
       </div>
       <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;">
         <button onclick="abrirFichaLead(${p.id})" style="background:rgba(59,130,246,0.12);color:var(--primary);border:1px solid rgba(59,130,246,0.3);border-radius:8px;padding:7px 12px;font-size:.76rem;font-weight:700;cursor:pointer;white-space:nowrap;"><i class="fa-solid fa-address-card"></i> Ficha</button>
+        <button onclick="plRegistrarDesdeProspecto(${p.id})" title="Cargar este prospecto en el registro de atribución (paso crítico antes del pago)" style="background:rgba(74,222,128,0.12);color:var(--green);border:1px solid rgba(74,222,128,0.35);border-radius:8px;padding:7px 12px;font-size:.76rem;font-weight:700;cursor:pointer;white-space:nowrap;"><i class="fa-solid fa-user-check"></i> Registrar para cobrar</button>
         ${p.estado==='sin_contactar'?`<button onclick="accionProspecto(${p.id},'contactar');cargarProspectosPipeline()" style="background:var(--primary);color:white;border:none;border-radius:8px;padding:7px 13px;font-size:.76rem;font-weight:700;cursor:pointer;white-space:nowrap;"><i class="fa-solid fa-paper-plane"></i> Contacté</button>`:''}
         ${p.estado==='contactado'?`<button onclick="accionProspecto(${p.id},'propuesta_enviada');cargarProspectosPipeline()" style="background:rgba(59,130,246,0.15);color:var(--primary);border:1px solid rgba(59,130,246,0.35);border-radius:8px;padding:7px 13px;font-size:.76rem;font-weight:700;cursor:pointer;white-space:nowrap;"><i class="fa-solid fa-file-invoice"></i> Envié propuesta</button>`:''}
         ${p.estado!=='perdido'?`<button onclick="abrirMarcarPerdido(${p.id},'${(p.nombre||'').replace(/'/g,"\\'")}');setTimeout(cargarProspectosPipeline,500)" title="Marcar como perdido" style="background:rgba(113,113,122,0.12);color:#a1a1aa;border:1px solid rgba(113,113,122,0.3);border-radius:8px;padding:7px 12px;font-size:.76rem;cursor:pointer;"><i class="fa-solid fa-circle-xmark"></i></button>`:''}
       </div>
     </div>
   `).join('');
+}
+
+// Prefill del formulario "Registrar un prospecto" (Paso 2) desde una ficha ya cargada,
+// para no re-tipear los datos. Resuelve la fricción entre Agregar y Registrar.
+function plRegistrarDesdeProspecto(id) {
+  const p = (typeof todosProspectosPipeline !== 'undefined' && todosProspectosPipeline)
+    ? todosProspectosPipeline.find(x => x.id === id) : null;
+  if (!p) return;
+  const elNombre = document.getElementById('pl-ref-nombre');
+  const elPlan   = document.getElementById('pl-ref-plan');
+  const elNotas  = document.getElementById('pl-ref-notas');
+  if (elNombre) elNombre.value = p.nombre || '';
+  if (elPlan) {
+    // El plan_interes del CRM usa los mismos values que el select de registro.
+    const mapPlan = { 'Plan Base':'Plan Base', 'Plan Pro':'Plan Pro', 'Plan Industrial':'Plan Industrial', 'Estrategico 360':'Estrategico 360', 'Estratégico 360':'Estrategico 360' };
+    elPlan.value = mapPlan[p.plan_interes] || '';
+  }
+  if (elNotas) elNotas.value = p.nota ? ('Desde CRM: ' + p.nota) : '';
+  // Llevar al formulario del Paso 2 y resaltarlo brevemente.
+  if (elNombre) {
+    elNombre.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    const box = elNombre.closest('.bento-box');
+    if (box) {
+      box.style.transition = 'box-shadow .3s';
+      box.style.boxShadow = '0 0 0 3px rgba(239,68,68,0.55)';
+      setTimeout(() => { box.style.boxShadow = ''; }, 1600);
+    }
+  }
+  if (typeof mostrarToast === 'function') mostrarToast('Datos cargados en "Registrar un prospecto". Revisá el plan y confirmá.', 'green');
 }
 
 // ─── CRM v3.0: FICHA DEL LEAD (timeline + tareas) ────────────────────────────
@@ -8169,10 +8213,10 @@ async function cargarReputacion() {
       consecText = '✅ Prioridad en leads premium. Candidato a todos los badges de calidad.';
     } else if (score >= 50) {
       rangoLabel = 'Confiable'; rangoColor = 'rgba(245,158,11,0.15)'; rangoFg = 'var(--amber)';
-      consecText = '⚡ Acceso a leads calificados. Visible en el leaderboard interno. Para subir a Destacado: mejorá tu tasa de cierre o éxito en bolsa.';
+      consecText = '⚡ Prioridad media en la asignación. Visible en el leaderboard interno. Para subir a Destacado: mejorá tu tasa de cierre o éxito en bolsa.';
     } else {
       rangoLabel = 'Inicial'; rangoColor = 'rgba(239,68,68,0.12)'; rangoFg = '#ef4444';
-      consecText = '⚠ Acceso solo a leads básicos gratuitos. Registrá prospectos y contactá leads para subir de rango.';
+      consecText = '⚠ Sin prioridad en la asignación de leads. Registrá prospectos y contactá leads para subir de rango.';
     }
     if (rangoBadge) {
       rangoBadge.textContent = rangoLabel;
@@ -8254,8 +8298,8 @@ async function cargarCreditos() {
     const sub = document.getElementById('d-creditos-sub');
     const cta = document.getElementById('d-creditos-cta');
     if (sub) sub.textContent = saldo > 0
-      ? `Crédito${saldo !== 1 ? 's' : ''} disponible${saldo !== 1 ? 's' : ''} para leads calificados`
-      : 'Sin créditos — solo podés reclamar leads básicos';
+      ? `Crédito${saldo !== 1 ? 's' : ''} para usar Jarvis IA`
+      : 'Sin créditos — recargá para usar Jarvis IA';
     if (cta) cta.style.display = saldo === 0 ? 'block' : 'none';
     // Actualizar los 3 lugares donde se muestra el saldo en la bolsa:
     // selector de categorías, panel calificado, panel premium.
@@ -8758,23 +8802,12 @@ function renderLeadCard(lead, opts = {}) {
     </div>
   `;
 
-  // ── COSTO (con equivalencia USD para anclar el valor real) ──────────
-  let costoBlock = '';
-  if (mostrarCosto) {
-    const usd = ((lead.costo_creditos || 0) * 0.10).toFixed(2);
-    costoBlock = `
-      <div style="display:flex;align-items:baseline;gap:6px;margin:10px 0 8px;">
-        <strong style="color:var(--amber);font-size:1.1rem;font-weight:900;">${lead.costo_creditos} cr.</strong>
-        <span style="font-size:.7rem;color:var(--text-dim);">≈ USD ${usd}</span>
-      </div>
-    `;
-  } else if (tier === 'basico') {
-    costoBlock = `
+  // ── COSTO — todos los leads son gratis (los créditos son sólo para Jarvis IA)
+  const costoBlock = `
       <div style="margin:10px 0 8px;">
         <span style="background:rgba(74,222,128,0.15);color:#86efac;border:1px solid rgba(74,222,128,0.3);padding:3px 10px;border-radius:99px;font-size:.72rem;font-weight:800;">GRATIS</span>
       </div>
     `;
-  }
 
   // ── OBSERVACIÓN PREVIEW (truncada para no spoilear info clave) ──────
   const obsPreview = (lead.tiene_observacion && lead.observacion)
@@ -8805,7 +8838,7 @@ function renderLeadCard(lead, opts = {}) {
       <div style="margin-top:auto;padding-top:8px;">
         <div style="display:flex;align-items:center;gap:6px;margin-bottom:8px;font-size:.72rem;color:var(--text-dim);">
           <i class="fa-solid fa-lock" style="font-size:.7rem;"></i>
-          <span style="font-style:italic;">Contacto y URLs visibles ${tier === 'basico' ? 'al reclamar' : 'al comprar'}</span>
+          <span style="font-style:italic;">Contacto y URLs visibles al reclamar</span>
         </div>
         ${accion}
       </div>
@@ -8939,15 +8972,10 @@ async function cargarMarketplace() {
           return;
         }
         grid.innerHTML = filtrados.map(l => {
-          const puedePagar = data.saldo_creditos >= (l.costo_creditos || 0);
-          const accion = puedePagar
-            ? `<button onclick="comprarLead(${l.id},${l.costo_creditos})" style="width:100%;background:var(--amber);color:#000;border:none;border-radius:8px;padding:10px;font-size:.82rem;font-weight:800;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;">
-                <i class="fa-solid fa-bolt"></i> Comprar lead
-              </button>`
-            : `<button onclick="abrirModalComprarCreditos()" style="width:100%;background:rgba(250,204,21,0.12);color:var(--amber);border:1px solid rgba(250,204,21,0.35);border-radius:8px;padding:10px;font-size:.82rem;font-weight:800;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;" title="Te faltan ${(l.costo_creditos || 0) - data.saldo_creditos} créditos">
-                <i class="fa-solid fa-plus"></i> Cargar saldo (faltan ${(l.costo_creditos || 0) - data.saldo_creditos})
+          const accion = `<button onclick="comprarLead(${l.id})" style="width:100%;background:var(--green);color:#000;border:none;border-radius:8px;padding:10px;font-size:.82rem;font-weight:800;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;">
+                <i class="fa-solid fa-hand-sparkles"></i> Reclamar gratis
               </button>`;
-          return renderLeadCard(l, { accion, mostrarCosto: true });
+          return renderLeadCard(l, { accion });
         }).join('');
       }
       _renderFiltroPaises(gridAnchor, idFiltro, paisesUnicos, colorActivo, p => { filtroPais = p; pintar(); });
@@ -8970,38 +8998,21 @@ async function cargarMarketplace() {
   } catch(e) { console.error('marketplace:', e); }
 }
 
-async function comprarLead(id, costo) {
-  if (!confirm(`Confirmás la compra de este lead por ${costo} créditos?`)) return;
+async function comprarLead(id) {
+  // Mantenemos el nombre por compatibilidad, pero ahora reclamar es GRATIS:
+  // los créditos quedaron sólo para Jarvis IA.
+  if (!confirm('¿Reclamar este lead? Es gratis. Tenés 48hs para contactarlo o vuelve a la bolsa.')) return;
   try {
     const res = await apiFetch(`${API}/bolsa/${id}/comprar?codigo_aliado=${aliado.codigo}`, {method:'POST'});
     const data = await res.json();
     if (!res.ok) {
-      // Manejo del error estructurado de "saldo insuficiente" — modal con CTAs.
-      // El backend ahora devuelve detail como objeto, no string.
       const detail = data.detail;
-      if (detail && typeof detail === 'object' && detail.code === 'saldo_insuficiente') {
-        const ok = confirm(
-          `${detail.mensaje}\n\n` +
-          `Tenés: ${detail.tenes} cr.\n` +
-          `Necesitás: ${detail.necesitas} cr.\n` +
-          `Faltan: ${detail.faltan} cr.\n\n` +
-          `¿Querés cargar saldo ahora? (Cancelar = ver leads gratis en cambio)`
-        );
-        if (ok) abrirModalComprarCreditos();
-        else { /* el aliado ve que la sección de básicos sigue arriba */ }
-        return;
-      }
       alert(typeof detail === 'string' ? detail : (detail?.mensaje || 'Error'));
       return;
     }
-    let toastMsg = `✅ Lead comprado — saldo: ${data.saldo_restante} créditos`;
-    if (data.aviso_saldo_bajo) {
-      toastMsg += ` (te avisamos por email cuando bajaste de ${data.umbral_saldo_bajo})`;
-    }
-    mostrarToast(toastMsg, 'green');
+    mostrarToast('✅ Lead reclamado gratis — el contacto ya está desbloqueado', 'green');
     await cargarMarketplace();
     await cargarBolsa();
-    await cargarCreditos();
   } catch(e) { alert('Error de conexión.'); }
 }
 
@@ -9399,11 +9410,18 @@ document.addEventListener('DOMContentLoaded', () => {
 // ACADEMIA DEL ALIADO · 8 módulos de formación
 // ═══════════════════════════════════════════════════════════════════════
 
+// NOTA: cada módulo tiene DOS campos distintos:
+//   · id  -> identificador interno ÚNICO. Se usa para guardar el progreso y para abrir el módulo correcto.
+//   · num -> el número VISIBLE para el aliado (ej. 'MÓDULO 08'). Es solo texto de pantalla.
+// NO unifiques los `id` aunque dos módulos compartan el mismo `num`: Canal 1 y Canal 2 tienen cada uno
+// su propio "MÓDULO 08", pero con id distinto (8 y 9). Si les das el mismo id, find() devuelve siempre
+// el primero y el módulo del otro canal queda inaccesible / se mezcla el progreso.
 const ACADEMIA_MODULOS = [
   {
     id: 1,
     num: 'MÓDULO 01',
     title: 'Cómo funciona el programa',
+    slug: 'mod-programa',
     desc: 'Comisiones, niveles, flujo de atribución de ventas y cómo te pagamos en 24hs.',
     tiempo: '5 min',
     icon: 'fa-circle-info',
@@ -9478,6 +9496,7 @@ const ACADEMIA_MODULOS = [
     id: 2,
     num: 'MÓDULO 02',
     title: 'Cómo detectar al cliente ideal',
+    slug: 'mod-cliente-ideal',
     desc: 'Las 4 preguntas que hacés en los primeros 30 segundos para saber si vale la pena avanzar.',
     tiempo: '6 min',
     icon: 'fa-bullseye',
@@ -9564,6 +9583,7 @@ const ACADEMIA_MODULOS = [
     id: 3,
     num: 'MÓDULO 03',
     title: 'Cómo hacer el diagnóstico',
+    slug: 'mod-diagnostico',
     desc: 'Cuando el cliente te pide "mostrame cómo funciona": guión paso a paso del diagnóstico de 15 minutos.',
     tiempo: '7 min',
     icon: 'fa-magnifying-glass-chart',
@@ -9677,6 +9697,7 @@ const ACADEMIA_MODULOS = [
     id: 4,
     num: 'MÓDULO 04',
     title: 'Los 4 sistemas explicados',
+    slug: 'mod-sistemas',
     desc: 'Base, Pro, Industrial y Estratégico 360: qué incluye cada uno, a qué empresa le conviene, cómo lo explicás.',
     tiempo: '8 min',
     icon: 'fa-layer-group',
@@ -9785,6 +9806,7 @@ const ACADEMIA_MODULOS = [
     id: 5,
     num: 'MÓDULO 05',
     title: 'Cómo cerrar con el guión por rubro',
+    slug: 'mod-cierre',
     desc: 'El pitch exacto, la pregunta de cierre y el mensaje de WhatsApp para cada rubro — copiá y pegá.',
     tiempo: '6 min',
     icon: 'fa-handshake',
@@ -9867,6 +9889,7 @@ const ACADEMIA_MODULOS = [
     id: 6,
     num: 'MÓDULO 06',
     title: 'Manejo de las 6 objeciones más comunes',
+    slug: 'mod-objeciones',
     desc: 'Qué te van a decir los clientes para no comprar, y qué responder sin pelear.',
     tiempo: '7 min',
     icon: 'fa-shield',
@@ -9964,6 +9987,7 @@ const ACADEMIA_MODULOS = [
     id: 7,
     num: 'MÓDULO 07',
     title: 'Casos de éxito en detalle',
+    slug: 'mod-casos',
     desc: 'Los 4 casos reales con cifras, antes/después y lecciones aprendidas — para contar con confianza.',
     tiempo: '5 min',
     icon: 'fa-trophy',
@@ -10051,6 +10075,7 @@ const ACADEMIA_MODULOS = [
     canal: 'canal1',
     num: 'MÓDULO 08',
     title: 'Materiales descargables',
+    slug: 'mod-materiales-c1',
     desc: 'Brochure comercial, guión por rubro, contrato y kit corto — todo lo que necesitás para vender.',
     tiempo: '2 min',
     icon: 'fa-download',
@@ -10210,10 +10235,11 @@ const ACADEMIA_MODULOS = [
 
   // ── MÓDULO 8 · CANAL 2 ──────────────────────────────────────────────────────
   {
-    id: 8,
+    id: 9,
     canal: 'canal2',
     num: 'MÓDULO 08',
     title: 'Tu kit de materiales',
+    slug: 'mod-materiales-c2',
     desc: 'Guiones por perfil, brochure v5 y guía por rubro — todo adaptado a tu canal.',
     tiempo: '5 min',
     icon: 'fa-download',
@@ -10331,6 +10357,7 @@ const ACADEMIA_MODULOS = [
     id: 10,
     num: 'MÓDULO 09',
     title: 'LinkedIn B2B: el canal con más potencial a mediano plazo',
+    slug: 'mod-linkedin',
     desc: 'Cómo usar LinkedIn para prospectar gerentes industriales, publicar contenido que genera autoridad y cerrar reuniones sin parecer vendedor.',
     tiempo: '12 min',
     icon: 'fa-linkedin',
@@ -10490,6 +10517,7 @@ const ACADEMIA_MODULOS = [
     canal: 'canal1',
     num: 'MÓDULO 10',
     title: 'Setting B2B: cómo llegar al que decide',
+    slug: 'mod-setting',
     desc: 'Identificá al que firma, pasá la recepción sin que te filtren y ganate los primeros 30 segundos con el dueño.',
     tiempo: '9 min',
     icon: 'fa-key',
@@ -10699,12 +10727,46 @@ function renderAcademiaIndex() {
   `).join('');
 }
 
-function getAcademiaProgreso() {
+// Mapea id de módulo actual -> slug estable (según ACADEMIA_MODULOS).
+function _slugDeModulo(id) {
+  const m = (typeof ACADEMIA_MODULOS !== 'undefined') ? ACADEMIA_MODULOS.find(x => x.id === id) : null;
+  return m ? m.slug : null;
+}
+// Mapea slug estable -> id de módulo actual.
+function _idDeSlug(slug) {
+  const m = (typeof ACADEMIA_MODULOS !== 'undefined') ? ACADEMIA_MODULOS.find(x => x.slug === slug) : null;
+  return m ? m.id : null;
+}
+
+// Progreso resiliente: se guarda por SLUG estable, no por id numérico.
+// Aunque se renumeren o agreguen módulos, lo ya completado nunca se "descompleta".
+function getAcademiaProgresoSlugs() {
   if (!aliado) return [];
-  const key = `academia_progress_${aliado.codigo}`;
-  try {
-    return JSON.parse(localStorage.getItem(key) || '[]');
-  } catch { return []; }
+  const keySlugs = `academia_progress_slugs_${aliado.codigo}`;
+  let slugs = [];
+  try { slugs = JSON.parse(localStorage.getItem(keySlugs) || '[]'); } catch { slugs = []; }
+  // Migración única desde el progreso viejo (basado en id) si todavía no migramos.
+  if (localStorage.getItem(keySlugs) === null) {
+    const keyOld = `academia_progress_${aliado.codigo}`;
+    let ids = [];
+    try { ids = JSON.parse(localStorage.getItem(keyOld) || '[]'); } catch { ids = []; }
+    if (ids.length) {
+      // El id 8 legacy en canal2 era el módulo de materiales (hoy id 9).
+      const esCanal2 = aliado && aliado.tipo_aliado === 'canal2';
+      const migrados = ids
+        .map(id => (esCanal2 && id === 8) ? 9 : id)
+        .map(id => _slugDeModulo(id))
+        .filter(Boolean);
+      slugs = [...new Set([...slugs, ...migrados])];
+      localStorage.setItem(keySlugs, JSON.stringify(slugs));
+    }
+  }
+  return slugs;
+}
+
+// Compat: el resto del código razona por id. Convertimos slugs -> ids actuales.
+function getAcademiaProgreso() {
+  return getAcademiaProgresoSlugs().map(s => _idDeSlug(s)).filter(v => v != null);
 }
 
 // Carga el progreso desde el backend y sincroniza al localStorage.
@@ -10720,11 +10782,12 @@ async function sincronizarProgresoDesdeBackend() {
       .filter(m => m.completado)
       .map(m => m.id);
     if (completadosIds.length > 0) {
-      const key = `academia_progress_${aliado.codigo}`;
-      // Merge: no pisar progreso local que el backend aún no tenga
-      const local = getAcademiaProgreso();
-      const merged = [...new Set([...completadosIds, ...local])];
-      localStorage.setItem(key, JSON.stringify(merged));
+      const keySlugs = `academia_progress_slugs_${aliado.codigo}`;
+      // Merge por slug estable: mapeamos los ids del backend a slugs actuales.
+      const local = getAcademiaProgresoSlugs();
+      const desdeBackend = completadosIds.map(id => _slugDeModulo(id)).filter(Boolean);
+      const merged = [...new Set([...desdeBackend, ...local])];
+      localStorage.setItem(keySlugs, JSON.stringify(merged));
     }
     renderAcademiaIndex();
   } catch (e) {
@@ -10734,12 +10797,13 @@ async function sincronizarProgresoDesdeBackend() {
 
 async function marcarModuloCompleto(id) {
   if (!aliado) return;
-  const key = `academia_progress_${aliado.codigo}`;
-  const progreso = getAcademiaProgreso();
-  if (!progreso.includes(id)) {
-    // Optimistic update: guardamos localmente primero para UX rápida
-    progreso.push(id);
-    localStorage.setItem(key, JSON.stringify(progreso));
+  const slug = _slugDeModulo(id);
+  const keySlugs = `academia_progress_slugs_${aliado.codigo}`;
+  const slugs = getAcademiaProgresoSlugs();
+  if (slug && !slugs.includes(slug)) {
+    // Optimistic update: guardamos por slug estable
+    slugs.push(slug);
+    localStorage.setItem(keySlugs, JSON.stringify(slugs));
     actualizarBadgeAcademia();
   }
   // Persistir en backend (idempotente: si ya estaba, no duplica créditos)

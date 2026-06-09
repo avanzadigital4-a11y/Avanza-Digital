@@ -657,7 +657,9 @@ PLANES_CONTINUIDAD = {
 }
 COMISION_RECURRENTE_PCT = 0.10
 
-# Paquetes de créditos para recargar saldo en el marketplace de leads.
+# Paquetes de créditos para recargar saldo y usar Jarvis IA (asistente de
+# ventas: análisis de leads, propuestas, seguimientos, objeciones, etc.).
+# Los leads de la bolsa NO consumen créditos: son todos gratis.
 # Anclados en USD; el precio ARS se calcula al cambio del día con dolarapi
 # blue al momento de generar la solicitud (ver SolicitudCompraCreditos).
 # La clave del dict es el `paquete_id` que viaja por API.
@@ -666,7 +668,7 @@ PAQUETES_CREDITOS = {
         "nombre":       "Impulso",
         "creditos":     100,
         "precio_usd":   10.0,
-        "descripcion":  "Para arrancar a explorar la bolsa de leads.",
+        "descripcion":  "Para arrancar a usar Jarvis IA en tus ventas.",
         "destacado":    False,
         "orden":        1,
     },
@@ -674,7 +676,7 @@ PAQUETES_CREDITOS = {
         "nombre":       "Acelerador",
         "creditos":     300,
         "precio_usd":   25.0,
-        "descripcion":  "El más elegido. 17% de descuento sobre Impulso.",
+        "descripcion":  "El más elegido para Jarvis IA. 17% de descuento sobre Impulso.",
         "destacado":    True,    # se marca como recomendado en el UI
         "orden":        2,
     },
@@ -682,7 +684,7 @@ PAQUETES_CREDITOS = {
         "nombre":       "Despegue",
         "creditos":     1000,
         "precio_usd":   70.0,
-        "descripcion":  "Para aliados activos. 30% de descuento sobre Impulso.",
+        "descripcion":  "Para aliados que usan Jarvis IA a full. 30% de descuento sobre Impulso.",
         "destacado":    False,
         "orden":        3,
     },
