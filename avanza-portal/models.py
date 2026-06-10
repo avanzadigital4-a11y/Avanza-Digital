@@ -281,6 +281,8 @@ class ActividadProspecto(Base):
     vence_en      = Column(DateTime, nullable=True)
     completada    = Column(Boolean, default=False)
     completada_en = Column(DateTime, nullable=True)
+    # True cuando el job de recordatorios ya avisó por email que venció.
+    recordatorio_enviado = Column(Boolean, default=False)
 
     prospecto = relationship("Prospecto", back_populates="actividades")
 
@@ -310,6 +312,38 @@ class AuditoriaLog(Base):
     dominio = Column(String, index=True)
     score = Column(Integer)
     email_capturado = Column(String, nullable=True)
+    creado_en = Column(DateTime, default=func.now())
+
+    # --- MIS CAPTURAS (bandeja del aliado) ---
+    # Datos extra que deja el lead en el magnet (antes solo iban a MailerLite).
+    nombre   = Column(String, nullable=True)
+    telefono = Column(String, nullable=True)
+    # Puente a CRM: si el aliado convirtió esta captura en prospecto, acá queda
+    # el link (idempotencia + botón "Ver en Mi CRM"), igual que en LeadBolsa.
+    prospecto_id = Column(Integer, ForeignKey("prospectos.id"), nullable=True)
+    # Cuándo el aliado vio la captura en su bandeja (badge de "nuevas").
+    visto_en = Column(DateTime, nullable=True)
+
+    aliado = relationship("Aliado")
+
+
+# ─── NOVEDADES (centro de notificaciones in-app del aliado) ──────────────────
+class Novedad(Base):
+    """Aviso in-app para el aliado (campanita del portal). Complementa los
+    emails: leads capturados, comisiones nuevas, tareas vencidas, etc.
+
+    tipo: 'captura' | 'comision' | 'tarea' | 'sistema' | ...
+    tab:  tab del portal a abrir al hacer click (ej: 'capturas', 'comisiones').
+    """
+    __tablename__ = "novedades"
+
+    id        = Column(Integer, primary_key=True, index=True)
+    aliado_id = Column(Integer, ForeignKey("aliados.id"), index=True, nullable=False)
+    tipo      = Column(String, default="sistema")
+    titulo    = Column(String, nullable=False)
+    cuerpo    = Column(Text, nullable=True)
+    tab       = Column(String, nullable=True)
+    leida     = Column(Boolean, default=False)
     creado_en = Column(DateTime, default=func.now())
 
     aliado = relationship("Aliado")
@@ -347,6 +381,11 @@ class LeadBolsa(Base):
     tiene_web = Column(Boolean, default=False)
     tiene_redes = Column(Boolean, default=False)
     observacion = Column(Text, nullable=True)
+
+    # --- CRM BRIDGE (v2.x) ---
+    # Si el aliado convirtió este lead en un prospecto del CRM, acá queda el
+    # link. Permite mostrar "Ver en Mi CRM" y hacer la conversión idempotente.
+    prospecto_id = Column(Integer, ForeignKey("prospectos.id"), nullable=True)
 
     aliado = relationship("Aliado", backref="leads_bolsa")
 

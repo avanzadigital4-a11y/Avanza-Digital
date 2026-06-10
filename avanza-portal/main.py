@@ -13,7 +13,7 @@ from models import (
     TransaccionCredito, PostComunidad, ComentarioComunidad, AutomationLog, ActividadProspecto, ContactoProspecto,
     LinkPago, Comision, AcademiaModulo, AliadoModuloCompletado,
     SolicitudCompraCreditos, ReporteMalContacto,
-    PlanContinuidadActivo, PasswordResetToken,
+    PlanContinuidadActivo, PasswordResetToken, Novedad,
     PLANES, PAQUETES_CREDITOS, NIVELES, CUOTAS_RECARGO, REPUTACION_BADGES,
     PLANES_CONTINUIDAD, COMISION_RECURRENTE_PCT,
 )
@@ -166,6 +166,9 @@ for col_sql in [
     # v2.2 — País del aliado (expansión Latam: AR, MX, CO, CL, PE…)
     # Separado de bolsa_leads (que ya tiene su pais desde v1.8).
     "ALTER TABLE aliados ADD COLUMN pais VARCHAR DEFAULT 'AR'",
+    # CRM bridge — conversión lead→prospecto y recordatorios de tareas
+    "ALTER TABLE bolsa_leads ADD COLUMN prospecto_id INTEGER",
+    "ALTER TABLE actividades_prospecto ADD COLUMN recordatorio_enviado BOOLEAN DEFAULT FALSE",
     # v2.3 — Rubros de especialidad para SEO local por país y ciudad
     # JSON array: ["metalurgica","agro","logistica","clinica","tecnico"]
     "ALTER TABLE aliados ADD COLUMN rubros_especialidad TEXT DEFAULT '[]'",
@@ -193,6 +196,13 @@ for col_sql in [
     "ALTER TABLE prospectos ADD COLUMN motivo_cierre VARCHAR",
     "ALTER TABLE prospectos ADD COLUMN etiquetas VARCHAR",
     "ALTER TABLE prospectos ADD COLUMN proxima_accion_en TIMESTAMP",
+    # v3.1 — Mis Capturas: bandeja de leads de magnets (auditoría/calculadora/recursos)
+    # visible para el aliado + puente a CRM. SIN estas columnas, SQLAlchemy hace
+    # SELECT * sobre auditorias_log y PostgreSQL tira UndefinedColumn.
+    "ALTER TABLE auditorias_log ADD COLUMN nombre VARCHAR",
+    "ALTER TABLE auditorias_log ADD COLUMN telefono VARCHAR",
+    "ALTER TABLE auditorias_log ADD COLUMN prospecto_id INTEGER",
+    "ALTER TABLE auditorias_log ADD COLUMN visto_en TIMESTAMP",
 ]:
     _aplicar_migracion(col_sql)
 
@@ -414,6 +424,27 @@ def enviar_email(destinatario: str, asunto: str, cuerpo_html: str):
         print(f"[EMAIL SMTP fallback] Enviado a {destinatario}: {asunto}")
     except Exception as e:
         print(f"[EMAIL ERROR total] {e}")
+
+
+def notificar_aliado(db, aliado_id: int, tipo: str, titulo: str,
+                     cuerpo: str = "", tab: str = None):
+    """Crea una novedad in-app para el aliado (campanita del portal).
+
+    Best-effort y NO hace commit: la transacción la maneja el caller (mismo
+    patrón que _crear_prospecto_desde_lead). Si algo falla, no rompe el flujo
+    principal — la novedad es complementaria, nunca crítica.
+    """
+    try:
+        if not aliado_id:
+            return
+        db.add(Novedad(
+            aliado_id=aliado_id, tipo=tipo,
+            titulo=(titulo or "")[:200],
+            cuerpo=(cuerpo or "")[:600] or None,
+            tab=tab,
+        ))
+    except Exception as e:
+        print(f"[NOVEDADES] No se pudo crear novedad para aliado {aliado_id}: {e}")
 
 
 # ─── DOLAR API: tipo de cambio blue en tiempo real ───────────────────────────
@@ -1370,6 +1401,8 @@ RUTAS_ADMIN = {
     ("GET",    "/admin/auditorias"),
     ("POST",   "/admin/bolsa"),
     ("POST",   "/admin/bolsa-v2"),
+    ("POST",   "/admin/bolsa/bulk"),
+    ("POST",   "/admin/bolsa/verificar-duplicados"),
     ("GET",    "/admin/bolsa"),
     ("POST",   "/admin/bolsa/{id}/revocar"),
     ("GET",    "/admin/historial-bolsa"),
@@ -3115,18 +3148,118 @@ def admin_prospectos(db: Session = Depends(get_db)):
 
 # ─── AUDITORÍAS ──────────────────────────────────────────────────────────────
 
+_FUENTE_LABELS = {
+    "auditoria": "Auditoría Digital",
+    "recursos":  "Descarga de recurso",
+    "guia":      "Guía descargada",
+}
+
+
+def _es_dominio(s: str) -> bool:
+    """True si el string parece un dominio web (logs de auditoría usan el
+    campo `dominio` para el sitio auditado; los demás magnets lo usan como
+    nombre de fuente: 'recursos', 'guia', etc.)."""
+    s = (s or "").lower()
+    return "." in s and " " not in s and s not in _FUENTE_LABELS
+
+
+def _fuente_captura(log) -> str:
+    """Clave de fuente normalizada de una captura: auditoria|recursos|guia|otro."""
+    d = (log.dominio or "").lower()
+    if d in _FUENTE_LABELS:
+        return d
+    if _es_dominio(d) or (log.score or 0) > 0:
+        return "auditoria"
+    return d or "otro"
+
+
+def _notificar_captura(db, aliado: Aliado, log: AuditoriaLog):
+    """Lead caliente: alguien dejó su email en un lead magnet del aliado.
+    Avisa al momento por email + campanita. NO hace commit (caller decide).
+
+    Estos leads vienen por iniciativa propia del prospecto (corrió la
+    auditoría / calculadora desde el link del aliado) — mucho más calientes
+    que uno de la bolsa. La velocidad de contacto acá lo es todo.
+    """
+    if not aliado or not log or not log.email_capturado:
+        return
+
+    fuente = _fuente_captura(log)
+    es_audit = fuente == "auditoria" and _es_dominio(log.dominio)
+    if es_audit:
+        que_hizo = f"corrió tu <strong>Auditoría Digital</strong> sobre <strong>{log.dominio}</strong>" + (
+            f" (score: <strong>{log.score}/100</strong>)" if log.score else "")
+        que_hizo_txt = f"corrió tu auditoría de {log.dominio}"
+    elif fuente == "recursos" or fuente == "guia":
+        que_hizo = "descargó un <strong>recurso</strong> desde tu enlace"
+        que_hizo_txt = "descargó un recurso con tu enlace"
+    else:
+        que_hizo = f"usó tu <strong>{_FUENTE_LABELS.get(fuente, 'herramienta')}</strong>"
+        que_hizo_txt = "usó una de tus herramientas"
+
+    # ── Campanita in-app ──────────────────────────────────────────────────────
+    notificar_aliado(
+        db, aliado.id, "captura",
+        "🔥 ¡Lead caliente capturado!",
+        f"{log.email_capturado} {que_hizo_txt}. Contactalo ahora desde Mis Capturas.",
+        tab="capturas",
+    )
+
+    # ── Email al momento ─────────────────────────────────────────────────────
+    if not aliado.email:
+        return
+    nombre_corto = (aliado.nombre or "Aliado").split()[0]
+    datos = []
+    if log.nombre:
+        datos.append(f"<tr><td style='padding:6px 12px;color:#94a3b8;'>Nombre</td><td style='padding:6px 12px;font-weight:700;'>{log.nombre}</td></tr>")
+    datos.append(f"<tr><td style='padding:6px 12px;color:#94a3b8;'>Email</td><td style='padding:6px 12px;font-weight:700;'>{log.email_capturado}</td></tr>")
+    if log.telefono:
+        datos.append(f"<tr><td style='padding:6px 12px;color:#94a3b8;'>Teléfono</td><td style='padding:6px 12px;font-weight:700;'>{log.telefono}</td></tr>")
+    if es_audit and log.dominio:
+        datos.append(f"<tr><td style='padding:6px 12px;color:#94a3b8;'>Sitio auditado</td><td style='padding:6px 12px;font-weight:700;'>{log.dominio}</td></tr>")
+    if es_audit and log.score:
+        datos.append(f"<tr><td style='padding:6px 12px;color:#94a3b8;'>Score</td><td style='padding:6px 12px;font-weight:700;color:#f87171;'>{log.score}/100</td></tr>")
+
+    html = f"""
+    <div style="font-family:Inter,sans-serif;background:#050505;color:#e2e8f0;padding:36px;max-width:600px;margin:0 auto;border-radius:12px;border:1px solid #1e1e1e;">
+      <span style="background:#1c1917;color:#fdba74;font-size:.75rem;font-weight:700;padding:4px 10px;border-radius:99px;letter-spacing:.5px;text-transform:uppercase;">🔥 Lead caliente</span>
+      <h2 style="margin:18px 0 10px;font-size:1.35rem;color:#fff;">{nombre_corto}, alguien acaba de usar tu enlace</h2>
+      <p style="color:#a1a1aa;line-height:1.6;">Hace minutos, un prospecto {que_hizo} y dejó sus datos. <strong style="color:#fff;">Vino solo, por tu link</strong> — es el lead más caliente que existe. Llamalo AHORA, antes de que se enfríe.</p>
+      <table style="width:100%;border-collapse:collapse;margin:16px 0;font-size:.9rem;background:#0a0a0a;border-radius:8px;">
+        {''.join(datos)}
+      </table>
+      <a href="{PORTAL_URL}/portal.html" style="display:inline-block;padding:14px 28px;background:#f97316;color:#000;border-radius:8px;text-decoration:none;font-weight:800;font-size:.95rem;">Abrir Mis Capturas →</a>
+      <p style="margin-top:24px;font-size:.74rem;color:#3f3f46;">Desde Mis Capturas lo pasás a tu CRM en 1 click. Avanza Digital · Partner Network.</p>
+    </div>
+    """
+    try:
+        enviar_email(
+            aliado.email,
+            f"🔥 {nombre_corto}: un lead acaba de usar tu enlace — llamalo ahora",
+            html,
+        )
+    except Exception as e:
+        print(f"[CAPTURAS] Falló email de aviso a {aliado.codigo}: {e}")
+
+
 @app.post("/auditorias/log")
 @limiter.limit("60/hour")
 def log_auditoria(request: Request, dominio: str, score: int, ref_code: str = "", email: str = "", db: Session = Depends(get_db)):
-    """Guarda el log cuando se genera un reporte o se captura un email."""
+    """Guarda el log cuando se genera un reporte o se captura un email.
+    Si hay email + aliado dueño del ref_code → aviso inmediato (Mis Capturas)."""
+    aliado = None
     aliado_id = None
     if ref_code:
         a = db.query(Aliado).filter(Aliado.ref_code == ref_code).first()
         if a:
+            aliado = a
             aliado_id = a.id
     
     log = AuditoriaLog(aliado_id=aliado_id, ref_code=ref_code, dominio=dominio, score=score, email_capturado=email)
     db.add(log)
+    if email and aliado:
+        db.flush()
+        _notificar_captura(db, aliado, log)
     db.commit()
     return {"status": "ok"}
 
@@ -3152,21 +3285,53 @@ async def capturar_lead(
     import httpx
 
     # ── 1. Registrar en BD ────────────────────────────────────────────────────
+    aliado_obj = None
     aliado_id = None
     if ref_code:
         a = db.query(Aliado).filter(Aliado.ref_code == ref_code).first()
         if a:
+            aliado_obj = a
             aliado_id = a.id
 
-    log = AuditoriaLog(
-        aliado_id=aliado_id,
-        ref_code=ref_code,
-        dominio=fuente,          # reutilizamos AuditoriaLog; 'dominio' = fuente para leads no-auditoria
-        score=0,
-        email_capturado=email,
-    )
-    db.add(log)
-    db.commit()
+    # Dedupe: la auditoría llama PRIMERO a /auditorias/log (con email) y después
+    # a este endpoint. Si ya existe una captura reciente con el mismo email para
+    # el mismo aliado/ref, reutilizamos esa fila (le completamos nombre/teléfono)
+    # en vez de duplicar la captura y el aviso al aliado.
+    log = None
+    if email:
+        hace_15m = datetime.now() - timedelta(minutes=15)
+        q = db.query(AuditoriaLog).filter(
+            AuditoriaLog.email_capturado == email,
+            AuditoriaLog.creado_en >= hace_15m,
+        )
+        if aliado_id:
+            q = q.filter(AuditoriaLog.aliado_id == aliado_id)
+        else:
+            q = q.filter(AuditoriaLog.ref_code == (ref_code or ""))
+        log = q.order_by(AuditoriaLog.creado_en.desc()).first()
+
+    if log:
+        # Fila ya creada por /auditorias/log: completar datos faltantes, sin re-avisar.
+        if nombre and not log.nombre:
+            log.nombre = nombre
+        if telefono and not log.telefono:
+            log.telefono = telefono
+        db.commit()
+    else:
+        log = AuditoriaLog(
+            aliado_id=aliado_id,
+            ref_code=ref_code,
+            dominio=fuente,          # reutilizamos AuditoriaLog; 'dominio' = fuente para leads no-auditoria
+            score=0,
+            email_capturado=email,
+            nombre=nombre or None,
+            telefono=telefono or None,
+        )
+        db.add(log)
+        if email and aliado_obj:
+            db.flush()
+            _notificar_captura(db, aliado_obj, log)
+        db.commit()
 
     # ── 2. Suscribir en MailerLite ────────────────────────────────────────────
     if MAILERLITE_API_KEY:
@@ -3222,7 +3387,203 @@ async def capturar_lead(
     return {"ok": True}
 
 
-@app.get("/admin/jarvis/uso")
+# ─── MIS CAPTURAS (bandeja de leads de magnets, por aliado) ──────────────────
+
+def _captura_row(log: AuditoriaLog) -> dict:
+    fuente = _fuente_captura(log)
+    es_audit = fuente == "auditoria"
+    return {
+        "id":           log.id,
+        "fuente":       fuente,
+        "fuente_label": _FUENTE_LABELS.get(fuente, "Lead magnet"),
+        "dominio":      log.dominio if (es_audit and _es_dominio(log.dominio)) else None,
+        "score":        log.score or 0,
+        "email":        log.email_capturado,
+        "nombre":       log.nombre,
+        "telefono":     log.telefono,
+        "visto":        log.visto_en is not None,
+        "prospecto_id": log.prospecto_id,   # != None si ya está en el CRM
+        "fecha":        log.creado_en.strftime("%d/%m/%Y %H:%M") if log.creado_en else None,
+        "creado_en":    log.creado_en.isoformat() if log.creado_en else None,
+    }
+
+
+@app.get("/aliados/{codigo}/capturas")
+def listar_capturas_aliado(codigo: str, db: Session = Depends(get_db), _owner=Depends(verify_ownership_dep)):
+    """Bandeja "Mis Capturas": leads que dejaron su email en los lead magnets
+    del aliado (Auditoría Digital, Calculadora, descargas) usando su ref_code.
+
+    Son los leads más calientes del sistema: vinieron solos, por iniciativa
+    propia, desde el enlace del aliado. Antes solo los veía el admin."""
+    a = _get_aliado(codigo, db)
+    logs = (db.query(AuditoriaLog)
+              .filter(AuditoriaLog.aliado_id == a.id,
+                      AuditoriaLog.email_capturado != None,
+                      AuditoriaLog.email_capturado != "")
+              .order_by(AuditoriaLog.creado_en.desc())
+              .limit(200)
+              .all())
+    no_vistas = sum(1 for l in logs if l.visto_en is None)
+    return {
+        "no_vistas": no_vistas,
+        "total": len(logs),
+        "capturas": [_captura_row(l) for l in logs],
+    }
+
+
+@app.post("/aliados/{codigo}/capturas/marcar-vistas")
+def marcar_capturas_vistas(codigo: str, db: Session = Depends(get_db), _owner=Depends(verify_ownership_dep)):
+    """Marca todas las capturas del aliado como vistas (apaga el badge)."""
+    a = _get_aliado(codigo, db)
+    ahora = datetime.now()
+    actualizadas = (db.query(AuditoriaLog)
+                      .filter(AuditoriaLog.aliado_id == a.id,
+                              AuditoriaLog.email_capturado != None,
+                              AuditoriaLog.email_capturado != "",
+                              AuditoriaLog.visto_en == None)
+                      .update({AuditoriaLog.visto_en: ahora}, synchronize_session=False))
+    db.commit()
+    return {"ok": True, "marcadas": actualizadas}
+
+
+def _crear_prospecto_desde_captura(db: Session, a: Aliado, log: AuditoriaLog) -> Prospecto:
+    """Crea el Prospecto del CRM a partir de una captura de lead magnet,
+    deja la actividad de sistema en el timeline y vincula la captura.
+    NO hace commit (el caller decide la transacción). Mismo patrón que
+    _crear_prospecto_desde_lead (puente Bolsa → CRM)."""
+    fuente = _fuente_captura(log)
+    es_audit = fuente == "auditoria" and _es_dominio(log.dominio)
+
+    partes_nota = []
+    if es_audit:
+        partes_nota.append(f"Origen: corrió tu Auditoría Digital sobre {log.dominio}"
+                           + (f" (score {log.score}/100)." if log.score else "."))
+        partes_nota.append("Lead caliente: vino solo desde tu enlace. El anzuelo de la "
+                           "auditoría ya hizo su trabajo — retomá la conversación desde el reporte.")
+    else:
+        partes_nota.append(f"Origen: {_FUENTE_LABELS.get(fuente, 'lead magnet')} desde tu enlace (captura #{log.id}).")
+
+    nombre_p = log.nombre or (es_audit and log.dominio) or log.email_capturado or f"Captura #{log.id}"
+
+    p = Prospecto(
+        aliado_id = a.id,
+        nombre    = nombre_p,
+        contacto  = log.nombre or log.email_capturado or "",
+        nota      = "\n".join(partes_nota),
+        estado    = "sin_contactar",
+        email     = log.email_capturado,
+        telefono  = log.telefono,
+        whatsapp  = log.telefono,
+    )
+    db.add(p)
+    db.flush()  # necesitamos p.id antes del commit
+
+    detalle = (f"Creado desde Mis Capturas — corrió la Auditoría Digital de {log.dominio}"
+               + (f" (score {log.score}/100)" if log.score else "")
+               if es_audit else
+               f"Creado desde Mis Capturas — {_FUENTE_LABELS.get(fuente, 'lead magnet')}")
+    db.add(ActividadProspecto(
+        prospecto_id = p.id,
+        aliado_id    = a.id,
+        tipo         = "sistema",
+        descripcion  = detalle + ".",
+    ))
+
+    log.prospecto_id = p.id
+    if log.visto_en is None:
+        log.visto_en = datetime.now()
+    return p
+
+
+@app.post("/capturas/{id}/convertir-prospecto")
+def convertir_captura_en_prospecto(id: int,
+                                   aliado: Aliado = Depends(current_aliado_required),
+                                   db: Session = Depends(get_db)):
+    """Puente Capturas → CRM: convierte una captura de lead magnet en un
+    Prospecto en 1 click (reusa el mismo patrón del puente Bolsa → CRM).
+
+    - Idempotente: si la captura ya fue convertida, devuelve el prospecto existente.
+    - Deja una actividad de sistema en el timeline con el origen.
+    """
+    a = aliado
+    log = db.query(AuditoriaLog).filter(AuditoriaLog.id == id).first()
+    if not log:
+        raise HTTPException(404, "Captura no encontrada.")
+    if log.aliado_id != a.id:
+        raise HTTPException(403, "Esta captura no es tuya.")
+    if not log.email_capturado:
+        raise HTTPException(400, "Esta captura no tiene datos de contacto para convertir.")
+
+    # Idempotencia: si ya existe el prospecto vinculado, devolverlo.
+    if log.prospecto_id:
+        existente = db.query(Prospecto).filter(Prospecto.id == log.prospecto_id).first()
+        if existente:
+            return {
+                "mensaje": "Esta captura ya estaba en tu CRM.",
+                "prospecto_id": existente.id,
+                "ya_existia": True,
+            }
+        log.prospecto_id = None  # el prospecto fue borrado: permitir reconvertir
+
+    p = _crear_prospecto_desde_captura(db, a, log)
+    db.commit()
+    db.refresh(p)
+
+    return {
+        "mensaje": f"¡{p.nombre} ya está en tu CRM!",
+        "prospecto_id": p.id,
+        "ya_existia": False,
+    }
+
+
+# ─── NOVEDADES (campanita in-app) ────────────────────────────────────────────
+
+@app.get("/aliados/{codigo}/novedades")
+def listar_novedades_aliado(codigo: str, db: Session = Depends(get_db), _owner=Depends(verify_ownership_dep)):
+    """Últimas novedades del aliado + contador de no leídas (campanita)."""
+    a = _get_aliado(codigo, db)
+    novedades = (db.query(Novedad)
+                   .filter(Novedad.aliado_id == a.id)
+                   .order_by(Novedad.creado_en.desc())
+                   .limit(30)
+                   .all())
+    no_leidas = (db.query(Novedad)
+                   .filter(Novedad.aliado_id == a.id, Novedad.leida == False)
+                   .count())
+    return {
+        "no_leidas": no_leidas,
+        "novedades": [{
+            "id": n.id, "tipo": n.tipo, "titulo": n.titulo,
+            "cuerpo": n.cuerpo, "tab": n.tab, "leida": n.leida,
+            "fecha": n.creado_en.strftime("%d/%m %H:%M") if n.creado_en else None,
+        } for n in novedades],
+    }
+
+
+@app.post("/aliados/{codigo}/novedades/marcar-leidas")
+def marcar_novedades_leidas(codigo: str, db: Session = Depends(get_db), _owner=Depends(verify_ownership_dep)):
+    a = _get_aliado(codigo, db)
+    (db.query(Novedad)
+       .filter(Novedad.aliado_id == a.id, Novedad.leida == False)
+       .update({Novedad.leida: True}, synchronize_session=False))
+    db.commit()
+    return {"ok": True}
+
+
+# ─── SIMULADOR DE GANANCIAS (config pública de planes/niveles) ───────────────
+
+@app.get("/simulador/config")
+def simulador_config():
+    """Datos para el Simulador de Ganancias del aliado: planes one-time,
+    planes de continuidad, % recurrente y comisión por nivel. Fuente única:
+    las constantes de negocio de models.py (cero duplicación en el frontend)."""
+    return {
+        "planes": PLANES,
+        "planes_continuidad": PLANES_CONTINUIDAD,
+        "comision_recurrente_pct": COMISION_RECURRENTE_PCT,
+        "niveles": {k: {"comision": v["comision"], "requisito": v["requisito"]}
+                    for k, v in NIVELES.items()},
+    }
 def admin_jarvis_uso(_admin=Depends(current_admin_required)):
     """Uso del motor de IA (tokens, llamadas, caché, errores) por modelo.
     Datos en memoria desde el último reinicio. Para histórico persistente,
@@ -4142,6 +4503,12 @@ def _procesar_pago_confirmado(db: Session,
         fecha_pago     = fecha_venta,
     )
     db.add(c)
+    notificar_aliado(
+        db, a.id, "comision",
+        f"💰 Nueva comisión: USD {comision_usd:,.0f}",
+        f"{nombre_cliente} contrató {plan}. Tu comisión quedó pendiente de pago.",
+        tab="comisiones",
+    )
 
     # --- Comisión de red (5% para sponsor) ---
     if getattr(a, "sponsor", None):
@@ -4974,6 +5341,7 @@ def ver_bolsa_aliado(codigo: str, pais: str = "", db: Session = Depends(get_db),
             "nombre_contacto": l.nombre_contacto, "ciudad": l.ciudad,
             "telefono": l.telefono, "whatsapp": l.whatsapp, "email": l.email,
             "estado": l.estado, "horas_restantes": horas_restantes,
+            "prospecto_id": l.prospecto_id,  # CRM bridge: != None si ya se convirtió
             # v1.6 — presencia digital
             "web": l.web, "instagram": l.instagram,
             "tiene_web": bool(l.tiene_web), "tiene_redes": bool(l.tiene_redes),
@@ -5069,14 +5437,228 @@ def contactar_lead_bolsa(id: int,
 
     lead.estado    = "contactado"
     lead.resultado = resultado
+
+    # ── AUTO-CONVERSIÓN AL CRM ────────────────────────────────────────────────
+    # Un contacto "exitoso" significa que hay una venta en marcha: el lead pasa
+    # solo a Mi CRM como prospecto para trabajarlo con etapas, notas y tareas.
+    # Defensivo: si la conversión falla por lo que sea, el marcado de contacto
+    # se guarda igual (la conversión manual sigue disponible desde la tarjeta).
+    convertido_a_crm = False
+    prospecto_id = lead.prospecto_id
+    if resultado == "exitoso" and not lead.prospecto_id:
+        try:
+            p = _crear_prospecto_desde_lead(db, a, lead)
+            prospecto_id = p.id
+            convertido_a_crm = True
+        except Exception as e:
+            print(f"[CRM AUTO-CONVERSIÓN] Falló para lead {lead.id}: {e}")
+
     db.commit()
 
     mensajes = {
-        "exitoso":       "¡Excelente! Lead marcado como exitoso. ¡A cerrar la venta!",
+        "exitoso":       ("¡Excelente! Lead marcado como exitoso y agregado a Mi CRM — seguilo desde ahí con etapas, notas y tareas."
+                          if convertido_a_crm else
+                          "¡Excelente! Lead marcado como exitoso. ¡A cerrar la venta!"),
         "no_interesado": "Anotado. El lead quedó marcado como no interesado.",
         "no_contesto":   "Anotado. Si conseguís contactarlo después, podés actualizar el estado.",
     }
-    return {"mensaje": mensajes[resultado]}
+    return {
+        "mensaje": mensajes[resultado],
+        "convertido_a_crm": convertido_a_crm,
+        "prospecto_id": prospecto_id,
+    }
+
+
+def _crear_prospecto_desde_lead(db: Session, a: Aliado, lead: LeadBolsa) -> Prospecto:
+    """Crea el Prospecto del CRM a partir de un lead de la bolsa, copia los datos
+    de contacto, deja la actividad de sistema en el timeline y vincula el lead.
+    NO hace commit (el caller decide la transacción)."""
+    partes_nota = [f"Origen: Bolsa de Leads (lead #{lead.id}, tier {lead.tier or 'basico'})."]
+    if lead.observacion:
+        partes_nota.append(f"Observación del prospectador: {lead.observacion}")
+    if lead.web:
+        partes_nota.append(f"Web: {lead.web}")
+    if lead.instagram:
+        partes_nota.append(f"Redes: {lead.instagram}")
+
+    ya_contactado = lead.estado == "contactado"
+    p = Prospecto(
+        aliado_id = a.id,
+        nombre    = lead.empresa,
+        contacto  = lead.nombre_contacto or lead.telefono or "",
+        rubro     = lead.rubro,
+        nota      = "\n".join(partes_nota),
+        estado    = "contactado" if ya_contactado else "sin_contactar",
+        fecha_contacto = datetime.now() if ya_contactado else None,
+        # CRM v3.0 — contacto estructurado
+        telefono  = lead.telefono,
+        whatsapp  = lead.whatsapp or lead.telefono,
+        email     = lead.email,
+    )
+    db.add(p)
+    db.flush()  # necesitamos p.id antes del commit
+
+    db.add(ActividadProspecto(
+        prospecto_id = p.id,
+        aliado_id    = a.id,
+        tipo         = "sistema",
+        descripcion  = f"Creado desde la Bolsa de Leads — {lead.empresa} ({lead.rubro or 's/rubro'}, tier {lead.tier or 'basico'}).",
+    ))
+
+    lead.prospecto_id = p.id
+    return p
+
+
+@app.post("/bolsa/{id}/convertir-prospecto")
+def convertir_lead_en_prospecto(id: int,
+                                aliado: Aliado = Depends(current_aliado_required),
+                                db: Session = Depends(get_db)):
+    """CRM bridge: convierte un lead reclamado de la bolsa en un Prospecto del
+    CRM en un click, copiando empresa/contacto/teléfono/email/rubro/observación.
+
+    - Idempotente: si el lead ya fue convertido, devuelve el prospecto existente.
+    - Marca el lead como 'contactado' (sale del contador de 48hs y libera cupo).
+    - Deja una actividad de sistema en el timeline del prospecto con el origen.
+    """
+    a = aliado
+    if (getattr(a, "tipo_aliado", "canal1") or "canal1") == "canal2":
+        raise HTTPException(403, "La bolsa de leads no está disponible para aliados Canal 2.")
+
+    lead = db.query(LeadBolsa).filter(LeadBolsa.id == id).first()
+    if not lead:
+        raise HTTPException(404, "Lead no encontrado.")
+    if lead.aliado_id != a.id:
+        raise HTTPException(403, "Este lead no es tuyo.")
+
+    # Idempotencia: si ya existe el prospecto vinculado, devolverlo.
+    if lead.prospecto_id:
+        existente = db.query(Prospecto).filter(Prospecto.id == lead.prospecto_id).first()
+        if existente:
+            return {
+                "mensaje": "Este lead ya estaba en tu CRM.",
+                "prospecto_id": existente.id,
+                "ya_existia": True,
+            }
+        lead.prospecto_id = None  # el prospecto fue borrado: permitir reconvertir
+
+    p = _crear_prospecto_desde_lead(db, a, lead)
+
+    # El lead queda gestionado: sale del reloj de 48hs y libera el cupo de reclamos.
+    if lead.estado == "reclamado":
+        lead.estado = "contactado"
+        if not lead.resultado:
+            lead.resultado = "exitoso"
+
+    db.commit()
+    db.refresh(p)
+
+    return {
+        "mensaje": f"¡{lead.empresa} ya está en tu CRM!",
+        "prospecto_id": p.id,
+        "ya_existia": False,
+    }
+
+
+# ─── OUTREACH IA: primer mensaje de WhatsApp según rubro/observación ──────────
+# El click-to-WhatsApp mandaba siempre el mismo texto genérico. Acá el botón
+# arma el mensaje según el rubro y la observación del lead — con IA (Groq) y
+# fallback a plantillas por rubro si la IA no está disponible. Es GRATIS (no
+# consume créditos): es el habilitador del primer contacto, donde se gana o
+# pierde el lead.
+
+_OUTREACH_GANCHOS = {
+    "metalurgica":  "presupuestos que se pierden por demora en cotizar y seguimiento manual de clientes",
+    "agro":         "cotizaciones y seguimiento de clientes del agro que se manejan a mano y se enfrían",
+    "logistica":    "seguimiento de operaciones y consultas de clientes que se pierden entre llamados",
+    "construccion": "presupuestos de obra que tardan días en salir y consultas que quedan sin responder",
+    "clinica":      "turnos y consultas de pacientes que se pierden por gestión manual",
+    "tecnico":      "pedidos de service y presupuestos que se traspapelan sin un sistema",
+}
+_OUTREACH_GANCHO_DEFAULT = "consultas de clientes que se pierden por procesos comerciales manuales"
+
+
+def _plantilla_outreach(saludo: str, empresa: str, rubro: str) -> str:
+    gancho = _OUTREACH_GANCHOS.get((rubro or "").lower().strip(), _OUTREACH_GANCHO_DEFAULT)
+    return (f"{saludo}, te escribo de Avanza Digital. Trabajamos con empresas de tu rubro "
+            f"resolviendo {gancho}. Vi {empresa} y creo que hay una oportunidad concreta "
+            f"de mejorar eso. ¿Tenés 10 minutos esta semana para contarte cómo?")
+
+
+def _generar_mensaje_outreach(aliado: Aliado, empresa: str, rubro: str = "",
+                              observacion: str = "", nombre_contacto: str = "") -> dict:
+    """Genera el primer mensaje de WhatsApp personalizado por rubro y
+    observación. IA primero (groq_ai._chat devuelve None si falla → fallback
+    a plantilla por rubro). Devuelve {mensaje, fuente: 'ia'|'plantilla'}."""
+    nombre_pila = (nombre_contacto or "").split()[0] if nombre_contacto else ""
+    saludo = f"Hola {nombre_pila}" if nombre_pila else "Hola"
+    empresa = (empresa or "tu empresa").strip()
+
+    system = (
+        "Sos un vendedor B2B argentino experto en primer contacto por WhatsApp. "
+        "Escribís mensajes de apertura para PyMEs en nombre de un aliado comercial de "
+        "Avanza Digital (software de captación y automatización de ventas para PyMEs). "
+        "Reglas estrictas: máximo 55 palabras, tono cercano y profesional con voseo "
+        "argentino, sin emojis, sin promesas de cifras inventadas, mencioná un dolor "
+        "concreto del rubro, terminá con UNA pregunta fácil de responder. "
+        "Devolvé SOLO el mensaje, sin comillas ni texto adicional."
+    )
+    partes = [f"Empresa del prospecto: {empresa}."]
+    if rubro:
+        partes.append(f"Rubro: {rubro}.")
+    if observacion:
+        partes.append(f"Observación del prospectador sobre este lead: {observacion[:400]}")
+    if nombre_pila:
+        partes.append(f"El contacto se llama {nombre_pila} — saludalo por su nombre.")
+    else:
+        partes.append("No sabemos el nombre del contacto — arrancá con 'Hola'.")
+    partes.append("El mensaje lo manda un asesor aliado de Avanza Digital, presentate como tal.")
+    prompt = "\n".join(partes)
+
+    try:
+        import groq_ai as _ga
+        texto = _ga._chat(prompt, system, max_tokens=220, temperature=0.6)
+    except Exception:
+        texto = None
+
+    if texto:
+        texto = texto.strip().strip('"').strip()
+        # Guard: si la IA devolvió algo vacío o desmedido, caer a la plantilla.
+        if 15 <= len(texto) <= 600:
+            return {"mensaje": texto, "fuente": "ia"}
+
+    return {"mensaje": _plantilla_outreach(saludo, empresa, rubro), "fuente": "plantilla"}
+
+
+@app.post("/bolsa/{id}/mensaje-outreach")
+def mensaje_outreach_bolsa(id: int,
+                           aliado: Aliado = Depends(current_aliado_required),
+                           db: Session = Depends(get_db)):
+    """Primer mensaje de WhatsApp personalizado para un lead de la bolsa,
+    según su rubro y la observación del prospectador. Gratis (sin créditos)."""
+    lead = db.query(LeadBolsa).filter(LeadBolsa.id == id).first()
+    if not lead:
+        raise HTTPException(404, "Lead no encontrado.")
+    if lead.aliado_id != aliado.id:
+        raise HTTPException(403, "Este lead no es tuyo.")
+    return _generar_mensaje_outreach(
+        aliado, lead.empresa, lead.rubro or "",
+        lead.observacion or "", lead.nombre_contacto or "",
+    )
+
+
+@app.post("/prospectos/{id}/mensaje-outreach")
+def mensaje_outreach_prospecto(id: int,
+                               aliado: Aliado = Depends(current_aliado_required),
+                               db: Session = Depends(get_db)):
+    """Primer mensaje de WhatsApp personalizado para un prospecto del CRM."""
+    p = db.query(Prospecto).filter(Prospecto.id == id).first()
+    if not p:
+        raise HTTPException(404, "Prospecto no encontrado.")
+    if p.aliado_id != aliado.id:
+        raise HTTPException(403, "Este prospecto no es tuyo.")
+    return _generar_mensaje_outreach(
+        aliado, p.nombre, p.rubro or "", p.nota or "", p.contacto or "",
+    )
 
 
 @app.get("/aliados/{codigo}/historial-bolsa")
@@ -7281,7 +7863,158 @@ def job_expirar_solicitudes_creditos():
 scheduler.add_job(job_expirar_solicitudes_creditos, "interval", hours=1)
 
 
+# ─── CRM: RECORDATORIOS DE TAREAS VENCIDAS ───────────────────────────────────
+# Las tareas del CRM (ActividadProspecto tipo='tarea' con vence_en) hasta ahora
+# solo se veían dentro del portal. Este job manda UN email-digest por aliado
+# cuando se le vencen tareas sin completar, y marca recordatorio_enviado para
+# no spamear. Si el envío falla, NO se marca: se reintenta en la próxima corrida.
+
+def job_recordatorios_tareas():
+    from database import SessionLocal
+    db = SessionLocal()
+    try:
+        ahora = datetime.now()
+        vencidas = (db.query(ActividadProspecto)
+                      .filter(ActividadProspecto.tipo == "tarea",
+                              ActividadProspecto.completada == False,
+                              ActividadProspecto.vence_en != None,
+                              ActividadProspecto.vence_en <= ahora,
+                              ActividadProspecto.recordatorio_enviado == False)
+                      .order_by(ActividadProspecto.vence_en.asc())
+                      .all())
+        if not vencidas:
+            return
+
+        # Agrupar por aliado → un solo digest cada uno
+        por_aliado: dict[int, list] = {}
+        for t in vencidas:
+            if t.aliado_id:
+                por_aliado.setdefault(t.aliado_id, []).append(t)
+
+        enviados = 0
+        for aliado_id, tareas in por_aliado.items():
+            a = db.query(Aliado).filter(Aliado.id == aliado_id).first()
+            if not a or not a.email:
+                # Sin email no hay a quién avisar: marcamos para no acumular.
+                for t in tareas:
+                    t.recordatorio_enviado = True
+                continue
+
+            nombre_corto = (a.nombre or "Aliado").split()[0]
+            filas = []
+            for t in tareas[:10]:  # techo defensivo por digest
+                p = db.query(Prospecto).filter(Prospecto.id == t.prospecto_id).first()
+                empresa = p.nombre if p else f"Prospecto #{t.prospecto_id}"
+                vencio = t.vence_en.strftime("%d/%m %H:%M") if t.vence_en else "—"
+                filas.append(
+                    f"<tr style='border-bottom:1px solid #1e293b;'>"
+                    f"<td style='padding:8px 12px;font-weight:600;'>{empresa}</td>"
+                    f"<td style='padding:8px 12px;color:#cbd5e1;'>{(t.descripcion or 'Tarea')[:120]}</td>"
+                    f"<td style='padding:8px 12px;color:#f87171;white-space:nowrap;'>{vencio}</td></tr>"
+                )
+            extra = (f"<p style='color:#a1a1aa;font-size:.85rem;'>…y {len(tareas)-10} tarea(s) más en tu CRM.</p>"
+                     if len(tareas) > 10 else "")
+
+            html = f"""
+            <div style="font-family:Inter,sans-serif;background:#050505;color:#e2e8f0;padding:36px;max-width:600px;margin:0 auto;border-radius:12px;border:1px solid #1e1e1e;">
+              <span style="background:#1c1917;color:#fdba74;font-size:.75rem;font-weight:700;padding:4px 10px;border-radius:99px;letter-spacing:.5px;text-transform:uppercase;">⏰ Recordatorio CRM</span>
+              <h2 style="margin:18px 0 10px;font-size:1.35rem;color:#fff;">{nombre_corto}, tenés {len(tareas)} tarea{'s' if len(tareas) != 1 else ''} vencida{'s' if len(tareas) != 1 else ''}</h2>
+              <p style="color:#a1a1aa;line-height:1.6;">La mitad de las ventas se cierran en el segundo contacto — no dejes enfriar estos seguimientos:</p>
+              <table style="width:100%;border-collapse:collapse;margin:16px 0;font-size:.88rem;">
+                <thead><tr style="background:#1e293b;color:#94a3b8;text-align:left;">
+                  <th style="padding:8px 12px;">Prospecto</th><th style="padding:8px 12px;">Tarea</th><th style="padding:8px 12px;">Vencía</th>
+                </tr></thead>
+                <tbody>{''.join(filas)}</tbody>
+              </table>
+              {extra}
+              <a href="{PORTAL_URL}/portal.html" style="display:inline-block;padding:13px 26px;background:#f97316;color:#000;border-radius:8px;text-decoration:none;font-weight:800;font-size:.95rem;">Abrir Mi CRM →</a>
+              <p style="margin-top:24px;font-size:.74rem;color:#3f3f46;">Te avisamos una sola vez por tarea. Completala en el CRM para frenar los recordatorios. Avanza Digital · Partner Network.</p>
+            </div>
+            """
+            try:
+                enviar_email(
+                    a.email,
+                    f"⏰ {nombre_corto}: {len(tareas)} tarea{'s' if len(tareas) != 1 else ''} de seguimiento vencida{'s' if len(tareas) != 1 else ''}",
+                    html,
+                )
+                for t in tareas:
+                    t.recordatorio_enviado = True
+                enviados += 1
+                notificar_aliado(
+                    db, a.id, "tarea",
+                    f"⏰ Tenés {len(tareas)} tarea{'s' if len(tareas) != 1 else ''} vencida{'s' if len(tareas) != 1 else ''}",
+                    "No dejes enfriar esos seguimientos — completalas en Mi CRM.",
+                    tab="pipeline",
+                )
+            except Exception as e:
+                print(f"[RECORDATORIOS CRM] Falló email a {a.codigo}: {e}")
+
+        db.commit()
+        if enviados:
+            print(f"[RECORDATORIOS CRM] {enviados} digest(s) de tareas vencidas enviados.")
+    except Exception as e:
+        print(f"[RECORDATORIOS CRM ERROR] {e}")
+    finally:
+        db.close()
+
+
+scheduler.add_job(job_recordatorios_tareas, "interval", minutes=30)
+
+
 # ─── BOLSA: CARGA MASIVA (CSV) ───────────────────────────────────────────────
+
+def _claves_duplicado_lead(empresa: str, telefono: str, pais: str) -> set:
+    """Claves de matching para detectar leads duplicados:
+       - mismo teléfono (solo dígitos, si tiene >= 6) en cualquier país
+       - misma empresa (normalizada) dentro del mismo país
+    """
+    import re as _re
+    claves = set()
+    tel = _re.sub(r"\D", "", telefono or "")
+    if len(tel) >= 6:
+        claves.add(("tel", tel))
+    emp = (empresa or "").strip().lower()
+    if emp:
+        claves.add(("emp", emp, (pais or "AR").upper()))
+    return claves
+
+
+def _indice_duplicados_bolsa(db: Session) -> set:
+    """Construye el set de claves de TODOS los leads ya existentes en la bolsa
+    (cualquier estado: un lead reclamado o contactado sigue siendo el mismo
+    contacto — recargarlo duplicaría el trabajo de los aliados)."""
+    indice = set()
+    for emp, tel, pais in db.query(LeadBolsa.empresa, LeadBolsa.telefono, LeadBolsa.pais).all():
+        indice |= _claves_duplicado_lead(emp, tel, pais)
+    return indice
+
+
+class VerificarDuplicadosItem(BaseModel):
+    empresa: str = ""
+    telefono: str = ""
+    pais: str = "AR"
+
+
+class VerificarDuplicadosPayload(BaseModel):
+    leads: list[VerificarDuplicadosItem]
+
+
+@app.post("/admin/bolsa/verificar-duplicados")
+def verificar_duplicados_bolsa(payload: VerificarDuplicadosPayload,
+                               db: Session = Depends(get_db)):
+    """Para la preview del importador CSV: devuelve, por cada lead enviado,
+    si ya existe en la bolsa (mismo teléfono, o misma empresa en el mismo país).
+    También marca duplicados DENTRO del propio lote (filas repetidas en el CSV)."""
+    indice = _indice_duplicados_bolsa(db)
+    vistos_lote = set()
+    out = []
+    for item in payload.leads:
+        claves = _claves_duplicado_lead(item.empresa, item.telefono, item.pais)
+        es_dup = bool(claves & indice) or bool(claves & vistos_lote)
+        out.append(es_dup)
+        vistos_lote |= claves
+    return {"duplicados": out, "total_en_bolsa": db.query(LeadBolsa).count()}
+
 
 class LeadBolsaBulkPayload(BaseModel):
     leads: list[LeadBolsaCreateAdv]
@@ -7289,12 +8022,23 @@ class LeadBolsaBulkPayload(BaseModel):
 @app.post("/admin/bolsa/bulk")
 def cargar_leads_bulk(payload: LeadBolsaBulkPayload, db: Session = Depends(get_db)):
     """Inserta una lista de leads de una vez y manda UN solo digest a los aliados.
-    Usar en lugar de llamar /admin/bolsa-v2 en loop desde el CSV importer."""
+
+    Defensa anti-duplicados: los leads que ya existen en la bolsa (mismo
+    teléfono, o misma empresa+país) o que se repiten dentro del propio lote se
+    OMITEN y se reportan en la respuesta — así subir dos veces el mismo CSV no
+    ensucia la bolsa."""
     if not payload.leads:
         raise HTTPException(400, "La lista de leads está vacía.")
 
+    indice = _indice_duplicados_bolsa(db)
     insertados = []
+    omitidos = []
     for lead in payload.leads:
+        claves = _claves_duplicado_lead(lead.empresa, lead.telefono, lead.pais)
+        if claves & indice:
+            omitidos.append(lead.empresa)
+            continue
+        indice |= claves  # también deduplica dentro del mismo lote
         tier = lead.tier if lead.tier in ("basico", "calificado", "premium") else "basico"
         nuevo = LeadBolsa(
             empresa=lead.empresa, rubro=lead.rubro,
@@ -7316,6 +8060,15 @@ def cargar_leads_bulk(payload: LeadBolsaBulkPayload, db: Session = Depends(get_d
         )
         db.add(nuevo)
         insertados.append(lead)
+
+    if not insertados and omitidos:
+        # Nada nuevo: todo el lote ya estaba en la bolsa.
+        return {
+            "mensaje": f"No se insertó ningún lead: los {len(omitidos)} del lote ya estaban en la bolsa.",
+            "total": 0,
+            "duplicados_omitidos": len(omitidos),
+            "duplicados_detalle": omitidos[:50],
+        }
 
     db.commit()
 
@@ -7365,7 +8118,13 @@ def cargar_leads_bulk(payload: LeadBolsaBulkPayload, db: Session = Depends(get_d
     except Exception as e:
         print(f"[BULK LEAD NOTIF ERROR] {e}")
 
-    return {"mensaje": f"{len(insertados)} leads cargados.", "total": len(insertados)}
+    return {
+        "mensaje": f"{len(insertados)} leads cargados."
+                   + (f" {len(omitidos)} duplicado(s) omitido(s)." if omitidos else ""),
+        "total": len(insertados),
+        "duplicados_omitidos": len(omitidos),
+        "duplicados_detalle": omitidos[:50],
+    }
 
 
 # ─── FINANCIACIÓN / CUOTAS (E) ───────────────────────────────────────────────
@@ -9417,6 +10176,12 @@ def _crear_comisiones_recurrentes_para_plan(db: Session,
         )
         db.add(c)
         creado["titular"] = True
+        notificar_aliado(
+            db, p.aliado_id, "comision",
+            f"🔁 Comisión recurrente: USD {p.comision_mensual_usd:,.2f}",
+            f"Se generó tu comisión mensual de {p.nombre_cliente} ({p.plan_continuidad}).",
+            tab="comisiones",
+        )
 
     # 2. Comisión pasiva 5% al sponsor (RED) — paralelo al one-shot.
     # nombre_cliente lleva prefijo "RED:" para distinguirlo, igual que en las

@@ -1,0 +1,46 @@
+{
+  "name": "Avanza Digital — Portal de Aliados",
+  "short_name": "Avanza",
+  "description": "Tu central de ventas: leads, CRM, comisiones y Jarvis IA en el bolsillo.",
+  "id": "/avanza-portal/portal.html",
+  "start_url": "portal.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#050505",
+  "theme_color": "#050505",
+  "lang": "es-AR",
+  "icons": [
+    {
+      "src": "icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/icon-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Mis Capturas",
+      "short_name": "Capturas",
+      "description": "Leads calientes que usaron tus enlaces",
+      "url": "portal.html"
+    },
+    {
+      "name": "Bolsa de Leads",
+      "short_name": "Bolsa",
+      "url": "portal.html#bolsa"
+    }
+  ]
+}

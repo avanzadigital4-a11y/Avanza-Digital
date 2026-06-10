@@ -4,6 +4,14 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Avanza Partner Portal</title>
+<!-- ── PWA: instalable en el celular ── -->
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#050505">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Avanza">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><path d=%22M10 20 L40 50 L10 80 L30 80 L60 50 L30 20 Z%22 fill=%22%230044cc%22/><path d=%22M45 20 L75 50 L45 80 L65 80 L95 50 L65 20 Z%22 fill=%22%2300cccc%22/></svg>">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -1410,6 +1418,7 @@ html.avz-collapsed #avz-sidebar .avz-exit span{ display:none; }
 
       <div class="avz-grp">Ventas</div>
       <button class="avz-nav-item tab-btn tab-canal1" data-tab="bolsa" data-c="1" onclick="cambiarTab('bolsa',this)"><i class="fa-solid fa-bullhorn"></i><span class="lb">Bolsa de Leads</span><span class="pill" style="background:var(--green);color:#000;">NUEVO</span><span class="tip">Bolsa de Leads</span></button>
+      <button class="avz-nav-item tab-btn" data-tab="capturas" onclick="cambiarTab('capturas',this)"><i class="fa-solid fa-fire" style="color:#f97316;"></i><span class="lb">Mis Capturas</span><span class="pill" id="capturas-pill" style="display:none;background:#f97316;color:#000;">0</span><span class="tip">Mis Capturas</span></button>
       <button class="avz-nav-item tab-btn tab-canal2" data-tab="kit-ventas" data-c="2" onclick="cambiarTab('kit-ventas',this)"><i class="fa-solid fa-briefcase"></i><span class="lb">Kit de Ventas</span><span class="pill" style="background:var(--green);color:#000;">C2</span><span class="tip">Kit de Ventas</span></button>
       <button class="avz-nav-item tab-btn tab-canal2" data-tab="selector-rubro" data-c="2" onclick="cambiarTab('selector-rubro',this)"><i class="fa-solid fa-crosshairs"></i><span class="lb">Selector de Rubro</span><span class="tip">Selector de Rubro</span></button>
       <button class="avz-nav-item tab-btn" id="btn-tab-pipeline" data-tab="pipeline" onclick="cambiarTab('pipeline',this)"><i class="fa-solid fa-bars-progress"></i><span class="lb">Mi CRM</span><span class="tip">Mi CRM</span></button>
@@ -1439,7 +1448,23 @@ html.avz-collapsed #avz-sidebar .avz-exit span{ display:none; }
     <button id="avz-hamb" onclick="avzDrawer(true)" aria-label="Menú"><i class="fa-solid fa-bars"></i></button>
     <div class="tb-brand">Portal de <span>Aliados</span></div>
     <div class="tb-right">
-      <a href="https://wa.me/5493424392759" target="_blank" class="tb-sup"><i class="fa-brands fa-whatsapp"></i> Soporte</a>
+      <button id="btn-instalar-pwa" onclick="instalarPWA()" style="display:none;background:rgba(249,115,22,0.12);border:1px solid rgba(249,115,22,0.35);color:#fb923c;padding:6px 12px;border-radius:8px;font-size:.78rem;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif;"><i class="fa-solid fa-mobile-screen-button"></i><span class="pwa-lb"> Instalar app</span></button>
+      <div style="position:relative;display:inline-block;">
+        <button id="btn-novedades" onclick="toggleNovedades()" title="Novedades" style="position:relative;background:transparent;border:1px solid var(--border);color:var(--text-muted);width:36px;height:36px;border-radius:10px;cursor:pointer;font-size:.95rem;">
+          <i class="fa-regular fa-bell"></i>
+          <span id="novedades-badge" style="display:none;position:absolute;top:-6px;right:-6px;min-width:18px;height:18px;line-height:18px;padding:0 4px;background:#ef4444;color:#fff;font-size:.66rem;font-weight:800;border-radius:99px;text-align:center;">0</span>
+        </button>
+        <div id="novedades-panel" style="display:none;position:absolute;right:0;top:46px;width:340px;max-width:88vw;max-height:430px;overflow-y:auto;background:#0d0d0d;border:1px solid var(--border-h);border-radius:14px;box-shadow:0 18px 50px rgba(0,0,0,0.6);z-index:300;">
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 16px;border-bottom:1px solid var(--border);">
+            <span style="font-size:.82rem;font-weight:800;"><i class="fa-regular fa-bell" style="color:#f97316;"></i> Novedades</span>
+            <button onclick="marcarNovedadesLeidas()" style="background:transparent;border:none;color:var(--primary);font-size:.72rem;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif;">Marcar leídas</button>
+          </div>
+          <div id="novedades-lista" style="padding:6px;">
+            <div style="padding:24px;text-align:center;color:var(--text-dim);font-size:.8rem;">Sin novedades por ahora.</div>
+          </div>
+        </div>
+      </div>
+      <a href="https://wa.me/5493424392759" target="_blank" class="tb-sup"><i class="fa-brands fa-whatsapp"></i><span class="sup-lb"> Soporte</span></a>
     </div>
   </header>
 
@@ -1634,9 +1659,9 @@ html.avz-collapsed #avz-sidebar .avz-exit span{ display:none; }
             <div id="d-creditos-wrap">
               <div style="font-size:2rem; font-weight:900; color:var(--amber);" id="d-creditos">0</div>
               <p style="font-size:0.72rem; color:var(--text-dim); margin-top:4px;" id="d-creditos-sub">Para usar Jarvis IA</p>
-              <div id="d-creditos-cta" style="display:none; margin-top:8px;">
-                <button onclick="abrirModalComprarCreditos()" style="background:rgba(245,158,11,0.15);color:var(--amber);border:1px solid rgba(245,158,11,0.4);border-radius:8px;padding:6px 12px;font-size:.72rem;font-weight:800;cursor:pointer;white-space:nowrap;letter-spacing:.3px;">
-                  <i class="fa-solid fa-plus"></i> Comprar créditos
+              <div id="d-creditos-cta" style="margin-top:8px;">
+                <button onclick="abrirModalComprarCreditos()" style="background:var(--amber);color:#000;border:none;border-radius:8px;padding:7px 14px;font-size:.74rem;font-weight:800;cursor:pointer;white-space:nowrap;letter-spacing:.3px;">
+                  <i class="fa-solid fa-plus"></i> Cargar créditos
                 </button>
               </div>
             </div>
@@ -2561,6 +2586,40 @@ html.avz-collapsed #avz-sidebar .avz-exit span{ display:none; }
     </div>
 
     <!-- ══════════════════════════════════════════════════════════════════════
+         TAB MIS CAPTURAS — leads que dejaron su email en los magnets del aliado
+    ══════════════════════════════════════════════════════════════════════ -->
+    <div id="tab-capturas" class="tab-panel">
+      <div class="welcome-header">
+        <div>
+          <div class="welcome-name"><i class="fa-solid fa-fire" style="color:#f97316;"></i> Mis Capturas <span style="font-size:1rem;font-weight:500;color:var(--text-muted);">— los leads más calientes: vinieron solos por tu enlace</span></div>
+        </div>
+      </div>
+
+      <div class="bento-box" style="margin-bottom:20px;background:linear-gradient(135deg,rgba(249,115,22,0.07),transparent);border-color:rgba(249,115,22,0.25);">
+        <p style="font-size:.88rem;color:var(--text-muted);line-height:1.6;margin:0;">
+          Cuando alguien corre tu <strong style="color:var(--text);">Auditoría Digital</strong>, usa tu <strong style="color:var(--text);">Calculadora de Ineficiencia</strong> o descarga un recurso desde tu enlace y deja su email, aparece acá <strong style="color:#fb923c;">al instante</strong> (y te llega un aviso por correo).
+          Ese prospecto vino <strong style="color:var(--text);">por iniciativa propia</strong> — la academia te lo enseña: la auditoría es el anzuelo. Contactalo en las primeras horas y pasalo a tu CRM en 1 click.
+        </p>
+      </div>
+
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:14px;">
+        <div style="font-size:.8rem;color:var(--text-dim);" id="capturas-resumen">Cargando capturas…</div>
+        <button onclick="cargarCapturas(true)" style="background:transparent;border:1px solid var(--border);color:var(--text-muted);padding:7px 14px;border-radius:8px;font-size:.78rem;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif;"><i class="fa-solid fa-rotate"></i> Actualizar</button>
+      </div>
+
+      <div id="capturas-lista"></div>
+
+      <div id="capturas-vacio" style="display:none;" class="bento-box">
+        <div style="text-align:center;padding:30px 16px;">
+          <div style="font-size:2rem;margin-bottom:10px;">🎣</div>
+          <div style="font-weight:800;margin-bottom:6px;">Todavía no tenés capturas</div>
+          <p style="font-size:.85rem;color:var(--text-muted);max-width:480px;margin:0 auto 16px;line-height:1.6;">Compartí tus enlaces de Auditoría y Calculadora (están en la pestaña Auditorías) por WhatsApp, email o redes. Cada empresa que los use y deje su email va a aparecer acá, asignada a tu cuenta.</p>
+          <button onclick="cambiarTab('herramientas', document.querySelector('.tab-btn[onclick*=herramientas]'))" style="background:var(--primary);color:#fff;border:none;border-radius:8px;padding:11px 20px;font-weight:800;cursor:pointer;font-size:.85rem;font-family:'Inter',sans-serif;"><i class="fa-solid fa-magnifying-glass"></i> Ir a mis enlaces de prospección</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════════════════════════════════
          TAB PIPELINE UNIFICADO — Prospectos → Prospectos registrados → Ventas
     ══════════════════════════════════════════════════════════════════════ -->
     <div id="tab-pipeline" class="tab-panel">
@@ -2826,6 +2885,36 @@ html.avz-collapsed #avz-sidebar .avz-exit span{ display:none; }
         <div class="planes-grid" id="planes-recurrentes-grid"></div>
         <div style="margin-top:14px; padding:12px 14px; background:rgba(0,0,0,0.3); border-radius:8px; border:1px dashed rgba(250,204,21,0.2); font-size:0.78rem; color:var(--text-muted); line-height:1.55;">
           <strong style="color:var(--amber);">¿Cómo se construye tu renta?</strong> Si vendés 5 clientes con Plan Crecimiento (USD 170/mes), tu MRR = USD 85 todos los meses. Si esos 5 evolucionan a Plan Liderazgo (USD 450/mes), tu MRR sube a USD 225/mes — sin volver a vender. Cada nuevo cliente con continuidad acumula sobre lo anterior.
+        </div>
+      </div>
+
+      <!-- ── SIMULADOR DE GANANCIAS — convierte la tabla de comisiones en un objetivo ── -->
+      <div class="bento-box" style="margin-bottom:24px; background:linear-gradient(135deg,rgba(59,130,246,0.06),rgba(74,222,128,0.03)); border-color:rgba(59,130,246,0.25);">
+        <h3 style="font-size:0.95rem;font-weight:700;margin-bottom:4px;"><i class="fa-solid fa-bullseye" style="color:var(--primary);"></i> &nbsp;Simulador de ganancias — ¿cuánto querés ganar este mes?</h3>
+        <p style="font-size:0.82rem;color:var(--text-muted);margin-bottom:10px;">Armá tu escenario combinando <strong style="color:var(--text);">planes de sistema</strong> (comisión one-time según tu nivel) con <strong style="color:var(--amber);">planes de mantenimiento mensual</strong> (10% recurrente). El simulador te muestra el total y cuánto más ganarías subiendo de nivel.</p>
+        <button onclick="cargarEjemploSimulador()" style="background:rgba(59,130,246,0.12);border:1px solid rgba(59,130,246,0.3);color:#60a5fa;padding:7px 14px;border-radius:8px;font-size:.76rem;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif;margin-bottom:16px;"><i class="fa-solid fa-wand-magic-sparkles"></i> Ver ejemplo: 2 Plan Pro + 2 mantenimientos</button>
+
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:20px;align-items:start;">
+          <div>
+            <div style="font-size:.72rem;font-weight:700;color:var(--text-dim);text-transform:uppercase;letter-spacing:1px;margin-bottom:10px;"><i class="fa-solid fa-server" style="color:var(--primary);"></i> Planes de sistema · cobrás 1 vez por venta</div>
+            <div id="sim-planes"></div>
+            <div style="font-size:.72rem;font-weight:700;color:var(--text-dim);text-transform:uppercase;letter-spacing:1px;margin:18px 0 10px;"><i class="fa-solid fa-arrows-rotate" style="color:var(--amber);"></i> Planes de mantenimiento · cobrás todos los meses</div>
+            <div id="sim-continuidad"></div>
+            <div style="margin-top:16px;">
+              <label style="font-size:.72rem;font-weight:700;color:var(--text-dim);text-transform:uppercase;letter-spacing:1px;display:block;margin-bottom:6px;">Tu nivel</label>
+              <select id="sim-nivel" onchange="calcularSimulador()" style="width:100%;background:#111;border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px 14px;color:var(--text);font-size:.88rem;font-family:'Inter',sans-serif;outline:none;"></select>
+            </div>
+          </div>
+          <div style="background:rgba(0,0,0,0.35);border:1px solid var(--border);border-radius:12px;padding:20px;">
+            <div style="font-size:.72rem;font-weight:700;color:var(--text-dim);text-transform:uppercase;letter-spacing:1.5px;margin-bottom:6px;">Ganancia mensual estimada</div>
+            <div style="font-size:2.6rem;font-weight:900;color:var(--green);line-height:1;" id="sim-total-mes">USD 0</div>
+            <div style="font-size:.78rem;color:var(--text-muted);margin-top:8px;" id="sim-desglose">Elegí al menos un plan para ver tu proyección.</div>
+            <div style="border-top:1px solid var(--border);margin:14px 0;padding-top:14px;">
+              <div style="font-size:.72rem;font-weight:700;color:var(--text-dim);text-transform:uppercase;letter-spacing:1.5px;margin-bottom:4px;">Proyección anual</div>
+              <div style="font-size:1.5rem;font-weight:900;color:var(--text);" id="sim-total-anio">USD 0</div>
+            </div>
+            <div id="sim-upgrade" style="display:none;margin-top:8px;padding:12px 14px;background:rgba(249,115,22,0.08);border:1px solid rgba(249,115,22,0.3);border-radius:10px;font-size:.8rem;color:#fdba74;line-height:1.55;"></div>
+          </div>
         </div>
       </div>
 
@@ -3946,8 +4035,13 @@ html.avz-collapsed #avz-sidebar .avz-exit span{ display:none; }
           </div>
           <button onclick="cargarBolsa()" style="background:transparent;border:1px solid var(--border);color:var(--text-muted);border-radius:8px;padding:7px 14px;font-size:.8rem;cursor:pointer;"><i class="fa-solid fa-rotate-right"></i> Refrescar</button>
         </div>
-        <div style="padding:14px 20px; font-size:.82rem; color:var(--text-muted); border-bottom:1px solid var(--border);">
-          Reclamalos <strong style="color:var(--green);">sin gastar créditos</strong>. Tenés 48hs para contactar a cada uno o vuelven a la bolsa.
+        <div style="padding:14px 20px; font-size:.82rem; color:var(--text-muted); border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; gap:14px; flex-wrap:wrap;">
+          <span>Reclamalos <strong style="color:var(--green);">sin gastar créditos</strong>. Tenés 48hs para contactar a cada uno o vuelven a la bolsa.</span>
+          <div style="position:relative; min-width:230px; flex:0 1 280px;">
+            <i class="fa-solid fa-magnifying-glass" style="position:absolute; left:11px; top:50%; transform:translateY(-50%); font-size:.75rem; color:var(--text-dim);"></i>
+            <input type="text" id="bolsa-buscar-basico" placeholder="Buscar empresa, rubro o ciudad…" oninput="window._repintarBolsa && window._repintarBolsa['basico'] && window._repintarBolsa['basico']()"
+              style="width:100%; background:#111; border:1px solid var(--border); color:var(--text); border-radius:8px; padding:8px 10px 8px 30px; font-size:.8rem;">
+          </div>
         </div>
         <div id="tabla-bolsa-disponibles" style="padding:16px;display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px;">
           <div style="text-align:center;padding:24px;color:var(--text-dim);grid-column:1/-1;">Cargando...</div>
@@ -3967,8 +4061,13 @@ html.avz-collapsed #avz-sidebar .avz-exit span{ display:none; }
           </div>
           <span style="font-size:.72rem; font-weight:800; color:#000; background:var(--green); padding:4px 10px; border-radius:6px;">GRATIS</span>
         </div>
-        <div style="padding:14px 20px; font-size:.82rem; color:var(--text-muted); border-bottom:1px solid var(--border);">
-          Empresas con presencia digital y contacto verificado. Reclamalos gratis, igual que los básicos.
+        <div style="padding:14px 20px; font-size:.82rem; color:var(--text-muted); border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; gap:14px; flex-wrap:wrap;">
+          <span>Empresas con presencia digital y contacto verificado. Reclamalos gratis, igual que los básicos.</span>
+          <div style="position:relative; min-width:230px; flex:0 1 280px;">
+            <i class="fa-solid fa-magnifying-glass" style="position:absolute; left:11px; top:50%; transform:translateY(-50%); font-size:.75rem; color:var(--text-dim);"></i>
+            <input type="text" id="bolsa-buscar-calificado" placeholder="Buscar empresa, rubro o ciudad…" oninput="window._repintarBolsa && window._repintarBolsa['calificado'] && window._repintarBolsa['calificado']()"
+              style="width:100%; background:#111; border:1px solid var(--border); color:var(--text); border-radius:8px; padding:8px 10px 8px 30px; font-size:.8rem;">
+          </div>
         </div>
         <div id="grid-calificado" style="padding:16px;display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px;">
           <div style="text-align:center;padding:24px;color:var(--text-dim);grid-column:1/-1;">Cargando...</div>
@@ -3988,8 +4087,13 @@ html.avz-collapsed #avz-sidebar .avz-exit span{ display:none; }
           </div>
           <span style="font-size:.72rem; font-weight:800; color:#000; background:var(--green); padding:4px 10px; border-radius:6px;">GRATIS</span>
         </div>
-        <div style="padding:14px 20px; font-size:.82rem; color:var(--text-muted); border-bottom:1px solid var(--border);">
-          Lo más jugoso: pitch sugerido por IA, presencia digital verificada. <strong>Mayor tasa de cierre.</strong>
+        <div style="padding:14px 20px; font-size:.82rem; color:var(--text-muted); border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; gap:14px; flex-wrap:wrap;">
+          <span>Lo más jugoso: pitch sugerido por IA, presencia digital verificada. <strong>Mayor tasa de cierre.</strong></span>
+          <div style="position:relative; min-width:230px; flex:0 1 280px;">
+            <i class="fa-solid fa-magnifying-glass" style="position:absolute; left:11px; top:50%; transform:translateY(-50%); font-size:.75rem; color:var(--text-dim);"></i>
+            <input type="text" id="bolsa-buscar-premium" placeholder="Buscar empresa, rubro o ciudad…" oninput="window._repintarBolsa && window._repintarBolsa['premium'] && window._repintarBolsa['premium']()"
+              style="width:100%; background:#111; border:1px solid var(--border); color:var(--text); border-radius:8px; padding:8px 10px 8px 30px; font-size:.8rem;">
+          </div>
         </div>
         <div id="grid-premium" style="padding:16px;display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px;">
           <div style="text-align:center;padding:24px;color:var(--text-dim);grid-column:1/-1;">Cargando...</div>
@@ -4074,90 +4178,128 @@ html.avz-collapsed #avz-sidebar .avz-exit span{ display:none; }
         <div style="font-size:.75rem; color:var(--text-dim); margin-top:8px;">Código de aliado: <span id="mc-ref-code" style="font-family:'Courier New',monospace; color:var(--text);">—</span></div>
       </div>
 
-      <!-- MÉTODO DE COBRO INTERNACIONAL -->
-      <div class="bento-box" style="margin-bottom:20px;">
-        <h3 style="font-size:0.95rem; font-weight:700; margin-bottom:4px;">
-          <i class="fa-solid fa-building-columns" style="color:var(--primary);"></i>
-          &nbsp;Método de cobro
-        </h3>
+      <!-- MÉTODO DE COBRO INTERNACIONAL (rediseño pro) -->
+      <style>
+        .pm-card{position:relative;display:flex;flex-direction:column;align-items:flex-start;gap:9px;padding:16px 14px 13px;border-radius:14px;border:1.5px solid var(--border);background:rgba(255,255,255,0.02);cursor:pointer;transition:border-color .18s ease,background .18s ease,transform .18s ease,box-shadow .18s ease;font-family:'Inter',sans-serif;text-align:left;}
+        .pm-card:hover{border-color:var(--border-h);background:rgba(255,255,255,0.05);transform:translateY(-2px);}
+        .pm-card.selected{border-color:var(--primary);background:linear-gradient(150deg,rgba(59,130,246,0.13),rgba(59,130,246,0.03));box-shadow:0 0 0 1px var(--primary),0 10px 28px rgba(59,130,246,0.18);transform:translateY(-2px);}
+        .pm-card .pm-check{position:absolute;top:10px;right:10px;width:19px;height:19px;border-radius:99px;border:1.5px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:.58rem;color:transparent;transition:all .18s;}
+        .pm-card.selected .pm-check{background:var(--primary);border-color:var(--primary);color:#fff;}
+        .pm-logo{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:1.05rem;flex-shrink:0;}
+        .pm-name{font-size:.85rem;font-weight:800;color:var(--text);line-height:1.2;}
+        .pm-tag{font-size:.62rem;font-weight:700;color:var(--text-dim);text-transform:uppercase;letter-spacing:.06em;}
+        .pm-badge{position:absolute;top:-9px;left:12px;font-size:.58rem;font-weight:800;letter-spacing:.04em;text-transform:uppercase;padding:2px 9px;border-radius:99px;}
+        .pm-fields{background:rgba(0,0,0,0.32);border:1px solid var(--border);border-radius:12px;padding:16px;}
+        .pm-fields label{font-size:.72rem;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;display:block;margin-bottom:8px;}
+        .pm-fields input,.pm-fields textarea{width:100%;background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:9px;padding:12px 14px;color:var(--text);font-size:.88rem;outline:none;box-sizing:border-box;transition:border-color .15s;font-family:'Inter',sans-serif;}
+        .pm-fields input:focus,.pm-fields textarea:focus{border-color:var(--primary);}
+        .pm-hint{font-size:.72rem;color:var(--text-dim);margin-top:8px;line-height:1.5;}
+      </style>
+      <div class="bento-box" style="margin-bottom:20px;background:linear-gradient(150deg,rgba(74,222,128,0.04),transparent);border-color:rgba(74,222,128,0.18);">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap;margin-bottom:6px;">
+          <h3 style="font-size:0.95rem; font-weight:800; margin:0;">
+            <i class="fa-solid fa-wallet" style="color:var(--green);"></i>
+            &nbsp;Método de cobro
+          </h3>
+          <span id="pm-chip-estado" style="font-size:.68rem;font-weight:800;letter-spacing:.04em;text-transform:uppercase;padding:4px 11px;border-radius:99px;background:rgba(250,204,21,0.12);border:1px solid rgba(250,204,21,0.35);color:var(--amber);"><i class="fa-solid fa-triangle-exclamation"></i> Pendiente</span>
+        </div>
         <p style="font-size:0.82rem; color:var(--text-muted); margin-bottom:16px;">
-          Donde te transferimos las comisiones. Funciona para cualquier país. <strong>Sin esto cargado, el admin no puede abonarte.</strong>
+          Acá te depositamos tus comisiones — funciona desde cualquier país. <strong style="color:var(--text);">Sin esto cargado, el admin no puede abonarte.</strong>
         </p>
 
-        <!-- Selector de método -->
-        <div style="margin-bottom:16px;">
-          <label style="font-size:.75rem; font-weight:600; color:var(--text-muted); text-transform:uppercase; letter-spacing:1px; display:block; margin-bottom:8px;">Método de pago</label>
-          <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(140px,1fr)); gap:8px;" id="payment-method-grid">
-            <button type="button" onclick="seleccionarMetodoPago('usdt_trc20')" id="pm-btn-usdt_trc20"
-              style="display:flex;flex-direction:column;align-items:center;gap:4px;padding:12px 8px;border-radius:10px;border:2px solid var(--border);background:rgba(255,255,255,0.03);cursor:pointer;transition:all .15s;font-size:.78rem;font-weight:700;color:var(--text-muted);">
-              <span style="font-size:1.3rem;">₮</span>
-              <span>USDT TRC20</span>
-            </button>
-            <button type="button" onclick="seleccionarMetodoPago('wise')" id="pm-btn-wise"
-              style="display:flex;flex-direction:column;align-items:center;gap:4px;padding:12px 8px;border-radius:10px;border:2px solid var(--border);background:rgba(255,255,255,0.03);cursor:pointer;transition:all .15s;font-size:.78rem;font-weight:700;color:var(--text-muted);">
-              <span style="font-size:1.3rem;">🌍</span>
-              <span>Wise</span>
-            </button>
-            <button type="button" onclick="seleccionarMetodoPago('transferencia')" id="pm-btn-transferencia"
-              style="display:flex;flex-direction:column;align-items:center;gap:4px;padding:12px 8px;border-radius:10px;border:2px solid var(--border);background:rgba(255,255,255,0.03);cursor:pointer;transition:all .15s;font-size:.78rem;font-weight:700;color:var(--text-muted);">
-              <span style="font-size:1.3rem;">🏦</span>
-              <span>Transf. bancaria</span>
-            </button>
-            <button type="button" onclick="seleccionarMetodoPago('payoneer')" id="pm-btn-payoneer"
-              style="display:flex;flex-direction:column;align-items:center;gap:4px;padding:12px 8px;border-radius:10px;border:2px solid var(--border);background:rgba(255,255,255,0.03);cursor:pointer;transition:all .15s;font-size:.78rem;font-weight:700;color:var(--text-muted);">
-              <span style="font-size:1.3rem;">💳</span>
-              <span>Payoneer</span>
-            </button>
-            <button type="button" onclick="seleccionarMetodoPago('airtm')" id="pm-btn-airtm"
-              style="display:flex;flex-direction:column;align-items:center;gap:4px;padding:12px 8px;border-radius:10px;border:2px solid var(--border);background:rgba(255,255,255,0.03);cursor:pointer;transition:all .15s;font-size:.78rem;font-weight:700;color:var(--text-muted);">
-              <span style="font-size:1.3rem;">💸</span>
-              <span>Airtm</span>
-            </button>
+        <!-- Resumen del método configurado -->
+        <div id="pm-resumen" style="display:none;align-items:center;gap:12px;background:rgba(74,222,128,0.07);border:1px solid rgba(74,222,128,0.3);border-radius:12px;padding:13px 16px;margin-bottom:18px;">
+          <div id="pm-resumen-logo" class="pm-logo" style="background:rgba(74,222,128,0.14);color:var(--green);"></div>
+          <div style="flex:1;min-width:0;">
+            <div style="font-size:.7rem;font-weight:700;color:var(--text-dim);text-transform:uppercase;letter-spacing:.06em;">Cobrás por</div>
+            <div style="font-size:.9rem;font-weight:800;color:var(--text);" id="pm-resumen-metodo">—</div>
+            <div style="font-size:.76rem;color:var(--text-muted);font-family:'Courier New',monospace;word-break:break-all;" id="pm-resumen-detalle"></div>
           </div>
+          <i class="fa-solid fa-circle-check" style="color:var(--green);font-size:1.15rem;"></i>
+        </div>
+
+        <!-- Selector de método -->
+        <label style="font-size:.72rem; font-weight:700; color:var(--text-muted); text-transform:uppercase; letter-spacing:1px; display:block; margin-bottom:10px;">Elegí cómo querés cobrar</label>
+        <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(155px,1fr)); gap:12px; margin-bottom:18px;" id="payment-method-grid">
+
+          <button type="button" onclick="seleccionarMetodoPago('usdt_trc20')" id="pm-btn-usdt_trc20" class="pm-card">
+            <span class="pm-badge" style="background:#173527;color:#4ade80;border:1px solid rgba(74,222,128,0.4);">Más rápido</span>
+            <span class="pm-check"><i class="fa-solid fa-check"></i></span>
+            <span class="pm-logo" style="background:rgba(38,161,123,0.16);color:#2ec99e;">₮</span>
+            <span class="pm-name">USDT · TRC20</span>
+            <span class="pm-tag">Cripto · USD digital</span>
+          </button>
+
+          <button type="button" onclick="seleccionarMetodoPago('airtm')" id="pm-btn-airtm" class="pm-card">
+            <span class="pm-badge" style="background:#0b2735;color:#38bdf8;border:1px solid rgba(56,189,248,0.4);">Popular LATAM</span>
+            <span class="pm-check"><i class="fa-solid fa-check"></i></span>
+            <span class="pm-logo" style="background:rgba(56,189,248,0.14);color:#38bdf8;">A</span>
+            <span class="pm-name">Airtm</span>
+            <span class="pm-tag">Balance en USD</span>
+          </button>
+
+          <button type="button" onclick="seleccionarMetodoPago('transferencia')" id="pm-btn-transferencia" class="pm-card">
+            <span class="pm-check"><i class="fa-solid fa-check"></i></span>
+            <span class="pm-logo" style="background:rgba(59,130,246,0.14);color:#60a5fa;"><i class="fa-solid fa-building-columns"></i></span>
+            <span class="pm-name">Transferencia</span>
+            <span class="pm-tag">Banco · CBU / IBAN</span>
+          </button>
+
+          <button type="button" onclick="seleccionarMetodoPago('wise')" id="pm-btn-wise" class="pm-card">
+            <span class="pm-check"><i class="fa-solid fa-check"></i></span>
+            <span class="pm-logo" style="background:rgba(159,232,112,0.13);color:#9fe870;">W</span>
+            <span class="pm-name">Wise</span>
+            <span class="pm-tag">Internacional</span>
+          </button>
+
+          <button type="button" onclick="seleccionarMetodoPago('payoneer')" id="pm-btn-payoneer" class="pm-card">
+            <span class="pm-check"><i class="fa-solid fa-check"></i></span>
+            <span class="pm-logo" style="background:rgba(255,106,51,0.13);color:#ff7a45;">P</span>
+            <span class="pm-name">Payoneer</span>
+            <span class="pm-tag">Internacional · USD</span>
+          </button>
         </div>
 
         <!-- Campos dinámicos según método -->
         <div id="pm-fields-usdt_trc20" class="pm-fields" style="display:none; margin-bottom:14px;">
-          <label style="font-size:.75rem; font-weight:600; color:var(--text-muted); text-transform:uppercase; letter-spacing:1px; display:block; margin-bottom:6px;">Dirección de wallet USDT (Red TRC20)</label>
-          <input type="text" id="pm-input-usdt_trc20" placeholder="Ej: TXxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
-                 style="width:100%; background:rgba(255,255,255,0.04); border:1px solid var(--border); border-radius:var(--radius-sm); padding:12px 14px; color:var(--text); font-size:.88rem; font-family:'Courier New',monospace; outline:none; box-sizing:border-box;">
-          <div style="font-size:.72rem; color:var(--text-dim); margin-top:6px;">Asegurate de usar la red TRC20 (Tron). Verificá bien la dirección antes de guardar.</div>
-        </div>
-
-        <div id="pm-fields-wise" class="pm-fields" style="display:none; margin-bottom:14px;">
-          <label style="font-size:.75rem; font-weight:600; color:var(--text-muted); text-transform:uppercase; letter-spacing:1px; display:block; margin-bottom:6px;">Email o @ de tu cuenta Wise</label>
-          <input type="text" id="pm-input-wise" placeholder="Ej: tu@email.com  o  @usuario"
-                 style="width:100%; background:rgba(255,255,255,0.04); border:1px solid var(--border); border-radius:var(--radius-sm); padding:12px 14px; color:var(--text); font-size:.9rem; font-family:'Inter',sans-serif; outline:none; box-sizing:border-box;">
-        </div>
-
-        <div id="pm-fields-transferencia" class="pm-fields" style="display:none; margin-bottom:14px;">
-          <label style="font-size:.75rem; font-weight:600; color:var(--text-muted); text-transform:uppercase; letter-spacing:1px; display:block; margin-bottom:6px;">Datos bancarios (banco, cuenta, CBU/CLABE/IBAN/etc.)</label>
-          <textarea id="pm-input-transferencia" rows="3" placeholder="Ej: Banco Galicia · CBU 007000300000000000001 · Titular: Juan Pérez"
-                 style="width:100%; background:rgba(255,255,255,0.04); border:1px solid var(--border); border-radius:var(--radius-sm); padding:12px 14px; color:var(--text); font-size:.88rem; font-family:'Inter',sans-serif; outline:none; resize:vertical; box-sizing:border-box;"></textarea>
-          <div style="font-size:.72rem; color:var(--text-dim); margin-top:6px;">Incluí banco, número de cuenta y titular. Para cuentas internacionales agregá SWIFT/BIC.</div>
-        </div>
-
-        <div id="pm-fields-payoneer" class="pm-fields" style="display:none; margin-bottom:14px;">
-          <label style="font-size:.75rem; font-weight:600; color:var(--text-muted); text-transform:uppercase; letter-spacing:1px; display:block; margin-bottom:6px;">Email de tu cuenta Payoneer</label>
-          <input type="text" id="pm-input-payoneer" placeholder="Ej: tu@email.com"
-                 style="width:100%; background:rgba(255,255,255,0.04); border:1px solid var(--border); border-radius:var(--radius-sm); padding:12px 14px; color:var(--text); font-size:.9rem; font-family:'Inter',sans-serif; outline:none; box-sizing:border-box;">
+          <label>Dirección de wallet USDT (Red TRC20)</label>
+          <input type="text" id="pm-input-usdt_trc20" placeholder="Ej: TXxxxxxxxxxxxxxxxxxxxxxxxxxxxx" style="font-family:'Courier New',monospace;">
+          <div class="pm-hint"><i class="fa-solid fa-triangle-exclamation" style="color:var(--amber);"></i> Usá la red <strong>TRC20 (Tron)</strong>. Una dirección equivocada = fondos perdidos. Copiala directo desde tu exchange/wallet y verificá los primeros y últimos caracteres.</div>
         </div>
 
         <div id="pm-fields-airtm" class="pm-fields" style="display:none; margin-bottom:14px;">
-          <label style="font-size:.75rem; font-weight:600; color:var(--text-muted); text-transform:uppercase; letter-spacing:1px; display:block; margin-bottom:6px;">Email o usuario de tu cuenta Airtm</label>
-          <input type="text" id="pm-input-airtm" placeholder="Ej: tu@email.com  o  @usuario"
-                 style="width:100%; background:rgba(255,255,255,0.04); border:1px solid var(--border); border-radius:var(--radius-sm); padding:12px 14px; color:var(--text); font-size:.9rem; font-family:'Inter',sans-serif; outline:none; box-sizing:border-box;">
-          <div style="font-size:.72rem; color:var(--text-dim); margin-top:6px;">Te depositamos en tu balance Airtm en USD. Verificá que el email/usuario sea el de tu cuenta Airtm.</div>
+          <label>Email o usuario de tu cuenta Airtm</label>
+          <input type="text" id="pm-input-airtm" placeholder="Ej: tu@email.com  o  @usuario">
+          <div class="pm-hint"><i class="fa-solid fa-circle-info" style="color:#38bdf8;"></i> Te depositamos en tu balance Airtm en <strong>USD (AirUSD)</strong>. Desde ahí podés retirar a bancos locales, billeteras o cripto en toda LATAM. Verificá que sea el email/usuario exacto de tu cuenta.</div>
+        </div>
+
+        <div id="pm-fields-transferencia" class="pm-fields" style="display:none; margin-bottom:14px;">
+          <label>Datos bancarios (banco, cuenta, CBU/CLABE/IBAN)</label>
+          <textarea id="pm-input-transferencia" rows="3" placeholder="Ej: Banco Galicia · CBU 0070003000000000000001 · Titular: Juan Pérez" style="resize:vertical;"></textarea>
+          <div class="pm-hint"><i class="fa-solid fa-circle-info" style="color:#60a5fa;"></i> Incluí banco, número de cuenta y titular. Para cuentas fuera de Argentina agregá <strong>SWIFT/BIC</strong>.</div>
+        </div>
+
+        <div id="pm-fields-wise" class="pm-fields" style="display:none; margin-bottom:14px;">
+          <label>Email o @ de tu cuenta Wise</label>
+          <input type="text" id="pm-input-wise" placeholder="Ej: tu@email.com  o  @usuario">
+          <div class="pm-hint"><i class="fa-solid fa-circle-info" style="color:#9fe870;"></i> Recibís en tu balance Wise y convertís a tu moneda local con comisión mínima.</div>
+        </div>
+
+        <div id="pm-fields-payoneer" class="pm-fields" style="display:none; margin-bottom:14px;">
+          <label>Email de tu cuenta Payoneer</label>
+          <input type="text" id="pm-input-payoneer" placeholder="Ej: tu@email.com">
+          <div class="pm-hint"><i class="fa-solid fa-circle-info" style="color:#ff7a45;"></i> Te llega como pago en USD a tu cuenta Payoneer.</div>
         </div>
 
         <!-- Input oculto para compatibilidad (perfil-cbu) -->
         <input type="hidden" id="perfil-cbu" value="">
 
-        <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
+        <div style="display:flex; gap:14px; align-items:center; flex-wrap:wrap; margin-top:4px;">
           <button onclick="guardarMetodoPago()" id="btn-guardar-cbu"
-                  style="background:var(--primary); color:white; border:none; border-radius:8px; padding:12px 22px; font-weight:800; cursor:pointer; font-size:.88rem;">
+                  style="background:linear-gradient(135deg,var(--primary),#2563eb); color:white; border:none; border-radius:10px; padding:13px 26px; font-weight:800; cursor:pointer; font-size:.88rem; font-family:'Inter',sans-serif; box-shadow:0 6px 18px rgba(59,130,246,0.25);">
             <i class="fa-solid fa-floppy-disk"></i> Guardar método de cobro
           </button>
+          <span style="font-size:.72rem;color:var(--text-dim);line-height:1.4;"><i class="fa-solid fa-lock" style="color:var(--green);"></i> Solo el administrador ve estos datos, únicamente para abonarte.</span>
         </div>
         <div id="perfil-cbu-estado" style="font-size:0.78rem; margin-top:10px;"></div>
       </div>
@@ -4967,7 +5109,8 @@ function cambiarTab(tab, btn) {
   if(tab==='academia') inicializarAcademia();
   // v1.4: refrescar TC al entrar al cotizador y comisiones al entrar a su tab
   if(tab==='cotizador') { cargarTipoDeCambio(); recuperarUltimoLinkActivo(); }
-  if(tab==='comisiones') renderComisiones();
+  if(tab==='comisiones') { renderComisiones(); inicializarSimulador(); }
+  if(tab==='capturas') cargarCapturas();
   if(tab==='mi-cuenta') poblarMiCuenta();
   if(tab==='jarvis') inicializarJarvisV2();
 }
@@ -5239,6 +5382,8 @@ async function cargarTodo() {
   cargarSiguienteAccion();
   cargarOnboardingChecklist();
   actualizarBadgeAcademia();
+  actualizarBadgeCapturas();
+  iniciarNovedades();
 
   // Mostrar botón flotante de soporte
   document.getElementById('float-support').style.display = 'flex';
@@ -5978,25 +6123,63 @@ async function confirmarBajaVoluntaria() {
 // v2.1: seleccionar método de pago en Mi Cuenta
 let _metodoPagoActual = null;
 
+const _PM_META = {
+  usdt_trc20:    { label: 'USDT · TRC20',           icono: '₮', color: '#2ec99e', bg: 'rgba(38,161,123,0.16)' },
+  airtm:         { label: 'Airtm',                   icono: 'A', color: '#38bdf8', bg: 'rgba(56,189,248,0.14)' },
+  transferencia: { label: 'Transferencia bancaria',  icono: '<i class="fa-solid fa-building-columns"></i>', color: '#60a5fa', bg: 'rgba(59,130,246,0.14)' },
+  wise:          { label: 'Wise',                    icono: 'W', color: '#9fe870', bg: 'rgba(159,232,112,0.13)' },
+  payoneer:      { label: 'Payoneer',                icono: 'P', color: '#ff7a45', bg: 'rgba(255,106,51,0.13)' },
+};
+
 function seleccionarMetodoPago(metodo) {
   _metodoPagoActual = metodo;
-  // Resaltar botón seleccionado
   ['usdt_trc20','wise','transferencia','payoneer','airtm'].forEach(m => {
     const btn = document.getElementById('pm-btn-' + m);
-    if(!btn) return;
-    if(m === metodo) {
-      btn.style.borderColor = 'var(--primary)';
-      btn.style.background = 'rgba(59,130,246,0.12)';
-      btn.style.color = 'var(--text)';
-    } else {
-      btn.style.borderColor = 'var(--border)';
-      btn.style.background = 'rgba(255,255,255,0.03)';
-      btn.style.color = 'var(--text-muted)';
-    }
+    if(btn) btn.classList.toggle('selected', m === metodo);
     // Mostrar/ocultar campos
     const fields = document.getElementById('pm-fields-' + m);
     if(fields) fields.style.display = m === metodo ? 'block' : 'none';
   });
+}
+
+// Enmascara el dato de cobro para mostrarlo sin exponerlo entero en pantalla
+function _maskPagoInfo(s) {
+  s = (s || '').trim();
+  if (s.length <= 14) return s;
+  return s.slice(0, 7) + '··· ' + s.slice(-5);
+}
+
+// Pinta el chip de estado y el resumen "Cobrás por …" arriba del selector
+function _pintarEstadoMetodoPago() {
+  const chip = document.getElementById('pm-chip-estado');
+  const resumen = document.getElementById('pm-resumen');
+  if (!chip || !resumen || !aliado) return;
+
+  const metodo = aliado.payment_method;
+  const info = aliado.payment_info;
+  const tieneAlgo = (metodo && info) || aliado.cbu_alias;
+
+  if (tieneAlgo) {
+    chip.style.background = 'rgba(74,222,128,0.12)';
+    chip.style.borderColor = 'rgba(74,222,128,0.4)';
+    chip.style.color = 'var(--green)';
+    chip.innerHTML = '<i class="fa-solid fa-circle-check"></i> Configurado';
+
+    const meta = _PM_META[metodo] || { label: 'Transferencia / legacy', icono: '<i class="fa-solid fa-building-columns"></i>', color: 'var(--green)', bg: 'rgba(74,222,128,0.14)' };
+    const logo = document.getElementById('pm-resumen-logo');
+    if (logo) { logo.innerHTML = meta.icono; logo.style.background = meta.bg; logo.style.color = meta.color; }
+    const met = document.getElementById('pm-resumen-metodo');
+    if (met) met.textContent = meta.label;
+    const det = document.getElementById('pm-resumen-detalle');
+    if (det) det.textContent = _maskPagoInfo(info || aliado.cbu_alias || '');
+    resumen.style.display = 'flex';
+  } else {
+    chip.style.background = 'rgba(250,204,21,0.12)';
+    chip.style.borderColor = 'rgba(250,204,21,0.35)';
+    chip.style.color = 'var(--amber)';
+    chip.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i> Pendiente';
+    resumen.style.display = 'none';
+  }
 }
 
 function _getInputMetodoPago() {
@@ -6043,6 +6226,7 @@ async function guardarMetodoPago() {
 
     estado.innerHTML = `<span style="color:var(--green);"><i class="fa-solid fa-circle-check"></i> Método de cobro guardado. Ya podés cobrar comisiones.</span>`;
     mostrarToast('Método de cobro guardado correctamente.', 'green');
+    _pintarEstadoMetodoPago();
   } catch(e) {
     estado.innerHTML = `<span style="color:var(--red);"><i class="fa-solid fa-circle-xmark"></i> ${e.message}</span>`;
     mostrarToast('No se pudo guardar. Intentá de nuevo.', 'red');
@@ -6095,6 +6279,7 @@ function poblarMiCuenta() {
       cbuEstado.innerHTML = `<span style="color:var(--amber);"><i class="fa-solid fa-triangle-exclamation"></i> Configurá tu método de cobro para poder cobrar.</span>`;
     }
   }
+  _pintarEstadoMetodoPago();
 }
 
 function copiarLinkAliado() {
@@ -6644,6 +6829,7 @@ function _renderAccionesFicha() {
   const subj = encodeURIComponent('Avanza Digital — ' + nombre);
   const btns = [];
   if (wa)   btns.push('<a href="https://wa.me/' + wa + '?text=' + msg + '" target="_blank" rel="noopener" onclick="_logEnvioFicha(\'whatsapp\')" style="flex:1;min-width:100px;text-align:center;padding:8px;font-size:.8rem;font-weight:700;text-decoration:none;background:var(--green);color:#000;border-radius:8px;"><i class="fa-brands fa-whatsapp"></i> WhatsApp</a>');
+  if (wa && typeof _fichaLeadId !== 'undefined' && _fichaLeadId) btns.push('<button onclick="abrirOutreach(\'prospecto\',' + _fichaLeadId + ',\'' + wa + '\')" style="flex:1;min-width:100px;text-align:center;padding:8px;font-size:.8rem;font-weight:700;background:rgba(127,216,255,0.1);color:#7fd8ff;border:1px solid rgba(127,216,255,0.35);border-radius:8px;cursor:pointer;font-family:\'Inter\',sans-serif;"><i class="fa-solid fa-wand-magic-sparkles"></i> Mensaje IA</button>');
   if (telD) btns.push('<a href="tel:' + telD + '" onclick="_logEnvioFicha(\'llamada\')" style="flex:1;min-width:80px;text-align:center;padding:8px;font-size:.8rem;font-weight:700;text-decoration:none;background:rgba(59,130,246,0.15);color:#60a5fa;border:1px solid rgba(59,130,246,0.3);border-radius:8px;"><i class="fa-solid fa-phone"></i> Llamar</a>');
   if (mail) btns.push('<a href="mailto:' + mail + '?subject=' + subj + '" onclick="_logEnvioFicha(\'email\')" style="flex:1;min-width:80px;text-align:center;padding:8px;font-size:.8rem;font-weight:700;text-decoration:none;background:rgba(255,255,255,0.06);color:var(--text-muted);border:1px solid var(--border);border-radius:8px;"><i class="fa-solid fa-envelope"></i> Email</a>');
   cont.innerHTML = btns.length
@@ -7129,6 +7315,7 @@ function _contactoAccionesBolsa(l) {
   const body = encodeURIComponent(saludo + '. Te escribo de Avanza Digital: ayudamos a PYMEs como ' + empresa + ' a que su presencia digital genere clientes. ¿Tenés unos minutos esta semana?');
   const btns = [];
   if (wa)   btns.push('<a href="https://wa.me/' + wa + '?text=' + msg + '" target="_blank" rel="noopener" style="flex:1;min-width:110px;text-align:center;padding:9px;font-size:.82rem;font-weight:700;text-decoration:none;background:var(--green);color:#000;border-radius:8px;"><i class="fa-brands fa-whatsapp"></i> WhatsApp</a>');
+  if (wa)   btns.push('<button onclick="abrirOutreach(\'bolsa\',' + l.id + ',\'' + wa + '\')" style="flex:1;min-width:110px;text-align:center;padding:9px;font-size:.82rem;font-weight:700;background:rgba(127,216,255,0.1);color:#7fd8ff;border:1px solid rgba(127,216,255,0.35);border-radius:8px;cursor:pointer;font-family:\'Inter\',sans-serif;"><i class="fa-solid fa-wand-magic-sparkles"></i> Mensaje IA</button>');
   if (tel)  btns.push('<a href="tel:' + tel + '" style="flex:1;min-width:90px;text-align:center;padding:9px;font-size:.82rem;font-weight:700;text-decoration:none;background:rgba(59,130,246,0.15);color:#60a5fa;border:1px solid rgba(59,130,246,0.3);border-radius:8px;"><i class="fa-solid fa-phone"></i> Llamar</a>');
   if (mail) btns.push('<a href="mailto:' + mail + '?subject=' + subj + '&body=' + body + '" style="flex:1;min-width:90px;text-align:center;padding:9px;font-size:.82rem;font-weight:700;text-decoration:none;background:rgba(255,255,255,0.06);color:var(--text-muted);border:1px solid var(--border);border-radius:8px;"><i class="fa-solid fa-envelope"></i> Email</a>');
   if (!btns.length) {
@@ -7257,7 +7444,12 @@ async function cargarBolsa() {
           <div style="margin-top:10px;">
             <button onclick="abrirPerfiladoBolsa(${l.id},'${(l.empresa||'').replace(/'/g,"\\'")}','${(l.rubro||'').replace(/'/g,"\\'")}')" style="width:100%;background:rgba(192,132,252,0.12);color:#c084fc;border:1px solid rgba(192,132,252,0.3);border-radius:8px;padding:8px 12px;font-size:.8rem;font-weight:700;cursor:pointer;"><i class="fa-solid fa-brain"></i> Perfilar con IA — Score + Pitch</button>
           </div>`}
-          <div style="margin-top:10px;">${accionBtn}</div>
+          <div style="margin-top:10px;display:flex;flex-direction:column;gap:8px;">
+            ${l.prospecto_id
+              ? `<button onclick="cambiarTabDesdeNBA('pipeline')" style="width:100%;background:rgba(74,222,128,0.10);color:var(--green);border:1px solid rgba(74,222,128,0.35);border-radius:8px;padding:9px;font-size:.8rem;font-weight:800;cursor:pointer;"><i class="fa-solid fa-bars-progress"></i> Ya está en Mi CRM — Ver pipeline →</button>`
+              : `<button onclick="convertirLeadEnProspecto(${l.id}, '${(l.empresa||'').replace(/'/g,"\\'")}')" style="width:100%;background:rgba(59,130,246,0.10);color:#60a5fa;border:1px solid rgba(59,130,246,0.35);border-radius:8px;padding:9px;font-size:.8rem;font-weight:800;cursor:pointer;"><i class="fa-solid fa-arrow-right-to-bracket"></i> Convertir en prospecto (Mi CRM)</button>`}
+            ${accionBtn}
+          </div>
         </div>`;
       }).join('');
     }
@@ -7276,9 +7468,15 @@ async function cargarBolsa() {
       let filtroActivoPais = '';
 
       function renderDisponibles() {
-        const filtrados = filtroActivoPais
+        const q = (document.getElementById('bolsa-buscar-basico')?.value || '').trim();
+        let filtrados = filtroActivoPais
           ? data.disponibles.filter(l => (l.pais || 'AR') === filtroActivoPais)
           : data.disponibles;
+        filtrados = filtrados.filter(l => _matchLeadTexto(l, q));
+        if (!filtrados.length) {
+          tbodyDisp.innerHTML = '<div style="text-align:center;padding:24px;color:var(--text-dim);grid-column:1/-1;">Sin resultados para esa búsqueda.</div>';
+          return;
+        }
 
         tbodyDisp.innerHTML = filtrados.map(l => {
           const accion = limitAlcanzado
@@ -7322,6 +7520,7 @@ async function cargarBolsa() {
         tbodyDisp.before(fc);
       }
 
+      window._repintarBolsa['basico'] = renderDisponibles;
       renderDisponibles();
     }
 
@@ -7338,6 +7537,24 @@ async function cargarBolsa() {
     }
 
   } catch(e) { console.error(e); }
+}
+
+// ─── CRM BRIDGE: convertir un lead reclamado en prospecto del CRM ─────────
+async function convertirLeadEnProspecto(id, empresa) {
+  if (!confirm(`¿Pasar "${empresa}" a Mi CRM como prospecto?\n\nSe copian todos los datos (contacto, teléfono, email, rubro y observaciones) y el lead queda gestionado en la bolsa. Después lo trabajás con etapas, notas y tareas desde la pestaña "Mi CRM".`)) return;
+  try {
+    const res = await apiFetch(`${API}/bolsa/${id}/convertir-prospecto`, { method: 'POST' });
+    const data = await res.json();
+    if (!res.ok) {
+      alert(typeof data.detail === 'string' ? data.detail : (data.detail?.mensaje || 'Error al convertir.'));
+      return;
+    }
+    mostrarToast(data.ya_existia ? 'ℹ️ Este lead ya estaba en tu CRM' : `✅ ${empresa} agregado a Mi CRM`, 'green');
+    await cargarBolsa();   // refresca la tarjeta: ahora muestra "Ver pipeline →"
+    if (confirm('¿Abrir Mi CRM ahora para trabajarlo (etapa, notas, próxima tarea)?')) {
+      cambiarTabDesdeNBA('pipeline');
+    }
+  } catch (e) { alert('Error de conexión.'); }
 }
 
 async function reclamarLead(id) {
@@ -7393,6 +7610,7 @@ async function marcarContactadoBolsa(id, empresa) {
       <div style="display:flex;flex-direction:column;gap:10px;">
         <button onclick="confirmarResultado(${id},'exitoso')" style="padding:12px;border-radius:10px;border:none;background:rgba(16,185,129,0.15);border:1px solid rgba(16,185,129,0.3);color:#10b981;font-weight:700;cursor:pointer;font-size:.9rem;">
           ✅ Exitoso — Está interesado / quedamos en hablar
+          <span style="display:block;font-size:.7rem;font-weight:600;color:#6ee7b7;margin-top:3px;">Pasa automáticamente a Mi CRM como prospecto</span>
         </button>
         <button onclick="confirmarResultado(${id},'no_interesado')" style="padding:12px;border-radius:10px;border:none;background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.2);color:#f87171;font-weight:700;cursor:pointer;font-size:.9rem;">
           ❌ No le interesó
@@ -7418,6 +7636,14 @@ async function confirmarResultado(id, resultado) {
       mostrarToast(data.mensaje, colores[resultado] || 'green');
       cargarBolsa();
       cargarHistorialBolsa();
+      if (data.convertido_a_crm) {
+        // El exitoso ya está en Mi CRM — ofrecer ir a trabajarlo ahí.
+        setTimeout(() => {
+          if (confirm('Este lead ya está en Mi CRM como prospecto. ¿Abrirlo ahora para definir la próxima acción?')) {
+            cambiarTabDesdeNBA('pipeline');
+          }
+        }, 400);
+      }
     } else {
       mostrarToast(data.detail || 'Error al actualizar', 'red');
     }
@@ -8300,13 +8526,7 @@ async function cargarCreditos() {
     if (sub) sub.textContent = saldo > 0
       ? `Crédito${saldo !== 1 ? 's' : ''} para usar Jarvis IA`
       : 'Sin créditos — recargá para usar Jarvis IA';
-    if (cta) cta.style.display = saldo === 0 ? 'block' : 'none';
-    // Actualizar los 3 lugares donde se muestra el saldo en la bolsa:
-    // selector de categorías, panel calificado, panel premium.
-    ['mkt-saldo','mkt-saldo-cal','mkt-saldo-prem'].forEach(id => {
-      const m = document.getElementById(id);
-      if (m) m.textContent = `${saldo} créditos`;
-    });
+    if (cta) cta.style.display = 'block';  // siempre visible: es el punto único de recarga
   } catch(e){ console.error('creditos:', e); }
 }
 
@@ -8882,11 +9102,19 @@ function volverASelectorBolsa() {
 }
 
 // Helper: actualiza saldo en los 3 lugares donde se muestra
+// ─── BÚSQUEDA EN LA BOLSA ────────────────────────────────────────────────
+// Registro de funciones de re-render por vista; los inputs llaman acá.
+window._repintarBolsa = window._repintarBolsa || {};
+
+function _matchLeadTexto(l, q) {
+  if (!q) return true;
+  const t = q.toLowerCase();
+  return [l.empresa, l.rubro, l.ciudad].some(v => (v || '').toLowerCase().includes(t));
+}
+
 function _actualizarSaldoMkt(saldo) {
-  ['mkt-saldo','mkt-saldo-cal','mkt-saldo-prem'].forEach(id => {
-    const el = document.getElementById(id);
-    if (el) el.textContent = `${saldo} créditos`;
-  });
+  // La bolsa ya no muestra saldo de créditos (los leads son gratis).
+  // El saldo vive en el dashboard ("Créditos Jarvis IA"). No-op por compatibilidad.
 }
 
 // Helper: actualiza el contador "X disponibles" en una tarjeta de categoría
@@ -8964,11 +9192,14 @@ async function cargarMarketplace() {
       let filtroPais = '';
 
       function pintar() {
-        const filtrados = filtroPais
+        const tierKey = grid.id === 'grid-premium' ? 'premium' : 'calificado';
+        const q = (document.getElementById(`bolsa-buscar-${tierKey}`)?.value || '').trim();
+        let filtrados = filtroPais
           ? leadsDelTier.filter(l => (l.pais || 'AR') === filtroPais)
           : leadsDelTier;
+        filtrados = filtrados.filter(l => _matchLeadTexto(l, q));
         if (!filtrados.length) {
-          grid.innerHTML = `<div style="text-align:center; padding:24px; color:var(--text-dim); grid-column:1/-1;">No hay leads para ese país en este momento.</div>`;
+          grid.innerHTML = `<div style="text-align:center; padding:24px; color:var(--text-dim); grid-column:1/-1;">Sin resultados para esa búsqueda o filtro.</div>`;
           return;
         }
         grid.innerHTML = filtrados.map(l => {
@@ -8979,6 +9210,7 @@ async function cargarMarketplace() {
         }).join('');
       }
       _renderFiltroPaises(gridAnchor, idFiltro, paisesUnicos, colorActivo, p => { filtroPais = p; pintar(); });
+      window._repintarBolsa[grid.id === 'grid-premium' ? 'premium' : 'calificado'] = pintar;
       pintar();
     }
 
@@ -12856,5 +13088,480 @@ document.addEventListener('click', function(e){
   if(it){ avzDrawer(false); }
 }, false);
 </script>
+
+<!-- ══════════════════════════════════════════════════════════════════════════
+     MÓVIL — ajustes responsive de los componentes nuevos (v3.1)
+══════════════════════════════════════════════════════════════════════════ -->
+<style>
+@media(max-width:860px){
+  /* Guard general: ninguna caja nueva empuja la pantalla de costado */
+  #portal-screen .tab-panel.active .bento-box{ max-width:100%; box-sizing:border-box; }
+  /* Mis Capturas: emails/dominios largos no desbordan la tarjeta */
+  #tab-capturas, #tab-capturas *{ min-width:0; overflow-wrap:anywhere; }
+}
+
+@media(max-width:600px){
+  /* ── Topbar: hamburguesa + marca + 3 acciones sin desborde ── */
+  #avz-topbar{ gap:8px; }
+  #avz-topbar .tb-right{ gap:7px; }
+  #avz-topbar .tb-sup .sup-lb, #btn-instalar-pwa .pwa-lb{ display:none; }
+  #avz-topbar .tb-sup, #btn-instalar-pwa{ padding:7px 10px; }
+
+  /* ── Campanita: panel anclado bajo el topbar, a casi todo el ancho ── */
+  #novedades-panel{ position:fixed !important; left:10px !important; right:10px !important;
+                    top:calc(var(--avz-tb) + 8px) !important; width:auto !important; max-width:none !important; }
+
+  /* ── Mis Capturas: título más compacto ── */
+  #tab-capturas .welcome-name{ font-size:1.25rem; }
+
+  /* ── Simulador: el número grande no rompe la caja de resultado ── */
+  #sim-total-mes{ font-size:2rem !important; }
+
+  /* ── Método de cobro: 2 tarjetas por fila, contenidas ── */
+  #payment-method-grid{ grid-template-columns:repeat(2,minmax(0,1fr)) !important; gap:10px !important; }
+  .pm-card{ padding:14px 10px 11px; }
+  .pm-name{ font-size:.78rem; }
+  .pm-tag{ font-size:.58rem; letter-spacing:.03em; }
+  #pm-resumen{ flex-wrap:wrap; }
+
+  /* ── Comisiones: en una columna, sin los bordes laterales del layout de 3 col ── */
+  #tab-comisiones [style*="border-left:1px solid rgba(255,255,255,0.08)"]{ border-left:none !important; padding-left:0 !important; }
+  /* Form "Cargar cliente con continuidad": una columna en celular */
+  #tab-comisiones [style*="grid-template-columns:1fr 1fr"]{ grid-template-columns:1fr !important; }
+
+  /* ── Modal outreach: botones cómodos para el pulgar ── */
+  #outreach-modal > div{ padding:18px 16px; }
+  #outreach-modal button{ min-height:42px; }
+}
+</style>
+
+<!-- ══════════════════════════════════════════════════════════════════════════
+     MODAL OUTREACH IA — primer mensaje de WhatsApp según rubro/observación
+══════════════════════════════════════════════════════════════════════════ -->
+<div id="outreach-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.72);z-index:400;align-items:center;justify-content:center;padding:16px;">
+  <div style="background:#0d0d0d;border:1px solid var(--border-h);border-radius:16px;max-width:540px;width:100%;padding:22px;box-shadow:0 24px 70px rgba(0,0,0,0.7);">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+      <div style="font-weight:800;font-size:.95rem;"><i class="fa-solid fa-wand-magic-sparkles" style="color:#7fd8ff;"></i> Mensaje de apertura personalizado</div>
+      <button onclick="cerrarOutreach()" style="background:transparent;border:none;color:var(--text-dim);font-size:1.1rem;cursor:pointer;"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <p style="font-size:.78rem;color:var(--text-muted);margin-bottom:12px;line-height:1.5;">Armado según el rubro y la observación del lead. Editalo a tu gusto antes de enviarlo — la primera impresión se gana acá.</p>
+    <div id="outreach-cargando" style="display:none;text-align:center;padding:26px;color:var(--text-muted);font-size:.85rem;"><span class="spinner"></span> &nbsp;Generando mensaje…</div>
+    <textarea id="outreach-texto" rows="6" style="display:none;width:100%;background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:10px;padding:12px 14px;color:var(--text);font-size:.88rem;font-family:'Inter',sans-serif;line-height:1.55;outline:none;resize:vertical;"></textarea>
+    <div id="outreach-fuente" style="display:none;font-size:.7rem;color:var(--text-dim);margin-top:6px;"></div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:14px;">
+      <button onclick="generarOutreach()" style="flex:1;min-width:110px;background:transparent;border:1px solid var(--border);color:var(--text-muted);padding:10px;border-radius:8px;font-size:.8rem;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif;"><i class="fa-solid fa-rotate"></i> Regenerar</button>
+      <button onclick="copiarOutreach()" style="flex:1;min-width:110px;background:rgba(59,130,246,0.15);border:1px solid rgba(59,130,246,0.35);color:#60a5fa;padding:10px;border-radius:8px;font-size:.8rem;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif;"><i class="fa-solid fa-copy"></i> Copiar</button>
+      <button onclick="abrirWhatsAppOutreach()" style="flex:1.4;min-width:140px;background:var(--green);border:none;color:#000;padding:10px;border-radius:8px;font-size:.8rem;font-weight:800;cursor:pointer;font-family:'Inter',sans-serif;"><i class="fa-brands fa-whatsapp"></i> Abrir WhatsApp</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════════════════════════
+// MIS CAPTURAS — bandeja de leads de magnets (auditoría / calculadora / recursos)
+// ═══════════════════════════════════════════════════════════════════════════
+let _capturasData = null;
+
+function _pintarBadgeCapturas(n) {
+  const pill = document.getElementById('capturas-pill');
+  if (!pill) return;
+  if (n > 0) { pill.style.display = ''; pill.textContent = n > 99 ? '99+' : n; }
+  else pill.style.display = 'none';
+}
+
+async function actualizarBadgeCapturas() {
+  if (!aliado) return;
+  try {
+    const r = await apiFetch(`${API}/aliados/${aliado.codigo}/capturas`);
+    if (!r.ok) return;
+    _capturasData = await r.json();
+    _pintarBadgeCapturas(_capturasData.no_vistas || 0);
+  } catch (e) { console.warn('capturas badge', e); }
+}
+
+const _CAPTURA_ICONOS = { auditoria: 'fa-magnifying-glass', recursos: 'fa-download', guia: 'fa-book-open' };
+
+function _capturaCard(c) {
+  const icono = _CAPTURA_ICONOS[c.fuente] || 'fa-fire';
+  const wa = (c.telefono && typeof _waNumeroBolsa === 'function') ? _waNumeroBolsa(c.telefono, (aliado && aliado.pais) || 'AR') : '';
+  const quien = c.nombre || c.email || '(sin datos)';
+  const filas = [];
+  if (c.nombre) filas.push(`<div style="font-size:.82rem;color:var(--text-muted);"><i class="fa-solid fa-user" style="width:16px;color:var(--text-dim);"></i> ${c.nombre}</div>`);
+  filas.push(`<div style="font-size:.82rem;color:var(--text-muted);"><i class="fa-solid fa-envelope" style="width:16px;color:var(--text-dim);"></i> ${c.email}</div>`);
+  if (c.telefono) filas.push(`<div style="font-size:.82rem;color:var(--text-muted);"><i class="fa-solid fa-phone" style="width:16px;color:var(--text-dim);"></i> ${c.telefono}</div>`);
+  if (c.dominio) filas.push(`<div style="font-size:.82rem;color:var(--text-muted);"><i class="fa-solid fa-globe" style="width:16px;color:var(--text-dim);"></i> ${c.dominio}${c.score ? ` · score <strong style="color:${c.score < 50 ? 'var(--red)' : 'var(--amber)'};">${c.score}/100</strong>` : ''}</div>`);
+
+  const acciones = [];
+  if (wa) acciones.push(`<a href="https://wa.me/${wa}?text=${encodeURIComponent('Hola' + (c.nombre ? ' ' + c.nombre.split(' ')[0] : '') + ', vi que usaste mi herramienta de diagnóstico de Avanza Digital. Te escribo para ayudarte a interpretar el resultado, ¿tenés unos minutos?')}" target="_blank" rel="noopener" style="flex:1;min-width:110px;text-align:center;padding:9px;font-size:.8rem;font-weight:700;text-decoration:none;background:var(--green);color:#000;border-radius:8px;"><i class="fa-brands fa-whatsapp"></i> WhatsApp</a>`);
+  acciones.push(`<a href="mailto:${c.email}?subject=${encodeURIComponent('Sobre tu diagnóstico — Avanza Digital')}" style="flex:1;min-width:90px;text-align:center;padding:9px;font-size:.8rem;font-weight:700;text-decoration:none;background:rgba(255,255,255,0.06);color:var(--text-muted);border:1px solid var(--border);border-radius:8px;"><i class="fa-solid fa-envelope"></i> Email</a>`);
+  if (c.prospecto_id) {
+    acciones.push(`<button onclick="cambiarTab('pipeline', document.getElementById('btn-tab-pipeline'))" style="flex:1.2;min-width:130px;padding:9px;font-size:.8rem;font-weight:700;background:rgba(59,130,246,0.15);color:#60a5fa;border:1px solid rgba(59,130,246,0.35);border-radius:8px;cursor:pointer;font-family:'Inter',sans-serif;"><i class="fa-solid fa-check"></i> Ver en Mi CRM</button>`);
+  } else {
+    acciones.push(`<button id="btn-conv-cap-${c.id}" onclick="convertirCaptura(${c.id})" style="flex:1.2;min-width:130px;padding:9px;font-size:.8rem;font-weight:800;background:#f97316;color:#000;border:none;border-radius:8px;cursor:pointer;font-family:'Inter',sans-serif;"><i class="fa-solid fa-user-plus"></i> Agregar a Mi CRM</button>`);
+  }
+
+  return `<div class="bento-box" style="margin-bottom:12px;${!c.visto ? 'border-color:rgba(249,115,22,0.45);background:linear-gradient(135deg,rgba(249,115,22,0.06),transparent);' : ''}">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;flex-wrap:wrap;">
+      <div style="display:flex;align-items:center;gap:10px;">
+        <div style="width:38px;height:38px;border-radius:10px;background:rgba(249,115,22,0.12);border:1px solid rgba(249,115,22,0.3);display:flex;align-items:center;justify-content:center;color:#fb923c;"><i class="fa-solid ${icono}"></i></div>
+        <div>
+          <div style="font-weight:800;font-size:.92rem;">${quien} ${!c.visto ? '<span style="background:#f97316;color:#000;font-size:.62rem;font-weight:800;padding:2px 8px;border-radius:99px;margin-left:6px;vertical-align:middle;">NUEVA</span>' : ''}</div>
+          <div style="font-size:.7rem;color:var(--text-dim);text-transform:uppercase;letter-spacing:.05em;">${c.fuente_label} · ${c.fecha || ''}</div>
+        </div>
+      </div>
+    </div>
+    <div style="display:grid;gap:5px;margin:12px 0;">${filas.join('')}</div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;">${acciones.join('')}</div>
+  </div>`;
+}
+
+async function cargarCapturas(force = false) {
+  if (!aliado) return;
+  const lista = document.getElementById('capturas-lista');
+  const vacio = document.getElementById('capturas-vacio');
+  const resumen = document.getElementById('capturas-resumen');
+  if (!lista) return;
+  try {
+    const r = await apiFetch(`${API}/aliados/${aliado.codigo}/capturas`);
+    if (!r.ok) { lista.innerHTML = '<div class="bento-box" style="color:var(--text-muted);font-size:.85rem;">No se pudieron cargar las capturas. Probá de nuevo.</div>'; return; }
+    const d = await r.json();
+    _capturasData = d;
+
+    if (resumen) resumen.textContent = d.total
+      ? `${d.total} captura${d.total !== 1 ? 's' : ''} · ${d.no_vistas} nueva${d.no_vistas !== 1 ? 's' : ''}`
+      : 'Sin capturas todavía';
+
+    if (!d.capturas || !d.capturas.length) {
+      lista.innerHTML = '';
+      if (vacio) vacio.style.display = 'block';
+    } else {
+      if (vacio) vacio.style.display = 'none';
+      lista.innerHTML = d.capturas.map(_capturaCard).join('');
+    }
+
+    // Apagar el badge: el aliado ya vio la bandeja
+    if (d.no_vistas > 0) {
+      apiFetch(`${API}/aliados/${aliado.codigo}/capturas/marcar-vistas`, { method: 'POST' })
+        .then(() => _pintarBadgeCapturas(0))
+        .catch(() => {});
+    } else {
+      _pintarBadgeCapturas(0);
+    }
+  } catch (e) { console.warn('cargarCapturas', e); }
+}
+
+async function convertirCaptura(id) {
+  const btn = document.getElementById(`btn-conv-cap-${id}`);
+  if (btn) { btn.disabled = true; btn.innerHTML = '<span class="spinner"></span>'; }
+  try {
+    const r = await apiFetch(`${API}/capturas/${id}/convertir-prospecto`, { method: 'POST' });
+    const d = await r.json();
+    if (!r.ok) throw new Error(d.detail || 'No se pudo convertir.');
+    mostrarToast(d.mensaje || '¡Ya está en tu CRM!', 'green');
+    cargarCapturas(true);
+  } catch (e) {
+    mostrarToast(e.message || 'Error al convertir la captura.', 'red');
+    if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fa-solid fa-user-plus"></i> Agregar a Mi CRM'; }
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// NOVEDADES — campanita in-app (centro de notificaciones)
+// ═══════════════════════════════════════════════════════════════════════════
+let _novedadesTimer = null;
+let _novedadesData = null;
+
+function iniciarNovedades() {
+  cargarNovedades();
+  if (_novedadesTimer) clearInterval(_novedadesTimer);
+  _novedadesTimer = setInterval(() => { cargarNovedades(); actualizarBadgeCapturas(); }, 90000);
+  // Cerrar el panel al hacer click afuera
+  document.addEventListener('click', (ev) => {
+    const panel = document.getElementById('novedades-panel');
+    const btn = document.getElementById('btn-novedades');
+    if (!panel || panel.style.display === 'none') return;
+    if (!panel.contains(ev.target) && !btn.contains(ev.target)) panel.style.display = 'none';
+  });
+}
+
+const _NOVEDAD_ICONOS = { captura: '🔥', comision: '💰', tarea: '⏰', sistema: '🔔' };
+
+async function cargarNovedades() {
+  if (!aliado) return;
+  try {
+    const r = await apiFetch(`${API}/aliados/${aliado.codigo}/novedades`);
+    if (!r.ok) return;
+    _novedadesData = await r.json();
+    const badge = document.getElementById('novedades-badge');
+    if (badge) {
+      const n = _novedadesData.no_leidas || 0;
+      badge.style.display = n > 0 ? 'block' : 'none';
+      badge.textContent = n > 99 ? '99+' : n;
+    }
+    _pintarNovedades();
+  } catch (e) { console.warn('novedades', e); }
+}
+
+function _pintarNovedades() {
+  const cont = document.getElementById('novedades-lista');
+  if (!cont || !_novedadesData) return;
+  const items = _novedadesData.novedades || [];
+  if (!items.length) {
+    cont.innerHTML = '<div style="padding:24px;text-align:center;color:var(--text-dim);font-size:.8rem;">Sin novedades por ahora.<br><span style="font-size:.72rem;">Acá vas a ver tus leads capturados, comisiones y recordatorios.</span></div>';
+    return;
+  }
+  cont.innerHTML = items.map(n => `
+    <div onclick="_clickNovedad('${n.tab || ''}')" style="display:flex;gap:10px;padding:10px 12px;border-radius:10px;cursor:${n.tab ? 'pointer' : 'default'};${!n.leida ? 'background:rgba(249,115,22,0.06);' : ''}" onmouseover="this.style.background='rgba(255,255,255,0.04)'" onmouseout="this.style.background='${!n.leida ? 'rgba(249,115,22,0.06)' : 'transparent'}'">
+      <div style="font-size:1.1rem;line-height:1.4;">${_NOVEDAD_ICONOS[n.tipo] || '🔔'}</div>
+      <div style="flex:1;min-width:0;">
+        <div style="font-size:.8rem;font-weight:${n.leida ? '600' : '800'};color:${n.leida ? 'var(--text-muted)' : 'var(--text)'};">${n.titulo}</div>
+        ${n.cuerpo ? `<div style="font-size:.74rem;color:var(--text-dim);line-height:1.45;margin-top:2px;">${n.cuerpo}</div>` : ''}
+        <div style="font-size:.66rem;color:var(--text-dim);margin-top:3px;">${n.fecha || ''}</div>
+      </div>
+      ${!n.leida ? '<div style="width:7px;height:7px;border-radius:99px;background:#f97316;margin-top:6px;flex-shrink:0;"></div>' : ''}
+    </div>`).join('');
+}
+
+function toggleNovedades() {
+  const panel = document.getElementById('novedades-panel');
+  if (!panel) return;
+  const abierto = panel.style.display !== 'none';
+  panel.style.display = abierto ? 'none' : 'block';
+  if (!abierto) cargarNovedades();
+}
+
+async function marcarNovedadesLeidas() {
+  if (!aliado) return;
+  try {
+    await apiFetch(`${API}/aliados/${aliado.codigo}/novedades/marcar-leidas`, { method: 'POST' });
+    if (_novedadesData) { _novedadesData.no_leidas = 0; (_novedadesData.novedades || []).forEach(n => n.leida = true); }
+    const badge = document.getElementById('novedades-badge');
+    if (badge) badge.style.display = 'none';
+    _pintarNovedades();
+  } catch (e) {}
+}
+
+function _clickNovedad(tab) {
+  if (!tab) return;
+  const panel = document.getElementById('novedades-panel');
+  if (panel) panel.style.display = 'none';
+  const btn = document.querySelector(`.tab-btn[data-tab="${tab}"]`);
+  cambiarTab(tab, btn || null);
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// OUTREACH IA — primer mensaje de WhatsApp por rubro/observación
+// ═══════════════════════════════════════════════════════════════════════════
+let _outreachCtx = null;
+
+function abrirOutreach(tipo, id, wa) {
+  _outreachCtx = { tipo, id, wa };
+  const modal = document.getElementById('outreach-modal');
+  modal.style.display = 'flex';
+  generarOutreach();
+}
+
+function cerrarOutreach() {
+  document.getElementById('outreach-modal').style.display = 'none';
+  _outreachCtx = null;
+}
+
+async function generarOutreach() {
+  if (!_outreachCtx) return;
+  const cargando = document.getElementById('outreach-cargando');
+  const texto = document.getElementById('outreach-texto');
+  const fuente = document.getElementById('outreach-fuente');
+  cargando.style.display = 'block'; texto.style.display = 'none'; fuente.style.display = 'none';
+  try {
+    const ruta = _outreachCtx.tipo === 'bolsa' ? 'bolsa' : 'prospectos';
+    const r = await apiFetch(`${API}/${ruta}/${_outreachCtx.id}/mensaje-outreach`, { method: 'POST' });
+    const d = await r.json();
+    if (!r.ok) throw new Error(d.detail || 'No se pudo generar el mensaje.');
+    texto.value = d.mensaje || '';
+    fuente.innerHTML = d.fuente === 'ia'
+      ? '<i class="fa-solid fa-wand-magic-sparkles" style="color:#7fd8ff;"></i> Generado con IA según el rubro y la observación del lead'
+      : '<i class="fa-solid fa-file-lines"></i> Plantilla por rubro (la IA no estaba disponible)';
+  } catch (e) {
+    texto.value = '';
+    fuente.innerHTML = '<span style="color:var(--red);">' + (e.message || 'Error al generar.') + '</span>';
+  }
+  cargando.style.display = 'none'; texto.style.display = 'block'; fuente.style.display = 'block';
+}
+
+function copiarOutreach() {
+  const t = document.getElementById('outreach-texto').value;
+  if (!t) return;
+  navigator.clipboard.writeText(t).then(() => mostrarToast('Mensaje copiado ✓', 'green'));
+}
+
+function abrirWhatsAppOutreach() {
+  if (!_outreachCtx) return;
+  const t = document.getElementById('outreach-texto').value.trim();
+  if (!t) { mostrarToast('Generá o escribí un mensaje primero.', 'red'); return; }
+  window.open('https://wa.me/' + _outreachCtx.wa + '?text=' + encodeURIComponent(t), '_blank');
+  if (_outreachCtx.tipo === 'prospecto' && typeof _logEnvioFicha === 'function') {
+    try { _logEnvioFicha('whatsapp'); } catch (e) {}
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// SIMULADOR DE GANANCIAS — la tabla de comisiones hecha objetivo tangible
+// ═══════════════════════════════════════════════════════════════════════════
+let _simConfig = null;
+let _simInicializado = false;
+
+async function inicializarSimulador() {
+  if (_simInicializado) { calcularSimulador(); return; }
+  try {
+    const r = await apiFetch(`${API}/simulador/config`);
+    if (!r.ok) return;
+    _simConfig = await r.json();
+  } catch (e) { return; }
+
+  const filaInput = (id, gid, label, precio, mensual) => `
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:8px;">
+      <div>
+        <div style="font-size:.84rem;color:var(--text);">${label} <span style="color:var(--text-dim);font-size:.74rem;">USD ${precio.toLocaleString('es-AR')}${mensual ? '/mes' : ''}</span></div>
+        <div id="${gid}" style="font-size:.7rem;color:${mensual ? 'var(--amber)' : 'var(--green)'};font-weight:700;"></div>
+      </div>
+      <input type="number" min="0" max="50" value="0" id="${id}" oninput="calcularSimulador()"
+             style="width:70px;background:#111;border:1px solid var(--border);border-radius:8px;padding:8px 10px;color:var(--text);font-size:.9rem;font-family:'Inter',sans-serif;outline:none;text-align:center;">
+    </div>`;
+
+  const contP = document.getElementById('sim-planes');
+  contP.innerHTML = Object.entries(_simConfig.planes).map(([nombre, precio], i) =>
+    filaInput(`sim-q-p${i}`, `sim-g-p${i}`, nombre, precio, false)).join('');
+
+  const contC = document.getElementById('sim-continuidad');
+  contC.innerHTML = Object.entries(_simConfig.planes_continuidad).map(([nombre, precio], i) =>
+    filaInput(`sim-q-c${i}`, `sim-g-c${i}`, nombre, precio, true)).join('');
+
+  const sel = document.getElementById('sim-nivel');
+  sel.innerHTML = Object.entries(_simConfig.niveles).map(([nivel, info]) =>
+    `<option value="${nivel}">${nivel} — ${Math.round(info.comision * 100)}% por venta</option>`).join('');
+  if (aliado && aliado.nivel && _simConfig.niveles[aliado.nivel]) sel.value = aliado.nivel;
+
+  _simInicializado = true;
+  calcularSimulador();
+}
+
+function calcularSimulador() {
+  if (!_simConfig) return;
+  const nivel = document.getElementById('sim-nivel').value;
+  const pctNivel = (_simConfig.niveles[nivel] || { comision: 0.10 }).comision;
+  const pctRec = _simConfig.comision_recurrente_pct || 0.10;
+  const fmt = n => 'USD ' + Math.round(n).toLocaleString('es-AR');
+
+  let baseOneTime = 0, cierres = 0;
+  Object.values(_simConfig.planes).forEach((precio, i) => {
+    const q = parseInt(document.getElementById(`sim-q-p${i}`)?.value || '0', 10) || 0;
+    baseOneTime += q * precio; cierres += q;
+    // Ganancia por unidad según el nivel elegido — hace tangible la tabla
+    const g = document.getElementById(`sim-g-p${i}`);
+    if (g) g.textContent = `Ganás ${fmt(precio * pctNivel)} por venta`;
+  });
+  let mrr = 0, clientesRec = 0;
+  Object.values(_simConfig.planes_continuidad).forEach((precio, i) => {
+    const q = parseInt(document.getElementById(`sim-q-c${i}`)?.value || '0', 10) || 0;
+    mrr += q * precio * pctRec; clientesRec += q;
+    const g = document.getElementById(`sim-g-c${i}`);
+    if (g) g.textContent = `Ganás ${fmt(precio * pctRec)} todos los meses`;
+  });
+
+  const oneTime = baseOneTime * pctNivel;
+  const totalMes = oneTime + mrr;
+
+  document.getElementById('sim-total-mes').textContent = fmt(totalMes);
+  document.getElementById('sim-total-anio').textContent = fmt(totalMes * 12);
+  document.getElementById('sim-desglose').innerHTML = (cierres || clientesRec)
+    ? `${cierres} plan${cierres !== 1 ? 'es' : ''} de sistema (${Math.round(pctNivel * 100)}%): <strong style="color:var(--green);">${fmt(oneTime)}</strong> &nbsp;·&nbsp; ${clientesRec} mantenimiento${clientesRec !== 1 ? 's' : ''} (${Math.round(pctRec * 100)}% mensual): <strong style="color:var(--amber);">${fmt(mrr)}</strong>`
+    : 'Elegí al menos un plan para ver tu proyección.';
+
+  // Zanahoria: cuánto más ganaría con el siguiente nivel
+  const upgrade = document.getElementById('sim-upgrade');
+  const niveles = Object.entries(_simConfig.niveles).sort((a, b) => a[1].comision - b[1].comision);
+  const idx = niveles.findIndex(([k]) => k === nivel);
+  if (baseOneTime > 0 && idx >= 0 && idx < niveles.length - 1) {
+    const [sigNivel, sigInfo] = niveles[idx + 1];
+    const delta = baseOneTime * (sigInfo.comision - pctNivel);
+    upgrade.style.display = 'block';
+    upgrade.innerHTML = `<i class="fa-solid fa-arrow-trend-up"></i> Con nivel <strong>${sigNivel}</strong> (${Math.round(sigInfo.comision * 100)}%) este mismo escenario te pagaría <strong>${fmt(delta)} más por mes</strong> — se alcanza con ${sigInfo.requisito} venta${sigInfo.requisito !== 1 ? 's' : ''} confirmada${sigInfo.requisito !== 1 ? 's' : ''} en 6 meses.`;
+  } else {
+    upgrade.style.display = 'none';
+  }
+}
+
+// Ejemplo precargado: el pitch clásico — "si cerrás 2 Plan Pro por mes ganás $X"
+async function cargarEjemploSimulador() {
+  if (!_simInicializado) await inicializarSimulador();
+  if (!_simConfig) return;
+  // Resetear todo
+  Object.keys(_simConfig.planes).forEach((_, i) => {
+    const el = document.getElementById(`sim-q-p${i}`); if (el) el.value = 0;
+  });
+  Object.keys(_simConfig.planes_continuidad).forEach((_, i) => {
+    const el = document.getElementById(`sim-q-c${i}`); if (el) el.value = 0;
+  });
+  // 2 Plan Pro (buscado por nombre, no por posición) + 2 Plan Crecimiento
+  const iPro = Object.keys(_simConfig.planes).findIndex(n => n === 'Plan Pro');
+  const iCre = Object.keys(_simConfig.planes_continuidad).findIndex(n => n === 'Plan Crecimiento');
+  const elPro = document.getElementById(`sim-q-p${iPro >= 0 ? iPro : 0}`);
+  const elCre = document.getElementById(`sim-q-c${iCre >= 0 ? iCre : 0}`);
+  if (elPro) elPro.value = 2;
+  if (elCre) elCre.value = 2;
+  calcularSimulador();
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// PWA — instalable en el celular (manifest + service worker)
+// ═══════════════════════════════════════════════════════════════════════════
+let _pwaPrompt = null;
+
+function _esIOS() { return /iphone|ipad|ipod/i.test(navigator.userAgent) && !window.MSStream; }
+function _esStandalone() {
+  return window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+}
+
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('sw.js').catch(e => console.warn('SW no registrado:', e));
+  });
+}
+
+window.addEventListener('beforeinstallprompt', (e) => {
+  e.preventDefault();
+  _pwaPrompt = e;
+  if (!_esStandalone()) {
+    const btn = document.getElementById('btn-instalar-pwa');
+    if (btn) btn.style.display = '';
+  }
+});
+
+// En iOS no existe beforeinstallprompt: mostramos el botón con instrucciones.
+window.addEventListener('load', () => {
+  if (_esIOS() && !_esStandalone()) {
+    const btn = document.getElementById('btn-instalar-pwa');
+    if (btn) btn.style.display = '';
+  }
+});
+
+async function instalarPWA() {
+  if (_pwaPrompt) {
+    _pwaPrompt.prompt();
+    const { outcome } = await _pwaPrompt.userChoice;
+    if (outcome === 'accepted') {
+      mostrarToast('¡App instalada! Buscá el ícono Avanza en tu pantalla de inicio.', 'green');
+      const btn = document.getElementById('btn-instalar-pwa');
+      if (btn) btn.style.display = 'none';
+    }
+    _pwaPrompt = null;
+  } else if (_esIOS()) {
+    mostrarToast('En iPhone: tocá Compartir (□↑) y elegí "Agregar a pantalla de inicio".', 'green');
+  } else {
+    mostrarToast('Abrí el menú del navegador y elegí "Instalar app" o "Agregar a pantalla de inicio".', 'green');
+  }
+}
+</script>
+
 </body>
 </html>

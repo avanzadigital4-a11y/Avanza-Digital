@@ -32,6 +32,14 @@
 /*.js
   Cache-Control: public, max-age=2592000
 
+# ── PWA del portal: el SW y el manifest NO se cachean ────────────────────────
+# Si el navegador cachea sw.js un mes, los deploys del portal tardan un mes en
+# llegar a los celulares instalados. Esta regla va DESPUÉS de /*.js y la pisa.
+/avanza-portal/sw.js
+  Cache-Control: no-cache
+/avanza-portal/manifest.webmanifest
+  Cache-Control: no-cache
+
 # ── Caché — HTML (1 hora) ────────────────────────────────────────────────────
 /*.html
   Cache-Control: public, max-age=3600

@@ -21,6 +21,10 @@
 # solo porque el bloqueo de abajo se aplica antes; las habilitamos explícitamente.
 /avanza-portal/portal         /avanza-portal/portal.html    200
 /avanza-portal/admin          /avanza-portal/admin.html     200
+# PWA del portal: manifest, service worker e íconos — DEBEN ir antes del 404.
+/avanza-portal/manifest.webmanifest   /avanza-portal/manifest.webmanifest   200
+/avanza-portal/sw.js                  /avanza-portal/sw.js                  200
+/avanza-portal/icons/*                /avanza-portal/icons/:splat           200
 # Todo lo demás (código fuente .py, .db, configs) → 404 duro.
 /avanza-portal/*              /404.html                     404!
 
