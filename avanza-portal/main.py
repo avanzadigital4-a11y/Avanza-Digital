@@ -513,37 +513,6 @@ def enviar_push_a_aliado(db, aliado_id, titulo, cuerpo="", url="/"):
             pass
 
 
-@app.get("/push/vapid-public")
-def push_vapid_public():
-    return {"public_key": VAPID_PUBLIC, "enabled": bool(_PUSH_OK and VAPID_PRIVATE and VAPID_PUBLIC)}
-
-
-@app.post("/push/subscribe")
-def push_subscribe(body: schemas.PushSubscribeIn,
-                   aliado: Aliado = Depends(current_aliado_required),
-                   db: Session = Depends(get_db)):
-    existente = db.query(PushSubscription).filter(PushSubscription.endpoint == body.endpoint).first()
-    if existente:
-        existente.aliado_id = aliado.id
-        existente.p256dh = body.p256dh
-        existente.auth = body.auth
-    else:
-        db.add(PushSubscription(aliado_id=aliado.id, endpoint=body.endpoint,
-                                p256dh=body.p256dh, auth=body.auth))
-    db.commit()
-    return {"ok": True}
-
-
-@app.post("/push/unsubscribe")
-def push_unsubscribe(body: schemas.PushUnsubscribeIn,
-                     aliado: Aliado = Depends(current_aliado_required),
-                     db: Session = Depends(get_db)):
-    db.query(PushSubscription).filter(
-        PushSubscription.endpoint == body.endpoint,
-        PushSubscription.aliado_id == aliado.id,
-    ).delete()
-    db.commit()
-    return {"ok": True}
 
 
 # ─── DOLAR API: tipo de cambio blue en tiempo real ───────────────────────────
@@ -1639,6 +1608,39 @@ def _es_ruta_admin(method: str, path: str) -> bool:
             return True
     return False
 
+
+
+@app.get("/push/vapid-public")
+def push_vapid_public():
+    return {"public_key": VAPID_PUBLIC, "enabled": bool(_PUSH_OK and VAPID_PRIVATE and VAPID_PUBLIC)}
+
+
+@app.post("/push/subscribe")
+def push_subscribe(body: schemas.PushSubscribeIn,
+                   aliado: Aliado = Depends(current_aliado_required),
+                   db: Session = Depends(get_db)):
+    existente = db.query(PushSubscription).filter(PushSubscription.endpoint == body.endpoint).first()
+    if existente:
+        existente.aliado_id = aliado.id
+        existente.p256dh = body.p256dh
+        existente.auth = body.auth
+    else:
+        db.add(PushSubscription(aliado_id=aliado.id, endpoint=body.endpoint,
+                                p256dh=body.p256dh, auth=body.auth))
+    db.commit()
+    return {"ok": True}
+
+
+@app.post("/push/unsubscribe")
+def push_unsubscribe(body: schemas.PushUnsubscribeIn,
+                     aliado: Aliado = Depends(current_aliado_required),
+                     db: Session = Depends(get_db)):
+    db.query(PushSubscription).filter(
+        PushSubscription.endpoint == body.endpoint,
+        PushSubscription.aliado_id == aliado.id,
+    ).delete()
+    db.commit()
+    return {"ok": True}
 
 @app.middleware("http")
 async def verificar_auth_admin(request: Request, call_next):
