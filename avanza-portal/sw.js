@@ -1,31 +1,48 @@
 /* Service Worker del Portal de Aliados — Avanza Digital
  *
- * Estrategia (v2):
- *  - Navegaciones (abrir la app): red primero; copia de respaldo si no hay señal.
- *  - CDN de fuentes e íconos (Font Awesome, Google Fonts) + /icons/ propios:
- *    cache-first con actualización en segundo plano. FIX v2: en la app
- *    instalada, si el CDN fallaba al arrancar, los íconos quedaban en blanco
- *    toda la sesión. Ahora la primera carga buena queda guardada y se usa de
- *    respaldo siempre.
- *  - TODO lo demás (llamadas a la API, datos en vivo): el SW NO lo toca.
+ * v3 — MÍNIMO Y SEGURO (lección aprendida):
+ *  - El SW SOLO intercepta navegaciones (abrir la app): red primero, con
+ *    página de respaldo si no hay señal. Eso alcanza para que el portal sea
+ *    instalable (Chrome solo exige que exista un fetch handler).
+ *  - NO toca Font Awesome, Google Fonts, íconos ni la API. El navegador ya
+ *    cachea los CDN perfecto por su cuenta (cdnjs manda immutable + 1 año).
+ *    En v2 cacheábamos esas respuestas "opacas" sin poder verificar si eran
+ *    válidas, y una copia rota quedaba envenenada y se servía para siempre
+ *    (íconos en blanco; Ctrl+Shift+R los traía de vuelta porque saltea al SW).
+ *  - AUTO-REPARACIÓN: al activarse borra los cachés envenenados de v1/v2 y,
+ *    solo en ese caso, recarga la pestaña UNA vez para que los íconos vuelvan
+ *    al instante sin que el usuario haga nada.
  *
  * Para invalidar el caché en un deploy: subir la versión de CACHE.
  */
-const CACHE = 'avanza-portal-v2';
+const CACHE = 'avanza-portal-v3';
+const CACHES_ENVENENADOS = ['avanza-portal-v1', 'avanza-portal-v2'];
 
-// Hosts cuyos recursos son estáticos e inmutables → seguros de cachear fuerte.
-const CDN_HOSTS = ['cdnjs.cloudflare.com', 'fonts.googleapis.com', 'fonts.gstatic.com'];
-
-self.addEventListener('install', (event) => {
+self.addEventListener('install', () => {
   self.skipWaiting();
 });
 
 self.addEventListener('activate', (event) => {
-  event.waitUntil(
-    caches.keys().then((keys) =>
-      Promise.all(keys.filter((k) => k !== CACHE).map((k) => caches.delete(k)))
-    ).then(() => self.clients.claim())
-  );
+  event.waitUntil((async () => {
+    const keys = await caches.keys();
+    let habiaVeneno = false;
+    await Promise.all(keys.map((k) => {
+      if (k === CACHE) return Promise.resolve();
+      if (CACHES_ENVENENADOS.includes(k)) habiaVeneno = true;
+      return caches.delete(k);
+    }));
+    await self.clients.claim();
+
+    // Auto-reparación: si veníamos de un caché envenenado (v1/v2), recargar
+    // las pestañas abiertas UNA vez para que los íconos carguen limpios.
+    // En instalaciones nuevas o futuras versiones esto no se ejecuta.
+    if (habiaVeneno) {
+      const ventanas = await self.clients.matchAll({ type: 'window' });
+      for (const c of ventanas) {
+        try { await c.navigate(c.url); } catch (e) { /* algunos navegadores no lo permiten */ }
+      }
+    }
+  })());
 });
 
 const PAGINA_OFFLINE =
@@ -36,52 +53,49 @@ const PAGINA_OFFLINE =
 
 self.addEventListener('fetch', (event) => {
   const req = event.request;
-  if (req.method !== 'GET') return;
 
-  const url = new URL(req.url);
-  const esCDN = CDN_HOSTS.includes(url.hostname);
-  const esIconoPropio = url.pathname.includes('/icons/');
+  // ÚNICA intercepción: navegaciones. Todo lo demás (CSS, fuentes, íconos,
+  // API) lo maneja el navegador directamente, sin pasar por este SW.
+  if (req.method !== 'GET' || req.mode !== 'navigate') return;
 
-  // ── 1. Navegaciones (abrir la app): red primero, respaldo si falla ─────────
-  if (req.mode === 'navigate') {
-    event.respondWith(
-      fetch(req)
-        .then((res) => {
-          const copia = res.clone();
-          caches.open(CACHE).then((c) => c.put(req, copia)).catch(() => {});
-          return res;
-        })
-        .catch(() =>
-          caches.match(req).then((hit) =>
-            hit || new Response(PAGINA_OFFLINE, { headers: { 'Content-Type': 'text/html; charset=utf-8' } })
-          )
-        )
-    );
-    return;
-  }
-
-  // ── 2. Fuentes/íconos (CDN + propios): cache-first ─────────────────────────
-  // Sin esto, si cdnjs falla al abrir la app, Font Awesome no carga y todos
-  // los íconos del portal se ven como cuadrados vacíos durante la sesión.
-  if (esCDN || esIconoPropio) {
-    event.respondWith(
-      caches.match(req).then((hit) => {
-        // Actualización en segundo plano (no bloquea la respuesta)
-        const refrescar = fetch(req)
-          .then((res) => {
-            if (res && (res.ok || res.type === 'opaque')) {
-              const copia = res.clone();
-              caches.open(CACHE).then((c) => c.put(req, copia)).catch(() => {});
-            }
-            return res;
-          })
-          .catch(() => hit || Response.error());
-        return hit || refrescar;
+  event.respondWith(
+    fetch(req)
+      .then((res) => {
+        const copia = res.clone();
+        caches.open(CACHE).then((c) => c.put(req, copia)).catch(() => {});
+        return res;
       })
-    );
-    return;
-  }
+      .catch(() =>
+        caches.match(req).then((hit) =>
+          hit || new Response(PAGINA_OFFLINE, { headers: { 'Content-Type': 'text/html; charset=utf-8' } })
+        )
+      )
+  );
+});
 
-  // ── 3. Todo lo demás (API, datos en vivo): el SW no interviene ─────────────
-  // No llamamos a respondWith → el navegador maneja el request normalmente.
+
+// ─── Web Push: mostrar la notificación y abrir la app al tocarla ───
+self.addEventListener('push', (event) => {
+  let data = {};
+  try { data = event.data ? event.data.json() : {}; }
+  catch (e) { data = { title: 'Avanza Digital', body: (event.data && event.data.text && event.data.text()) || '' }; }
+  const title = data.title || 'Avanza Digital';
+  const options = {
+    body: data.body || '',
+    icon: 'icons/icon-192.png',
+    badge: 'icons/icon-192.png',
+    data: { url: data.url || 'portal.html' },
+  };
+  event.waitUntil(self.registration.showNotification(title, options));
+});
+
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close();
+  const destino = (event.notification.data && event.notification.data.url) || 'portal.html';
+  event.waitUntil(
+    self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((wins) => {
+      for (const w of wins) { if ('focus' in w) return w.focus(); }
+      if (self.clients.openWindow) return self.clients.openWindow(destino);
+    })
+  );
 });

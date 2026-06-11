@@ -88,6 +88,7 @@ class Aliado(Base):
     # --- NOTIFICACIONES DE INACTIVIDAD ---
     notif_inact_20d_en = Column(DateTime, nullable=True)
     notif_inact_30d_en = Column(DateTime, nullable=True)
+    notif_inact_55d_en = Column(DateTime, nullable=True)
 
     # --- SUSPENSIÓN Y ELIMINACIÓN AUTOMÁTICA POR INACTIVIDAD ---
     # Día 30 sin login → cuenta suspendida (activo=False) + este campo se setea.
@@ -148,9 +149,13 @@ class Referido(Base):
     registrado_en = Column(DateTime, default=func.now())
     acuse_recibo = Column(Boolean, default=False)
     convertido = Column(Boolean, default=False)
+    # Puente CRM → Referido: si el referido se creó desde la ficha de un
+    # prospecto del CRM, acá queda el vínculo (idempotencia + badge en ficha).
+    prospecto_id = Column(Integer, ForeignKey("prospectos.id"), nullable=True)
 
     aliado = relationship("Aliado", back_populates="referidos")
     venta = relationship("Venta", back_populates="referido", uselist=False)
+    prospecto = relationship("Prospecto", back_populates="referido")
 
 
 # ─── VENTA ───────────────────────────────────────────────────────────────────
@@ -264,6 +269,9 @@ class Prospecto(Base):
     aliado      = relationship("Aliado", back_populates="prospectos")
     actividades = relationship("ActividadProspecto", back_populates="prospecto", cascade="all, delete-orphan")
     contactos   = relationship("ContactoProspecto", back_populates="prospecto", cascade="all, delete-orphan")
+    # Referido vinculado (si el aliado ya lo registró para venta desde la ficha).
+    # selectin: 1 sola query extra al listar el pipeline, sin N+1.
+    referido    = relationship("Referido", back_populates="prospecto", uselist=False, lazy="selectin")
 
 
 # ─── ACTIVIDAD DE PROSPECTO (CRM v3.0: timeline + tareas) ─────────────────────
@@ -751,3 +759,13 @@ REPUTACION_BADGES = {
     "EMBAJADOR":     {"label": "Embajador",     "icono": "👑", "desc": "3+ sub-aliados vendiendo"},
     "BOLSA_MASTER":  {"label": "Bolsa Master",  "icono": "🏆", "desc": "Tasa de éxito en bolsa ≥ 30%"},
 }
+
+
+class PushSubscription(Base):
+    __tablename__ = "push_subscriptions"
+    id        = Column(Integer, primary_key=True, index=True)
+    aliado_id = Column(Integer, ForeignKey("aliados.id"), index=True)
+    endpoint  = Column(Text, unique=True)
+    p256dh    = Column(String)
+    auth      = Column(String)
+    creado_en = Column(DateTime, default=datetime.now)

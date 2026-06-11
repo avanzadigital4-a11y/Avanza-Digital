@@ -9,6 +9,7 @@ from datetime import datetime, timedelta, timezone
 from pydantic import BaseModel
 from typing import Optional
 from models import (
+    PushSubscription,
     Aliado, Admin, AdminAuditLog, Venta, Referido, Prospecto, AuditoriaLog, LeadBolsa,
     TransaccionCredito, PostComunidad, ComentarioComunidad, AutomationLog, ActividadProspecto, ContactoProspecto,
     LinkPago, Comision, AcademiaModulo, AliadoModuloCompletado,
@@ -82,6 +83,7 @@ def _aplicar_migracion(sql: str) -> None:
 # Migraciones legacy (orden cronológico de versiones)
 _aplicar_migracion("ALTER TABLE aliados ADD COLUMN ultimo_login TIMESTAMP")
 _aplicar_migracion("ALTER TABLE aliados ADD COLUMN cantidad_logins INTEGER DEFAULT 0")
+_aplicar_migracion("ALTER TABLE aliados ADD COLUMN notif_inact_55d_en TIMESTAMP")
 
 # Migraciones para columnas nuevas de LeadBolsa y Red de Aliados
 for col_sql in [
@@ -203,6 +205,8 @@ for col_sql in [
     "ALTER TABLE auditorias_log ADD COLUMN telefono VARCHAR",
     "ALTER TABLE auditorias_log ADD COLUMN prospecto_id INTEGER",
     "ALTER TABLE auditorias_log ADD COLUMN visto_en TIMESTAMP",
+    # v3.2 — Puente CRM → Referido (registrar para venta en 1 click desde la ficha)
+    "ALTER TABLE referidos ADD COLUMN prospecto_id INTEGER",
 ]:
     _aplicar_migracion(col_sql)
 
@@ -443,8 +447,103 @@ def notificar_aliado(db, aliado_id: int, tipo: str, titulo: str,
             cuerpo=(cuerpo or "")[:600] or None,
             tab=tab,
         ))
+        try:
+            if tipo in _PUSH_TIPOS_INMEDIATOS:
+                enviar_push_a_aliado(db, aliado_id, titulo, cuerpo, "/")
+        except Exception:
+            pass
     except Exception as e:
         print(f"[NOVEDADES] No se pudo crear novedad para aliado {aliado_id}: {e}")
+
+
+# ─── WEB PUSH (notificaciones al celular) ────────────────────────────────────
+try:
+    from pywebpush import webpush, WebPushException
+    _PUSH_OK = True
+except Exception:
+    _PUSH_OK = False
+
+VAPID_PUBLIC  = os.environ.get("VAPID_PUBLIC_KEY", "")
+VAPID_PRIVATE = os.environ.get("VAPID_PRIVATE_KEY", "").replace("\\n", "\n")
+VAPID_SUBJECT = os.environ.get("VAPID_SUBJECT", "mailto:soporte@avanzadigital.digital")
+# Tipos de novedad que disparan push inmediato (opt-in por env, vacío = ninguno).
+# Ej en Render: PUSH_TIPOS_INMEDIATOS="comision,venta"
+_PUSH_TIPOS_INMEDIATOS = set(
+    t.strip() for t in os.environ.get("PUSH_TIPOS_INMEDIATOS", "").split(",") if t.strip()
+)
+
+def enviar_push_a_aliado(db, aliado_id, titulo, cuerpo="", url="/"):
+    """Manda un web-push a todos los dispositivos suscritos del aliado.
+    No-op si faltan claves VAPID / la librería / suscripciones. Limpia las
+    suscripciones muertas (404/410). Nunca rompe el flujo principal."""
+    if not (_PUSH_OK and VAPID_PRIVATE and aliado_id):
+        return
+    try:
+        subs = db.query(PushSubscription).filter(PushSubscription.aliado_id == aliado_id).all()
+    except Exception:
+        return
+    if not subs:
+        return
+    import json as _json
+    payload = _json.dumps({"title": titulo, "body": cuerpo, "url": url})
+    muertas = []
+    for sub in subs:
+        try:
+            webpush(
+                subscription_info={"endpoint": sub.endpoint, "keys": {"p256dh": sub.p256dh, "auth": sub.auth}},
+                data=payload,
+                vapid_private_key=VAPID_PRIVATE,
+                vapid_claims={"sub": VAPID_SUBJECT},
+            )
+        except WebPushException as e:
+            code = getattr(getattr(e, "response", None), "status_code", None)
+            if code in (404, 410):
+                muertas.append(sub)
+        except Exception as e:
+            print(f"[PUSH] error enviando a {aliado_id}: {e}")
+    for s in muertas:
+        try:
+            db.delete(s)
+        except Exception:
+            pass
+    if muertas:
+        try:
+            db.commit()
+        except Exception:
+            pass
+
+
+@app.get("/push/vapid-public")
+def push_vapid_public():
+    return {"public_key": VAPID_PUBLIC, "enabled": bool(_PUSH_OK and VAPID_PRIVATE and VAPID_PUBLIC)}
+
+
+@app.post("/push/subscribe")
+def push_subscribe(body: schemas.PushSubscribeIn,
+                   aliado: Aliado = Depends(current_aliado_required),
+                   db: Session = Depends(get_db)):
+    existente = db.query(PushSubscription).filter(PushSubscription.endpoint == body.endpoint).first()
+    if existente:
+        existente.aliado_id = aliado.id
+        existente.p256dh = body.p256dh
+        existente.auth = body.auth
+    else:
+        db.add(PushSubscription(aliado_id=aliado.id, endpoint=body.endpoint,
+                                p256dh=body.p256dh, auth=body.auth))
+    db.commit()
+    return {"ok": True}
+
+
+@app.post("/push/unsubscribe")
+def push_unsubscribe(body: schemas.PushUnsubscribeIn,
+                     aliado: Aliado = Depends(current_aliado_required),
+                     db: Session = Depends(get_db)):
+    db.query(PushSubscription).filter(
+        PushSubscription.endpoint == body.endpoint,
+        PushSubscription.aliado_id == aliado.id,
+    ).delete()
+    db.commit()
+    return {"ok": True}
 
 
 # ─── DOLAR API: tipo de cambio blue en tiempo real ───────────────────────────
@@ -874,6 +973,10 @@ def job_notificaciones_inactividad():
                 """
                 enviar_email(a.email, f"⚠️ {nombre_corto}, suspendimos tu cuenta — reactivala antes del {fecha_elim_str}", html)
                 try:
+                    enviar_push_a_aliado(db, a.id, "Cuenta suspendida", f"Llevás {dias_inactivo} días sin entrar. Reactivala gratis antes del {fecha_elim_str}.", "/")
+                except Exception:
+                    pass
+                try:
                     a.notif_inact_30d_en = ahora
                 except Exception:
                     pass
@@ -906,6 +1009,10 @@ def job_notificaciones_inactividad():
                 </div>
                 """
                 enviar_email(a.email, f"👋 {nombre_corto}, ¿todo bien? Hace {dias_inactivo} días que no entrás", html)
+                try:
+                    enviar_push_a_aliado(db, a.id, "¿Todo bien?", f"Hace {dias_inactivo} días que no entrás. Hay leads esperándote.", "/")
+                except Exception:
+                    pass
                 try:
                     a.notif_inact_20d_en = ahora
                 except Exception:
@@ -1181,6 +1288,48 @@ def job_generar_comisiones_recurrentes_mensual():
 
 
 scheduler.add_job(job_notificaciones_inactividad, "interval", hours=24)
+
+def job_push_digest_diario():
+    """Cron 9hs: a cada aliado con push suscrito, UN solo aviso combinando
+    leads nuevos (ultimas 24h) + tareas vencidas. Batch para no spamear."""
+    from database import SessionLocal
+    db = SessionLocal()
+    try:
+        ahora = datetime.now()
+        hace_24h = ahora - timedelta(days=1)
+        leads_nuevos = db.query(LeadBolsa).filter(
+            LeadBolsa.estado == "disponible",
+            LeadBolsa.fecha_carga >= hace_24h,
+        ).count()
+        aliado_ids = [r[0] for r in db.query(PushSubscription.aliado_id).distinct().all()]
+        for aid in aliado_ids:
+            try:
+                vencidas = db.query(ActividadProspecto).filter(
+                    ActividadProspecto.aliado_id == aid,
+                    ActividadProspecto.tipo == "tarea",
+                    ActividadProspecto.completada == False,
+                    ActividadProspecto.vence_en != None,
+                    ActividadProspecto.vence_en < ahora,
+                ).count()
+                partes = []
+                if leads_nuevos:
+                    plu = "s" if leads_nuevos != 1 else ""
+                    partes.append(f"{leads_nuevos} lead{plu} nuevo{plu} en la bolsa")
+                if vencidas:
+                    plu = "s" if vencidas != 1 else ""
+                    partes.append(f"{vencidas} seguimiento{plu} vencido{plu}")
+                if not partes:
+                    continue
+                cuerpo = "Buen dia! Tenes " + " y ".join(partes) + "."
+                enviar_push_a_aliado(db, aid, "Avanza Digital", cuerpo, "/")
+            except Exception as e:
+                print(f"[DIGEST PUSH] aliado {aid}: {e}")
+    except Exception as e:
+        print(f"[DIGEST PUSH] {e}")
+    finally:
+        db.close()
+
+scheduler.add_job(job_push_digest_diario, "cron", hour=9)
 scheduler.add_job(job_estipendio_mensual, "interval", hours=24)
 
 
@@ -1199,6 +1348,48 @@ def job_eliminacion_definitiva():
     try:
         ahora = datetime.now()
         eliminados = 0
+
+        # ── AVISO "ULTIMA OPORTUNIDAD": faltan <= 5 dias para el borrado ──
+        try:
+            limite_aviso = ahora + timedelta(days=5)
+            no_repetir_uo = ahora - timedelta(days=10)
+            por_borrar = db.query(Aliado).filter(
+                Aliado.activo == False,
+                Aliado.fecha_eliminacion_programada != None,
+                Aliado.fecha_eliminacion_programada > ahora,
+                Aliado.fecha_eliminacion_programada <= limite_aviso,
+            ).all()
+            for a in por_borrar:
+                ya = getattr(a, "notif_inact_55d_en", None)
+                if ya and ya > no_repetir_uo:
+                    continue
+                fstr = a.fecha_eliminacion_programada.strftime("%d/%m/%Y")
+                nombre_corto = (a.nombre or "aliado").split()[0]
+                if a.email:
+                    try:
+                        enviar_email(
+                            a.email,
+                            f"\u23f3 {nombre_corto}, tu cuenta se elimina el {fstr} \u2014 reactivala gratis",
+                            f"<div style='font-family:Inter,sans-serif;background:#050505;color:#e2e8f0;padding:32px;max-width:560px;margin:0 auto;border-radius:12px;border:1px solid #1e1e1e;'>"
+                            f"<h2 style='color:#f87171;margin:0 0 12px;'>Ultima oportunidad</h2>"
+                            f"<p style='color:#a1a1aa;line-height:1.6;'>Hola <strong style='color:#fff;'>{nombre_corto}</strong>, tu cuenta de aliado se elimina definitivamente el <strong style='color:#f87171;'>{fstr}</strong> junto con tu codigo y todo el historial.</p>"
+                            f"<p style='color:#a1a1aa;line-height:1.6;'>Para conservarla, solo tenes que <strong style='color:#fff;'>iniciar sesion</strong> antes de esa fecha. Es gratis y se reactiva al instante.</p>"
+                            f"</div>",
+                        )
+                    except Exception:
+                        pass
+                try:
+                    enviar_push_a_aliado(db, a.id, "Ultima oportunidad",
+                                         f"Tu cuenta se elimina el {fstr}. Entra para reactivarla gratis.", "/")
+                except Exception:
+                    pass
+                try:
+                    a.notif_inact_55d_en = ahora
+                except Exception:
+                    pass
+            db.commit()
+        except Exception as e:
+            print(f"[ULTIMA OPORTUNIDAD] {e}")
 
         candidatos = (
             db.query(Aliado)
@@ -3085,9 +3276,77 @@ def toggle_interesante(id: int, request: Request, db: Session = Depends(get_db))
     return {"interesante": p.interesante}
 
 
+# ─── IMPORT MASIVO DE PROSPECTOS (ALIADO -> su CRM personal) ─────────────────
+def _clave_prospecto_dup(nombre: str, contacto: str) -> set:
+    """Claves de dedup para prospectos del propio aliado: nombre normalizado
+    y/o telefono (solo digitos, >= 6)."""
+    import re as _re
+    claves = set()
+    n = (nombre or "").strip().lower()
+    if n:
+        claves.add(("nom", n))
+    tel = _re.sub(r"\D", "", contacto or "")
+    if len(tel) >= 6:
+        claves.add(("tel", tel))
+    return claves
+
+
+@app.post("/prospectos/bulk")
+def crear_prospectos_bulk(body: schemas.ProspectosBulkIn,
+                          aliado: Aliado = Depends(current_aliado_required),
+                          db: Session = Depends(get_db)):
+    """Importa una lista de prospectos al CRM personal del aliado de un saque.
+    Deduplica contra los prospectos que el aliado ya tiene (mismo nombre o mismo
+    telefono) y contra repetidos dentro del propio lote. Los duplicados se omiten
+    y se reportan; el resto entra en 'sin_contactar'."""
+    items = body.prospectos or []
+    if not items:
+        raise HTTPException(400, "La lista esta vacia.")
+    indice = set()
+    for p in aliado.prospectos:
+        indice |= _clave_prospecto_dup(p.nombre, getattr(p, "contacto", "") or "")
+    insertados = 0
+    omitidos = []
+    for it in items:
+        nombre = (it.nombre or "").strip()
+        if not nombre:
+            continue
+        claves = _clave_prospecto_dup(nombre, it.contacto)
+        if claves & indice:
+            omitidos.append(nombre)
+            continue
+        indice |= claves
+        db.add(Prospecto(
+            aliado_id=aliado.id,
+            nombre=nombre,
+            contacto=(it.contacto or "").strip(),
+            plan_interes=(it.plan_interes or "").strip(),
+            rubro=(it.rubro or "").strip() or None,
+            nota=(it.nota or "").strip(),
+        ))
+        insertados += 1
+    if insertados:
+        db.commit()
+    msg = f"{insertados} prospecto(s) importado(s)."
+    if omitidos:
+        msg += f" {len(omitidos)} duplicado(s) omitido(s)."
+    return {"insertados": insertados, "omitidos": len(omitidos),
+            "omitidos_detalle": omitidos[:50], "mensaje": msg}
+
+
 @app.delete("/prospectos/{id}/eliminar")
 def eliminar_prospecto(id: int, request: Request, db: Session = Depends(get_db)):
     p = _get_prospecto_owned_or_admin(id, request, db)
+    # Soltar las referencias externas ANTES de borrar: en Postgres las FK sin
+    # ON DELETE rechazarían el delete. Las filas vinculadas sobreviven sueltas:
+    # - LeadBolsa/AuditoriaLog quedan re-convertibles (los puentes lo permiten).
+    # - El Referido (atribución de venta) NUNCA se borra: solo pierde el vínculo.
+    db.query(LeadBolsa).filter(LeadBolsa.prospecto_id == p.id)\
+        .update({LeadBolsa.prospecto_id: None}, synchronize_session=False)
+    db.query(AuditoriaLog).filter(AuditoriaLog.prospecto_id == p.id)\
+        .update({AuditoriaLog.prospecto_id: None}, synchronize_session=False)
+    db.query(Referido).filter(Referido.prospecto_id == p.id)\
+        .update({Referido.prospecto_id: None}, synchronize_session=False)
     db.delete(p); db.commit()
     return {"mensaje": "Prospecto eliminado."}
 
@@ -3802,6 +4061,63 @@ def marcar_ganado(id: int, request: Request, valor_usd: float | None = None,
     return {"mensaje": "Marcado como ganado.", "estado": p.estado}
 
 
+@app.post("/prospectos/{id}/registrar-referido")
+def registrar_referido_desde_crm(id: int, request: Request, plan: str = "",
+                                 notas: str = "", db: Session = Depends(get_db)):
+    """Puente CRM → Referido: registra el prospecto para venta en 1 click.
+
+    Crea el Referido (el registro contractual que atribuye la venta al aliado,
+    obligatorio ANTES de que el cliente pague) con los datos del prospecto,
+    sin volver a tipear nada. Idempotente: si ya fue registrado, devuelve el
+    referido existente. Mismas reglas de negocio que /referidos/registrar.
+    """
+    p = _get_prospecto_owned_or_admin(id, request, db)
+    a = db.query(Aliado).filter(Aliado.id == p.aliado_id).first()
+    if not a:
+        raise HTTPException(404, "Aliado no encontrado.")
+    if (getattr(a, "tipo_aliado", "canal1") or "canal1") == "canal2":
+        raise HTTPException(403, "Referidos no disponibles para aliados Canal 2.")
+    if plan not in PLANES:
+        raise HTTPException(400, "Plan inválido. Elegí uno de los planes de sistema.")
+
+    # Idempotencia: un prospecto se registra para venta UNA sola vez.
+    existente = db.query(Referido).filter(Referido.prospecto_id == p.id).first()
+    if existente:
+        return {
+            "mensaje": "Este lead ya estaba registrado para venta.",
+            "id_referido": existente.id,
+            "plan": existente.plan_elegido,
+            "ya_existia": True,
+        }
+
+    notas_final = (notas or "").strip() or f"Registrado desde Mi CRM (lead #{p.id})."
+    r = Referido(
+        aliado_id=a.id,
+        nombre_cliente=p.nombre,
+        plan_elegido=plan,
+        notas=notas_final,
+        prospecto_id=p.id,
+    )
+    db.add(r)
+    if not (p.plan_interes or "").strip():
+        p.plan_interes = plan
+    db.flush()
+    db.add(ActividadProspecto(
+        prospecto_id=p.id, aliado_id=p.aliado_id, tipo="sistema",
+        descripcion=f"🔒 Registrado para venta — Referido #{r.id} ({plan}). "
+                    f"La venta queda atribuida a tu cuenta."))
+    db.commit()
+    db.refresh(r)
+    return {
+        "mensaje": f"¡{p.nombre} registrado para venta! La atribución es tuya.",
+        "id_referido": r.id,
+        "plan": plan,
+        "valor_plan": PLANES[plan],
+        "comision_estimada": round(PLANES[plan] * a.comision_pct, 2),
+        "ya_existia": False,
+    }
+
+
 # ═══════════════════════════════════════════════════════════════════════════
 # SALTO 3 — Empresa ↔ contactos: varios interlocutores por prospecto
 # ═══════════════════════════════════════════════════════════════════════════
@@ -3874,6 +4190,7 @@ def _prospecto_row(p):
         "id": p.id, "nombre": p.nombre, "contacto": p.contacto,
         "plan_interes": p.plan_interes, "estado": p.estado,
         "nota": p.nota, "interesante": p.interesante,
+        "referido_id": p.referido.id if getattr(p, "referido", None) else None,
         "piloto_automatico": getattr(p, "piloto_automatico", False) or False,
         "fecha_contacto":  p.fecha_contacto.strftime("%d/%m/%Y") if p.fecha_contacto else None,
         "fecha_respuesta": p.fecha_respuesta.strftime("%d/%m/%Y") if p.fecha_respuesta else None,

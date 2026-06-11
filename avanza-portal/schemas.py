@@ -81,6 +81,28 @@ class CrearProspectoIn(_Base):
     nota: str = ""
 
 
+class ProspectoBulkItem(_Base):
+    nombre: str = ""
+    contacto: str = ""
+    plan_interes: str = ""
+    rubro: str = ""
+    nota: str = ""
+
+
+class ProspectosBulkIn(_Base):
+    prospectos: list[ProspectoBulkItem] = []
+
+
+class PushSubscribeIn(_Base):
+    endpoint: str
+    p256dh: str
+    auth: str
+
+
+class PushUnsubscribeIn(_Base):
+    endpoint: str
+
+
 class ActualizarNotaIn(_Base):
     nota: str = Field("", max_length=4000)
 

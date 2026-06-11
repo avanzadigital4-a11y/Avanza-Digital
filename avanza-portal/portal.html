@@ -1486,6 +1486,14 @@ html.avz-collapsed #avz-sidebar .avz-exit span{ display:none; }
         </div>
       </div>
 
+      <div class="bento-box" id="tareas-hoy-box" style="margin-bottom:24px;display:none;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+          <h3 style="font-size:0.95rem;font-weight:700;"><i class="fa-solid fa-list-check" style="color:var(--amber);margin-right:6px;"></i>Mis tareas de hoy</h3>
+          <span id="tareas-hoy-count" style="font-size:0.75rem;font-weight:800;color:var(--amber);"></span>
+        </div>
+        <div id="tareas-hoy-list"></div>
+      </div>
+
       <!-- [WHATSAPP BANNER MOVED: see below after NBA] -->
 
       <!-- ONBOARDING CHECKLIST — siempre visible, con fallback estático si la API falla -->
@@ -2688,6 +2696,18 @@ html.avz-collapsed #avz-sidebar .avz-exit span{ display:none; }
             <i class="fa-solid fa-plus"></i> &nbsp;Agregar prospecto
           </button>
           <span id="pl-np-msg" style="font-size:.82rem;color:var(--green);display:none;"><i class="fa-solid fa-check"></i> Cargado correctamente</span>
+          <button onclick="plToggleImport()" id="pl-import-btn" style="background:rgba(255,255,255,0.04);color:var(--text-muted);border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px 18px;font-size:.85rem;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;"><i class="fa-solid fa-file-arrow-up"></i> &nbsp;Importar lista (CSV o pegar)</button>
+        </div>
+
+        <div id="pl-import-panel" style="display:none;margin-top:14px;border:1px solid var(--border);border-radius:var(--radius-sm);padding:16px;background:rgba(255,255,255,0.02);">
+          <div style="font-size:.82rem;color:var(--text-muted);margin-bottom:8px;line-height:1.5;">Peg&aacute; tu lista (una por l&iacute;nea) o sub&iacute; un CSV. Acepta encabezados <b>nombre, contacto, plan, rubro, nota</b> en cualquier orden; si no hay encabezado, toma ese mismo orden. Se omiten autom&aacute;ticamente los que ya tengas cargados (mismo nombre o tel&eacute;fono).</div>
+          <textarea id="pl-import-text" rows="6" placeholder="Metal&uacute;rgica San Mart&iacute;n, +54 9 342 555 1234, Pro, metalurgia, viene de referido&#10;Talleres del Litoral, 3415551234, Industrial" style="width:100%;box-sizing:border-box;background:var(--bg);color:var(--text);border:1px solid var(--border);border-radius:8px;padding:10px;font-size:.82rem;font-family:monospace;resize:vertical;"></textarea>
+          <div style="display:flex;gap:10px;align-items:center;margin-top:10px;flex-wrap:wrap;">
+            <input type="file" id="pl-import-file" accept=".csv,.txt" onchange="plImportFile(event)" style="font-size:.8rem;color:var(--text-muted);max-width:230px;">
+            <button onclick="plPreviewImport()" style="background:rgba(255,255,255,0.04);color:var(--text);border:1px solid var(--border);border-radius:8px;padding:8px 16px;font-size:.82rem;font-weight:600;cursor:pointer;">Previsualizar</button>
+            <button onclick="plDoImport()" id="pl-import-do" style="background:var(--primary);color:white;border:none;border-radius:8px;padding:8px 18px;font-size:.82rem;font-weight:700;cursor:pointer;">Importar</button>
+            <span id="pl-import-msg" style="font-size:.8rem;color:var(--text-muted);"></span>
+          </div>
         </div>
       </div>
 
@@ -2788,45 +2808,6 @@ html.avz-collapsed #avz-sidebar .avz-exit span{ display:none; }
       </div>
 
     </div><!-- /tab-pipeline -->
-
-    <div id="tab-referidos" class="tab-panel">
-      <div class="form-wrap">
-        <div class="bento-box">
-          <div class="form-title"><i class="fa-solid fa-user-plus" style="color:var(--primary);"></i> &nbsp;Registrar un prospecto</div>
-          <div class="form-desc">Completá este formulario <strong style="color:white;">antes de que el cliente pague</strong>. Es el único requisito obligatorio del contrato para que la venta te sea atribuida.</div>
-          <div class="alert-box">
-            <i class="fa-solid fa-triangle-exclamation"></i>
-            <span><strong>Regla crítica:</strong> Si el cliente paga antes de que lo registres acá, la venta no puede atribuirse a tu cuenta. Registrá primero, confirmá el pago después.</span>
-          </div>
-          <div class="form-row">
-            <label>Nombre completo del cliente o empresa</label>
-            <input type="text" id="ref-nombre" placeholder="Ej: Metalúrgica San Martín S.A.">
-          </div>
-          <div class="form-row">
-            <label>Plan elegido</label>
-            <select id="ref-plan">
-              <option value="">— Seleccioná un plan —</option>
-              <option value="Plan Base">Plan Base — USD 1.050</option>
-              <option value="Plan Pro">Plan Pro — USD 2.900</option>
-              <option value="Plan Industrial">Plan Industrial — USD 4.900</option>
-              <option value="Estrategico 360">Estratégico 360 — USD 7.500</option>
-            </select>
-          </div>
-          <div class="form-row">
-            <label>Notas (opcional)</label>
-            <textarea id="ref-notas" rows="3" placeholder="Ej: El cliente evalúa Plan Pro e Industrial, pide demo esta semana..."></textarea>
-          </div>
-          <button class="btn-primary" id="btn-ref" onclick="registrarReferido()" style="max-width:300px;">
-            <i class="fa-solid fa-paper-plane"></i> Registrar prospecto ahora
-          </button>
-          <div class="success-box" id="ref-success"></div>
-        </div>
-      </div>
-      <div class="table-wrap">
-        <div class="table-head"><h3><i class="fa-solid fa-list-check" style="color:var(--primary);"></i> &nbsp;Mis prospectos registrados</h3></div>
-        <div id="tabla-referidos"></div>
-      </div>
-    </div>
 
     <div id="tab-ventas" class="tab-panel">
       <div class="table-wrap">
@@ -3565,6 +3546,21 @@ html.avz-collapsed #avz-sidebar .avz-exit span{ display:none; }
       <div style="display:flex; gap:6px; flex-wrap:wrap; margin-top:8px;">
         <button onclick="guardarContactoFicha()" style="background:rgba(59,130,246,0.15); color:var(--primary); border:1px solid rgba(59,130,246,0.3); border-radius:8px; padding:8px 14px; font-size:.8rem; font-weight:700; cursor:pointer;"><i class="fa-solid fa-floppy-disk"></i> Guardar</button>
         <button onclick="marcarGanadoFicha()" style="background:rgba(74,222,128,0.15); color:var(--green); border:1px solid rgba(74,222,128,0.3); border-radius:8px; padding:8px 14px; font-size:.8rem; font-weight:700; cursor:pointer;"><i class="fa-solid fa-trophy"></i> Marcar ganado</button>
+        <button id="ficha-btn-reg-venta" onclick="toggleRegistrarVentaFicha()" style="background:rgba(239,68,68,0.12); color:#f87171; border:1px solid rgba(239,68,68,0.35); border-radius:8px; padding:8px 14px; font-size:.8rem; font-weight:700; cursor:pointer;"><i class="fa-solid fa-lock"></i> Registrar para venta</button>
+        <button onclick="eliminarProspectoFicha()" title="Eliminar lead (definitivo)" style="margin-left:auto; background:transparent; color:var(--text-dim); border:1px solid var(--border); border-radius:8px; width:34px; height:34px; cursor:pointer; font-size:.85rem;"><i class="fa-regular fa-trash-can"></i></button>
+      </div>
+      <div id="ficha-ref-panel" style="display:none; margin-top:10px; background:rgba(239,68,68,0.05); border:1px solid rgba(239,68,68,0.3); border-radius:10px; padding:12px;">
+        <div style="font-size:.76rem; color:#fca5a5; line-height:1.5; margin-bottom:10px;"><i class="fa-solid fa-triangle-exclamation"></i> Esto crea el <strong>registro oficial que atribuye la venta a tu cuenta</strong> (el Paso 2 del pipeline, sin volver a tipear nada). Hacelo <strong>ANTES</strong> de que el cliente pague.</div>
+        <div style="display:flex; gap:8px; flex-wrap:wrap;">
+          <select id="ficha-ref-plan" style="flex:1; min-width:180px; background:#111; border:1px solid var(--border); color:white; padding:9px; border-radius:8px; font-size:.84rem;">
+            <option value="">— Seleccioná el plan —</option>
+            <option value="Plan Base">Plan Base — USD 1.050</option>
+            <option value="Plan Pro">Plan Pro — USD 2.900</option>
+            <option value="Plan Industrial">Plan Industrial — USD 4.900</option>
+            <option value="Estrategico 360">Estratégico 360 — USD 7.500</option>
+          </select>
+          <button onclick="confirmarRegistrarVentaFicha()" id="ficha-ref-confirm" style="background:#ef4444; color:#fff; border:none; border-radius:8px; padding:9px 18px; font-size:.82rem; font-weight:800; cursor:pointer;"><i class="fa-solid fa-paper-plane"></i> Registrar</button>
+        </div>
       </div>
       <div id="ficha-contacto-acciones" style="margin-top:10px;"></div>
     </div>
@@ -4130,6 +4126,20 @@ html.avz-collapsed #avz-sidebar .avz-exit span{ display:none; }
          TAB MI CUENTA ⚙️
     ══════════════════════════════════════════════════════════════════ -->
     <div id="tab-mi-cuenta" class="tab-panel">
+
+      <!-- NOTIFICACIONES -->
+      <div class="bento-box" style="margin-bottom:20px;">
+        <h3 style="font-size:0.95rem; font-weight:700; margin-bottom:4px;">
+          <i class="fa-solid fa-bell" style="color:var(--primary);"></i>
+          &nbsp;Notificaciones al celular
+        </h3>
+        <p style="font-size:0.82rem; color:var(--text-muted); margin-bottom:14px;">Recib&iacute; avisos de leads nuevos y seguimientos pendientes en este dispositivo, aunque tengas la app cerrada. En iPhone, primero agreg&aacute; el portal a la pantalla de inicio.</p>
+        <div style="display:flex; gap:12px; align-items:center; flex-wrap:wrap;">
+          <span id="push-estado" style="font-size:.85rem; font-weight:600; color:var(--text-muted);">&mdash;</span>
+          <button id="push-btn-on" onclick="activarNotificaciones()" style="display:none; background:var(--primary); color:white; border:none; border-radius:8px; padding:8px 18px; font-size:.82rem; font-weight:700; cursor:pointer;">Activar</button>
+          <button id="push-btn-off" onclick="desactivarNotificaciones()" style="display:none; background:rgba(255,255,255,0.04); color:var(--text-muted); border:1px solid var(--border); border-radius:8px; padding:8px 18px; font-size:.82rem; font-weight:600; cursor:pointer;">Desactivar</button>
+        </div>
+      </div>
 
       <!-- DATOS PERSONALES -->
       <div class="bento-box" style="margin-bottom:20px;">
@@ -5088,6 +5098,8 @@ function cambiarTab(tab, btn) {
 
   if(tab==='prospectos') cargarProspectos();
   if(tab==='pipeline') { cargarProspectosPipeline(); plRenderReferidos(); plRenderVentas(); }
+  if(tab==='dashboard') { renderTareasHoy(); }
+  if(tab==='mi-cuenta') { try { _renderEstadoPush(); } catch (e) {} }
   if(tab==='selector-rubro') cargarBadgesRubro();
   if(tab==='bolsa') {
     // Soft-gate: verificar si el aliado completó al menos los primeros 3 módulos de la Academia
@@ -5367,13 +5379,13 @@ async function intentarAutoLogin() {
 }
 
 async function cargarTodo() {
+  try { _initPush(); } catch (e) {}
   try { const res = await apiFetch(`${API}/aliados/${aliado.codigo}`); if(res.ok) aliado = await res.json(); } catch {}
   
   // Configurar visibilidad de tabs y bloques según canal del aliado
   configurarCanal();
 
   renderDashboard(); 
-  renderReferidos(); 
   renderVentas(); 
   renderComisiones();
   renderLeaderboard();
@@ -5518,6 +5530,7 @@ function getMotivationalMsg(aliado) {
 }
 
 function renderDashboard() {
+  try { renderTareasHoy(); } catch (e) {}
   const nivel = aliado.nivel_calculado || aliado.nivel_actual || 'BASIC';
   const p = Math.round(pct(nivel)*100);
   const v6 = aliado.ventas_6m || 0;
@@ -6655,6 +6668,7 @@ function plRenderProspectos() {
         ${p.estado==='sin_contactar'?`<button onclick="accionProspecto(${p.id},'contactar');cargarProspectosPipeline()" style="background:var(--primary);color:white;border:none;border-radius:8px;padding:7px 13px;font-size:.76rem;font-weight:700;cursor:pointer;white-space:nowrap;"><i class="fa-solid fa-paper-plane"></i> Contacté</button>`:''}
         ${p.estado==='contactado'?`<button onclick="accionProspecto(${p.id},'propuesta_enviada');cargarProspectosPipeline()" style="background:rgba(59,130,246,0.15);color:var(--primary);border:1px solid rgba(59,130,246,0.35);border-radius:8px;padding:7px 13px;font-size:.76rem;font-weight:700;cursor:pointer;white-space:nowrap;"><i class="fa-solid fa-file-invoice"></i> Envié propuesta</button>`:''}
         ${p.estado!=='perdido'?`<button onclick="abrirMarcarPerdido(${p.id},'${(p.nombre||'').replace(/'/g,"\\'")}');setTimeout(cargarProspectosPipeline,500)" title="Marcar como perdido" style="background:rgba(113,113,122,0.12);color:#a1a1aa;border:1px solid rgba(113,113,122,0.3);border-radius:8px;padding:7px 12px;font-size:.76rem;cursor:pointer;"><i class="fa-solid fa-circle-xmark"></i></button>`:''}
+        <button onclick="eliminarLeadDirecto(${p.id})" title="Eliminar lead (definitivo)" style="background:transparent;color:var(--text-dim);border:1px solid var(--border);border-radius:8px;padding:7px 11px;font-size:.76rem;cursor:pointer;"><i class="fa-regular fa-trash-can"></i></button>
       </div>
     </div>
   `).join('');
@@ -6722,6 +6736,7 @@ function abrirFichaLead(id) {
   document.getElementById('ficha-valor').value     = (p && (p.valor_usd != null)) ? p.valor_usd : '';
   document.getElementById('ficha-etiquetas').value = (p && p.etiquetas) ? p.etiquetas : '';
   _fichaLeadNombre = (p && p.nombre) ? p.nombre : '';
+  _pintarBtnRegistrarVenta(p);
   _renderAccionesFicha();
   document.getElementById('ficha-timeline').innerHTML = '<div style="color:var(--text-dim);font-size:.82rem;padding:10px 0;">Cargando…</div>';
   document.getElementById('modal-ficha-lead').classList.add('open');
@@ -6884,6 +6899,295 @@ async function marcarGanadoFicha() {
   } catch { mostrarToast('Error de conexión.', 'red'); }
 }
 
+// ─── Puente CRM → Referido: registrar para venta en 1 click ─────────────────
+function _pintarBtnRegistrarVenta(p) {
+  const btn = document.getElementById('ficha-btn-reg-venta');
+  const panel = document.getElementById('ficha-ref-panel');
+  if (!btn) return;
+  if (panel) panel.style.display = 'none';
+
+  // Canal 2 no usa referidos (misma regla que el Paso 2 del pipeline)
+  if (aliado && (aliado.tipo_aliado || 'canal1') === 'canal2') {
+    btn.style.display = 'none';
+    return;
+  }
+  btn.style.display = '';
+
+  if (p && p.referido_id) {
+    btn.innerHTML = '<i class="fa-solid fa-circle-check"></i> Registrado para venta';
+    btn.style.background = 'rgba(74,222,128,0.12)';
+    btn.style.color = 'var(--green)';
+    btn.style.borderColor = 'rgba(74,222,128,0.35)';
+    btn.style.cursor = 'default';
+    btn.disabled = true;
+  } else {
+    btn.innerHTML = '<i class="fa-solid fa-lock"></i> Registrar para venta';
+    btn.style.background = 'rgba(239,68,68,0.12)';
+    btn.style.color = '#f87171';
+    btn.style.borderColor = 'rgba(239,68,68,0.35)';
+    btn.style.cursor = 'pointer';
+    btn.disabled = false;
+    // Precargar el plan de interés del lead si coincide con un plan de sistema
+    const sel = document.getElementById('ficha-ref-plan');
+    if (sel && p && p.plan_interes) {
+      const opt = Array.from(sel.options).find(o => o.value === p.plan_interes);
+      sel.value = opt ? p.plan_interes : '';
+    } else if (sel) { sel.value = ''; }
+  }
+}
+
+function toggleRegistrarVentaFicha() {
+  const panel = document.getElementById('ficha-ref-panel');
+  if (!panel) return;
+  panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
+}
+
+async function confirmarRegistrarVentaFicha() {
+  if (!_fichaLeadId) return;
+  const plan = (document.getElementById('ficha-ref-plan').value || '').trim();
+  if (!plan) { mostrarToast('Elegí el plan que va a contratar el cliente.', 'red'); return; }
+  const btn = document.getElementById('ficha-ref-confirm');
+  btn.disabled = true; btn.innerHTML = '<span class="spinner"></span>';
+  try {
+    const res = await apiFetch(`${API}/prospectos/${_fichaLeadId}/registrar-referido?plan=${encodeURIComponent(plan)}`, { method: 'POST' });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.detail || 'No se pudo registrar.');
+    mostrarToast(data.ya_existia
+      ? 'Este lead ya estaba registrado para venta.'
+      : `🔒 ${data.mensaje} Comisión estimada: USD ${(data.comision_estimada || 0).toLocaleString('es-AR')}.`, 'green');
+    // Reflejar en memoria local + UI sin esperar al refetch
+    const p = (typeof todosProspectosPipeline !== 'undefined' && todosProspectosPipeline)
+      ? todosProspectosPipeline.find(x => x.id === _fichaLeadId) : null;
+    if (p) p.referido_id = data.id_referido;
+    _pintarBtnRegistrarVenta(p);
+    cargarFichaLead(_fichaLeadId);  // timeline con la actividad nueva
+    setTimeout(() => { cargarTodo(); if (typeof plRenderReferidos === 'function') plRenderReferidos(); }, 800);
+  } catch (e) {
+    mostrarToast(e.message || 'Error al registrar para venta.', 'red');
+  }
+  btn.disabled = false; btn.innerHTML = '<i class="fa-solid fa-paper-plane"></i> Registrar';
+}
+
+// ─── Eliminar lead del CRM (definitivo; para errores/duplicados) ─────────────
+async function eliminarProspectoFicha() {
+  if (!_fichaLeadId) return;
+  const nombre = _fichaLeadNombre || 'este lead';
+  if (!confirm(`¿Eliminar "${nombre}" definitivamente?\n\nSe borra el lead con todo su historial y tareas. Si el cliente no compró pero existió la conversación, te conviene marcarlo PERDIDO (conserva el historial y tus métricas).\n\nEliminar es para duplicados o errores de carga.`)) return;
+  try {
+    const res = await apiFetch(`${API}/prospectos/${_fichaLeadId}/eliminar`, { method: 'DELETE' });
+    if (!res.ok) {
+      const d = await res.json().catch(() => ({}));
+      throw new Error(d.detail || 'No se pudo eliminar.');
+    }
+    mostrarToast('Lead eliminado.', 'green');
+    document.getElementById('modal-ficha-lead').classList.remove('open');
+    if (typeof cargarProspectosPipeline === 'function') cargarProspectosPipeline();
+  } catch (e) {
+    mostrarToast(e.message || 'Error al eliminar.', 'red');
+  }
+}
+
+// ─── Import masivo de prospectos (aliado -> su CRM) ───
+function plToggleImport() {
+  const el = document.getElementById('pl-import-panel');
+  if (el) el.style.display = (el.style.display === 'none' || !el.style.display) ? 'block' : 'none';
+}
+function plImportFile(ev) {
+  const f = ev.target.files && ev.target.files[0];
+  if (!f) return;
+  const r = new FileReader();
+  r.onload = () => { const t = document.getElementById('pl-import-text'); if (t) t.value = r.result; plPreviewImport(); };
+  r.readAsText(f);
+}
+function _plParseImport(text) {
+  const HEADERS = {
+    nombre: ['nombre','empresa','cliente','razon social','razón social'],
+    contacto: ['contacto','telefono','teléfono','whatsapp','celular','tel','email','correo'],
+    plan_interes: ['plan','plan_interes','plan de interes','plan de interés','interes','interés'],
+    rubro: ['rubro','sector','industria'],
+    nota: ['nota','notas','observacion','observación','observaciones','comentario']
+  };
+  const lines = (text || '').split(/\r?\n/).map(l => l.trim()).filter(l => l.length);
+  if (!lines.length) return [];
+  const delim = lines[0].indexOf('\t') >= 0 ? '\t' : ((lines[0].indexOf(';') >= 0 && lines[0].indexOf(',') < 0) ? ';' : ',');
+  const split = l => l.split(delim).map(c => c.trim().replace(/^["']+|["']+$/g, ''));
+  const first = split(lines[0]).map(c => c.toLowerCase());
+  let map = null, start = 0;
+  const isHeader = first.some(c => Object.values(HEADERS).some(arr => arr.indexOf(c) >= 0));
+  if (isHeader) {
+    map = {};
+    first.forEach((c, i) => { for (const k in HEADERS) { if (HEADERS[k].indexOf(c) >= 0) map[k] = i; } });
+    start = 1;
+  }
+  const order = ['nombre','contacto','plan_interes','rubro','nota'];
+  const out = [];
+  for (let i = start; i < lines.length; i++) {
+    const cells = split(lines[i]);
+    const obj = { nombre: '', contacto: '', plan_interes: '', rubro: '', nota: '' };
+    if (map) { for (const k in map) obj[k] = cells[map[k]] || ''; }
+    else { order.forEach((k, idx) => { obj[k] = cells[idx] || ''; }); }
+    if (obj.nombre) out.push(obj);
+  }
+  return out;
+}
+function plPreviewImport() {
+  const ta = document.getElementById('pl-import-text');
+  const arr = _plParseImport(ta ? ta.value : '');
+  const msg = document.getElementById('pl-import-msg');
+  if (msg) msg.textContent = arr.length ? (arr.length + ' prospecto(s) detectado(s) para importar.') : 'No se detectaron filas válidas (falta el nombre).';
+  return arr;
+}
+async function plDoImport() {
+  const arr = plPreviewImport();
+  if (!arr.length) return;
+  const btn = document.getElementById('pl-import-do');
+  if (btn) { btn.disabled = true; btn.textContent = 'Importando…'; }
+  try {
+    const res = await apiFetch(`${API}/prospectos/bulk`, { method: 'POST', body: { prospectos: arr } });
+    const d = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(d.detail || 'No se pudo importar.');
+    mostrarToast(d.mensaje || ((d.insertados || 0) + ' importados.'), 'green');
+    const ta = document.getElementById('pl-import-text'); if (ta) ta.value = '';
+    const msg = document.getElementById('pl-import-msg');
+    if (msg) msg.textContent = (d.omitidos ? ('Omitidos por duplicado: ' + (d.omitidos_detalle || []).join(', ')) : '');
+    if (typeof cargarProspectosPipeline === 'function') cargarProspectosPipeline();
+  } catch (e) {
+    mostrarToast(e.message || 'Error al importar.', 'red');
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = 'Importar'; }
+  }
+}
+
+// ─── Mis tareas de hoy (pantalla de entrada) ───
+async function renderTareasHoy() {
+  const box = document.getElementById('tareas-hoy-box');
+  const list = document.getElementById('tareas-hoy-list');
+  const cnt = document.getElementById('tareas-hoy-count');
+  if (!box || !list) return;
+  try {
+    const res = await apiFetch(`${API}/prospectos/tareas/pendientes`);
+    if (!res.ok) { box.style.display = 'none'; return; }
+    const tareas = await res.json();
+    if (!Array.isArray(tareas) || !tareas.length) { box.style.display = 'none'; return; }
+    const ahora = new Date();
+    const items = tareas.map(t => ({ ...t, _v: t.vence_en ? new Date(t.vence_en) : null }));
+    items.sort((a, b) => { if (!a._v) return 1; if (!b._v) return -1; return a._v - b._v; });
+    const vencidas = items.filter(t => t._v && t._v < ahora).length;
+    if (cnt) cnt.textContent = vencidas ? (vencidas + ' vencida(s)') : (items.length + ' pendiente(s)');
+    list.innerHTML = items.map(t => {
+      const overdue = t._v && t._v < ahora;
+      const fecha = t._v ? t._v.toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit' }) : 'sin fecha';
+      const color = overdue ? 'var(--red)' : 'var(--text-muted)';
+      const tag = overdue ? 'Vencida' : 'Próxima';
+      return `<div onclick="abrirFichaLead(${t.prospecto_id})" style="display:flex;align-items:center;gap:10px;padding:9px 6px;border-bottom:1px solid var(--border);cursor:pointer;">
+        <span style="font-size:.72rem;font-weight:800;color:${color};border:1px solid ${color};border-radius:50px;padding:2px 9px;white-space:nowrap;">${tag} · ${fecha}</span>
+        <span style="font-size:.86rem;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:38%;">${t.prospecto_nombre || '—'}</span>
+        <span style="font-size:.8rem;color:var(--text-muted);margin-left:auto;text-align:right;">${t.descripcion || ''}</span>
+      </div>`;
+    }).join('');
+    box.style.display = 'block';
+  } catch (e) { box.style.display = 'none'; }
+}
+
+// ─── Web Push: opt-in y gestión de suscripción ───
+function _urlB64ToUint8(base64String) {
+  const padding = '='.repeat((4 - base64String.length % 4) % 4);
+  const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
+  const raw = atob(base64);
+  const arr = new Uint8Array(raw.length);
+  for (let i = 0; i < raw.length; i++) arr[i] = raw.charCodeAt(i);
+  return arr;
+}
+async function activarNotificaciones() {
+  try {
+    if (!('serviceWorker' in navigator) || !('PushManager' in window) || !('Notification' in window)) {
+      mostrarToast('Tu navegador no soporta notificaciones push.', 'red'); return;
+    }
+    const vr = await apiFetch(`${API}/push/vapid-public`);
+    const vd = await vr.json();
+    if (!vd.enabled || !vd.public_key) { mostrarToast('Las notificaciones aún no están configuradas en el servidor.', 'red'); return; }
+    const perm = await Notification.requestPermission();
+    if (perm !== 'granted') { mostrarToast('No diste permiso para notificaciones.', 'amber'); _renderEstadoPush(); return; }
+    const reg = await navigator.serviceWorker.ready;
+    const sub = await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: _urlB64ToUint8(vd.public_key) });
+    const j = sub.toJSON();
+    await apiFetch(`${API}/push/subscribe`, { method: 'POST', body: { endpoint: j.endpoint, p256dh: j.keys.p256dh, auth: j.keys.auth } });
+    mostrarToast('Notificaciones activadas en este dispositivo ✓', 'green');
+    _renderEstadoPush();
+  } catch (e) {
+    console.warn('push subscribe error', e);
+    mostrarToast('No se pudieron activar las notificaciones.', 'red');
+  }
+}
+async function desactivarNotificaciones() {
+  try {
+    const reg = await navigator.serviceWorker.ready;
+    const sub = await reg.pushManager.getSubscription();
+    if (sub) {
+      const j = sub.toJSON();
+      try { await apiFetch(`${API}/push/unsubscribe`, { method: 'POST', body: { endpoint: j.endpoint } }); } catch (e) {}
+      await sub.unsubscribe();
+    }
+    mostrarToast('Notificaciones desactivadas en este dispositivo.', 'amber');
+    _renderEstadoPush();
+  } catch (e) { console.warn(e); }
+}
+async function _renderEstadoPush() {
+  const el = document.getElementById('push-estado');
+  const btnOn = document.getElementById('push-btn-on');
+  const btnOff = document.getElementById('push-btn-off');
+  if (!el) return;
+  let activo = false, soportado = ('serviceWorker' in navigator) && ('PushManager' in window) && ('Notification' in window);
+  try {
+    if (soportado) {
+      const reg = await navigator.serviceWorker.ready;
+      const sub = await reg.pushManager.getSubscription();
+      activo = !!sub && Notification.permission === 'granted';
+    }
+  } catch (e) {}
+  if (!soportado) { el.textContent = 'No disponible en este navegador'; el.style.color = 'var(--text-dim)'; if (btnOn) btnOn.style.display = 'none'; if (btnOff) btnOff.style.display = 'none'; return; }
+  const bloqueado = (typeof Notification !== 'undefined' && Notification.permission === 'denied');
+  el.textContent = activo ? 'Activadas en este dispositivo' : (bloqueado ? 'Bloqueadas en el navegador' : 'Desactivadas');
+  el.style.color = activo ? 'var(--green)' : 'var(--text-muted)';
+  if (btnOn) btnOn.style.display = (activo || bloqueado) ? 'none' : 'inline-block';
+  if (btnOff) btnOff.style.display = activo ? 'inline-block' : 'none';
+}
+async function _initPush() {
+  try {
+    if (!('serviceWorker' in navigator) || !('PushManager' in window) || !('Notification' in window)) return;
+    if (Notification.permission === 'granted') {
+      const reg = await navigator.serviceWorker.ready;
+      let sub = await reg.pushManager.getSubscription();
+      if (!sub) {
+        const vr = await apiFetch(`${API}/push/vapid-public`); const vd = await vr.json();
+        if (vd.enabled && vd.public_key) {
+          sub = await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: _urlB64ToUint8(vd.public_key) });
+        }
+      }
+      if (sub) { const j = sub.toJSON(); apiFetch(`${API}/push/subscribe`, { method: 'POST', body: { endpoint: j.endpoint, p256dh: j.keys.p256dh, auth: j.keys.auth } }).catch(() => {}); }
+    }
+    _renderEstadoPush();
+  } catch (e) {}
+}
+
+async function eliminarLeadDirecto(id) {
+  let nombre = 'este lead';
+  try {
+    const arr = (typeof todosProspectosPipeline !== 'undefined' && todosProspectosPipeline) ? todosProspectosPipeline : [];
+    const _p = arr.find(x => x.id === id);
+    if (_p && _p.nombre) nombre = _p.nombre;
+  } catch (e) {}
+  if (!confirm(`¿Eliminar "${nombre}" definitivamente?\n\nSe borra el lead con todo su historial y tareas. Si hubo conversación pero el cliente no compró, conviene marcarlo PERDIDO (conserva historial y métricas).\n\nEliminar es para duplicados o errores de carga.`)) return;
+  try {
+    const res = await apiFetch(`${API}/prospectos/${id}/eliminar`, { method: 'DELETE' });
+    if (!res.ok) { const d = await res.json().catch(() => ({})); throw new Error(d.detail || 'No se pudo eliminar.'); }
+    mostrarToast('Lead eliminado.', 'green');
+    if (typeof cargarProspectosPipeline === 'function') cargarProspectosPipeline();
+  } catch (e) {
+    mostrarToast(e.message || 'Error al eliminar.', 'red');
+  }
+}
+
 // ─── CRM v3.0 (Fase D): métricas del embudo + vista kanban ───────────────────
 window._plVista = window._plVista || 'lista';
 
@@ -6971,7 +7275,7 @@ function plRenderKanban() {
       return `<div onclick="abrirFichaLead(${p.id})" style="background:#111;border:1px solid var(--border);border-radius:8px;padding:9px 10px;margin-bottom:7px;cursor:pointer;">
         <div style="display:flex;justify-content:space-between;gap:6px;align-items:flex-start;">
           <div style="font-size:.83rem;font-weight:700;color:var(--text);min-width:0;">${p.nombre || '—'}</div>
-          ${val}
+          <div style="display:flex;align-items:center;gap:6px;flex-shrink:0;">${val}<button onclick="event.stopPropagation();eliminarLeadDirecto(${p.id})" title="Eliminar lead" style="background:transparent;border:none;color:var(--text-dim);cursor:pointer;font-size:.74rem;padding:2px;line-height:1;"><i class="fa-regular fa-trash-can"></i></button></div>
         </div>
         ${p.plan_interes ? `<div style="font-size:.7rem;color:var(--text-dim);margin-top:2px;">${p.plan_interes}</div>` : ''}
         ${prox}
