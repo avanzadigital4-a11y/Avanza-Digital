@@ -44,8 +44,9 @@ from auth import (
 )
 from database import get_db
 from models import (
-    Aliado, AuditoriaLog, AutomationLog, ComentarioComunidad, Comision,
-    LeadBolsa, LinkPago, NIVELES, PlanContinuidadActivo, PostComunidad,
+    ActividadProspecto, Aliado, AuditoriaLog, AutomationLog,
+    ComentarioComunidad, Comision, ContactoProspecto, LeadBolsa, LinkPago,
+    NIVELES, Novedad, PlanContinuidadActivo, PostComunidad,
     Prospecto, Referido, TransaccionCredito, Venta,
 )
 from notificaciones import ADMIN_EMAIL, enviar_email
@@ -627,6 +628,28 @@ def eliminar_aliado(codigo: str, db: Session = Depends(get_db),
             .filter(Referido.aliado_id == aid)
             .delete(synchronize_session=False))
 
+        # 8.5) Hijos de prospectos — DEBEN limpiarse ANTES que los prospectos.
+        #      El delete masivo del paso 9 saltea el cascade del ORM, así que las
+        #      FK a nivel BD (actividades_prospecto / contactos_prospecto, ambas
+        #      NOT NULL) bloquean el borrado si no se vacían primero.
+        if prospecto_ids:
+            _sp(lambda: db.query(ActividadProspecto)
+                .filter(ActividadProspecto.prospecto_id.in_(prospecto_ids))
+                .delete(synchronize_session=False))
+            _sp(lambda: db.query(ContactoProspecto)
+                .filter(ContactoProspecto.prospecto_id.in_(prospecto_ids))
+                .delete(synchronize_session=False))
+            # Referencias nullable a estos prospectos → desvincular (preservar fila)
+            _sp(lambda: db.query(Novedad)
+                .filter(Novedad.prospecto_id.in_(prospecto_ids))
+                .update({Novedad.prospecto_id: None}, synchronize_session=False))
+            _sp(lambda: db.query(AuditoriaLog)
+                .filter(AuditoriaLog.prospecto_id.in_(prospecto_ids))
+                .update({AuditoriaLog.prospecto_id: None}, synchronize_session=False))
+            _sp(lambda: db.query(Referido)
+                .filter(Referido.prospecto_id.in_(prospecto_ids))
+                .update({Referido.prospecto_id: None}, synchronize_session=False))
+
         # 9) Prospectos
         _sp(lambda: db.query(Prospecto)
             .filter(Prospecto.aliado_id == aid)
@@ -743,7 +766,7 @@ def actualizar_perfil_aliado(payload: PerfilAliadoUpdate,
     SECURITY: Toma el aliado del JWT, ya NO acepta `?codigo=` como parámetro
     (era una via de hijack del CBU para redirigir comisiones).
     """
-    VALID_METHODS = {"usdt_trc20", "wise", "transferencia", "payoneer"}
+    VALID_METHODS = {"usdt_trc20", "airtm", "wise", "transferencia", "payoneer"}
 
     if payload.payment_method is not None:
         method = (payload.payment_method or "").strip().lower()
@@ -759,7 +782,7 @@ def actualizar_perfil_aliado(payload: PerfilAliadoUpdate,
         aliado.cbu_alias = payload.cbu_alias.strip()[:300] or None
     elif payload.payment_method and payload.payment_info:
         # Auto-generar cbu_alias legible para el admin
-        labels = {"usdt_trc20":"USDT TRC20","wise":"Wise","transferencia":"Transf. bancaria","payoneer":"Payoneer"}
+        labels = {"usdt_trc20":"USDT TRC20","airtm":"Airtm","wise":"Wise","transferencia":"Transf. bancaria","payoneer":"Payoneer"}
         label = labels.get((payload.payment_method or "").lower(), payload.payment_method or "")
         aliado.cbu_alias = f"[{label}] {(payload.payment_info or '').strip()}"[:300] or None
 

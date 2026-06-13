@@ -6242,28 +6242,6 @@ const ACADEMIA_MODULOS = [
         </a>
       </div>
 
-      <h3>Casos de éxito · Para postear</h3>
-      <p style="color:var(--text-dim);font-size:.85rem;margin:-4px 0 12px;">Carruseles listos para subir a LinkedIn (como documento). Cada uno cuenta un caso real: problema → solución → resultado. Compartilos como caso de Avanza, no como propio.</p>
-      <div class="aca-downloads">
-        <a class="aca-download" href="#" onclick="descargarPDF('https://drive.google.com/uc?export=download&id=1qnj6IwmBDmodEyjFHUiejKsJc31DLiNY','Carrusel_Aleametal_Canal1.pdf');return false;">
-          <i class="fa-solid fa-layer-group" style="color:#f97316;"></i>
-          <div><div class="dl-title">Caso Aleametal (Metalúrgica)</div><div class="dl-sub">+47% conversión en 21 días</div></div>
-        </a>
-        <a class="aca-download" href="#" onclick="descargarPDF('https://drive.google.com/uc?export=download&id=1vss3SR6MHvUNiyhonIyWjJpZUhhuqWFP','Carrusel_Onate_Canal1.pdf');return false;">
-          <i class="fa-solid fa-layer-group" style="color:#f97316;"></i>
-          <div><div class="dl-title">Caso Logística Cordillera (Logística)</div><div class="dl-sub">De 31hs a 4hs de respuesta · +38% cierre</div></div>
-        </a>
-        <a class="aca-download" href="#" onclick="descargarPDF('https://drive.google.com/uc?export=download&id=1ztWe9BqnDWnknvbM4L9RcmOLQixSQ9qw','Carrusel_Soluciones Técnicas Generales_Canal1.pdf');return false;">
-          <i class="fa-solid fa-layer-group" style="color:#f97316;"></i>
-          <div><div class="dl-title">Caso Soluciones Técnicas Generales (Servicios técnicos)</div><div class="dl-sub">USD 8.400 en contratos · 1° en Google local</div></div>
-        </a>
-        <a class="aca-download" href="#" onclick="descargarPDF('https://drive.google.com/uc?export=download&id=1DSLzQOQ_SU8GrOTiOWqVAAhcCGWzQNsS','Carrusel_Parque_Canal1.pdf');return false;">
-          <i class="fa-solid fa-layer-group" style="color:#f97316;"></i>
-          <div><div class="dl-title">Caso Parque Logístico (Gran escala)</div><div class="dl-sub">Proyecto Estratégico 360 · 120 ha</div></div>
-        </a>
-      </div>
-
-
       </div>
 
       <h3>Cuándo usar cada material</h3>

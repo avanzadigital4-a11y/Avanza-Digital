@@ -1227,19 +1227,25 @@ scheduler.add_job(job_lock.con_lock(job_onboarding_sequence, "onboarding_sequenc
 scheduler.add_job(job_lock.con_lock(job_generar_comisiones_recurrentes_mensual, "comisiones_recurrentes_mensual", 86400), "interval", hours=24)
 
 # ─── CANAL 1 — Secuencia WhatsApp ────────────────────────────────────────────
+# Envíos salientes de WhatsApp por Twilio: DESACTIVADOS por defecto.
+# La cuenta trial topa en 50 ms/día (429) y, fuera de la ventana de 24hs,
+# WhatsApp exige templates aprobados. El onboarding/reactivación ya va por
+# email (Brevo). Para reactivar cuando haya un sender de WhatsApp real,
+# poner ENABLE_CANAL1_WA=1 en las env de Render.
+ENABLE_CANAL1_WA = os.environ.get("ENABLE_CANAL1_WA", "0") == "1"
 # Onboarding: cada hora. Por WhatsApp solo se manda el toque de DÍA 1; la
 # secuencia educativa D3/D7 va por email (job_onboarding_sequence) para no
 # duplicar el mismo empujón en ambos canales el mismo día.
-scheduler.add_job(job_lock.con_lock(jarvis_canal1.job_onboarding_wa, "canal1_onboarding_wa", 3600),  "interval", hours=1)
+if ENABLE_CANAL1_WA: scheduler.add_job(job_lock.con_lock(jarvis_canal1.job_onboarding_wa, "canal1_onboarding_wa", 3600),  "interval", hours=1)
 # Inactividad por WhatsApp: DESACTIVADA a propósito. La reactivación por
 # inactividad (7d/30d) + suspensión la maneja el email (job_notificaciones_inactividad),
 # así no mandamos el mismo recordatorio por dos canales. Si algún día se quiere
 # reactivar el canal WA para esto, descomentar la línea de abajo.
 # scheduler.add_job(jarvis_canal1.job_inactividad_wa, "interval", hours=6)
 # Leads semanales: lunes 9hs Argentina (UTC-3 → UTC+0 = 12hs UTC)
-scheduler.add_job(job_lock.con_lock(jarvis_canal1.job_semanal_wa, "canal1_semanal_wa", 604800),     "cron", day_of_week="mon", hour=12, minute=0)
+if ENABLE_CANAL1_WA: scheduler.add_job(job_lock.con_lock(jarvis_canal1.job_semanal_wa, "canal1_semanal_wa", 604800),     "cron", day_of_week="mon", hour=12, minute=0)
 # Ranking mensual: día 1 de cada mes, 10hs Argentina (13hs UTC)
-scheduler.add_job(job_lock.con_lock(jarvis_canal1.job_mensual_wa, "canal1_mensual_wa", 86400),     "cron", day=1, hour=13, minute=0)
+if ENABLE_CANAL1_WA: scheduler.add_job(job_lock.con_lock(jarvis_canal1.job_mensual_wa, "canal1_mensual_wa", 86400),     "cron", day=1, hour=13, minute=0)
 # ─── SETTER — Secuencia de seguimiento a prospectos inbound ──────────────────
 # Reactiva prospectos en 'calificando' sin respuesta (máx 3 toques). Cada 2hs.
 scheduler.add_job(job_lock.con_lock(jarvis_setter.job_seguimientos, "setter_seguimientos", 7200),   "interval", hours=2)

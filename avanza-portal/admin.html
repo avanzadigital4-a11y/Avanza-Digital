@@ -2641,7 +2641,7 @@ function renderEmbudoNunca(prosp) {
 
   const hoy = new Date();
   tbody.innerHTML = nunca.map(a => {
-    const fechaRegistro = a.fecha_firma ? new Date(a.fecha_firma) : null;
+    const fechaRegistro = a.fecha_firma ? parseFecha(a.fecha_firma) : null;
     const diasInactivo = fechaRegistro ? Math.floor((hoy - fechaRegistro) / 86400000) : '—';
     const urgencia = typeof diasInactivo === 'number' && diasInactivo <= 3
       ? `<span style="color:var(--amber);font-weight:700;">⚡ ${diasInactivo}d — actuar ya</span>`
@@ -2682,7 +2682,8 @@ function renderEmbudoTiming(prosp) {
     const fechasProsp = (a.prospectos || []).map(p => p.creado_en).filter(Boolean).sort();
     if (!fechasProsp.length) continue;
     const primerProsp = new Date(fechasProsp[0]);
-    const registro = new Date(aliado.fecha_firma);
+    const registro = parseFecha(aliado.fecha_firma);
+    if (!registro || isNaN(primerProsp)) continue;
     const dias = Math.max(0, Math.floor((primerProsp - registro) / 86400000));
     deltas.push({ nombre: a.nombre, dias, primerProsp: fechasProsp[0] });
   }

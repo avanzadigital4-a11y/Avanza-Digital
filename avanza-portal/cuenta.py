@@ -24,6 +24,7 @@ cuenta → aliados). hash_password/verify_password quedan en main porque
 tests/conftest.py los monkeypatchea: se accede por puente diferido para que
 el patch aplique también acá.
 """
+import os
 import secrets
 from datetime import datetime, timedelta, timezone
 
@@ -230,7 +231,8 @@ def auto_registro(request: Request,
 
     # WhatsApp de bienvenida Canal 1 — EN SEGUNDO PLANO
     # Envía: código de aliado + link grupo WA + primer paso accionable
-    background_tasks.add_task(jarvis_canal1.notificar_bienvenida, a, db)
+    if os.environ.get("ENABLE_CANAL1_WA", "0") == "1":
+        background_tasks.add_task(jarvis_canal1.notificar_bienvenida, a, db)
 
     # Email de bienvenida — EN SEGUNDO PLANO (no bloquea la respuesta)
     # IMPORTANTE: este email NO debe mencionar el marketplace de créditos ni
