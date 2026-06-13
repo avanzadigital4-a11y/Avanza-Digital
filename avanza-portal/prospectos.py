@@ -409,6 +409,67 @@ def completar_tarea(act_id: int, request: Request, db: Session = Depends(get_db)
     return {"mensaje": "Tarea completada.", "id": act.id}
 
 
+@router.post("/prospectos/{id}/seguimiento")
+def registrar_seguimiento(id: int, request: Request,
+                          detalle: str = "",
+                          proxima_accion: str = "",
+                          vence_en: str = "",
+                          db: Session = Depends(get_db)):
+    """Seguimiento en un solo paso, para el botón "Hice el seguimiento" del CRM.
+
+    Resuelve la confusión típica del aliado que "registra lo que hizo y agenda
+    lo siguiente" pero ve los contadores trabados: en una sola acción
+      1. deja la actividad en el timeline (lo que se hizo),
+      2. cierra TODAS las tareas abiertas (pendientes o vencidas) del prospecto,
+      3. si se indica, agenda la próxima acción como tarea nueva con fecha,
+      4. recalcula la próxima acción.
+    Así el aliado cierra el pendiente y agenda el siguiente sin entrar a la Ficha,
+    y los contadores de "tareas vencidas" / "sin próximo paso" reflejan su trabajo.
+    """
+    p = _get_prospecto_owned_or_admin(id, request, db)
+    ahora = datetime.now()
+
+    # 1. Timeline: qué se hizo.
+    db.add(ActividadProspecto(
+        prospecto_id=p.id, aliado_id=p.aliado_id, tipo="nota",
+        descripcion=((detalle or "").strip() or "Hice un seguimiento."),
+        creado_en=ahora,
+    ))
+
+    # 2. Cerrar tareas abiertas (pendientes o vencidas) de este prospecto.
+    abiertas = (db.query(ActividadProspecto)
+                  .filter(ActividadProspecto.prospecto_id == p.id,
+                          ActividadProspecto.tipo == "tarea",
+                          ActividadProspecto.completada == False)
+                  .all())
+    for t in abiertas:
+        t.completada = True
+        t.completada_en = ahora
+
+    # 3. Agendar la próxima acción (opcional).
+    if (proxima_accion or "").strip():
+        db.add(ActividadProspecto(
+            prospecto_id=p.id, aliado_id=p.aliado_id, tipo="tarea",
+            descripcion=proxima_accion.strip(),
+            vence_en=_parse_dt_crm(vence_en), completada=False,
+        ))
+
+    db.commit()
+    _recalcular_proxima_accion(p, db); db.commit()
+
+    pendientes = (db.query(ActividadProspecto)
+                    .filter(ActividadProspecto.prospecto_id == p.id,
+                            ActividadProspecto.tipo == "tarea",
+                            ActividadProspecto.completada == False)
+                    .count())
+    return {
+        "mensaje": "Seguimiento registrado.",
+        "tareas_cerradas": len(abiertas),
+        "tareas_pendientes": pendientes,
+        "proxima_accion_en": p.proxima_accion_en.isoformat() if p.proxima_accion_en else None,
+    }
+
+
 # ── NOTA DE DISEÑO ────────────────────────────────────────────────────────────
 # Este endpoint existe y funciona, pero NO tiene aún una pantalla en el portal
 # que lo consuma. Es un hook deliberadamente pre-construido para un futuro

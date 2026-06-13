@@ -1411,6 +1411,8 @@ RUTAS_ADMIN = {
     ("GET",    "/admin/bajas-voluntarias"),
     # v2.0 — métricas de cohorte de fuga
     ("GET",    "/admin/cohorte-fuga"),
+    # v2.x — cohorte de registro × activación (salud del programa)
+    ("GET",    "/admin/cohorte-activacion"),
     ("GET",    "/admin/uso-creditos"),
     # v1.6 — 2FA TOTP del admin (gestión protegida por JWT admin)
     ("POST",   "/admin/2fa/setup"),
@@ -2520,6 +2522,123 @@ def admin_cohorte_fuga(umbral_gasto: int = 80,
             else "Cohorte grande → problema sistémico (calidad de leads, Jarvis o capacitación). Más créditos no arreglan."
         ),
         "aliados": cohorte,
+    }
+
+
+@app.get("/admin/cohorte-activacion")
+def admin_cohorte_activacion(umbral_fuga: int = 80,
+                             db: Session = Depends(get_db)):
+    """Salud del programa cruzando COHORTE DE REGISTRO (mes de alta) × ACTIVACIÓN.
+
+    Es la extensión natural de /admin/cohorte-fuga: en lugar de un único segmento
+    de fuga, para cada cohorte de registro muestra cuántos aliados avanzaron por
+    cada hito de activación, y la fuga pasa a ser UNA columna más (no el centro).
+
+    Hitos (se reportan como conteos absolutos, NO como funnel estricto: un aliado
+    puede cerrar venta sin haber gastado créditos de Jarvis, p. ej.):
+      registrados → logueó → capturó lead → usó Jarvis → cerró venta
+    Más dos columnas de "salud": en_fuga (gastó ≥umbral en Jarvis y 0 ventas) y
+    suspendidos (activo == False, dado de baja por inactividad o voluntaria).
+
+    Nota: la cohorte de registro es histórica, así que incluye aliados suspendidos
+    (a diferencia de cohorte-fuga, que solo mira activos).
+    """
+    aliados = db.query(Aliado).all()
+
+    # ── Conjuntos de activación en queries agregadas (sin N+1) ──────────────
+    # Capturó ≥1 lead: con leads gratis, reclamar es el primer acto real de trabajo.
+    ids_captura = {
+        r[0] for r in db.query(LeadBolsa.aliado_id)
+        .filter(LeadBolsa.aliado_id.isnot(None)).distinct().all()
+    }
+    # Usó Jarvis IA: gastó créditos (único sink de créditos hoy).
+    ids_jarvis = {
+        r[0] for r in db.query(TransaccionCredito.aliado_id)
+        .filter(TransaccionCredito.motivo.like("jarvis%"),
+                TransaccionCredito.delta < 0).distinct().all()
+    }
+    # Gasto total de Jarvis por aliado (para el umbral de fuga).
+    gasto_jarvis = {
+        aid: -int(suma or 0)
+        for aid, suma in db.query(
+            TransaccionCredito.aliado_id, func.sum(TransaccionCredito.delta)
+        ).filter(
+            TransaccionCredito.motivo.like("jarvis%"),
+            TransaccionCredito.delta < 0,
+        ).group_by(TransaccionCredito.aliado_id).all()
+    }
+    # Cerró ≥1 venta confirmada.
+    ids_venta = {
+        r[0] for r in db.query(Venta.aliado_id)
+        .filter(Venta.confirmada == True).distinct().all()
+    }
+
+    # ── Agrupar por cohorte de registro (mes YYYY-MM) ───────────────────────
+    cohortes: dict = {}
+    for a in aliados:
+        mes = a.creado_en.strftime("%Y-%m") if a.creado_en else "sin_fecha"
+        c = cohortes.setdefault(mes, {
+            "cohorte": mes, "registrados": 0, "logueo": 0, "onboarding": 0,
+            "capturo_lead": 0, "uso_jarvis": 0, "cerro_venta": 0,
+            "en_fuga": 0, "suspendidos": 0,
+        })
+        c["registrados"] += 1
+        if getattr(a, "ultimo_login", None):
+            c["logueo"] += 1
+        if getattr(a, "onboarding_completado", False):
+            c["onboarding"] += 1
+        if a.id in ids_captura:
+            c["capturo_lead"] += 1
+        if a.id in ids_jarvis:
+            c["uso_jarvis"] += 1
+        tiene_venta = a.id in ids_venta
+        if tiene_venta:
+            c["cerro_venta"] += 1
+        if gasto_jarvis.get(a.id, 0) >= umbral_fuga and not tiene_venta:
+            c["en_fuga"] += 1
+        if not a.activo:
+            c["suspendidos"] += 1
+
+    def pct(n, d):
+        return round(100 * n / d, 1) if d else 0.0
+
+    filas = sorted(cohortes.values(),
+                   key=lambda c: (c["cohorte"] == "sin_fecha", c["cohorte"]))
+    for c in filas:
+        d = c["registrados"]
+        c["pct_logueo"]     = pct(c["logueo"], d)
+        c["pct_capturo"]    = pct(c["capturo_lead"], d)
+        c["pct_uso_jarvis"] = pct(c["uso_jarvis"], d)
+        c["pct_cerro"]      = pct(c["cerro_venta"], d)
+        c["pct_fuga"]       = pct(c["en_fuga"], d)
+        # "Activado" = capturó al menos un lead (primer acto de trabajo real).
+        c["pct_activacion"] = c["pct_capturo"]
+
+    claves = ["registrados", "logueo", "onboarding", "capturo_lead",
+              "uso_jarvis", "cerro_venta", "en_fuga", "suspendidos"]
+    tot = {k: sum(c[k] for c in filas) for k in claves}
+    d = tot["registrados"]
+    totales = {
+        **tot,
+        "pct_logueo":     pct(tot["logueo"], d),
+        "pct_capturo":    pct(tot["capturo_lead"], d),
+        "pct_uso_jarvis": pct(tot["uso_jarvis"], d),
+        "pct_cerro":      pct(tot["cerro_venta"], d),
+        "pct_fuga":       pct(tot["en_fuga"], d),
+        "pct_activacion": pct(tot["capturo_lead"], d),
+    }
+
+    return {
+        "umbral_fuga": umbral_fuga,
+        "definicion": {
+            "logueo":       "ultimo_login no nulo (entró al menos una vez tras el alta)",
+            "capturo_lead": "reclamó ≥1 lead de la bolsa (leads gratis = primer acto de trabajo)",
+            "uso_jarvis":   "gastó créditos en Jarvis IA (motivo jarvis*, delta<0)",
+            "cerro_venta":  "≥1 venta confirmada",
+            "en_fuga":      f"gastó ≥{umbral_fuga} créditos en Jarvis y tiene 0 ventas, ahora desglosado por cohorte de registro",
+        },
+        "cohortes": filas,
+        "totales": totales,
     }
 
 

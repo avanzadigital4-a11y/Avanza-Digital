@@ -637,6 +637,22 @@ tr:hover td { background:rgba(255,255,255,0.02); }
         </div>
       </div>
 
+      <!-- ── 1b. COHORTES DE REGISTRO × ACTIVACIÓN ─────────────── -->
+      <div class="table-wrap" style="margin-bottom:24px;padding:28px 28px 22px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:8px;">
+          <div style="font-size:.88rem;font-weight:800;text-transform:uppercase;letter-spacing:.8px;color:var(--text-muted);">
+            <i class="fa-solid fa-layer-group" style="color:var(--primary);margin-right:6px;"></i> Cohortes de registro × activación
+          </div>
+          <div style="font-size:.74rem;color:var(--text-muted);">% sobre los registrados de cada mes · fuga ≥80 créditos sin venta</div>
+        </div>
+        <div style="font-size:.78rem;color:var(--text-muted);margin-bottom:18px;">
+          Cada fila es el mes en que se dieron de alta. Las columnas siguen el camino real: entrar → capturar un lead → usar Jarvis → cerrar. Si una cohorte vieja sigue baja en "Capturó", el problema es el arranque, no el tiempo.
+        </div>
+        <div id="cohorte-activacion-grid">
+          <div style="text-align:center;padding:32px;color:var(--text-muted);">Cargando...</div>
+        </div>
+      </div>
+
       <!-- ── 2. ALIADOS CON 0 PROSPECTOS JAMÁS ──────────────── -->
       <div class="table-wrap" style="margin-bottom:24px;">
         <div class="table-head" style="display:flex;align-items:center;justify-content:space-between;">
@@ -2459,6 +2475,97 @@ async function cargarEmbudo() {
   renderEmbudoTiming(prosp);
   renderEmbudoCalientes(prosp);
   renderEmbudoBolsa(bolsaRes);
+  cargarCohorteActivacion();
+}
+
+/* ─── 1b. COHORTES DE REGISTRO × ACTIVACIÓN ────────────────────────────── */
+async function cargarCohorteActivacion() {
+  const el = document.getElementById('cohorte-activacion-grid');
+  if (!el) return;
+  let data;
+  try {
+    const r = await apiFetch(`${API}/admin/cohorte-activacion`);
+    if (!r.ok) throw new Error(r.status);
+    data = await r.json();
+  } catch (e) {
+    el.innerHTML = `<div style="text-align:center;padding:24px;color:var(--text-muted);">No se pudo cargar la grilla de cohortes.</div>`;
+    return;
+  }
+
+  const cohortes = data.cohortes || [];
+  if (!cohortes.length) {
+    el.innerHTML = `<div style="text-align:center;padding:24px;color:var(--text-muted);">Todavía no hay aliados registrados.</div>`;
+    return;
+  }
+
+  // Heatmap: color de fondo proporcional al % (verde = alto, rojo apagado = bajo).
+  const heat = (p) => {
+    const h = Math.round((p / 100) * 130);        // 0=rojo, 130=verde
+    return `background:hsla(${h},70%,45%,${0.10 + (p/100)*0.30});color:var(--text);`;
+  };
+  const fugaCell = (p) =>
+    `background:rgba(248,113,113,${0.08 + (p/100)*0.4});color:${p > 0 ? '#fca5a5' : 'var(--text-muted)'};`;
+
+  const cols = [
+    { k: 'logueo',       pk: 'pct_logueo',     label: 'Logueó' },
+    { k: 'capturo_lead', pk: 'pct_capturo',    label: 'Capturó lead' },
+    { k: 'uso_jarvis',   pk: 'pct_uso_jarvis', label: 'Usó Jarvis' },
+    { k: 'cerro_venta',  pk: 'pct_cerro',      label: 'Cerró venta' },
+  ];
+
+  const fmtMes = (m) => {
+    if (m === 'sin_fecha') return 'Sin fecha';
+    const [y, mm] = m.split('-');
+    const meses = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+    return `${meses[parseInt(mm,10)-1] || mm} ${y}`;
+  };
+
+  const cell = (n, p, style) =>
+    `<td style="text-align:center;padding:9px 8px;${style}border-radius:6px;">
+       <div style="font-weight:800;font-size:.86rem;">${p}%</div>
+       <div style="font-size:.68rem;color:var(--text-muted);">${n}</div>
+     </td>`;
+
+  const filaHTML = (c) => `
+    <tr>
+      <td style="padding:9px 10px;font-weight:700;font-size:.82rem;white-space:nowrap;">${fmtMes(c.cohorte)}</td>
+      <td style="text-align:center;padding:9px 8px;font-weight:800;font-size:.86rem;">${c.registrados}</td>
+      ${cols.map(col => cell(c[col.k], c[col.pk], heat(c[col.pk]))).join('')}
+      ${cell(c.en_fuga, c.pct_fuga, fugaCell(c.pct_fuga))}
+      <td style="text-align:center;padding:9px 8px;font-size:.82rem;color:${c.suspendidos > 0 ? 'var(--amber)' : 'var(--text-muted)'};">${c.suspendidos || 0}</td>
+    </tr>`;
+
+  const t = data.totales || {};
+  const totalHTML = `
+    <tr style="border-top:2px solid var(--border);font-weight:800;">
+      <td style="padding:11px 10px;font-size:.82rem;">TOTAL</td>
+      <td style="text-align:center;padding:11px 8px;font-size:.88rem;">${t.registrados || 0}</td>
+      <td style="text-align:center;padding:11px 8px;font-size:.82rem;">${t.pct_logueo}%</td>
+      <td style="text-align:center;padding:11px 8px;font-size:.82rem;">${t.pct_capturo}%</td>
+      <td style="text-align:center;padding:11px 8px;font-size:.82rem;">${t.pct_uso_jarvis}%</td>
+      <td style="text-align:center;padding:11px 8px;font-size:.82rem;">${t.pct_cerro}%</td>
+      <td style="text-align:center;padding:11px 8px;font-size:.82rem;color:#fca5a5;">${t.pct_fuga}%</td>
+      <td style="text-align:center;padding:11px 8px;font-size:.82rem;">${t.suspendidos || 0}</td>
+    </tr>`;
+
+  el.innerHTML = `
+    <div style="overflow-x:auto;">
+    <table style="width:100%;border-collapse:separate;border-spacing:0 4px;min-width:640px;">
+      <thead>
+        <tr style="font-size:.7rem;text-transform:uppercase;letter-spacing:.5px;color:var(--text-muted);">
+          <th style="text-align:left;padding:0 10px 6px;">Cohorte</th>
+          <th style="text-align:center;padding:0 8px 6px;">Alta</th>
+          ${cols.map(col => `<th style="text-align:center;padding:0 8px 6px;">${col.label}</th>`).join('')}
+          <th style="text-align:center;padding:0 8px 6px;color:#fca5a5;">Fuga</th>
+          <th style="text-align:center;padding:0 8px 6px;">Suspend.</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${cohortes.map(filaHTML).join('')}
+        ${totalHTML}
+      </tbody>
+    </table>
+    </div>`;
 }
 
 /* ─── 1. FUNNEL VISUAL ─────────────────────────────────────────────────── */

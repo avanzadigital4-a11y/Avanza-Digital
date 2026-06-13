@@ -25,6 +25,8 @@
 /avanza-portal/manifest.webmanifest   /avanza-portal/manifest.webmanifest   200
 /avanza-portal/sw.js                  /avanza-portal/sw.js                  200
 /avanza-portal/icons/*                /avanza-portal/icons/:splat           200
+# Assets del portal (JS, CSS, imágenes) — DEBEN ir antes del bloqueo.
+/avanza-portal/assets/*               /avanza-portal/assets/:splat          200
 # Todo lo demás (código fuente .py, .db, configs) → 404 duro.
 /avanza-portal/*              /404.html                     404!
 
@@ -41,8 +43,7 @@
 /colombia/         /colombia/index.html      200
 /chile/            /chile/index.html         200
 /peru/             /peru/index.html          200
-# FIX: el archivo real se llama VE__index.html, no index.html
-/venezuela/        /venezuela/VE__index.html    200
+/venezuela/        /venezuela/index.html     200
 
 # ── LATAM rubro + país ────────────────────────────────────────────────────────
 /mexico/metalurgica/    /mexico/metalurgica/index.html    200
@@ -57,10 +58,9 @@
 /peru/agro/             /peru/agro/index.html             200
 /peru/metalurgica/      /peru/metalurgica/index.html      200
 /peru/logistica/        /peru/logistica/index.html        200
-# FIX: archivos Venezuela tienen prefijo VE__ en el nombre
-/venezuela/agro/        /venezuela/agro/VE__agro__index.html           200
-/venezuela/metalurgica/ /venezuela/metalurgica/VE__metalurgica__index.html  200
-/venezuela/logistica/   /venezuela/logistica/VE__logistica__index.html  200
+/venezuela/agro/        /venezuela/agro/index.html        200
+/venezuela/metalurgica/ /venezuela/metalurgica/index.html 200
+/venezuela/logistica/   /venezuela/logistica/index.html   200
 
 # Renombrado de archivo con espacio — 301 para preservar indexación
 /presencia-en-google%20(1).html   /presencia-en-google.html   301

@@ -861,21 +861,21 @@ input[type=text]:focus{{outline:none;border-color:#3b82f6;}}
       <p class="planes-title" style="text-align:center;font-size:1.15rem;margin-bottom:20px;">Lo que lograron empresas como la tuya</p>
       <div class="caso-card">
         <div class="caso-header">
-          <div><div class="caso-empresa">Metalúrgica Balconi · Rafaela</div><div class="caso-rubro">Fabricación de estructuras</div></div>
+          <div><div class="caso-empresa">Aleametal · Perú</div><div class="caso-rubro">Fabricación de estructuras</div></div>
           <div class="caso-badge">+47% conversión</div>
         </div>
         <p class="caso-resultado">Tenían el mismo problema de presupuestos que se perdían. En <strong>21 días</strong> implementaron el sistema. Primer trimestre: <strong>3 contratos nuevos</strong> desde canales digitales.</p>
       </div>
       <div class="caso-card">
         <div class="caso-header">
-          <div><div class="caso-empresa">Transportes Oñate · Rosario</div><div class="caso-rubro">Logística y transporte</div></div>
+          <div><div class="caso-empresa">Logística Cordillera · Chile</div><div class="caso-rubro">Logística y transporte</div></div>
           <div class="caso-badge">31hs → 4hs</div>
         </div>
         <p class="caso-resultado">Pasaron de tardar <strong>31 horas</strong> en responder cotizaciones a <strong>menos de 4 horas</strong>. Cerraron <strong>3 contratos nuevos</strong> el primer mes.</p>
       </div>
       <div class="caso-card">
         <div class="caso-header">
-          <div><div class="caso-empresa">Soluciones Técnicas del Litoral · Paraná</div><div class="caso-rubro">Servicios técnicos industriales</div></div>
+          <div><div class="caso-empresa">Soluciones Técnicas Generales · Argentina</div><div class="caso-rubro">Servicios técnicos industriales</div></div>
           <div class="caso-badge">USD 8.400 primer trimestre</div>
         </div>
         <p class="caso-resultado">En <strong>7 días</strong> activaron el Plan Base. En 20 días les entró la primera consulta digital. Primer trimestre: <strong>USD 8.400 en contratos nuevos</strong>.</p>
