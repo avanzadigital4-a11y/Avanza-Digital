@@ -559,113 +559,26 @@ function buildMetrics(desk, mob){
 async function generateReport(domain, mx){
     const overall = Math.round(mx.perf_d*0.25+mx.perf_m*0.25+mx.seo*0.2+mx.bp*0.15+mx.access*0.15);
 
-    const prompt = `Sos experto en marketing digital B2B industrial en Argentina. Analizá estos datos REALES de Google Lighthouse para "${domain}" y generá un reporte útil para una PYME industrial argentina.
-
-DATOS REALES MEDIDOS:
-- Performance Desktop: ${mx.perf_d}/100
-- Performance Mobile: ${mx.perf_m}/100  
-- SEO: ${mx.seo}/100
-- Accesibilidad: ${mx.access}/100
-- Buenas Prácticas: ${mx.bp}/100
-- FCP Desktop: ${mx.fcp} | LCP Desktop: ${mx.lcp}
-- FCP Mobile: ${mx.fcp_m} | LCP Mobile: ${mx.lcp_m}
-- TBT: ${mx.tbt} | CLS: ${mx.cls} | TTI: ${mx.tti}
-- HTTPS activo: ${mx.https}
-- Viewport configurado: ${mx.viewport}
-- Meta description: ${mx.metadesc}
-- Indexable por Google: ${mx.crawl}
-- Fuentes legibles mobile: ${mx.fontsize}
-- Tap targets OK: ${mx.taptarg}
-- Score general calculado: ${overall}/100
-
-Devolvé SOLO JSON válido sin backticks:
-{
-  "overall_score": ${overall},
-  "score_title": "<título corto según el score>",
-  "score_verdict": "<2-3 oraciones concretas sobre qué significan estos datos para el negocio B2B>",
-  "meta_tags":[
-    {"icon":"fas fa-tachometer-alt","text":"Desktop: ${mx.perf_d}/100"},
-    {"icon":"fas fa-mobile-alt","text":"Mobile: ${mx.perf_m}/100"},
-    {"icon":"fas fa-search","text":"SEO: ${mx.seo}/100"}
-  ],
-  "categories":[
-    {"key":"perf_d","icon":"⚡","icon_color":"#f97316","name":"Velocidad Desktop","subtitle":"Google Lighthouse real","score":${mx.perf_d},
-     "findings":[
-       {"type":"${mx.perf_d>=90?'ok':mx.perf_d>=50?'warn':'bad'}","text":"Score performance: ${mx.perf_d}/100"},
-       {"type":"${mx.fcp&&parseFloat(mx.fcp)<1.8?'ok':parseFloat(mx.fcp)<3?'warn':'bad'}","text":"First Contentful Paint: ${mx.fcp}"},
-       {"type":"${mx.lcp&&parseFloat(mx.lcp)<2.5?'ok':parseFloat(mx.lcp)<4?'warn':'bad'}","text":"Largest Contentful Paint: ${mx.lcp}"},
-       {"type":"ok","text":"Speed Index: ${mx.si}"}
-     ]},
-    {"key":"perf_m","icon":"📱","icon_color":"#a78bfa","name":"Performance Mobile","subtitle":"Experiencia en celular","score":${mx.perf_m},
-     "findings":[
-       {"type":"${mx.perf_m>=90?'ok':mx.perf_m>=50?'warn':'bad'}","text":"Score mobile: ${mx.perf_m}/100"},
-       {"type":"${mx.viewport?'ok':'bad'}","text":"Viewport responsive: ${mx.viewport?'Configurado correctamente':'Sin configurar - no es mobile-friendly'}"},
-       {"type":"${mx.fontsize?'ok':'warn'}","text":"Tamaño de texto mobile: ${mx.fontsize?'Legible':'Demasiado pequeño'}"},
-       {"type":"${mx.taptarg?'ok':'warn'}","text":"Botones táctiles: ${mx.taptarg?'Tamaño correcto':'Muy pequeños para tocar'}"}
-     ]},
-    {"key":"seo","icon":"🔍","icon_color":"#3b82f6","name":"SEO y Visibilidad","subtitle":"Indexación real en Google","score":${mx.seo},
-     "findings":[
-       {"type":"${mx.seo>=90?'ok':mx.seo>=50?'warn':'bad'}","text":"Score SEO: ${mx.seo}/100"},
-       {"type":"${mx.metadesc?'ok':'bad'}","text":"Meta description: ${mx.metadesc?'Presente y activa':'Falta - reduce el CTR en Google'}"},
-       {"type":"${mx.crawl?'ok':'bad'}","text":"Indexación: ${mx.crawl?'Google puede indexar el sitio':'Google NO puede indexar el sitio'}"},
-       {"type":"<ok|warn|bad>","text":"<hallazgo SEO adicional relevante para industria B2B>"}
-     ]},
-    {"key":"security","icon":"🔒","icon_color":"#34d399","name":"Seguridad","subtitle":"HTTPS y buenas prácticas","score":${mx.bp},
-     "findings":[
-       {"type":"${mx.https?'ok':'bad'}","text":"HTTPS/SSL: ${mx.https?'Certificado activo y válido':'Sin HTTPS - navegadores muestran advertencia de peligro'}"},
-       {"type":"${mx.bp>=90?'ok':mx.bp>=50?'warn':'bad'}","text":"Buenas prácticas web: ${mx.bp}/100"},
-       {"type":"<ok|warn|bad>","text":"<hallazgo de seguridad concreto>"}
-     ]},
-    {"key":"access","icon":"♿","icon_color":"#60a5fa","name":"Accesibilidad","subtitle":"Usabilidad","score":${mx.access},
-     "findings":[
-       {"type":"${mx.access>=90?'ok':mx.access>=50?'warn':'bad'}","text":"Score accesibilidad: ${mx.access}/100"},
-       {"type":"<ok|warn|bad>","text":"<hallazgo específico de accesibilidad>"},
-       {"type":"<ok|warn|bad>","text":"<impacto en conversión B2B>"}
-     ]},
-    {"key":"leads","icon":"🎯","icon_color":"#4ade80","name":"Captación de Leads B2B","subtitle":"Estimación de conversión","score":<número basado en perf_m+seo+bp dividido entre 3>,
-     "findings":[
-       {"type":"<based on perf>","text":"<impacto de la velocidad en conversión de leads>"},
-       {"type":"<based on seo>","text":"<captación orgánica estimada>"},
-       {"type":"<based on mobile>","text":"<conversión desde mobile - muy relevante para compradores industriales>"},
-       {"type":"<overall>","text":"<recomendación concreta de mejora para captar más leads>"}
-     ]},
-    {"key":"comercial","icon":"💼","icon_color":"#fb7185","name":"Potencial Comercial","subtitle":"Competitividad digital","score":<número basado en análisis general>,
-     "findings":[
-       {"type":"<based on overall>","text":"<posición competitiva estimada en el sector>"},
-       {"type":"<based on data>","text":"<oportunidad de mejora concreta con mayor impacto comercial>"},
-       {"type":"<based on data>","text":"<hallazgo sobre propuesta de valor digital>"},
-       {"type":"<based on data>","text":"<recomendación estratégica B2B>"}
-     ]}
-  ],
-  "recommendations":[
-    {"priority":"alta","title":"<acción concreta basada en el problema más crítico>","description":"<por qué es urgente con datos reales>","impact":"<impacto estimado>"},
-    {"priority":"alta","title":"<segunda acción crítica>","description":"<descripción con datos>","impact":"<impacto>"},
-    {"priority":"media","title":"<mejora importante>","description":"<descripción>","impact":"<impacto>"},
-    {"priority":"media","title":"<cuarta acción>","description":"<descripción>","impact":"<impacto>"},
-    {"priority":"baja","title":"<optimización de largo plazo>","description":"<descripción>","impact":"<impacto>"}
-  ],
-  "checklist":[
-    {"item":"Certificado HTTPS/SSL","state":"${mx.https?'ok':'bad'}","impact":"Confianza del usuario y posicionamiento Google"},
-    {"item":"Indexable por Google","state":"${mx.crawl?'ok':'bad'}","impact":"Visibilidad orgánica y captación de leads"},
-    {"item":"Meta description optimizada","state":"${mx.metadesc?'ok':'bad'}","impact":"CTR en resultados de búsqueda"},
-    {"item":"Performance Desktop > 70","state":"${mx.perf_d>=70?'ok':mx.perf_d>=40?'warn':'bad'}","impact":"Experiencia de usuario y ranking SEO"},
-    {"item":"Performance Mobile > 70","state":"${mx.perf_m>=70?'ok':mx.perf_m>=40?'warn':'bad'}","impact":"60%+ del tráfico B2B llega por celular"},
-    {"item":"Responsive / Mobile-Friendly","state":"${mx.viewport?'ok':'bad'}","impact":"Acceso desde celular para compradores en campo"},
-    {"item":"LCP < 2.5 segundos","state":"${mx.lcp&&parseFloat(mx.lcp)<2.5?'ok':mx.lcp&&parseFloat(mx.lcp)<4?'warn':'bad'}","impact":"Retención de visitantes y tasa de conversión"},
-    {"item":"SEO técnico > 70","state":"${mx.seo>=70?'ok':mx.seo>=40?'warn':'bad'}","impact":"Posicionamiento en búsquedas del sector"},
-    {"item":"Accesibilidad > 80","state":"${mx.access>=80?'ok':mx.access>=50?'warn':'bad'}","impact":"Alcance y estándares web"},
-    {"item":"Buenas prácticas > 80","state":"${mx.bp>=80?'ok':mx.bp>=50?'warn':'bad'}","impact":"Seguridad y confianza del navegador"},
-    {"item":"Formulario de contacto activo","state":"${mx.metadesc&&mx.crawl&&mx.https?'warn':'bad'}","impact":"Captación de leads B2B directa"},
-    {"item":"CRM o seguimiento de leads","state":"${mx.bp>=80&&mx.https?'warn':'bad'}","impact":"Conversión y seguimiento comercial"}
-  ]
-}`;
+    // SEGURIDAD: el prompt ya NO se arma en el cliente. El backend construye
+    // el prompt a partir de estas métricas estructuradas (ver /auditoria-ia en
+    // main.py). Así el endpoint deja de ser un proxy de LLM abierto.
+    const metricsPayload = {
+        perf_d: mx.perf_d, perf_m: mx.perf_m, seo: mx.seo,
+        access: mx.access, bp: mx.bp,
+        fcp: String(mx.fcp ?? ''), lcp: String(mx.lcp ?? ''),
+        fcp_m: String(mx.fcp_m ?? ''), lcp_m: String(mx.lcp_m ?? ''),
+        tbt: String(mx.tbt ?? ''), cls: String(mx.cls ?? ''),
+        tti: String(mx.tti ?? ''), si: String(mx.si ?? ''),
+        https: !!mx.https, viewport: !!mx.viewport, metadesc: !!mx.metadesc,
+        crawl: !!mx.crawl, fontsize: !!mx.fontsize, taptarg: !!mx.taptarg,
+    };
 
     try {
         // Llama al backend propio (Groq) en lugar del Worker de Cloudflare
         const res = await fetch('/auditoria-ia', {
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({prompt, domain})
+            body: JSON.stringify({domain, metrics: metricsPayload})
         });
 
         if (!res.ok) {

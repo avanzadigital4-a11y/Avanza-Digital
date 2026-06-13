@@ -202,8 +202,8 @@ class TestRecordatoriosTareas:
         main_mod.job_recordatorios_tareas()
 
         db.expire_all()
-        assert db.query(ActividadProspecto).get(vencida.id).recordatorio_enviado is True
-        assert db.query(ActividadProspecto).get(futura.id).recordatorio_enviado is False
+        assert db.get(ActividadProspecto, vencida.id).recordatorio_enviado is True
+        assert db.get(ActividadProspecto, futura.id).recordatorio_enviado is False
 
     def test_job_no_reenvia_dos_veces(self, client, db, aliado):
         import main as main_mod
@@ -219,4 +219,4 @@ class TestRecordatoriosTareas:
 
         main_mod.job_recordatorios_tareas()  # no debe romper ni cambiar nada
         db.expire_all()
-        assert db.query(ActividadProspecto).get(t.id).recordatorio_enviado is True
+        assert db.get(ActividadProspecto, t.id).recordatorio_enviado is True

@@ -194,6 +194,12 @@ class Admin(Base):
     username = Column(String, unique=True)
     password_hash = Column(String)
     creado_en = Column(DateTime, default=func.now())
+    # 2FA TOTP (opt-in). totp_secret guarda la semilla base32; totp_enabled
+    # solo se pone en True tras verificar el primer código (evita lockout por
+    # un secret a medio configurar). Si totp_enabled es False, el login se
+    # comporta como siempre (solo usuario + contraseña).
+    totp_secret = Column(String, nullable=True)
+    totp_enabled = Column(Boolean, default=False, nullable=False)
 
 
 # ─── AUDITORÍA DE ACCIONES ADMIN ─────────────────────────────────────────────

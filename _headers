@@ -26,6 +26,17 @@
 /fonts/*
   Cache-Control: public, max-age=31536000, immutable
 
+# ── Caché — módulos JS versionados por hash (1 año, inmutable) ───────────────
+# Los portal.*.<hash>.js llevan el hash del contenido en el nombre: un cambio
+# genera un nombre nuevo, así que la copia cacheada nunca queda obsoleta. Esto
+# es lo que hace que el arranque en frío del PWA no vuelva a parsear ~470 KB.
+# Va ANTES de la regla genérica /*.js para que la pise (Netlify: más específica
+# gana, pero el orden documenta la intención).
+/assets/js/*
+  Cache-Control: public, max-age=31536000, immutable
+/avanza-portal/assets/js/*
+  Cache-Control: public, max-age=31536000, immutable
+
 # ── Caché — CSS y JS (1 mes) ─────────────────────────────────────────────────
 /*.css
   Cache-Control: public, max-age=2592000

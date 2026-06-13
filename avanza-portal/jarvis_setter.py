@@ -594,7 +594,7 @@ def _link_para_embudo(db, s: dict) -> Optional[str]:
     try:
         from models import Aliado  # type: ignore
         if s.get("aliado_id"):
-            a = db.query(Aliado).get(s["aliado_id"])
+            a = db.get(Aliado, s["aliado_id"])
             ref = getattr(a, "ref_code", None)
     except Exception:
         pass

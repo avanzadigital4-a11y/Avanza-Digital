@@ -70,6 +70,7 @@ class AdminSetupIn(_Base):
 class AdminLoginIn(_Base):
     username: str
     password: str
+    totp: str = ""   # código 2FA de 6 dígitos; solo requerido si el admin activó TOTP
 
 
 # ─── PROSPECTOS ──────────────────────────────────────────────────────────────

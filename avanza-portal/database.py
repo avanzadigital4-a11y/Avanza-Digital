@@ -12,7 +12,11 @@ if DATABASE_URL:
     # SQLAlchemy 2.x solo acepta "postgresql://"
     if DATABASE_URL.startswith("postgres://"):
         DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
-    engine = create_engine(DATABASE_URL)
+    # pool_pre_ping: Railway/Render cierran conexiones idle del lado del server.
+    # Sin esto, la primera query tras un rato de inactividad falla con "connection
+    # already closed" (error fantasma). El pre-ping hace un SELECT 1 barato antes
+    # de entregar la conexión del pool y la recicla sola si está muerta.
+    engine = create_engine(DATABASE_URL, pool_pre_ping=True)
 else:
     # Fallback local
     DB_PATH = "/tmp/avanza.db"

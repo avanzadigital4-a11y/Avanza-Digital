@@ -14,7 +14,16 @@ const DEFAULT_HEAVY_MODEL = 'claude-sonnet-4-6';
 export default {
   async fetch(request, env) {
 
-    const ALLOWED_ORIGIN = '*'; // en produccion: 'https://avanzadigital.digital'
+    // SEGURIDAD: origin cerrado al dominio de producción. Con '*' cualquier
+    // sitio podía llamar a este Worker desde el navegador y quemar la cuota
+    // de Anthropic/PageSpeed. Para probar en local, agregá temporalmente tu
+    // origin de dev acá (y sacalo antes de deployar).
+    const ALLOWED_ORIGINS = [
+      'https://avanzadigital.digital',
+      'https://www.avanzadigital.digital',
+    ];
+    const reqOrigin = request.headers.get('Origin') || '';
+    const ALLOWED_ORIGIN = ALLOWED_ORIGINS.includes(reqOrigin) ? reqOrigin : ALLOWED_ORIGINS[0];
 
     if (request.method === 'OPTIONS') {
       return new Response(null, {

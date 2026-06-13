@@ -13,9 +13,10 @@ Cubrimos:
   3. Descuento con saldo insuficiente → 400, saldo no cambia.
   4. Cada operación crea TransaccionCredito (auditoría).
   5. Bienvenida: registro otorga 100 créditos.
-  6. Compra de lead premium: descuenta correctamente.
-  7. Compra de lead con saldo insuficiente → 400.
-  8. Compra de lead básico: usa /reclamar (no descuenta créditos).
+  6. Reclamo de lead premium vía /comprar: GRATIS, no descuenta créditos
+     (desde la unificación de la bolsa, los créditos son solo para Jarvis IA).
+  7. Reclamo de lead premium con 0 créditos: funciona igual (es gratis).
+  8. Reclamo de lead básico: usa /reclamar (tampoco descuenta créditos).
   9. Lead ya comprado → 400 "no disponible".
  10. Límite de reclamos activos simultáneos.
  11. Aliado Canal 2 no puede comprar leads.
@@ -139,8 +140,10 @@ class TestCreditosBienvenida:
 
 class TestCompraLeads:
 
-    def test_compra_lead_premium_descuenta_creditos(self, client, db, aliado, lead_premium, token_aliado):
-        """Comprar un lead premium descuenta el costo en créditos."""
+    def test_compra_lead_premium_es_gratis_no_descuenta_creditos(self, client, db, aliado, lead_premium, token_aliado):
+        """Desde la unificación de la bolsa, reclamar un lead premium vía
+        /comprar es GRATIS: el saldo de créditos NO cambia y la respuesta
+        desbloquea el contacto. Los créditos quedan reservados para Jarvis IA."""
         aliado.creditos = 100
         db.commit()
 
@@ -149,8 +152,30 @@ class TestCompraLeads:
             headers={"Authorization": f"Bearer {token_aliado}"},
         )
         assert resp.status_code == 200
+        data = resp.json()
+        # El contacto viene desbloqueado en la respuesta
+        assert data["lead"]["telefono"] == lead_premium.telefono
         db.refresh(aliado)
-        assert aliado.creditos == 100 - lead_premium.costo_creditos
+        assert aliado.creditos == 100  # sin cambio: el reclamo es gratuito
+
+    def test_compra_no_genera_transaccion_credito(self, client, db, aliado, lead_premium, token_aliado):
+        """El reclamo gratuito no debe dejar registro en TransaccionCredito
+        (no hubo movimiento de saldo que auditar)."""
+        aliado.creditos = 100
+        db.commit()
+        txs_antes = db.query(TransaccionCredito).filter(
+            TransaccionCredito.aliado_id == aliado.id
+        ).count()
+
+        resp = client.post(
+            f"/bolsa/{lead_premium.id}/comprar",
+            headers={"Authorization": f"Bearer {token_aliado}"},
+        )
+        assert resp.status_code == 200
+        txs_despues = db.query(TransaccionCredito).filter(
+            TransaccionCredito.aliado_id == aliado.id
+        ).count()
+        assert txs_despues == txs_antes
 
     def test_compra_lead_actualiza_estado_a_reclamado(self, client, db, aliado, lead_premium, token_aliado):
         """Tras la compra, el lead queda en estado 'reclamado'."""
@@ -165,18 +190,23 @@ class TestCompraLeads:
         assert lead_premium.estado == "reclamado"
         assert lead_premium.aliado_id == aliado.id
 
-    def test_compra_con_saldo_insuficiente_retorna_400(self, client, db, aliado, lead_premium, token_aliado):
-        """Sin créditos suficientes → 400, lead sigue disponible."""
-        aliado.creditos = 5  # insuficiente (costo = 50)
+    def test_compra_con_cero_creditos_funciona_igual(self, client, db, aliado, lead_premium, token_aliado):
+        """Como los leads ya no cuestan créditos, un aliado con saldo 0 puede
+        reclamar un lead premium sin problema. (Antes esto devolvía 400 por
+        saldo insuficiente — ese comportamiento quedó obsoleto a propósito.)"""
+        aliado.creditos = 0
         db.commit()
 
         resp = client.post(
             f"/bolsa/{lead_premium.id}/comprar",
             headers={"Authorization": f"Bearer {token_aliado}"},
         )
-        assert resp.status_code == 400
+        assert resp.status_code == 200
         db.refresh(lead_premium)
-        assert lead_premium.estado == "disponible"
+        db.refresh(aliado)
+        assert lead_premium.estado == "reclamado"
+        assert lead_premium.aliado_id == aliado.id
+        assert aliado.creditos == 0  # sin cambio
 
     def test_compra_lead_ya_tomado_retorna_400_o_409(self, client, db, aliado, lead_premium, token_aliado):
         """Lead ya reclamado → error (no se puede comprar dos veces)."""
