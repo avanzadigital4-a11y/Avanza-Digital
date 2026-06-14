@@ -139,8 +139,28 @@ try:
 except Exception:
     _PUSH_OK = False
 
+def _vapid_private_normalizado(valor):
+    """pywebpush SOLO acepta la VAPID private key en raw base64url. Esta función
+    tolera raw base64url, PEM con saltos reales o PEM con \\n escapados, y siempre
+    devuelve la clave en raw (o '' si no se puede cargar)."""
+    raw = (valor or "").strip()
+    if not raw:
+        return ""
+    if "BEGIN" not in raw:
+        return raw  # ya es raw base64url
+    try:
+        from cryptography.hazmat.primitives import serialization as _ser
+        import base64 as _b64
+        k = _ser.load_pem_private_key(raw.replace("\\n", "\n").encode(), password=None)
+        return _b64.urlsafe_b64encode(
+            k.private_numbers().private_value.to_bytes(32, "big")
+        ).rstrip(b"=").decode()
+    except Exception as e:
+        print(f"[PUSH] VAPID_PRIVATE_KEY en PEM no se pudo cargar: {str(e).splitlines()[0][:80]}")
+        return ""
+
 VAPID_PUBLIC  = os.environ.get("VAPID_PUBLIC_KEY", "")
-VAPID_PRIVATE = os.environ.get("VAPID_PRIVATE_KEY", "").replace("\\n", "\n")
+VAPID_PRIVATE = _vapid_private_normalizado(os.environ.get("VAPID_PRIVATE_KEY", ""))
 VAPID_SUBJECT = os.environ.get("VAPID_SUBJECT", "mailto:soporte@avanzadigital.digital")
 # Tipos de novedad que disparan push inmediato (opt-in por env, vacío = ninguno).
 # Ej en Render: PUSH_TIPOS_INMEDIATOS="comision,venta"
