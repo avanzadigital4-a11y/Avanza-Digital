@@ -303,3 +303,49 @@ def marcar_novedades_leidas(codigo: str, db: Session = Depends(get_db), _owner=D
        .update({Novedad.leida: True}, synchronize_session=False))
     db.commit()
     return {"ok": True}
+
+
+@router.post("/push/test")
+def push_test(aliado: Aliado = Depends(current_aliado_required),
+              db: Session = Depends(get_db)):
+    """Envía una push de prueba a los dispositivos del aliado que llama y
+    devuelve un diagnóstico (claves activas, nº de suscripciones, enviadas,
+    primer error) para depurar por qué no llegan las notificaciones."""
+    if not (_PUSH_OK and VAPID_PRIVATE and VAPID_PUBLIC):
+        falta = []
+        if not _PUSH_OK: falta.append("libreria pywebpush")
+        if not VAPID_PUBLIC: falta.append("VAPID_PUBLIC_KEY")
+        if not VAPID_PRIVATE: falta.append("VAPID_PRIVATE_KEY")
+        return {"ok": False, "enabled": False, "suscripciones": 0, "enviadas": 0,
+                "error": "Push deshabilitado en el servidor. Falta: " + ", ".join(falta)}
+    subs = db.query(PushSubscription).filter(PushSubscription.aliado_id == aliado.id).all()
+    if not subs:
+        return {"ok": False, "enabled": True, "suscripciones": 0, "enviadas": 0,
+                "error": "No hay suscripción guardada para esta cuenta. Reactivá las notificaciones desde este dispositivo."}
+    import json as _json
+    payload = _json.dumps({"title": "Avanza Digital",
+                           "body": "Notificación de prueba — el push funciona.", "url": "/"})
+    enviadas, primer_error, muertas = 0, None, []
+    for sub in subs:
+        try:
+            webpush(
+                subscription_info={"endpoint": sub.endpoint, "keys": {"p256dh": sub.p256dh, "auth": sub.auth}},
+                data=payload, vapid_private_key=VAPID_PRIVATE,
+                vapid_claims={"sub": VAPID_SUBJECT},
+            )
+            enviadas += 1
+        except WebPushException as e:
+            code = getattr(getattr(e, "response", None), "status_code", None)
+            if code in (404, 410):
+                muertas.append(sub)
+            if primer_error is None:
+                primer_error = f"WebPushException {code or ''}: {e}".strip()
+        except Exception as e:
+            if primer_error is None:
+                primer_error = f"{type(e).__name__}: {e}"
+    for x in muertas:
+        try: db.delete(x)
+        except Exception: pass
+    db.commit()
+    return {"ok": enviadas > 0, "enabled": True, "suscripciones": len(subs),
+            "enviadas": enviadas, "error": primer_error}

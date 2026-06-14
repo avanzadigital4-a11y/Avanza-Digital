@@ -4147,9 +4147,32 @@ html.avz-collapsed #avz-sidebar .avz-exit span{ display:none; }
           <span id="push-estado" style="font-size:.85rem; font-weight:600; color:var(--text-muted);">&mdash;</span>
           <button id="push-btn-on" onclick="activarNotificaciones()" style="display:none; background:var(--primary); color:white; border:none; border-radius:8px; padding:8px 18px; font-size:.82rem; font-weight:700; cursor:pointer;">Activar</button>
           <button id="push-btn-off" onclick="desactivarNotificaciones()" style="display:none; background:rgba(255,255,255,0.04); color:var(--text-muted); border:1px solid var(--border); border-radius:8px; padding:8px 18px; font-size:.82rem; font-weight:600; cursor:pointer;">Desactivar</button>
+          <button id="push-btn-test" onclick="probarNotificacion()" style="background:rgba(255,255,255,0.04); color:var(--text-muted); border:1px solid var(--border); border-radius:8px; padding:8px 18px; font-size:.82rem; font-weight:600; cursor:pointer;">Probar</button>
         </div>
       </div>
 
+      <script>
+      async function probarNotificacion() {
+        const btn = document.getElementById('push-btn-test');
+        const estado = document.getElementById('push-estado');
+        try {
+          if (btn) { btn.disabled = true; btn.textContent = 'Enviando...'; }
+          const r = await apiFetch(`${API}/push/test`, { method: 'POST' });
+          const j = await r.json();
+          let msg;
+          if (j.enviadas > 0) msg = `✓ Enviada a ${j.enviadas} dispositivo(s). Revisá el celular.`;
+          else if (j.suscripciones === 0) msg = '⚠ No hay suscripción en esta cuenta. Activá las notificaciones acá.';
+          else if (!j.enabled) msg = '⚠ Push deshabilitado en el servidor: ' + (j.error || '');
+          else msg = '⚠ No se pudo enviar: ' + (j.error || 'error desconocido');
+          if (estado) estado.textContent = msg; else alert(msg);
+        } catch (e) {
+          const m = '⚠ Error: ' + (e && e.message ? e.message : e);
+          if (estado) estado.textContent = m; else alert(m);
+        } finally {
+          if (btn) { btn.disabled = false; btn.textContent = 'Probar'; }
+        }
+      }
+      </script>
       <!-- DATOS PERSONALES -->
       <div class="bento-box" style="margin-bottom:20px;">
         <h3 style="font-size:0.95rem; font-weight:700; margin-bottom:4px;">
