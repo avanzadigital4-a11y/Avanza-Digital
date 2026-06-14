@@ -110,22 +110,31 @@ self.addEventListener('push', (event) => {
   try { data = event.data ? event.data.json() : {}; }
   catch (e) { data = { title: 'Avanza Digital', body: (event.data && event.data.text && event.data.text()) || '' }; }
   const title = data.title || 'Avanza Digital';
+  let _url = data.url || 'portal.html';
+  if (_url === '/') _url = 'portal.html';   // nunca abrir la raíz (sitio público)
   const options = {
     body: data.body || '',
     icon: 'icons/icon-192.png',
-    badge: 'icons/icon-192.png',
-    data: { url: data.url || 'portal.html' },
+    badge: 'icons/badge-96.png',          // badge transparente -> flechas, no cuadrado
+    data: { url: _url },
   };
   event.waitUntil(self.registration.showNotification(title, options));
 });
 
 self.addEventListener('notificationclick', (event) => {
   event.notification.close();
-  const destino = (event.notification.data && event.notification.data.url) || 'portal.html';
+  let destino = (event.notification.data && event.notification.data.url) || 'portal.html';
+  if (destino === '/' || !destino) destino = 'portal.html';
+  const target = new URL(destino, self.location).href;   // resuelve dentro de /avanza-portal/
   event.waitUntil(
     self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((wins) => {
-      for (const w of wins) { if ('focus' in w) return w.focus(); }
-      if (self.clients.openWindow) return self.clients.openWindow(destino);
+      for (const w of wins) {
+        if (w.url && w.url.indexOf('/avanza-portal/') !== -1 && 'focus' in w) {
+          if ('navigate' in w && w.url !== target) { w.navigate(target).catch(() => {}); }
+          return w.focus();
+        }
+      }
+      if (self.clients.openWindow) return self.clients.openWindow(target);
     })
   );
 });

@@ -1449,6 +1449,7 @@ html.avz-collapsed #avz-sidebar .avz-exit span{ display:none; }
     <div class="tb-brand">Portal de <span>Aliados</span></div>
     <div class="tb-right">
       <button id="btn-instalar-pwa" onclick="instalarPWA()" style="display:none;background:rgba(249,115,22,0.12);border:1px solid rgba(249,115,22,0.35);color:#fb923c;padding:6px 12px;border-radius:8px;font-size:.78rem;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif;"><i class="fa-solid fa-mobile-screen-button"></i><span class="pwa-lb"> Instalar app</span></button>
+      <button id="tb-creditos" onclick="abrirModalComprarCreditos()" title="Cargar créditos Jarvis IA" style="display:inline-flex;align-items:center;gap:7px;background:rgba(251,191,36,0.12);border:1px solid rgba(251,191,36,0.32);color:var(--amber);padding:7px 12px;border-radius:9px;font-size:.78rem;font-weight:800;cursor:pointer;font-family:'Inter',sans-serif;white-space:nowrap;"><i class="fa-solid fa-coins"></i><span class="cred-lb"> Cargar créditos</span></button>
       <div style="position:relative;display:inline-block;">
         <button id="btn-novedades" onclick="toggleNovedades()" title="Novedades" style="position:relative;background:transparent;border:1px solid var(--border);color:var(--text-muted);width:36px;height:36px;border-radius:10px;cursor:pointer;font-size:.95rem;">
           <i class="fa-regular fa-bell"></i>
@@ -1667,11 +1668,6 @@ html.avz-collapsed #avz-sidebar .avz-exit span{ display:none; }
             <div id="d-creditos-wrap">
               <div style="font-size:2rem; font-weight:900; color:var(--amber);" id="d-creditos">0</div>
               <p style="font-size:0.72rem; color:var(--text-dim); margin-top:4px;" id="d-creditos-sub">Para usar Jarvis IA</p>
-              <div id="d-creditos-cta" style="margin-top:8px;">
-                <button onclick="abrirModalComprarCreditos()" style="background:var(--amber);color:#000;border:none;border-radius:8px;padding:7px 14px;font-size:.74rem;font-weight:800;cursor:pointer;white-space:nowrap;letter-spacing:.3px;">
-                  <i class="fa-solid fa-plus"></i> Cargar créditos
-                </button>
-              </div>
             </div>
           </div>
         </div>
@@ -2979,12 +2975,17 @@ html.avz-collapsed #avz-sidebar .avz-exit span{ display:none; }
               <div class="ref-url" id="red-link-reclutamiento" style="color:var(--text);">Cargando...</div>
             </div>
             <button class="btn-copy" style="background:var(--amber);color:#000;" onclick="copiarLinkRed()"><i class="fa-solid fa-copy"></i> Copiar</button>
+            <button class="btn-copy" style="background:#22c55e;color:#000;margin-left:8px;" onclick="compartirRed()"><i class="fa-brands fa-whatsapp"></i> Compartir</button>
           </div>
           <div style="font-size:.75rem;color:var(--text-dim);margin-top:8px;line-height:1.5;">
             <i class="fa-solid fa-circle-info" style="color:var(--amber);"></i> &nbsp;Usalo en LinkedIn, WhatsApp o conversaciones con vendedores y agencias. <strong style="color:var(--text);">No lo mandes a clientes finales</strong> — para clientes usá tu <a href="#" onclick="cambiarTab('dashboard', document.querySelector('.tab-btn[onclick*=dashboard]')); return false;" style="color:var(--amber);font-weight:700;text-decoration:underline;">página de ventas del Dashboard</a>.
           </div>
         </div>
 
+        <div id="red-bono-banner" style="display:flex;align-items:center;gap:10px;background:rgba(168,85,247,0.08);border:1px solid rgba(168,85,247,0.25);border-radius:10px;padding:12px 14px;margin-bottom:16px;">
+          <i class="fa-solid fa-gift" style="color:#c084fc;font-size:1.1rem;"></i>
+          <div style="font-size:.85rem;color:var(--text);">Además del 5% pasivo: ganás <strong id="red-bono-activacion" style="color:#c084fc;">75</strong> créditos apenas un invitado se activa (su primer ingreso al portal).</div>
+        </div>
         <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:16px;">
           <div style="background:rgba(0,0,0,0.4); padding:20px; border-radius:12px; border:1px solid var(--border);">
             <div style="font-size:0.75rem;font-weight:700;color:var(--text-dim);text-transform:uppercase;">Equipo Activo</div>
@@ -2993,6 +2994,14 @@ html.avz-collapsed #avz-sidebar .avz-exit span{ display:none; }
           <div style="background:rgba(0,0,0,0.4); padding:20px; border-radius:12px; border:1px solid var(--green-border);">
             <div style="font-size:0.75rem;font-weight:700;color:var(--green);text-transform:uppercase;">Ingresos Pasivos</div>
             <div style="font-size:2rem;font-weight:900;color:var(--green);" id="red-ingresos-total">USD 0</div>
+          </div>
+          <div style="background:rgba(0,0,0,0.4); padding:20px; border-radius:12px; border:1px solid rgba(168,85,247,0.25);">
+            <div style="font-size:0.75rem;font-weight:700;color:#c084fc;text-transform:uppercase;">Activados</div>
+            <div style="font-size:2rem;font-weight:900;color:var(--text);" id="red-activados">0 / 0</div>
+          </div>
+          <div style="background:rgba(0,0,0,0.4); padding:20px; border-radius:12px; border:1px solid var(--border);">
+            <div style="font-size:0.75rem;font-weight:700;color:var(--text-dim);text-transform:uppercase;">Créditos por referidos</div>
+            <div style="font-size:2rem;font-weight:900;color:var(--text);" id="red-creditos-ref">0</div>
           </div>
         </div>
       </div>
@@ -4147,32 +4156,9 @@ html.avz-collapsed #avz-sidebar .avz-exit span{ display:none; }
           <span id="push-estado" style="font-size:.85rem; font-weight:600; color:var(--text-muted);">&mdash;</span>
           <button id="push-btn-on" onclick="activarNotificaciones()" style="display:none; background:var(--primary); color:white; border:none; border-radius:8px; padding:8px 18px; font-size:.82rem; font-weight:700; cursor:pointer;">Activar</button>
           <button id="push-btn-off" onclick="desactivarNotificaciones()" style="display:none; background:rgba(255,255,255,0.04); color:var(--text-muted); border:1px solid var(--border); border-radius:8px; padding:8px 18px; font-size:.82rem; font-weight:600; cursor:pointer;">Desactivar</button>
-          <button id="push-btn-test" onclick="probarNotificacion()" style="background:rgba(255,255,255,0.04); color:var(--text-muted); border:1px solid var(--border); border-radius:8px; padding:8px 18px; font-size:.82rem; font-weight:600; cursor:pointer;">Probar</button>
         </div>
       </div>
 
-      <script>
-      async function probarNotificacion() {
-        const btn = document.getElementById('push-btn-test');
-        const estado = document.getElementById('push-estado');
-        try {
-          if (btn) { btn.disabled = true; btn.textContent = 'Enviando...'; }
-          const r = await apiFetch(`${API}/push/test`, { method: 'POST' });
-          const j = await r.json();
-          let msg;
-          if (j.enviadas > 0) msg = `✓ Enviada a ${j.enviadas} dispositivo(s). Revisá el celular.`;
-          else if (j.suscripciones === 0) msg = '⚠ No hay suscripción en esta cuenta. Activá las notificaciones acá.';
-          else if (!j.enabled) msg = '⚠ Push deshabilitado en el servidor: ' + (j.error || '');
-          else msg = '⚠ No se pudo enviar: ' + (j.error || 'error desconocido');
-          if (estado) estado.textContent = msg; else alert(msg);
-        } catch (e) {
-          const m = '⚠ Error: ' + (e && e.message ? e.message : e);
-          if (estado) estado.textContent = m; else alert(m);
-        } finally {
-          if (btn) { btn.disabled = false; btn.textContent = 'Probar'; }
-        }
-      }
-      </script>
       <!-- DATOS PERSONALES -->
       <div class="bento-box" style="margin-bottom:20px;">
         <h3 style="font-size:0.95rem; font-weight:700; margin-bottom:4px;">
@@ -5795,8 +5781,8 @@ window.__MODS = {
   /* ── Topbar: hamburguesa + marca + 3 acciones sin desborde ── */
   #avz-topbar{ gap:8px; }
   #avz-topbar .tb-right{ gap:7px; }
-  #avz-topbar .tb-sup .sup-lb, #btn-instalar-pwa .pwa-lb{ display:none; }
-  #avz-topbar .tb-sup, #btn-instalar-pwa{ padding:7px 10px; }
+  #avz-topbar .tb-sup .sup-lb, #btn-instalar-pwa .pwa-lb, #tb-creditos .cred-lb{ display:none; }
+  #avz-topbar .tb-sup, #btn-instalar-pwa, #tb-creditos{ padding:7px 10px; }
 
   /* ── Campanita: panel anclado bajo el topbar, a casi todo el ancho ── */
   #novedades-panel{ position:fixed !important; left:10px !important; right:10px !important;

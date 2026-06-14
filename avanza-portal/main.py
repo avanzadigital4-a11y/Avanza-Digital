@@ -717,7 +717,7 @@ def job_notificaciones_inactividad():
                   <p style="margin-top:28px;font-size:.75rem;color:#3f3f46;">Avanza Digital · Partner Network · ¿No recordás tu contraseña? Usá el enlace de recuperación en el portal.</p>
                 </div>
                 """
-                enviar_email(a.email, f"⚠️ {nombre_corto}, suspendimos tu cuenta — reactivala antes del {fecha_elim_str}", html)
+                enviar_email(a.email, f"⚠️ {nombre_corto}, suspendimos tu cuenta — reactivala antes del {fecha_elim_str}", html, campania="inactividad_30d", aliado_id=a.id)
                 try:
                     enviar_push_a_aliado(db, a.id, "Cuenta suspendida", f"Llevás {dias_inactivo} días sin entrar. Reactivala gratis antes del {fecha_elim_str}.", "/")
                 except Exception:
@@ -754,7 +754,7 @@ def job_notificaciones_inactividad():
                   <p style="margin-top:28px;font-size:.75rem;color:#3f3f46;">Avanza Digital · Partner Network · ¿Preguntas? Respondé este email.</p>
                 </div>
                 """
-                enviar_email(a.email, f"👋 {nombre_corto}, ¿todo bien? Hace {dias_inactivo} días que no entrás", html)
+                enviar_email(a.email, f"👋 {nombre_corto}, ¿todo bien? Hace {dias_inactivo} días que no entrás", html, campania="inactividad_20d", aliado_id=a.id)
                 try:
                     enviar_push_a_aliado(db, a.id, "¿Todo bien?", f"Hace {dias_inactivo} días que no entrás. Hay leads esperándote.", "/")
                 except Exception:
@@ -878,7 +878,7 @@ def job_onboarding_sequence():
                 </div>
                 """
                 try:
-                    enviar_email(a.email, f"🎯 {nombre_corto}, así arrancás (sin gastar tus créditos)", html)
+                    enviar_email(a.email, f"🎯 {nombre_corto}, así arrancás (sin gastar tus créditos)", html, campania="onboarding_d1", aliado_id=a.id)
                     a.onboarding_email_d1_en = ahora
                     db.commit()
                     enviados_d1 += 1
@@ -906,7 +906,7 @@ def job_onboarding_sequence():
                 </div>
                 """
                 try:
-                    enviar_email(a.email, f"⭐ {nombre_corto}, hora de probar un lead calificado", html)
+                    enviar_email(a.email, f"⭐ {nombre_corto}, hora de probar un lead calificado", html, campania="onboarding_d3", aliado_id=a.id)
                     a.onboarding_email_d3_en = ahora
                     db.commit()
                     enviados_d3 += 1
@@ -936,7 +936,7 @@ def job_onboarding_sequence():
                     </div>
                     """
                     try:
-                        enviar_email(a.email, f"⏳ {nombre_corto}, tus {saldo} créditos de Jarvis IA siguen sin usar", html)
+                        enviar_email(a.email, f"⏳ {nombre_corto}, tus {saldo} créditos de Jarvis IA siguen sin usar", html, campania="onboarding_d7", aliado_id=a.id)
                         a.onboarding_email_d7_en = ahora
                         db.commit()
                         enviados_d7 += 1
@@ -3334,6 +3334,8 @@ import mal_contacto
 import solicitudes_creditos
 import prospectos
 import notificaciones as _notificaciones_mod  # ya importado arriba; acá solo el router
+import email_tracking      # Hueco 1: analítica de email
+import referidos_aliados   # Hueco 2: loop de reclutamiento aliado→aliado
 
 app.include_router(academia.router)
 app.include_router(bolsa.router)
@@ -3349,6 +3351,17 @@ app.include_router(portal_publico.router)
 app.include_router(ia_comercial.router)
 app.include_router(checkout.router)
 app.include_router(comisiones.router)
+
+# ─── HUECOS 1 y 2 ────────────────────────────────────────────────────────────
+app.include_router(email_tracking.router)       # /e/o, /e/c, /admin/email/metricas
+app.include_router(referidos_aliados.router)     # /aliados/{codigo}/red
+
+# Job diario: cuando un referido entra por primera vez, acreditamos el bono de
+# activación a su sponsor (idempotente). Mismo patrón que los demás jobs.
+scheduler.add_job(
+    job_lock.con_lock(referidos_aliados.job_referidos_activacion, "referidos_activacion", 86400),
+    "interval", hours=24,
+)
 
 # Los endpoints de IA sobre prospectos que siguen en este archivo usan el
 # helper de ownership que ahora vive en prospectos.py:

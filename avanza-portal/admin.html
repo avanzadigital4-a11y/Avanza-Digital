@@ -351,6 +351,7 @@ tr:hover td { background:rgba(255,255,255,0.02); }
       <button class="tab-btn" onclick="cambiarTab('prospectos',this)"><i class="fa-solid fa-bullseye"></i> Prospectos <span id="badge-prosp" style="display:none;background:var(--red);color:white;font-size:.65rem;font-weight:800;padding:2px 7px;border-radius:50px;margin-left:2px;">0</span></button>
       <button class="tab-btn" onclick="cambiarTab('embudo',this)"><i class="fa-solid fa-filter"></i> Embudo</button>
       <button class="tab-btn" onclick="cambiarTab('auditorias',this)"><i class="fa-solid fa-magnifying-glass"></i> Auditorías</button>
+      <button class="tab-btn" onclick="cambiarTab('email',this)"><i class="fa-solid fa-envelope-open-text"></i> Email</button>
       <button class="tab-btn" onclick="cambiarTab('bolsa',this)"><i class="fa-solid fa-bullhorn"></i> Bolsa de Leads</button>
       <button class="tab-btn" onclick="cambiarTab('comisiones',this)"><i class="fa-solid fa-percent"></i> Comisiones <span id="badge-comis" style="display:none;background:var(--red);color:white;font-size:.65rem;font-weight:800;padding:2px 7px;border-radius:50px;margin-left:2px;">0</span></button>
       <button class="tab-btn" onclick="cambiarTab('continuidad',this)"><i class="fa-solid fa-arrows-rotate"></i> Continuidad</button>
@@ -1255,6 +1256,32 @@ tr:hover td { background:rgba(255,255,255,0.02); }
       </div>
     </div>
 
+    <!-- TAB EMAIL — Analítica de correos (Hueco 1) ─────────────────────────── -->
+    <div id="tab-email" class="tab-panel">
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:20px;">
+        <div>
+          <h3 style="font-size:1.2rem;font-weight:900;margin-bottom:4px;"><i class="fa-solid fa-envelope-open-text" style="color:#a855f7;"></i> &nbsp;Analítica de Email</h3>
+          <p style="font-size:.85rem;color:var(--text-muted);">Entregabilidad real de las secuencias: aperturas, clics y reactivación.</p>
+        </div>
+        <select id="email-ventana" onchange="cargarEmailMetricas()" style="background:#111;border:1px solid var(--border);color:#fff;padding:8px 12px;border-radius:8px;font-weight:700;">
+          <option value="7">Últimos 7 días</option>
+          <option value="30">Últimos 30 días</option>
+          <option value="90" selected>Últimos 90 días</option>
+          <option value="365">Último año</option>
+        </select>
+      </div>
+
+      <div class="metrics-grid" id="email-kpi">
+        <div class="metric-card"><div class="metric-icon mi-blue"><i class="fa-solid fa-paper-plane"></i></div><div class="metric-label">Enviados</div><div class="metric-value mv-blue" id="em-env">—</div><div class="metric-sub">en la ventana</div></div>
+        <div class="metric-card"><div class="metric-icon mi-green"><i class="fa-solid fa-envelope-open"></i></div><div class="metric-label">Tasa de apertura</div><div class="metric-value mv-green" id="em-ta">—</div><div class="metric-sub" id="em-ab">— abiertos</div></div>
+        <div class="metric-card"><div class="metric-icon mi-amber"><i class="fa-solid fa-hand-pointer"></i></div><div class="metric-label">Tasa de clic</div><div class="metric-value mv-amber" id="em-tc">—</div><div class="metric-sub" id="em-cl">— clics</div></div>
+      </div>
+
+      <div class="table-wrap" style="margin-top:20px;">
+        <div class="table-head"><h3><i class="fa-solid fa-list-check"></i> &nbsp;Por campaña</h3></div>
+        <div id="email-tabla"><div style="text-align:center;padding:24px;color:var(--text-muted);">Cargando…</div></div>
+      </div>
+    </div>
     <div id="tab-nuevo-aliado" class="tab-panel">
       <div style="max-width:640px;">
         <div class="table-wrap" style="padding:32px;">
@@ -2455,6 +2482,7 @@ function cambiarTab(tab, btn) {
   if(tab==='pagos')       cargarAdminPagos();
   if(tab==='solicitudes') cargarSolicitudesCreditos();
   if(tab==='academia')    cargarAdminAcademia();
+      if(tab==='email')       cargarEmailMetricas();
 }
 
 // ── EMBUDO DE ACTIVACIÓN ─────────────────────────────────────────────────────
@@ -4429,6 +4457,47 @@ async function confirmarRechazo() {
   }
 }
 
+// ── ANALÍTICA DE EMAIL (Hueco 1) ─────────────────────────────────────────────
+async function cargarEmailMetricas() {
+  const cont = document.getElementById('email-tabla');
+  const dias = (document.getElementById('email-ventana')||{}).value || 90;
+  let data;
+  try {
+    const r = await apiFetch(`${API}/admin/email/metricas?dias=${dias}`);
+    if (!r.ok) throw new Error(r.status);
+    data = await r.json();
+  } catch (e) {
+    cont.innerHTML = `<div style="text-align:center;padding:24px;color:var(--text-muted);">No se pudieron cargar las métricas de email.</div>`;
+    return;
+  }
+  const t = data.totales || {};
+  const set = (id,v)=>{ const el=document.getElementById(id); if(el) el.textContent=v; };
+  set('em-env', (t.enviados||0).toLocaleString());
+  set('em-ta',  (t.tasa_apertura||0) + '%');
+  set('em-ab',  (t.abiertos||0).toLocaleString() + ' abiertos');
+  set('em-tc',  (t.tasa_clic||0) + '%');
+  set('em-cl',  (t.clickeados||0).toLocaleString() + ' clics');
+
+  const camps = data.campanias || [];
+  if (!camps.length) {
+    cont.innerHTML = `<div style="text-align:center;padding:24px;color:var(--text-muted);">Todavía no hay correos taggeados en esta ventana. Las secuencias de inactividad y onboarding se registran a medida que se envían.</div>`;
+    return;
+  }
+  const fmtReact = (c) => (c.tasa_reactivacion===undefined)
+    ? '<span style="color:var(--text-dim);">—</span>'
+    : `<span style="color:var(--green);font-weight:800;">${c.tasa_reactivacion}%</span> <span style="color:var(--text-dim);font-size:.78rem;">(${c.reactivados})</span>`;
+  cont.innerHTML = `<table><thead><tr>
+      <th>Campaña</th><th>Enviados</th><th>Apertura</th><th>Clic</th><th>Reactivación</th>
+    </tr></thead><tbody>` +
+    camps.map(c => `<tr>
+      <td style="font-weight:700;">${c.campania||'—'}</td>
+      <td>${(c.enviados||0).toLocaleString()}</td>
+      <td><span style="font-weight:800;">${c.tasa_apertura}%</span> <span style="color:var(--text-dim);font-size:.78rem;">(${c.abiertos})</span></td>
+      <td><span style="font-weight:800;">${c.tasa_clic}%</span> <span style="color:var(--text-dim);font-size:.78rem;">(${c.clickeados})</span></td>
+      <td>${fmtReact(c)}</td>
+    </tr>`).join('') + `</tbody></table>
+    <p style="font-size:.75rem;color:var(--text-dim);padding:12px 4px 0;">${data.nota||''}</p>`;
+}
 </script>
 </body>
 </html>

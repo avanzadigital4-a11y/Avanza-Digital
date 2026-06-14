@@ -56,13 +56,85 @@ BREVO_FROM      = os.environ.get("BREVO_FROM", "no-reply@avanzadigital.digital")
 BREVO_FROM_NAME = os.environ.get("BREVO_FROM_NAME", "Avanza Digital")
 
 
-def enviar_email(destinatario: str, asunto: str, cuerpo_html: str):
+# ─── EMAIL TRACKING (Hueco 1) ────────────────────────────────────────────────
+# enviar_email() acepta una `campania` opcional. Cuando viene, registra el
+# envío e inyecta pixel de apertura + reescritura de links para medir (ver
+# email_tracking.py). Sin campania, el envío se comporta EXACTAMENTE igual que
+# siempre, así que los ~29 call sites existentes no necesitan tocarse.
+import re as _re
+import uuid as _uuid
+from urllib.parse import quote as _urlquote
+
+TRACK_BASE = os.environ.get(
+    "PORTAL_URL", os.environ.get("BACKEND_PUBLIC_URL", "")
+).strip().rstrip("/")
+
+
+def _registrar_y_trackear(destinatario, asunto, cuerpo_html, campania, aliado_id):
+    """Crea el registro EmailEnviado y, si hay URL base, inyecta el pixel de
+    apertura y reescribe los links al portal. Devuelve el HTML (modificado o el
+    original). Best-effort: ante cualquier error devuelve el HTML original y el
+    envío sigue normal — nunca rompe el flujo."""
+    try:
+        from database import SessionLocal
+        from models import EmailEnviado
+
+        token = _uuid.uuid4().hex
+        db = SessionLocal()
+        try:
+            db.add(EmailEnviado(
+                token=token, campania=(campania or "")[:80],
+                aliado_id=aliado_id,
+                destinatario=(destinatario or "")[:200],
+                asunto=(asunto or "")[:300],
+            ))
+            db.commit()
+        finally:
+            db.close()
+
+        if not TRACK_BASE:
+            return cuerpo_html  # sin base no se puede armar la URL absoluta del pixel
+
+        html = cuerpo_html or ""
+
+        # 1) Reescribir los links que apuntan al portal para que pasen por el
+        #    redirect de clic. Solo los del portal (no tocamos links externos).
+        def _rw(m):
+            url = m.group(1)
+            return ('href="' + TRACK_BASE + '/e/c/' + token
+                    + '?u=' + _urlquote(url, safe="") + '"')
+        try:
+            html = _re.sub(r'href="(' + _re.escape(TRACK_BASE) + r'[^"]*)"', _rw, html)
+        except Exception:
+            pass
+
+        # 2) Pixel de apertura al final del cuerpo.
+        pixel = ('<img src="' + TRACK_BASE + '/e/o/' + token
+                 + '.png" width="1" height="1" alt="" '
+                 'style="display:none;max-height:0;overflow:hidden;">')
+        if "</body>" in html:
+            html = html.replace("</body>", pixel + "</body>", 1)
+        else:
+            html = html + pixel
+        return html
+    except Exception as e:
+        print(f"[EMAIL TRACKING] no se pudo registrar ({campania}): {e}")
+        return cuerpo_html
+
+
+def enviar_email(destinatario: str, asunto: str, cuerpo_html: str,
+                 campania: str = "", aliado_id=None):
     """Envía un email con cadena de fallback: Brevo → Resend → SMTP → log.
 
     Brevo es el proveedor primario (300 emails/día gratis, permanente).
     Resend queda como respaldo automático si Brevo falla por cualquier razón.
     SMTP es el último recurso si ambas APIs fallan.
     """
+    # Hueco 1: si el envío está taggeado con una campaña, lo registramos y le
+    # inyectamos tracking antes de mandarlo (por cualquiera de los proveedores).
+    if campania:
+        cuerpo_html = _registrar_y_trackear(destinatario, asunto, cuerpo_html, campania, aliado_id)
+
     # --- 1. BREVO (primario) ---
     if BREVO_API_KEY:
         try:

@@ -3548,6 +3548,7 @@ async function cargarHistorialBolsa() {
 // Funciones de MI RED
 async function cargarRed() {
   if(!aliado) return;
+  cargarInvitacionRed();
 
   // Poblar link de reclutamiento
   const linkRedEl = document.getElementById('red-link-reclutamiento');
@@ -7041,4 +7042,41 @@ async function completarYAvanzar(id) {
   } else {
     setTimeout(() => volverAIndice(), 600);
   }
+}
+
+
+// ── INVITACIÓN / RECLUTAMIENTO (Hueco 2): enriquece la solapa Red ────────────
+// Consume GET /aliados/{codigo}/invitacion para sumar el bono de activación,
+// el desglose activados/invitados, los créditos ganados y el botón de compartir.
+let _redMensajeCompartir = '';
+let _redInviteLink = '';
+async function cargarInvitacionRed() {
+  if (!aliado) return;
+  try {
+    const r = await apiFetch(`${API}/aliados/${aliado.codigo}/invitacion`);
+    if (!r.ok) return;
+    const d = await r.json();
+    _redMensajeCompartir = d.mensaje_para_compartir || '';
+    _redInviteLink = d.invite_link || '';
+    // Usar el link autoritativo del backend (respeta PORTAL_URL).
+    const linkEl = document.getElementById('red-link-reclutamiento');
+    if (linkEl && _redInviteLink) linkEl.textContent = _redInviteLink;
+    const bono = document.getElementById('red-bono-activacion');
+    if (bono && d.bono_por_activacion != null) bono.textContent = d.bono_por_activacion;
+    const st = d.stats || {};
+    const act = document.getElementById('red-activados');
+    if (act) act.textContent = `${st.activados || 0} / ${st.invitados || 0}`;
+    const cred = document.getElementById('red-creditos-ref');
+    if (cred) cred.textContent = (st.creditos_por_referidos || 0).toLocaleString();
+  } catch (e) { /* best-effort: la solapa Red sigue andando igual */ }
+}
+
+function compartirRed() {
+  const msg = _redMensajeCompartir
+    || (_redInviteLink ? ('Sumate como aliado de Avanza Digital: ' + _redInviteLink) : '');
+  if (!msg) {
+    if (typeof mostrarToast === 'function') mostrarToast('Esperá a que cargue tu link…', 'amber');
+    return;
+  }
+  window.open('https://wa.me/?text=' + encodeURIComponent(msg), '_blank');
 }

@@ -775,3 +775,26 @@ class PushSubscription(Base):
     p256dh    = Column(String)
     auth      = Column(String)
     creado_en = Column(DateTime, default=datetime.now)
+
+# ─── EMAIL TRACKING (Hueco 1: analítica de correos) ──────────────────────────
+class EmailEnviado(Base):
+    """Un registro por cada email transaccional TAGGEADO con una campaña.
+    Lo escribe enviar_email() SOLO cuando se le pasa `campania` (los correos
+    sueltos sin tag no generan overhead). Mide apertura (pixel) y clic
+    (redirect), y permite correlacionar con reactivación. Ver email_tracking.py.
+    """
+    __tablename__ = "emails_enviados"
+
+    id           = Column(Integer, primary_key=True, index=True)
+    token        = Column(String, unique=True, index=True, nullable=False)
+    campania     = Column(String, index=True, nullable=False)   # ej 'inactividad_20d'
+    aliado_id    = Column(Integer, ForeignKey("aliados.id"), index=True, nullable=True)
+    destinatario = Column(String, nullable=True)
+    asunto       = Column(String, nullable=True)
+    enviado_en   = Column(DateTime, default=func.now(), index=True)
+    abierto_en   = Column(DateTime, nullable=True)
+    aperturas    = Column(Integer, default=0)
+    click_en     = Column(DateTime, nullable=True)
+    clicks       = Column(Integer, default=0)
+
+    aliado = relationship("Aliado")
