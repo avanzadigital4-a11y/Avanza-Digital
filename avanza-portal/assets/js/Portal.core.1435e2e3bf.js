@@ -5376,54 +5376,74 @@ async function enviarComprobante() {
 }
 
 // ─── COMUNIDAD ──────────────────────────────────────────────────────
+let _comCat = '';
 async function cargarComunidad() {
   const feed = document.getElementById('comunidad-feed');
   if (!feed) return;
-  feed.innerHTML = `<div style="text-align:center; padding:40px; color:var(--text-dim);">Cargando feed...</div>`;
+  feed.innerHTML = `<div style="text-align:center; padding:40px; color:var(--text-dim);">Cargando foro...</div>`;
+  const orden = (document.getElementById('com-orden')||{}).value || 'recientes';
+  const q = ((document.getElementById('com-buscar')||{}).value || '').trim();
   try {
-    const res = await apiFetch(`${API}/comunidad/feed`);
+    const url = `${API}/comunidad/feed?categoria=${encodeURIComponent(_comCat)}&orden=${encodeURIComponent(orden)}&q=${encodeURIComponent(q)}`;
+    const res = await apiFetch(url);
     if (!res.ok) return;
     const data = await res.json();
     if (!data.posts.length) {
       feed.innerHTML = `<div class="bento-box" style="text-align:center; padding:40px; color:var(--text-muted);">
-        Nadie publicó todavía. <br>¡Sé el primero en compartir un tip o una victoria!
+        No hay publicaciones acá todavía.<br>¡Dejá una pregunta, proponé una mejora o compartí una victoria!
       </div>`;
       return;
     }
-    const tipoIcon = { tip: '💡', win: '🎉', pregunta: '❓' };
-    const tipoColor = { tip: '#c084fc', win: '#4ade80', pregunta: '#facc15' };
-    feed.innerHTML = data.posts.map(p => `
-      <div class="bento-box" style="margin-bottom:16px; ${p.fijado?'border-color:rgba(250,204,21,0.4); background:rgba(250,204,21,0.02);':''}">
-        <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:10px;">
-          <div>
-            <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
-              <span style="font-size:1.2rem;">${tipoIcon[p.tipo]||'💬'}</span>
-              <strong style="font-size:1rem;">${p.titulo}</strong>
-              ${p.fijado?'<span style="font-size:.65rem; background:rgba(250,204,21,0.15); color:var(--amber); padding:2px 8px; border-radius:4px; font-weight:800;">📌 DESTACADO</span>':''}
-            </div>
-            <div style="font-size:.75rem; color:var(--text-dim); margin-top:4px;">
-              ${p.autor} · ${p.autor_nivel||'BASIC'} · ${p.fecha}
-            </div>
+    const catMeta = {
+      pregunta:{ic:'❓',label:'Pregunta',color:'#facc15'},
+      mejora:{ic:'🛠️',label:'Mejora',color:'#60a5fa'},
+      charla:{ic:'💬',label:'Charla',color:'#c084fc'},
+      victoria:{ic:'🎉',label:'Victoria',color:'#4ade80'},
+    };
+    const estadoMeta = {
+      recibido:{t:'Recibida',c:'#a1a1aa'}, evaluacion:{t:'En evaluación',c:'#facc15'},
+      planificado:{t:'Planificada',c:'#60a5fa'}, hecho:{t:'Hecho ✅',c:'#4ade80'},
+      descartado:{t:'Descartada',c:'#ef4444'},
+    };
+    feed.innerHTML = data.posts.map(p => {
+      const cm = catMeta[p.categoria] || catMeta.charla;
+      const esAutor = p.autor_codigo && typeof aliado!=='undefined' && aliado && p.autor_codigo === aliado.codigo;
+      const badgeCat = `<span style="font-size:.65rem;font-weight:800;background:${cm.color}22;color:${cm.color};padding:2px 8px;border-radius:6px;">${cm.ic} ${cm.label.toUpperCase()}</span>`;
+      const badgeResuelta = (p.categoria==='pregunta' && p.resuelto) ? `<span style="font-size:.65rem;font-weight:800;background:rgba(74,222,128,0.15);color:#4ade80;padding:2px 8px;border-radius:6px;">✓ RESUELTA</span>` : '';
+      const em = p.estado_mejora ? estadoMeta[p.estado_mejora] : null;
+      const badgeEstado = em ? `<span style="font-size:.65rem;font-weight:800;background:${em.c}22;color:${em.c};padding:2px 8px;border-radius:6px;">${em.t}</span>` : '';
+      const badgeFijado = p.fijado ? `<span style="font-size:.65rem;background:rgba(250,204,21,0.15);color:var(--amber);padding:2px 8px;border-radius:6px;font-weight:800;">📌 DESTACADO</span>` : '';
+      const comentariosHtml = (p.comentarios||[]).map(c => {
+        const aceptarBtn = (esAutor && p.categoria==='pregunta' && !c.aceptada) ? `<button onclick="aceptarRespuesta(${p.id},${c.id})" title="Marcar como la respuesta" style="background:none;border:1px solid rgba(74,222,128,0.4);color:#4ade80;border-radius:6px;padding:2px 8px;font-size:.7rem;font-weight:700;cursor:pointer;margin-left:6px;">✓ Aceptar</button>` : '';
+        const aceptadaBox = c.aceptada ? 'background:rgba(74,222,128,0.06);border-left:3px solid #4ade80;padding-left:8px;border-radius:4px;' : '';
+        const aceptadaTag = c.aceptada ? `<span style="color:#4ade80;font-weight:800;font-size:.7rem;margin-left:6px;">✓ Aceptada</span>` : '';
+        return `<div style="padding:6px 0;font-size:.82rem;${aceptadaBox}"><strong style="color:var(--text-muted);">${c.autor}:</strong> <span style="color:var(--text);">${escapeHtml(c.cuerpo)}</span> <span style="font-size:.7rem;color:var(--text-dim);margin-left:6px;">${c.fecha||''}</span>${aceptadaTag}${aceptarBtn}</div>`;
+      }).join('');
+      const resolverCtl = (esAutor && p.categoria==='pregunta')
+        ? (p.resuelto
+            ? `<button onclick="resolverToggle(${p.id},false)" style="background:none;border:1px solid var(--border);color:var(--text-muted);border-radius:6px;padding:4px 10px;font-size:.72rem;font-weight:700;cursor:pointer;white-space:nowrap;">Reabrir</button>`
+            : `<button onclick="resolverToggle(${p.id},true)" style="background:rgba(74,222,128,0.1);border:1px solid rgba(74,222,128,0.35);color:#4ade80;border-radius:6px;padding:4px 10px;font-size:.72rem;font-weight:700;cursor:pointer;white-space:nowrap;">✓ Resuelta</button>`)
+        : '';
+      return `<div class="bento-box" style="margin-bottom:16px;${p.fijado?'border-color:rgba(250,204,21,0.4);background:rgba(250,204,21,0.02);':''}">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px;gap:10px;">
+          <div style="flex:1;">
+            <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:6px;">${badgeCat}${badgeResuelta}${badgeEstado}${badgeFijado}</div>
+            <strong style="font-size:1rem;">${escapeHtml(p.titulo)}</strong>
+            <div style="font-size:.75rem;color:var(--text-dim);margin-top:4px;">${p.autor} · ${p.autor_nivel||'BASIC'} · ${p.fecha}</div>
           </div>
-          <button onclick="darLike(${p.id})" style="background:rgba(239,68,68,0.08); color:#ef4444; border:1px solid rgba(239,68,68,0.2); border-radius:20px; padding:5px 12px; font-size:.78rem; font-weight:700; cursor:pointer; white-space:nowrap;">
-            ❤ ${p.likes||0}
-          </button>
+          <button onclick="darLike(${p.id})" style="background:rgba(239,68,68,0.08);color:#ef4444;border:1px solid rgba(239,68,68,0.2);border-radius:20px;padding:5px 12px;font-size:.78rem;font-weight:700;cursor:pointer;white-space:nowrap;">❤ ${p.likes||0}</button>
         </div>
-        <div style="white-space:pre-wrap; font-size:.88rem; line-height:1.6; color:var(--text); margin-bottom:12px;">${escapeHtml(p.cuerpo)}</div>
-        <div style="border-top:1px solid var(--border); padding-top:10px;">
-          ${(p.comentarios||[]).map(c=>`
-            <div style="padding:6px 0; font-size:.82rem;">
-              <strong style="color:var(--text-muted);">${c.autor}:</strong> <span style="color:var(--text);">${escapeHtml(c.cuerpo)}</span>
-              <span style="font-size:.7rem; color:var(--text-dim); margin-left:6px;">${c.fecha}</span>
-            </div>
-          `).join('')}
-          <div style="display:flex; gap:6px; margin-top:8px;">
-            <input type="text" id="com-input-${p.id}" placeholder="Escribir un comentario..." style="flex:1; background:rgba(255,255,255,0.03); border:1px solid var(--border); color:var(--text); padding:7px 12px; border-radius:6px; font-size:.82rem;">
-            <button onclick="comentarPost(${p.id})" style="background:var(--primary); color:#fff; border:none; border-radius:6px; padding:7px 14px; font-size:.78rem; font-weight:700; cursor:pointer;"><i class="fa-solid fa-paper-plane"></i></button>
+        <div style="white-space:pre-wrap;font-size:.88rem;line-height:1.6;color:var(--text);margin-bottom:12px;">${escapeHtml(p.cuerpo)}</div>
+        <div style="border-top:1px solid var(--border);padding-top:10px;">
+          ${comentariosHtml}
+          <div style="display:flex;gap:6px;margin-top:8px;align-items:center;">
+            <input type="text" id="com-input-${p.id}" placeholder="Escribir una respuesta..." style="flex:1;background:rgba(255,255,255,0.03);border:1px solid var(--border);color:var(--text);padding:7px 12px;border-radius:6px;font-size:.82rem;">
+            <button onclick="comentarPost(${p.id})" style="background:var(--primary);color:#fff;border:none;border-radius:6px;padding:7px 14px;font-size:.78rem;font-weight:700;cursor:pointer;"><i class="fa-solid fa-paper-plane"></i></button>
+            ${resolverCtl}
           </div>
         </div>
-      </div>
-    `).join('');
+      </div>`;
+    }).join('');
   } catch(e) { console.error('comunidad:', e); }
 }
 
@@ -5432,21 +5452,48 @@ function escapeHtml(s) {
 }
 
 async function publicarPost() {
-  const tipo = document.getElementById('post-tipo').value;
+  const categoria = (document.getElementById('post-categoria')||{}).value || 'charla';
   const titulo = document.getElementById('post-titulo').value.trim();
   const cuerpo = document.getElementById('post-cuerpo').value.trim();
   if (titulo.length < 3 || cuerpo.length < 5) { alert('Escribí un título y un cuerpo.'); return; }
   try {
     const res = await apiFetch(`${API}/comunidad/post`, {
       method:'POST', headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({codigo_aliado: aliado.codigo, tipo, titulo, cuerpo})
+      body: JSON.stringify({codigo_aliado: aliado.codigo, categoria, titulo, cuerpo})
     });
     if (!res.ok) { const d = await res.json(); alert(d.detail || 'Error'); return; }
     document.getElementById('post-titulo').value = '';
     document.getElementById('post-cuerpo').value = '';
-    mostrarToast('✅ Post publicado', 'green');
+    mostrarToast('✅ Publicado', 'green');
     cargarComunidad();
   } catch(e) { alert('Error de conexión.'); }
+}
+
+function filtrarComunidadCat(cat, btn) {
+  _comCat = cat || '';
+  document.querySelectorAll('#com-cats .com-chip').forEach(b=>b.classList.remove('activo'));
+  if (btn) btn.classList.add('activo');
+  cargarComunidad();
+}
+
+async function aceptarRespuesta(postId, comId) {
+  try {
+    const res = await apiFetch(`${API}/comunidad/${postId}/resolver`, {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({resuelto:true, comentario_id:comId})
+    });
+    if (res.ok) { mostrarToast('Respuesta aceptada ✓','green'); cargarComunidad(); }
+  } catch(e){}
+}
+
+async function resolverToggle(postId, resuelto) {
+  try {
+    const res = await apiFetch(`${API}/comunidad/${postId}/resolver`, {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({resuelto})
+    });
+    if (res.ok) { mostrarToast(resuelto?'Marcada como resuelta':'Pregunta reabierta','green'); cargarComunidad(); }
+  } catch(e){}
 }
 
 async function darLike(id) {
@@ -7072,11 +7119,32 @@ async function cargarInvitacionRed() {
 }
 
 function compartirRed() {
-  const msg = _redMensajeCompartir
-    || (_redInviteLink ? ('Sumate como aliado de Avanza Digital: ' + _redInviteLink) : '');
+  // Mensaje: primero el del backend; si /invitacion no cargó (ej. backend aún
+  // sin deployar), lo armamos desde el ref_code, que SIEMPRE está en el cliente.
+  let msg = _redMensajeCompartir;
+  if (!msg) {
+    const link = _redInviteLink
+      || (aliado && aliado.ref_code ? ('https://avanzadigital.digital/alianzas?ref=' + aliado.ref_code) : '');
+    if (link) {
+      msg = 'Te comparto el programa de aliados de Avanza Digital, para closers/setters '
+          + 'que quieran cerrar sistemas comerciales para PyMEs industriales, con leads ya '
+          + 'cargados y comisión por venta. Si te interesa, registrate con mi link: ' + link;
+    }
+  }
   if (!msg) {
     if (typeof mostrarToast === 'function') mostrarToast('Esperá a que cargue tu link…', 'amber');
     return;
   }
-  window.open('https://wa.me/?text=' + encodeURIComponent(msg), '_blank');
+
+  // Móvil / PWA: hoja de compartir nativa (deja elegir WhatsApp u otra app).
+  // Se llama de forma síncrona desde el click para no perder el gesto del usuario.
+  if (navigator.share) {
+    navigator.share({ text: msg }).catch(() => {});
+    return;
+  }
+
+  // Desktop / sin Web Share API: abrir WhatsApp con el texto pre-cargado.
+  // OJO: usamos api.whatsapp.com/send?text= (no wa.me/?text=, que sin número
+  // no resuelve y deja la pestaña en blanco).
+  window.open('https://api.whatsapp.com/send?text=' + encodeURIComponent(msg), '_blank');
 }

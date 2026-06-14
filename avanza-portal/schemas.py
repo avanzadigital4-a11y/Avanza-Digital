@@ -196,7 +196,8 @@ class LeadBolsaCreateIn(_Base):
 # ─── COMUNIDAD ───────────────────────────────────────────────────────────────
 class PostComunidadIn(_Base):
     codigo_aliado: str
-    tipo: str = "tip"
+    tipo: str = "tip"            # legacy (tip/win/pregunta) — se mantiene por compat
+    categoria: str = ""          # foro: pregunta | mejora | charla | victoria
     titulo: str = Field(..., min_length=1, max_length=200)
     cuerpo: str = Field(..., min_length=1, max_length=10000)
 
@@ -204,6 +205,17 @@ class PostComunidadIn(_Base):
 class ComentarioComunidadIn(_Base):
     codigo_aliado: str
     cuerpo: str = Field(..., min_length=1, max_length=2000)
+
+
+class ResolverPostIn(_Base):
+    """Marcar una pregunta como resuelta (y opcionalmente aceptar una respuesta)."""
+    resuelto: bool = True
+    comentario_id: int | None = None
+
+
+class EstadoMejoraIn(_Base):
+    """Admin: estado de un pedido de mejora del portal."""
+    estado: str  # recibido | evaluacion | planificado | hecho | descartado
 
 
 # ─── CHECKOUT ────────────────────────────────────────────────────────────────

@@ -3019,10 +3019,11 @@ html.avz-collapsed #avz-sidebar .avz-exit span{ display:none; }
         <p style="color:var(--text-muted); font-size:0.9rem; margin-bottom:20px;">Compartí tips, preguntas o celebrá tus cierres. La red aprende junta.</p>
 
         <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:12px;">
-          <select id="post-tipo" style="background:#111; border:1px solid var(--border); color:white; padding:10px 12px; border-radius:8px;">
-            <option value="tip">💡 Tip / Buena práctica</option>
-            <option value="win">🎉 Cierre / Victoria</option>
-            <option value="pregunta">❓ Pregunta / Duda</option>
+          <select id="post-categoria" style="background:#111; border:1px solid var(--border); color:white; padding:10px 12px; border-radius:8px;">
+            <option value="pregunta">❓ Pregunta</option>
+            <option value="mejora">🛠️ Mejora del portal</option>
+            <option value="charla">💬 Charla / Tip</option>
+            <option value="victoria">🎉 Victoria / Cierre</option>
           </select>
           <input type="text" id="post-titulo" placeholder="Título (ej: Cómo cerré un Industrial en 3 días)" style="background:#111; border:1px solid var(--border); color:white; padding:10px 12px; border-radius:8px;">
         </div>
@@ -3033,6 +3034,26 @@ html.avz-collapsed #avz-sidebar .avz-exit span{ display:none; }
         </div>
       </div>
 
+      <div style="display:flex; flex-wrap:wrap; gap:10px; align-items:center; margin-bottom:16px;">
+        <div id="com-cats" style="display:flex; flex-wrap:wrap; gap:6px;">
+          <button class="com-chip activo" data-cat="" onclick="filtrarComunidadCat('', this)">Todas</button>
+          <button class="com-chip" data-cat="pregunta" onclick="filtrarComunidadCat('pregunta', this)">❓ Preguntas</button>
+          <button class="com-chip" data-cat="mejora" onclick="filtrarComunidadCat('mejora', this)">🛠️ Mejoras</button>
+          <button class="com-chip" data-cat="charla" onclick="filtrarComunidadCat('charla', this)">💬 Charla</button>
+          <button class="com-chip" data-cat="victoria" onclick="filtrarComunidadCat('victoria', this)">🎉 Victorias</button>
+        </div>
+        <div style="flex:1;"></div>
+        <select id="com-orden" onchange="cargarComunidad()" style="background:#111; border:1px solid var(--border); color:white; padding:8px 10px; border-radius:8px; font-size:.82rem;">
+          <option value="recientes">Recientes</option>
+          <option value="sin_responder">Sin responder</option>
+          <option value="mas_votados">Más votados</option>
+        </select>
+        <input type="text" id="com-buscar" placeholder="Buscar…" onkeyup="if(event.key==='Enter')cargarComunidad()" style="background:#111; border:1px solid var(--border); color:white; padding:8px 12px; border-radius:8px; font-size:.82rem; min-width:140px;">
+      </div>
+      <style>
+        .com-chip{background:rgba(255,255,255,0.04);border:1px solid var(--border);color:var(--text-muted);padding:6px 12px;border-radius:20px;font-size:.8rem;font-weight:700;cursor:pointer;}
+        .com-chip.activo{background:var(--primary);border-color:var(--primary);color:#fff;}
+      </style>
       <div id="comunidad-feed"></div>
     </div>
 </div>

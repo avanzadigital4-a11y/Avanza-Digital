@@ -213,6 +213,11 @@ for col_sql in [
     # existente sigue entrando solo con usuario + contraseña hasta que lo active.
     "ALTER TABLE admins ADD COLUMN totp_secret VARCHAR",
     "ALTER TABLE admins ADD COLUMN totp_enabled BOOLEAN DEFAULT FALSE",
+    # Camino B — Foro de la comunidad (categorías, resuelto, estado de mejoras)
+    "ALTER TABLE comunidad_posts ADD COLUMN categoria VARCHAR DEFAULT 'general'",
+    "ALTER TABLE comunidad_posts ADD COLUMN resuelto BOOLEAN DEFAULT FALSE",
+    "ALTER TABLE comunidad_posts ADD COLUMN estado_mejora VARCHAR",
+    "ALTER TABLE comunidad_comentarios ADD COLUMN aceptada BOOLEAN DEFAULT FALSE",
 ]:
     _aplicar_migracion(col_sql)
 

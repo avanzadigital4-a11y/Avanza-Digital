@@ -352,6 +352,7 @@ tr:hover td { background:rgba(255,255,255,0.02); }
       <button class="tab-btn" onclick="cambiarTab('embudo',this)"><i class="fa-solid fa-filter"></i> Embudo</button>
       <button class="tab-btn" onclick="cambiarTab('auditorias',this)"><i class="fa-solid fa-magnifying-glass"></i> Auditorías</button>
       <button class="tab-btn" onclick="cambiarTab('email',this)"><i class="fa-solid fa-envelope-open-text"></i> Email</button>
+      <button class="tab-btn" onclick="cambiarTab('comunidad',this)"><i class="fa-solid fa-comments"></i> Comunidad</button>
       <button class="tab-btn" onclick="cambiarTab('bolsa',this)"><i class="fa-solid fa-bullhorn"></i> Bolsa de Leads</button>
       <button class="tab-btn" onclick="cambiarTab('comisiones',this)"><i class="fa-solid fa-percent"></i> Comisiones <span id="badge-comis" style="display:none;background:var(--red);color:white;font-size:.65rem;font-weight:800;padding:2px 7px;border-radius:50px;margin-left:2px;">0</span></button>
       <button class="tab-btn" onclick="cambiarTab('continuidad',this)"><i class="fa-solid fa-arrows-rotate"></i> Continuidad</button>
@@ -1281,6 +1282,25 @@ tr:hover td { background:rgba(255,255,255,0.02); }
         <div class="table-head"><h3><i class="fa-solid fa-list-check"></i> &nbsp;Por campaña</h3></div>
         <div id="email-tabla"><div style="text-align:center;padding:24px;color:var(--text-muted);">Cargando…</div></div>
       </div>
+    </div>
+    <!-- TAB COMUNIDAD — Foro (moderación + estado de mejoras) ──────────────── -->
+    <div id="tab-comunidad" class="tab-panel">
+      <style>
+        .ac-chip{background:rgba(255,255,255,0.04);border:1px solid var(--border);color:var(--text-muted);padding:6px 12px;border-radius:20px;font-size:.8rem;font-weight:700;cursor:pointer;}
+        .ac-chip.active{background:var(--primary,#3b82f6);border-color:var(--primary,#3b82f6);color:#fff;}
+      </style>
+      <div style="margin-bottom:16px;">
+        <h3 style="font-size:1.2rem;font-weight:900;margin-bottom:4px;"><i class="fa-solid fa-comments" style="color:#c084fc;"></i> &nbsp;Comunidad / Foro</h3>
+        <p style="font-size:.85rem;color:var(--text-muted);">Moderá publicaciones y movéle el estado a los pedidos de mejora — el aliado recibe el aviso.</p>
+      </div>
+      <div id="ac-cats" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px;">
+        <button class="ac-chip active" onclick="_acFiltrar('', this)">Todas</button>
+        <button class="ac-chip" onclick="_acFiltrar('mejora', this)">🛠️ Mejoras</button>
+        <button class="ac-chip" onclick="_acFiltrar('pregunta', this)">❓ Preguntas</button>
+        <button class="ac-chip" onclick="_acFiltrar('charla', this)">💬 Charla</button>
+        <button class="ac-chip" onclick="_acFiltrar('victoria', this)">🎉 Victorias</button>
+      </div>
+      <div class="table-wrap"><div id="admin-comunidad-list"><div style="text-align:center;padding:24px;color:var(--text-muted);">Cargando…</div></div></div>
     </div>
     <div id="tab-nuevo-aliado" class="tab-panel">
       <div style="max-width:640px;">
@@ -2483,6 +2503,7 @@ function cambiarTab(tab, btn) {
   if(tab==='solicitudes') cargarSolicitudesCreditos();
   if(tab==='academia')    cargarAdminAcademia();
       if(tab==='email')       cargarEmailMetricas();
+      if(tab==='comunidad')   cargarAdminComunidad();
 }
 
 // ── EMBUDO DE ACTIVACIÓN ─────────────────────────────────────────────────────
@@ -4497,6 +4518,61 @@ async function cargarEmailMetricas() {
       <td>${fmtReact(c)}</td>
     </tr>`).join('') + `</tbody></table>
     <p style="font-size:.75rem;color:var(--text-dim);padding:12px 4px 0;">${data.nota||''}</p>`;
+}
+// ── COMUNIDAD / FORO — moderación + estado de mejoras ────────────────────────
+let _acFiltro = '';
+async function cargarAdminComunidad() {
+  const cont = document.getElementById('admin-comunidad-list');
+  if (!cont) return;
+  cont.innerHTML = '<div style="text-align:center;padding:24px;color:var(--text-muted);">Cargando…</div>';
+  let data;
+  try {
+    const r = await apiFetch(`${API}/comunidad/feed?limit=100&categoria=${encodeURIComponent(_acFiltro)}`);
+    if (!r.ok) throw new Error(r.status);
+    data = await r.json();
+  } catch (e) {
+    cont.innerHTML = '<div style="text-align:center;padding:24px;color:var(--text-muted);">No se pudo cargar el foro.</div>';
+    return;
+  }
+  const posts = data.posts || [];
+  if (!posts.length) { cont.innerHTML = '<div style="text-align:center;padding:24px;color:var(--text-muted);">Sin publicaciones.</div>'; return; }
+  const estados = ['recibido','evaluacion','planificado','hecho','descartado'];
+  cont.innerHTML = `<table><thead><tr><th>Publicación</th><th>Categoría</th><th>Autor</th><th>Interacción</th><th>Estado / Acciones</th></tr></thead><tbody>` +
+    posts.map(p => {
+      const estadoSel = (p.categoria==='mejora')
+        ? `<select onchange="setEstadoMejora(${p.id}, this.value)" style="background:#111;border:1px solid var(--border);color:#fff;padding:5px 8px;border-radius:6px;font-size:.78rem;">`
+          + estados.map(e=>`<option value="${e}" ${p.estado_mejora===e?'selected':''}>${e}</option>`).join('') + `</select>`
+        : `<span style="color:var(--text-dim);font-size:.78rem;">—</span>`;
+      return `<tr>
+        <td style="max-width:320px;"><strong>${p.titulo}</strong>${p.resuelto?' <span style="color:#4ade80;font-size:.7rem;">✓ resuelta</span>':''}${p.fijado?' 📌':''}</td>
+        <td><span class="badge badge-blue">${p.categoria}</span></td>
+        <td style="color:var(--text-muted);">${p.autor}</td>
+        <td style="font-size:.8rem;color:var(--text-dim);white-space:nowrap;">❤ ${p.likes||0} · 💬 ${p.n_comentarios||0}</td>
+        <td><div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;">${estadoSel}
+          <button onclick="adminFijarPost(${p.id}, ${p.fijado?'false':'true'})" title="Fijar / Desfijar" style="background:none;border:1px solid var(--border);color:var(--text-muted);border-radius:6px;padding:4px 8px;font-size:.72rem;cursor:pointer;">📌</button>
+          <button onclick="adminOcultarPost(${p.id})" title="Ocultar del foro" style="background:none;border:1px solid rgba(239,68,68,0.3);color:#ef4444;border-radius:6px;padding:4px 8px;font-size:.72rem;cursor:pointer;">Ocultar</button>
+        </div></td>
+      </tr>`;
+    }).join('') + `</tbody></table>`;
+}
+function _acFiltrar(cat, btn) {
+  _acFiltro = cat || '';
+  document.querySelectorAll('#ac-cats .ac-chip').forEach(b=>b.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+  cargarAdminComunidad();
+}
+async function setEstadoMejora(id, estado) {
+  try {
+    const r = await apiFetch(`${API}/admin/comunidad/${id}/estado`, {method:'POST', body:{estado}});
+    mostrarToast(r.ok ? 'Estado actualizado ✓' : 'No se pudo actualizar', r.ok ? 'green' : 'red');
+  } catch (e) { mostrarToast('Error de conexión', 'red'); }
+}
+async function adminFijarPost(id, fijar) {
+  try { await apiFetch(`${API}/admin/comunidad/${id}/fijar?fijar=${fijar}`, {method:'POST'}); cargarAdminComunidad(); } catch (e) {}
+}
+async function adminOcultarPost(id) {
+  if (!confirm('¿Ocultar esta publicación del foro?')) return;
+  try { await apiFetch(`${API}/admin/comunidad/${id}/ocultar?ocultar=true`, {method:'POST'}); cargarAdminComunidad(); } catch (e) {}
 }
 </script>
 </body>

@@ -467,6 +467,14 @@ class PostComunidad(Base):
     oculto = Column(Boolean, default=False)
     creado_en = Column(DateTime, default=func.now())
 
+    # --- FORO (Camino B) ---
+    # categoria: 'pregunta' | 'mejora' | 'charla' | 'victoria'. Para posts viejos
+    # (sin categoria) se deriva de `tipo` en el feed. `resuelto` aplica a preguntas;
+    # `estado_mejora` aplica a pedidos de mejora del portal.
+    categoria = Column(String, default="general", index=True)
+    resuelto = Column(Boolean, default=False)
+    estado_mejora = Column(String, nullable=True)   # recibido|evaluacion|planificado|hecho|descartado
+
     aliado = relationship("Aliado")
 
 
@@ -477,6 +485,7 @@ class ComentarioComunidad(Base):
     post_id = Column(Integer, ForeignKey("comunidad_posts.id"))
     aliado_id = Column(Integer, ForeignKey("aliados.id"))
     cuerpo = Column(Text, nullable=False)
+    aceptada = Column(Boolean, default=False)   # respuesta aceptada por el autor de la pregunta
     creado_en = Column(DateTime, default=func.now())
 
     post = relationship("PostComunidad", backref="comentarios")
