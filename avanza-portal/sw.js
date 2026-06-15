@@ -15,8 +15,8 @@
  *
  * Para invalidar el caché en un deploy: subir la versión de CACHE.
  */
-const CACHE = 'avanza-portal-v4';
-const CACHES_ENVENENADOS = ['avanza-portal-v1', 'avanza-portal-v2'];
+const CACHE = 'avanza-portal-v5';
+const CACHES_ENVENENADOS = ['avanza-portal-v1', 'avanza-portal-v2', 'avanza-portal-v3', 'avanza-portal-v4'];
 // v4: además de navegaciones, cacheamos los módulos JS propios versionados
 // por hash (assets/js/portal.*.<hash>.js). Son inmutables: el hash cambia
 // con el contenido, así que cache-first es seguro y no hay veneno posible

@@ -3563,23 +3563,50 @@ async function cargarRed() {
     
     document.getElementById('red-equipo-count').textContent = data.total_sub_aliados;
     document.getElementById('red-ingresos-total').textContent = `USD ${data.total_ganancia_pasiva.toLocaleString()}`;
-    
+
     const tbody = document.getElementById('tabla-red');
     if(data.total_sub_aliados === 0) {
       tbody.innerHTML = `<div class="empty-state"><i class="fa-solid fa-user-group"></i><p>Tu red está vacía.<br>Copiá tu <strong>link de reclutamiento</strong> de arriba y compartílo con vendedores, agencias o colegas que quieran sumarse como aliados.</p></div>`;
       return;
     }
-    
-    tbody.innerHTML = `<table><thead><tr><th>Nombre</th><th>Nivel</th><th>Ubicación</th><th>Ingreso</th><th>Ganancia Generada (5%)</th></tr></thead><tbody>` + 
-      data.detalle.map(sub => `
-        <tr>
-          <td style="font-weight:700;">${sub.nombre}</td>
-          <td><span class="badge badge-blue">${sub.nivel}</span></td>
-          <td style="color:var(--text-muted);">${sub.ciudad}</td>
+
+    // Estado de cada invitado → presentación + acción de seguimiento sugerida.
+    const ESTADO_RED = {
+      sin_activar:         { label: 'Sin activar', bg: 'rgba(239,68,68,0.12)',  fg: '#ef4444',      hint: 'Se registró pero nunca ingresó al portal — escribile para que haga su primer login y se te acrediten los créditos por activación.' },
+      activado_sin_vender: { label: 'Activado',    bg: 'rgba(245,158,11,0.14)', fg: 'var(--amber)', hint: 'Ya ingresó al portal pero todavía no registró ventas — dale una mano con su primer cierre.' },
+      vendiendo:           { label: 'Vendiendo',   bg: 'rgba(34,197,94,0.14)',  fg: 'var(--green)', hint: 'Activo y generando ventas. Tu 5% pasivo corre.' }
+    };
+
+    const resumen = `${data.activados || 0} de ${data.total_sub_aliados} activados · ${data.vendiendo || 0} vendiendo`;
+
+    const filas = data.detalle.map(sub => {
+      const e = ESTADO_RED[sub.estado] || ESTADO_RED.sin_activar;
+      const logins = sub.cantidad_logins || 0;
+      const loginsTxt = logins > 0
+        ? `${logins}<span style="font-size:.72rem;font-weight:400;color:var(--text-muted);"> ${logins === 1 ? 'vez' : 'veces'}</span>`
+        : `<span style="color:#ef4444;font-weight:700;">0</span>`;
+      const ultimo = (sub.ultimo_login && sub.ultimo_login !== 'Nunca')
+        ? sub.ultimo_login
+        : `<span style="color:#ef4444;">Nunca</span>`;
+      return `
+        <tr title="${e.hint}">
+          <td style="font-weight:700;">${sub.nombre}<div style="font-size:.72rem;font-weight:400;color:var(--text-muted);">${sub.ciudad}</div></td>
+          <td><span style="background:${e.bg};color:${e.fg};border:1px solid ${e.fg};padding:3px 9px;border-radius:20px;font-size:.72rem;font-weight:700;white-space:nowrap;">${e.label}</span></td>
           <td style="font-size:.8rem;color:var(--text-dim);">${sub.fecha_ingreso}</td>
-          <td style="color:var(--green);font-weight:800;">USD ${sub.ganancia_pasiva.toLocaleString()}</td>
-        </tr>
-      `).join('') + `</tbody></table>`;
+          <td style="font-weight:700;color:var(--text);">${loginsTxt}</td>
+          <td style="font-size:.8rem;color:var(--text-dim);">${ultimo}</td>
+          <td style="color:var(--green);font-weight:800;">USD ${(sub.ganancia_pasiva || 0).toLocaleString()}</td>
+        </tr>`;
+    }).join('');
+
+    tbody.innerHTML = `
+      <div style="display:flex;flex-wrap:wrap;gap:14px;align-items:center;margin-bottom:12px;font-size:.78rem;color:var(--text-dim);">
+        <span style="font-weight:800;color:var(--text);">${resumen}</span>
+        <span style="display:inline-flex;align-items:center;gap:5px;"><span style="width:9px;height:9px;border-radius:50%;background:#ef4444;display:inline-block;"></span>Sin activar = nunca entró</span>
+        <span style="display:inline-flex;align-items:center;gap:5px;"><span style="width:9px;height:9px;border-radius:50%;background:#f59e0b;display:inline-block;"></span>Activado = entró, no vendió</span>
+        <span style="display:inline-flex;align-items:center;gap:5px;"><span style="width:9px;height:9px;border-radius:50%;background:#22c55e;display:inline-block;"></span>Vendiendo</span>
+      </div>
+      <table><thead><tr><th>Nombre</th><th>Estado</th><th>Se sumó</th><th>Ingresos</th><th>Último ingreso</th><th>Ganancia (5%)</th></tr></thead><tbody>${filas}</tbody></table>`;
   } catch(e) { console.error('Error cargando red', e); }
 }
 

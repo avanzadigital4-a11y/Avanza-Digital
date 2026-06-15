@@ -730,19 +730,44 @@ def mi_red_comercial(codigo: str, db: Session = Depends(get_db), _owner=Depends(
         elif getattr(sub, "fecha_firma", None):
             fecha_ing = sub.fecha_firma
 
+        # Estado de actividad para que el sponsor siga a cada invitado.
+        logins = int(getattr(sub, "cantidad_logins", 0) or 0)
+        ventas_6m = int(getattr(sub, "ventas_6_meses", 0) or 0)
+        if logins == 0:
+            estado = "sin_activar"          # se registró pero nunca ingresó
+        elif ventas_6m == 0:
+            estado = "activado_sin_vender"  # ya ingresó pero todavía no vendió
+        else:
+            estado = "vendiendo"            # ingresó y ya genera ventas
+
+        ult = getattr(sub, "ultimo_login", None)
+        ultimo_login_fmt = ult.strftime("%d/%m/%Y") if ult else "Nunca"
+
         red.append({
             "nombre": sub.nombre,
             "ciudad": sub.ciudad or "Sin especificar",
             "nivel": sub.nivel_calculado,
             "fecha_ingreso": fecha_ing,
+            "cantidad_logins": logins,
+            "ultimo_login": ultimo_login_fmt,
+            "activado": logins >= 1,
+            "ventas_6m": ventas_6m,
+            "estado": estado,
             "ganancia_pasiva": round(ganancia, 2)
         })
-    
+
     red.sort(key=lambda x: x["ganancia_pasiva"], reverse=True)
+
+    total = len(red)
+    activados = sum(1 for s in red if s["activado"])
+    vendiendo = sum(1 for s in red if s["estado"] == "vendiendo")
 
     return {
         "sponsor": getattr(a, "sponsor").nombre if getattr(a, "sponsor", None) else None,
-        "total_sub_aliados": len(red),
+        "total_sub_aliados": total,
+        "activados": activados,
+        "sin_activar": total - activados,
+        "vendiendo": vendiendo,
         "total_ganancia_pasiva": round(total_pasivo, 2),
         "detalle": red
     }
