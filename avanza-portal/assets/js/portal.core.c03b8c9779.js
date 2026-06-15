@@ -3546,6 +3546,36 @@ async function cargarHistorialBolsa() {
 }
 
 // Funciones de MI RED
+// Lista de invitados de la red (para el botón de seguimiento por fila).
+let _redInvitados = [];
+
+// Abre WhatsApp con un mensaje pre-armado según el estado del invitado.
+// Si no hay WhatsApp en su ficha, copia el mensaje al portapapeles.
+function seguirInvitadoRed(i) {
+  const inv = (_redInvitados && _redInvitados[i]) ? _redInvitados[i] : null;
+  if (!inv) return;
+  const num = (inv.whatsapp || '').replace(/\D/g, '');
+  if (num) {
+    window.open(`https://wa.me/${num}?text=${encodeURIComponent(inv.msg)}`, '_blank');
+    return;
+  }
+  // Sin número en ficha → fallback a copiar.
+  const ok = () => mostrarToast('Sin WhatsApp en su ficha. Copié el mensaje para que se lo mandes.', 'amber');
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(inv.msg).then(ok).catch(() => {
+      const ta = document.createElement('textarea');
+      ta.value = inv.msg; document.body.appendChild(ta); ta.select();
+      try { document.execCommand('copy'); } catch (_) {}
+      document.body.removeChild(ta); ok();
+    });
+  } else {
+    const ta = document.createElement('textarea');
+    ta.value = inv.msg; document.body.appendChild(ta); ta.select();
+    try { document.execCommand('copy'); } catch (_) {}
+    document.body.removeChild(ta); ok();
+  }
+}
+
 async function cargarRed() {
   if(!aliado) return;
   cargarInvitacionRed();
@@ -3570,16 +3600,33 @@ async function cargarRed() {
       return;
     }
 
-    // Estado de cada invitado → presentación + acción de seguimiento sugerida.
+    // Estado de cada invitado → presentación, acción y mensaje de seguimiento.
+    const PORTAL_LOGIN = 'https://avanzadigital.digital/avanza-portal/portal.html';
     const ESTADO_RED = {
-      sin_activar:         { label: 'Sin activar', bg: 'rgba(239,68,68,0.12)',  fg: '#ef4444',      hint: 'Se registró pero nunca ingresó al portal — escribile para que haga su primer login y se te acrediten los créditos por activación.' },
-      activado_sin_vender: { label: 'Activado',    bg: 'rgba(245,158,11,0.14)', fg: 'var(--amber)', hint: 'Ya ingresó al portal pero todavía no registró ventas — dale una mano con su primer cierre.' },
-      vendiendo:           { label: 'Vendiendo',   bg: 'rgba(34,197,94,0.14)',  fg: 'var(--green)', hint: 'Activo y generando ventas. Tu 5% pasivo corre.' }
+      sin_activar: {
+        label: 'Sin activar', bg: 'rgba(239,68,68,0.12)', fg: '#ef4444',
+        hint: 'Se registró pero nunca ingresó al portal — escribile para que haga su primer login y se te acrediten los créditos por activación.',
+        cta: 'Recordarle',
+        msg: n => `Hola ${n}! Te sumaste a Avanza Digital con mi link pero todavía no ingresaste al portal. Entrá para activar tu cuenta y arrancar — ya tenés leads cargados esperándote: ${PORTAL_LOGIN} . Cualquier duda, escribime.`
+      },
+      activado_sin_vender: {
+        label: 'Activado', bg: 'rgba(245,158,11,0.14)', fg: 'var(--amber)',
+        hint: 'Ya ingresó al portal pero todavía no registró ventas — dale una mano con su primer cierre.',
+        cta: 'Impulsar',
+        msg: n => `Hola ${n}! Vi que ya entraste al portal de Avanza. ¿Te doy una mano para arrancar con tu primer cierre? Tenés leads listos para contactar — decime y lo vemos juntos.`
+      },
+      vendiendo: {
+        label: 'Vendiendo', bg: 'rgba(34,197,94,0.14)', fg: 'var(--green)',
+        hint: 'Activo y generando ventas. Tu 5% pasivo corre.',
+        cta: 'Saludar',
+        msg: n => `Hola ${n}! Vengo siguiendo tus ventas en Avanza, vas muy bien. ¿Necesitás algo para seguir cerrando? Acá estoy.`
+      }
     };
 
     const resumen = `${data.activados || 0} de ${data.total_sub_aliados} activados · ${data.vendiendo || 0} vendiendo`;
 
-    const filas = data.detalle.map(sub => {
+    _redInvitados = [];
+    const filas = data.detalle.map((sub, i) => {
       const e = ESTADO_RED[sub.estado] || ESTADO_RED.sin_activar;
       const logins = sub.cantidad_logins || 0;
       const loginsTxt = logins > 0
@@ -3588,6 +3635,7 @@ async function cargarRed() {
       const ultimo = (sub.ultimo_login && sub.ultimo_login !== 'Nunca')
         ? sub.ultimo_login
         : `<span style="color:#ef4444;">Nunca</span>`;
+      _redInvitados.push({ nombre: sub.nombre, whatsapp: sub.whatsapp || '', msg: e.msg(sub.nombre) });
       return `
         <tr title="${e.hint}">
           <td style="font-weight:700;">${sub.nombre}<div style="font-size:.72rem;font-weight:400;color:var(--text-muted);">${sub.ciudad}</div></td>
@@ -3596,17 +3644,18 @@ async function cargarRed() {
           <td style="font-weight:700;color:var(--text);">${loginsTxt}</td>
           <td style="font-size:.8rem;color:var(--text-dim);">${ultimo}</td>
           <td style="color:var(--green);font-weight:800;">USD ${(sub.ganancia_pasiva || 0).toLocaleString()}</td>
+          <td><button onclick="seguirInvitadoRed(${i})" style="display:inline-flex;align-items:center;gap:6px;background:rgba(37,211,102,0.12);color:#25D366;border:1px solid rgba(37,211,102,0.4);border-radius:8px;padding:6px 12px;font-size:.76rem;font-weight:700;cursor:pointer;white-space:nowrap;"><i class="fa-brands fa-whatsapp"></i> ${e.cta}</button></td>
         </tr>`;
     }).join('');
 
     tbody.innerHTML = `
-      <div style="display:flex;flex-wrap:wrap;gap:14px;align-items:center;margin-bottom:12px;font-size:.78rem;color:var(--text-dim);">
+      <div style="display:flex;flex-wrap:wrap;justify-content:center;gap:14px;align-items:center;margin-bottom:12px;font-size:.78rem;color:var(--text-dim);">
         <span style="font-weight:800;color:var(--text);">${resumen}</span>
         <span style="display:inline-flex;align-items:center;gap:5px;"><span style="width:9px;height:9px;border-radius:50%;background:#ef4444;display:inline-block;"></span>Sin activar = nunca entró</span>
         <span style="display:inline-flex;align-items:center;gap:5px;"><span style="width:9px;height:9px;border-radius:50%;background:#f59e0b;display:inline-block;"></span>Activado = entró, no vendió</span>
         <span style="display:inline-flex;align-items:center;gap:5px;"><span style="width:9px;height:9px;border-radius:50%;background:#22c55e;display:inline-block;"></span>Vendiendo</span>
       </div>
-      <table><thead><tr><th>Nombre</th><th>Estado</th><th>Se sumó</th><th>Ingresos</th><th>Último ingreso</th><th>Ganancia (5%)</th></tr></thead><tbody>${filas}</tbody></table>`;
+      <table><thead><tr><th>Nombre</th><th>Estado</th><th>Se sumó</th><th>Ingresos</th><th>Último ingreso</th><th>Ganancia (5%)</th><th>Seguimiento</th></tr></thead><tbody>${filas}</tbody></table>`;
   } catch(e) { console.error('Error cargando red', e); }
 }
 

@@ -753,6 +753,7 @@ def mi_red_comercial(codigo: str, db: Session = Depends(get_db), _owner=Depends(
             "activado": logins >= 1,
             "ventas_6m": ventas_6m,
             "estado": estado,
+            "whatsapp": (getattr(sub, "whatsapp", "") or ""),
             "ganancia_pasiva": round(ganancia, 2)
         })
 
