@@ -282,6 +282,21 @@ def auto_registro(request: Request,
         f"<p>Nuevo aliado auto-registrado:<br><strong>{a.nombre}</strong> — {a.email} — {a.whatsapp}<br>Perfil: {a.perfil or '—'} | Ciudad: {a.ciudad or '—'}<br>Código: {a.codigo} | Ref: {a.ref_code}</p>"
     )
 
+    # ── ACTIVACIÓN INMEDIATA ─────────────────────────────────────────────
+    # El alta ya auto-loguea (incluir_token=True más abajo), así que ESTE
+    # ingreso ES el primer login del aliado. Si no lo contamos, el que se
+    # registra y sigue usando el portal con la sesión abierta queda con
+    # cantidad_logins=0 → aparece "Sin activar" en la Mi Red de su sponsor
+    # aunque ya esté reclamando leads y trabajando. Lo marcamos una sola vez,
+    # acá en el alta. No bloquea el registro si llegara a fallar.
+    try:
+        a.ultimo_login = datetime.now()
+        a.cantidad_logins = (getattr(a, "cantidad_logins", 0) or 0) + 1
+        db.commit()
+    except Exception as e:
+        db.rollback()
+        print(f"[REGISTRO] No se pudo marcar la activación inicial: {e}")
+
     return _aliado_detalle(a, incluir_token=True)
 
 

@@ -26,22 +26,29 @@
 /fonts/*
   Cache-Control: public, max-age=31536000, immutable
 
-# ── Caché — módulos JS versionados por hash (1 año, inmutable) ───────────────
-# Los portal.*.<hash>.js llevan el hash del contenido en el nombre: un cambio
-# genera un nombre nuevo, así que la copia cacheada nunca queda obsoleta. Esto
-# es lo que hace que el arranque en frío del PWA no vuelva a parsear ~470 KB.
-# Va ANTES de la regla genérica /*.js para que la pise (Netlify: más específica
-# gana, pero el orden documenta la intención).
+# ── Caché — módulos JS del portal (nombre fijo, siempre valida) ──────────────
+# Estos archivos (portal.core.js, portal.jarvis.js, etc.) conservan SIEMPRE el
+# mismo nombre. Por eso NO pueden ser 'immutable': si lo fueran, el navegador
+# serviría la copia vieja hasta un año tras editarlos en el lugar (había que
+# hacer Ctrl+Shift+R). Con no-cache el navegador GUARDA el archivo pero pregunta
+# al servidor si cambió antes de usarlo (If-None-Match). Si no cambió → 304
+# instantáneo, no re-descarga. Si cambió → baja el nuevo. Deploy = cambio visible
+# al instante, sin tocar el nombre y sin F5.
 /assets/js/*
-  Cache-Control: public, max-age=31536000, immutable
+  Cache-Control: no-cache
 /avanza-portal/assets/js/*
-  Cache-Control: public, max-age=31536000, immutable
+  Cache-Control: no-cache
 
-# ── Caché — CSS y JS (1 mes) ─────────────────────────────────────────────────
+# ── Caché — CSS y JS (sin caché fijo — siempre valida contra el servidor) ────
+# ANTES tenían max-age=2592000 (30 días): el navegador servía el archivo viejo
+# hasta un mes sin preguntar, obligando a hacer Ctrl+Shift+R tras cada deploy.
+# Con no-cache el navegador GUARDA el archivo pero valida si cambió antes de
+# usarlo (manda If-None-Match / If-Modified-Since). Si no cambió → 304 rápido.
+# Si cambió → descarga el nuevo. Deploy nuevo = todos ven el cambio al instante.
 /*.css
-  Cache-Control: public, max-age=2592000
+  Cache-Control: no-cache
 /*.js
-  Cache-Control: public, max-age=2592000
+  Cache-Control: no-cache
 
 # ── PWA del portal: el SW y el manifest NO se cachean ────────────────────────
 # Si el navegador cachea sw.js un mes, los deploys del portal tardan un mes en
@@ -51,6 +58,9 @@
 /avanza-portal/manifest.webmanifest
   Cache-Control: no-cache
 
-# ── Caché — HTML (1 hora) ────────────────────────────────────────────────────
+# ── Caché — HTML (sin caché fijo — siempre valida contra el servidor) ────────
+# Con max-age=3600 los usuarios podían ver HTML viejo hasta 1 hora.
+# Con no-cache siempre valida: el HTML es liviano y es el punto de entrada;
+# si el HTML es fresco, el usuario siempre parte de la versión correcta.
 /*.html
-  Cache-Control: public, max-age=3600
+  Cache-Control: no-cache

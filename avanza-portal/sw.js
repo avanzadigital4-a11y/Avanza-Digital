@@ -15,13 +15,13 @@
  *
  * Para invalidar el caché en un deploy: subir la versión de CACHE.
  */
-const CACHE = 'avanza-portal-v5';
+const CACHE = 'avanza-portal-v6';
 const CACHES_ENVENENADOS = ['avanza-portal-v1', 'avanza-portal-v2', 'avanza-portal-v3', 'avanza-portal-v4'];
-// v4: además de navegaciones, cacheamos los módulos JS propios versionados
-// por hash (assets/js/portal.*.<hash>.js). Son inmutables: el hash cambia
-// con el contenido, así que cache-first es seguro y no hay veneno posible
-// (a diferencia de los CDN opacos de v2). Una copia vieja queda huérfana
-// cuando sube el hash y se barre al activar la próxima versión de CACHE.
+// v6: el SW ya NO cachea los módulos JS propios. Los archivos del portal
+// (portal.core.js, portal.jarvis.js, ...) tienen nombre fijo y se sirven con
+// 'no-cache' desde Netlify, así que el navegador los revalida solo en cada
+// carga. El SW los deja pasar directo (igual que CSS, fuentes y la API). Al
+// subir CACHE a v6, el 'activate' barre el caché v5 que tenía copias viejas.
 
 self.addEventListener('install', () => {
   self.skipWaiting();
@@ -58,34 +58,10 @@ const PAGINA_OFFLINE =
 
 self.addEventListener('fetch', (event) => {
   const req = event.request;
-  const url = new URL(req.url);
 
-  // ── Módulos JS propios versionados: cache-first (inmutables por hash) ──
-  // Mismo-origin y bajo /assets/js/ con extensión .js. La primera visita los
-  // baja de red y los guarda; las siguientes los sirven del caché al instante
-  // (clave para el arranque en frío en celular). Como el nombre lleva el hash
-  // del contenido, nunca servimos una versión equivocada: un deploy nuevo pide
-  // un nombre nuevo y la copia vieja queda inerte hasta el barrido de activate.
-  if (req.method === 'GET' && url.origin === self.location.origin &&
-      url.pathname.includes('/assets/js/') && url.pathname.endsWith('.js')) {
-    event.respondWith(
-      caches.match(req).then((hit) => {
-        if (hit) return hit;
-        return fetch(req).then((res) => {
-          // Solo cacheamos respuestas propias y OK (no opacas): verificable.
-          if (res && res.ok && res.type === 'basic') {
-            const copia = res.clone();
-            caches.open(CACHE).then((c) => c.put(req, copia)).catch(() => {});
-          }
-          return res;
-        });
-      })
-    );
-    return;
-  }
-
-  // ── Navegaciones: red primero, respaldo offline ── Todo lo demás (CSS, fuentes, íconos,
-  // API) lo maneja el navegador directamente, sin pasar por este SW.
+  // ── Navegaciones: red primero, respaldo offline ── Todo lo demás (CSS, JS del
+  // portal, fuentes, íconos, API) lo maneja el navegador directamente con sus
+  // propias cabeceras de caché, sin pasar por este SW.
   if (req.method !== 'GET' || req.mode !== 'navigate') return;
 
   event.respondWith(
