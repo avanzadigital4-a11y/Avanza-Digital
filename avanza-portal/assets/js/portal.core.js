@@ -591,6 +591,9 @@ async function iniciarSesion() {
 }
 
 function cambiarTab(tab, btn) {
+  // Cualquier cambio de solapa frena el auto-refresh de Mi Red (si estaba
+  // activo). Se vuelve a encender más abajo solo si la nueva solapa es 'red'.
+  detenerAutoRefreshRed();
   document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));
   document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
   const panel = document.getElementById(`tab-${tab}`);
@@ -630,7 +633,7 @@ function cambiarTab(tab, btn) {
     }
     cargarBolsa(); cargarHistorialBolsa(); cargarMarketplace();
   }
-  if(tab==='red') cargarRed();
+  if(tab==='red') { cargarRed(); iniciarAutoRefreshRed(); }
   if(tab==='comunidad') cargarComunidad();
   if(tab==='academia') inicializarAcademia();
   // v1.4: refrescar TC al entrar al cotizador y comisiones al entrar a su tab
@@ -3573,6 +3576,38 @@ function seguirInvitadoRed(i) {
     ta.value = inv.msg; document.body.appendChild(ta); ta.select();
     try { document.execCommand('copy'); } catch (_) {}
     document.body.removeChild(ta); ok();
+  }
+}
+
+// ── Auto-refresh de Mi Red ───────────────────────────────────────────────────
+// Mientras el aliado está parado en la solapa Mi Red, repedimos los datos solos
+// cada AUTO_REFRESH_RED_MS para que vea la activación de un invitado (ej. cuando
+// un referido entra por primera vez y su contador pasa de 0 a 1) SIN apretar F5.
+// Arranca al entrar a la solapa y se frena al salir (lo dispara cambiarTab). Si la
+// pestaña del navegador no está visible, salteamos el pedido para no gastar
+// requests al pedo; al volver, el próximo ciclo lo trae igual.
+const AUTO_REFRESH_RED_MS = 45000; // 45 segundos
+let _redPollTimer = null;
+
+function iniciarAutoRefreshRed() {
+  detenerAutoRefreshRed(); // nunca dejar dos timers corriendo a la vez
+  _redPollTimer = setInterval(() => {
+    // Si el aliado ya no está en la solapa Mi Red, frenamos por las dudas.
+    const panelRed = document.getElementById('tab-red');
+    if (!panelRed || !panelRed.classList.contains('active')) {
+      detenerAutoRefreshRed();
+      return;
+    }
+    // Pestaña del navegador en segundo plano → no pedimos nada todavía.
+    if (document.hidden) return;
+    cargarRed();
+  }, AUTO_REFRESH_RED_MS);
+}
+
+function detenerAutoRefreshRed() {
+  if (_redPollTimer) {
+    clearInterval(_redPollTimer);
+    _redPollTimer = null;
   }
 }
 
