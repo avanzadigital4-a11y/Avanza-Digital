@@ -334,6 +334,7 @@ async def crear_checkout(request: Request, plan: str,
                          cliente_email: str = "",
                          cliente_whatsapp: str = "",
                          moneda: str = "ars",
+                         prospecto_id: int = None,
                          db: Session = Depends(get_db)):
     """Crea un link de pago. `moneda` = 'ars' (MercadoPago) o 'usd' (USDT TRC20).
     Spec §5: ambos flujos generan registros en links_pago con expiración a 48hs."""
@@ -386,6 +387,19 @@ async def crear_checkout(request: Request, plan: str,
         resultado = await _crear_link_mp(a, plan, nombre_cliente, db)
     else:
         resultado = await _crear_link_usdt(a, plan, nombre_cliente, db)
+
+    # Atribucion de equipo: ligar el link al prospecto handed-off (si se paso) para que
+    # al pagarse la comision de sistemas se reparta con el setter.
+    if prospecto_id:
+        try:
+            _lid = resultado.get("link_id")
+            if _lid:
+                _lp = db.query(LinkPago).filter(LinkPago.id == _lid).first()
+                if _lp:
+                    _lp.prospecto_id = prospecto_id
+                    db.commit()
+        except Exception as _e:
+            print(f"[CHECKOUT] No pude ligar prospecto al link: {_e}")
 
     # Guardar email y whatsapp del cliente en el LinkPago para recuperarlos
     # cuando llegue el webhook de pago confirmado y mandar el Tally correcto.
@@ -651,6 +665,43 @@ def _procesar_pago_confirmado(db: Session,
         )
         db.add(c_red)
         a.sponsor.nivel = a.sponsor.nivel_calculado
+
+    # --- SPLIT DE EQUIPO (sistemas/one-shot): si el link esta ligado a un prospecto
+    # handed-off, repartir la comision titular con el setter. Modelo B para sponsors.
+    # Best-effort: cualquier error NO rompe el pago (la comision del closer ya esta).
+    try:
+        _setter_id = None; _split = None
+        if link_pago_id:
+            _lp = db.query(LinkPago).filter(LinkPago.id == link_pago_id).first()
+            if _lp and getattr(_lp, "prospecto_id", None):
+                _pro = db.query(Prospecto).filter(Prospecto.id == _lp.prospecto_id).first()
+                if _pro:
+                    _setter_id = getattr(_pro, "setter_id", None)
+                    _split = getattr(_pro, "setter_split_pct", None)
+        if _setter_id and _split and _setter_id != a.id:
+            _parte = round(float(comision_usd) * float(_split), 2)
+            if _parte > 0:
+                c.comision_usd = round(float(comision_usd) - _parte, 2)
+                db.add(Comision(
+                    aliado_id=_setter_id, plan=plan, monto_plan_usd=valor_usd,
+                    comision_pct=round(float(comision_pct) * float(_split), 4),
+                    comision_usd=_parte, nombre_cliente="EQUIPO: " + str(nombre_cliente),
+                    estado="pendiente", processor=processor, fecha_pago=fecha_venta))
+                notificar_aliado(db, _setter_id, "comision",
+                    "Comision de equipo: USD %s" % format(_parte, ",.0f"),
+                    "Tu closer cerro %s (%s). Te toca tu parte como setter." % (nombre_cliente, plan),
+                    tab="comisiones")
+                # Modelo B: el sponsor del setter tambien cobra su 5% del deal.
+                _setter = db.query(Aliado).filter(Aliado.id == _setter_id).first()
+                _sp = getattr(_setter, "sponsor", None) if _setter else None
+                if _sp:
+                    db.add(Comision(
+                        aliado_id=_sp.id, plan=plan, monto_plan_usd=valor_usd,
+                        comision_pct=0.05, comision_usd=round(valor_usd * 0.05, 2),
+                        nombre_cliente="RED EQUIPO: " + str(nombre_cliente),
+                        estado="pendiente", processor=processor, fecha_pago=fecha_venta))
+    except Exception as _e:
+        print(f"[CHECKOUT] split de equipo no aplicado: {_e}")
 
     # --- Actualizar LinkPago a pagado ---
     if link_pago_id:

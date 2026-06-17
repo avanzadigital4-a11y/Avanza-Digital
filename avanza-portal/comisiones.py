@@ -562,6 +562,27 @@ def _repartir_comision_titular_equipo(db, p, c_closer, plan_label, mes, anio, fe
         tab="comisiones",
     )
 
+    # Modelo B: el sponsor del SETTER tambien cobra su override (5% del deal completo).
+    from models import Aliado as _Aliado
+    _setter = db.query(_Aliado).filter(_Aliado.id == setter_id).first()
+    _sp = getattr(_setter, "sponsor", None) if _setter else None
+    if _sp:
+        cliente_red = "RED EQUIPO: " + str(p.nombre_cliente)
+        ya_sp = db.query(Comision).filter(
+            Comision.aliado_id == _sp.id,
+            Comision.nombre_cliente == cliente_red,
+            Comision.plan == plan_label,
+            extract('month', Comision.fecha_pago) == mes,
+            extract('year',  Comision.fecha_pago) == anio,
+        ).first()
+        if not ya_sp:
+            _ovr = round(float(p.precio_mensual_usd) * 0.05, 2)
+            db.add(Comision(
+                aliado_id=_sp.id, plan=plan_label,
+                monto_plan_usd=float(p.precio_mensual_usd), comision_pct=0.05,
+                comision_usd=_ovr, nombre_cliente=cliente_red,
+                estado="pendiente", fecha_pago=fecha_pago))
+
 
 def _stampear_setter_desde_lead(db, p, lead_id, closer_id):
     """Copia la atribucion setter->closer del lead handed-off al plan, para que el

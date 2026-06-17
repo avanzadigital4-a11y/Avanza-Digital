@@ -39,6 +39,20 @@ JWT_EXPIRE_HOURS = int(os.environ.get("JWT_EXPIRE_HOURS", "168"))  # 7 días
 # de nuevo a mano). Por defecto: 30 días.
 JWT_REFRESH_WINDOW_HOURS = int(os.environ.get("JWT_REFRESH_WINDOW_HOURS", "720"))
 
+# ─── TRACKING DE ACTIVIDAD ────────────────────────────────────────────────────
+# Cada request autenticado de un aliado "toca" su actividad. Así "Último acceso"
+# y "Visitas" en el admin reflejan CUALQUIER ingreso real (abrir el portal,
+# reclamar/contactar un lead, ver la bolsa, etc.), NO solo el formulario de
+# login. Antes el contador subía únicamente en /aliados/login y en el auto-
+# registro: el que entraba con la sesión guardada o por un token quedaba en
+# "Nunca / 0 visitas" aunque estuviera trabajando, y no sumaba en Mi Red.
+#   - ultimo_login se refresca como mucho cada ACTIVIDAD_DEBOUNCE_MIN minutos
+#     (evita escribir en la base en cada click).
+#   - cantidad_logins ("Visitas") suma 1 por sesión nueva: si pasaron más de
+#     ACTIVIDAD_SESION_MIN minutos desde la última actividad, es una visita nueva.
+ACTIVIDAD_DEBOUNCE_MIN = int(os.environ.get("ACTIVIDAD_DEBOUNCE_MIN", "2"))
+ACTIVIDAD_SESION_MIN   = int(os.environ.get("ACTIVIDAD_SESION_MIN", "30"))
+
 _jwt_secret_env = os.environ.get("JWT_SECRET", "").strip()
 _env_name = os.environ.get("ENV", "").lower().strip() or os.environ.get("ENVIRONMENT", "").lower().strip()
 _is_production = _env_name in ("production", "prod")
@@ -139,6 +153,48 @@ def current_payload_required(request: Request) -> dict:
     return payload
 
 
+def _minutos_desde(dt) -> Optional[float]:
+    """Minutos transcurridos desde `dt` hasta ahora. Tolerante a naive/aware."""
+    if dt is None:
+        return None
+    try:
+        ahora = datetime.now(dt.tzinfo) if dt.tzinfo is not None else datetime.now()
+        return (ahora - dt).total_seconds() / 60.0
+    except Exception:
+        return None
+
+
+def registrar_actividad(db: Session, a: Aliado) -> None:
+    """Marca actividad real del aliado en CADA request autenticado.
+
+    Refresca `ultimo_login` (con debounce para no escribir en cada click) e
+    incrementa `cantidad_logins` cuando arranca una sesión nueva. Es la fuente
+    de verdad de "Último acceso" y "Visitas" en el admin y de los "activados"
+    de Mi Red. Best-effort: si la escritura falla hace rollback y sigue, nunca
+    rompe el request del aliado."""
+    ult = getattr(a, "ultimo_login", None)
+    gap = _minutos_desde(ult)
+
+    es_sesion_nueva  = (ult is None) or (gap is not None and gap >= ACTIVIDAD_SESION_MIN)
+    necesita_refresh = (ult is None) or (gap is None) or (gap >= ACTIVIDAD_DEBOUNCE_MIN)
+    if not necesita_refresh:
+        return
+
+    try:
+        a.ultimo_login = datetime.now()
+        if es_sesion_nueva:
+            a.cantidad_logins = (getattr(a, "cantidad_logins", 0) or 0) + 1
+        # Vuelve a estar activo: limpiar avisos de inactividad para que el ciclo
+        # 20d/30d/55d arranque limpio desde esta actividad.
+        a.notif_inact_20d_en = None
+        a.notif_inact_30d_en = None
+        a.notif_inact_55d_en = None
+        db.commit()
+    except Exception as e:
+        db.rollback()
+        print(f"[ACTIVIDAD] no se pudo registrar ingreso de {getattr(a, 'codigo', '?')}: {e}")
+
+
 def current_aliado_required(
     payload: dict = Depends(current_payload_required),
     db: Session = Depends(get_db),
@@ -153,6 +209,8 @@ def current_aliado_required(
     a = db.query(Aliado).filter(Aliado.codigo == codigo, Aliado.activo == True).first()
     if not a:
         raise HTTPException(401, "Aliado del token no encontrado o inactivo.")
+    # Registrar el ingreso real (precisión de "Último acceso" / "Visitas").
+    registrar_actividad(db, a)
     return a
 
 

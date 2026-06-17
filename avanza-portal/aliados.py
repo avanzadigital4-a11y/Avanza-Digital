@@ -26,6 +26,7 @@ cambiar password) viven en cuenta.py; el portal público en portal_publico.py.
 hash_password queda en main (tests/conftest.py lo monkeypatchea) y se accede
 por puente diferido, igual que _get_aliado, _ajustar_creditos y PORTAL_URL.
 """
+import os
 import random
 import re
 import string
@@ -717,13 +718,17 @@ def mi_red_comercial(codigo: str, db: Session = Depends(get_db), _owner=Depends(
     red = []
     total_pasivo = 0
 
+    # Ventana móvil: un sub cuenta como "activado" si ingresó en los últimos N días.
+    DIAS_VENTANA_ACTIVO = int(os.environ.get("DIAS_VENTANA_ACTIVO", "7"))
+    corte_activo = datetime.now() - timedelta(days=DIAS_VENTANA_ACTIVO)
+
     sub_aliados = getattr(a, "sub_aliados", [])
     for sub in sub_aliados:
         # Calcular cuánta plata generó este sub-aliado
         ventas_red = [v.comision_usd for v in a.ventas if f"RED: {sub.nombre}" in v.nombre_cliente]
         ganancia = sum(ventas_red)
         total_pasivo += ganancia
-        
+
         fecha_ing = "Reciente"
         if getattr(sub, "creado_en", None):
             fecha_ing = sub.creado_en.strftime("%d/%m/%Y")
@@ -733,14 +738,25 @@ def mi_red_comercial(codigo: str, db: Session = Depends(get_db), _owner=Depends(
         # Estado de actividad para que el sponsor siga a cada invitado.
         logins = int(getattr(sub, "cantidad_logins", 0) or 0)
         ventas_6m = int(getattr(sub, "ventas_6_meses", 0) or 0)
-        if logins == 0:
-            estado = "sin_activar"          # se registró pero nunca ingresó
-        elif ventas_6m == 0:
-            estado = "activado_sin_vender"  # ya ingresó pero todavía no vendió
-        else:
-            estado = "vendiendo"            # ingresó y ya genera ventas
-
         ult = getattr(sub, "ultimo_login", None)
+
+        # ¿Ingresó alguna vez? ¿Ingresó dentro de la ventana móvil?
+        entro_alguna_vez = (ult is not None) or (logins >= 1)
+        try:
+            activo_reciente = (ult is not None) and (ult >= corte_activo)
+        except TypeError:
+            # Defensa por si ult viniera tz-aware: compará en naive.
+            activo_reciente = (ult is not None) and (ult.replace(tzinfo=None) >= corte_activo)
+
+        if not entro_alguna_vez:
+            estado = "sin_activar"          # se registró pero nunca ingresó
+        elif not activo_reciente:
+            estado = "inactivo"            # ingresó antes, pero hace +N días que no vuelve
+        elif ventas_6m == 0:
+            estado = "activado_sin_vender"  # activo y sin ventas todavía
+        else:
+            estado = "vendiendo"            # activo y generando ventas
+
         ultimo_login_fmt = ult.strftime("%d/%m/%Y") if ult else "Nunca"
 
         red.append({
@@ -750,7 +766,8 @@ def mi_red_comercial(codigo: str, db: Session = Depends(get_db), _owner=Depends(
             "fecha_ingreso": fecha_ing,
             "cantidad_logins": logins,
             "ultimo_login": ultimo_login_fmt,
-            "activado": logins >= 1,
+            "activado": activo_reciente,
+            "entro_alguna_vez": entro_alguna_vez,
             "ventas_6m": ventas_6m,
             "estado": estado,
             "whatsapp": (getattr(sub, "whatsapp", "") or ""),
@@ -761,14 +778,18 @@ def mi_red_comercial(codigo: str, db: Session = Depends(get_db), _owner=Depends(
 
     total = len(red)
     activados = sum(1 for s in red if s["activado"])
+    inactivos = sum(1 for s in red if s["estado"] == "inactivo")
+    nunca_entro = sum(1 for s in red if s["estado"] == "sin_activar")
     vendiendo = sum(1 for s in red if s["estado"] == "vendiendo")
 
     return {
         "sponsor": getattr(a, "sponsor").nombre if getattr(a, "sponsor", None) else None,
         "total_sub_aliados": total,
         "activados": activados,
-        "sin_activar": total - activados,
+        "inactivos": inactivos,
+        "sin_activar": nunca_entro,
         "vendiendo": vendiendo,
+        "ventana_dias": DIAS_VENTANA_ACTIVO,
         "total_ganancia_pasiva": round(total_pasivo, 2),
         "detalle": red
     }

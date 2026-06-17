@@ -286,3 +286,18 @@ function prepararContinuidadDesdeLead(leadId, empresaEnc) {
   if (typeof cambiarTab === 'function') cambiarTab('comisiones', btn || null);
   mostrarToast('Completa el plan y activa la continuidad para registrar el cierre.', 'green');
 }
+
+
+/* El CLOSER genera el link de pago de un prospecto (de sistemas). Lleva el
+ * prospecto_id al cotizador para que, si vino de un handoff, la comision se
+ * reparta con el setter al cobrarse. */
+function cobrarDesdeProspecto(prospectoId, nombreEnc) {
+  window._cotizadorProspectoId = prospectoId;
+  let nombre = '';
+  try { nombre = decodeURIComponent(nombreEnc || ''); } catch (e) {}
+  const c = document.getElementById('cot-cliente');
+  if (c && nombre) c.value = nombre;
+  const btn = document.querySelector('.tab-btn[data-tab="cotizador"]');
+  if (typeof cambiarTab === 'function') cambiarTab('cotizador', btn || null);
+  mostrarToast('Elegi el plan y genera el link. Si vino en equipo, se reparte con el setter.', 'green');
+}

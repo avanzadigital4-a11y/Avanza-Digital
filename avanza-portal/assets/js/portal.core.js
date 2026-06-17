@@ -2191,6 +2191,7 @@ function plRenderProspectos() {
         <button onclick="abrirFichaLead(${p.id})" style="background:rgba(59,130,246,0.12);color:var(--primary);border:1px solid rgba(59,130,246,0.3);border-radius:8px;padding:7px 12px;font-size:.76rem;font-weight:700;cursor:pointer;white-space:nowrap;"><i class="fa-solid fa-address-card"></i> Ficha</button>
         ${(p.estado!=='perdido'&&p.estado!=='ganado')?`<button onclick="plHiceSeguimiento(${p.id})" title="Registrá lo que hiciste, cerrá la tarea pendiente y agendá el próximo paso — todo en un paso" style="background:rgba(245,158,11,0.14);color:var(--amber);border:1px solid rgba(245,158,11,0.4);border-radius:8px;padding:7px 12px;font-size:.76rem;font-weight:700;cursor:pointer;white-space:nowrap;"><i class="fa-solid fa-circle-check"></i> Hice el seguimiento</button>`:''}
         <button onclick="plRegistrarDesdeProspecto(${p.id})" title="Cargar este prospecto en el registro de atribución (paso crítico antes del pago)" style="background:rgba(74,222,128,0.12);color:var(--green);border:1px solid rgba(74,222,128,0.35);border-radius:8px;padding:7px 12px;font-size:.76rem;font-weight:700;cursor:pointer;white-space:nowrap;"><i class="fa-solid fa-user-check"></i> Registrar para cobrar</button>
+        <button onclick="cobrarDesdeProspecto(${p.id}, '${encodeURIComponent(p.nombre||'')}')" title="Generar link de pago (si vino de un handoff de equipo, reparte la comision con el setter)" style="background:rgba(124,58,237,0.12);color:#c084fc;border:1px solid rgba(124,58,237,0.35);border-radius:8px;padding:7px 12px;font-size:.76rem;font-weight:700;cursor:pointer;white-space:nowrap;"><i class="fa-solid fa-link"></i> Generar link de pago</button>
         ${p.estado==='sin_contactar'?`<button onclick="accionProspecto(${p.id},'contactar');cargarProspectosPipeline()" style="background:var(--primary);color:white;border:none;border-radius:8px;padding:7px 13px;font-size:.76rem;font-weight:700;cursor:pointer;white-space:nowrap;"><i class="fa-solid fa-paper-plane"></i> Contacté</button>`:''}
         ${p.estado==='contactado'?`<button onclick="accionProspecto(${p.id},'propuesta_enviada');cargarProspectosPipeline()" style="background:rgba(59,130,246,0.15);color:var(--primary);border:1px solid rgba(59,130,246,0.35);border-radius:8px;padding:7px 13px;font-size:.76rem;font-weight:700;cursor:pointer;white-space:nowrap;"><i class="fa-solid fa-file-invoice"></i> Envié propuesta</button>`:''}
         ${p.estado!=='perdido'?`<button onclick="abrirMarcarPerdido(${p.id},'${(p.nombre||'').replace(/'/g,"\\'")}');setTimeout(cargarProspectosPipeline,500)" title="Marcar como perdido" style="background:rgba(113,113,122,0.12);color:#a1a1aa;border:1px solid rgba(113,113,122,0.3);border-radius:8px;padding:7px 12px;font-size:.76rem;cursor:pointer;"><i class="fa-solid fa-circle-xmark"></i></button>`:''}
@@ -3657,6 +3658,12 @@ async function cargarRed() {
         cta: 'Impulsar',
         msg: n => `Hola ${n}! Vi que ya entraste al portal de Avanza. ¿Te doy una mano para arrancar con tu primer cierre? Tenés leads listos para contactar — decime y lo vemos juntos.`
       },
+      inactivo: {
+        label: 'Inactivo', bg: 'rgba(148,163,184,0.16)', fg: '#94a3b8',
+        hint: 'Ingresó alguna vez pero hace más de 7 días que no vuelve — reactivalo antes de que se enfríe del todo.',
+        cta: 'Reactivar',
+        msg: n => `Hola ${n}! Hace unos días que no entrás al portal de Avanza. Tenés leads esperándote — entrá un rato y, si necesitás una mano para retomar, avisame: ${PORTAL_LOGIN}`
+      },
       vendiendo: {
         label: 'Vendiendo', bg: 'rgba(34,197,94,0.14)', fg: 'var(--green)',
         hint: 'Activo y generando ventas. Tu 5% pasivo corre.',
@@ -3665,7 +3672,7 @@ async function cargarRed() {
       }
     };
 
-    const resumen = `${data.activados || 0} de ${data.total_sub_aliados} activados · ${data.vendiendo || 0} vendiendo`;
+    const resumen = `${data.activados || 0} de ${data.total_sub_aliados} activos (7 días) · ${data.vendiendo || 0} vendiendo`;
 
     _redInvitados = [];
     const filas = data.detalle.map((sub, i) => {
@@ -3694,6 +3701,7 @@ async function cargarRed() {
       <div style="display:flex;flex-wrap:wrap;justify-content:center;gap:14px;align-items:center;margin-bottom:12px;font-size:.78rem;color:var(--text-dim);">
         <span style="font-weight:800;color:var(--text);">${resumen}</span>
         <span style="display:inline-flex;align-items:center;gap:5px;"><span style="width:9px;height:9px;border-radius:50%;background:#ef4444;display:inline-block;"></span>Sin activar = nunca entró</span>
+        <span style="display:inline-flex;align-items:center;gap:5px;"><span style="width:9px;height:9px;border-radius:50%;background:#94a3b8;display:inline-block;"></span>Inactivo = +7 días sin entrar</span>
         <span style="display:inline-flex;align-items:center;gap:5px;"><span style="width:9px;height:9px;border-radius:50%;background:#f59e0b;display:inline-block;"></span>Activado = entró, no vendió</span>
         <span style="display:inline-flex;align-items:center;gap:5px;"><span style="width:9px;height:9px;border-radius:50%;background:#22c55e;display:inline-block;"></span>Vendiendo</span>
       </div>
@@ -3902,6 +3910,7 @@ async function generarLinkPago(moneda) {
     const clienteEmail = (document.getElementById('cot-cliente-email')?.value || '').trim();
     const clienteWA    = (document.getElementById('cot-cliente-whatsapp')?.value || '').trim();
     const url = `${API}/checkout/crear?plan=${encodeURIComponent(plan)}&ref_code=${aliado.ref_code}&nombre_cliente=${encodeURIComponent(cliente)}&moneda=${moneda}&cliente_email=${encodeURIComponent(clienteEmail)}&cliente_whatsapp=${encodeURIComponent(clienteWA)}`;
+    if (window._cotizadorProspectoId) { url += '&prospecto_id=' + window._cotizadorProspectoId; window._cotizadorProspectoId = null; }
     const res  = await fetch(url, { method: 'POST' });
     const data = await res.json();
 

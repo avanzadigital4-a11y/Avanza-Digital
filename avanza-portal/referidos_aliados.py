@@ -27,6 +27,7 @@ Costo: $0. Reusa créditos, comisiones y notificaciones que ya existen.
 from __future__ import annotations
 
 import os
+from datetime import datetime, timedelta
 
 from fastapi import APIRouter, Depends
 from sqlalchemy import func
@@ -48,6 +49,14 @@ BONUS_ACTIVACION = 75
 
 # Motivo/anti-duplicado en transacciones_credito (mismo patrón que estipendio).
 MOTIVO_REF = "referido_activacion"
+
+# Días sin ingresar tras los cuales un referido deja de contar como "activado"
+# en el contador X/Y de Mi Red. Es una ventana MÓVIL: si el invitado entra,
+# vuelve a contar; si pasa este lapso sin entrar, el contador baja (4/4 → 3/4).
+# OJO: esto es solo el contador de actividad reciente. El BONO de activación
+# (job_referidos_activacion) es un pago de una sola vez por la PRIMERA
+# activación y NO se revierte si el referido después se enfría.
+DIAS_VENTANA_ACTIVO = int(os.environ.get("DIAS_VENTANA_ACTIVO", "7"))
 
 
 def _get_aliado(codigo, db):
@@ -74,10 +83,23 @@ def mi_invitacion(codigo: str, db: Session = Depends(get_db),
     a = _get_aliado(codigo, db)
 
     invitados = db.query(func.count(Aliado.id)).filter(Aliado.sponsor_id == a.id).scalar() or 0
+
+    # "Activados" = invitados que INGRESARON en los últimos DIAS_VENTANA_ACTIVO
+    # días (ventana móvil). Si dejan de entrar ese lapso, el contador baja solo.
+    corte_activo = datetime.now() - timedelta(days=DIAS_VENTANA_ACTIVO)
     activados = (db.query(func.count(Aliado.id))
                  .filter(Aliado.sponsor_id == a.id,
-                         Aliado.cantidad_logins >= 1)
+                         Aliado.ultimo_login.isnot(None),
+                         Aliado.ultimo_login >= corte_activo)
                  .scalar() or 0)
+
+    # Cuántos ingresaron alguna vez (histórico, no baja nunca). Sirve de referencia
+    # y para distinguir "nunca entró" de "entró pero se enfrió".
+    activados_alguna_vez = (db.query(func.count(Aliado.id))
+                            .filter(Aliado.sponsor_id == a.id,
+                                    ((Aliado.ultimo_login.isnot(None)) |
+                                     (Aliado.cantidad_logins >= 1)))
+                            .scalar() or 0)
 
     # Override de red: comisiones del aliado al 5% (las de sponsor; las propias
     # arrancan en 10%). Es una aproximación robusta sin tocar el modelo.
@@ -110,6 +132,8 @@ def mi_invitacion(codigo: str, db: Session = Depends(get_db),
         "stats": {
             "invitados": invitados,
             "activados": activados,
+            "activados_alguna_vez": activados_alguna_vez,
+            "ventana_dias": DIAS_VENTANA_ACTIVO,
             "pendientes_activar": max(0, invitados - activados),
             "override_usd_ganado": round(float(override_usd), 2),
             "creditos_por_referidos": int(creditos_ganados),
