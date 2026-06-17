@@ -437,6 +437,9 @@ def aliado_alta_continuidad(payload: dict,
     db.add(p)
     db.flush()
 
+    # Atribucion de equipo: si el cierre vino de un lead handed-off, stampear el setter.
+    _stampear_setter_desde_lead(db, p, payload.get("lead_id"), aliado.id)
+
     ahora = datetime.utcnow()
     creado = _crear_comisiones_recurrentes_para_plan(
         db, p, ahora.month, ahora.year, ahora,
@@ -518,6 +521,68 @@ def aliado_baja_continuidad(plan_id: int,
 # v1.5 — extraído del endpoint admin para que el scheduler y el flujo de alta
 # (primera comisión al firmar) puedan reutilizar la misma lógica de creación
 # idempotente. Toda creación de Comision recurrente en el sistema pasa por acá.
+def _repartir_comision_titular_equipo(db, p, c_closer, plan_label, mes, anio, fecha_pago):
+    """Si el plan vino de un handoff de equipo (setter->closer), reparte la comision
+    TITULAR: el setter cobra su % pactado y el closer el resto. El total NO cambia (se
+    reparte, no se suma) y el 5% del sponsor queda intacto. Idempotente por
+    (setter_id, "EQUIPO: cliente", plan, mes, anio)."""
+    from sqlalchemy import extract
+    setter_id = getattr(p, "setter_id", None)
+    split = getattr(p, "setter_split_pct", None)
+    if not setter_id or not split or setter_id == p.aliado_id:
+        return
+    bruto = float(c_closer.comision_usd)
+    parte_setter = round(bruto * float(split), 2)
+    if parte_setter <= 0:
+        return
+    cliente_eq = "EQUIPO: " + str(p.nombre_cliente)
+    ya = db.query(Comision).filter(
+        Comision.aliado_id == setter_id,
+        Comision.nombre_cliente == cliente_eq,
+        Comision.plan == plan_label,
+        extract('month', Comision.fecha_pago) == mes,
+        extract('year',  Comision.fecha_pago) == anio,
+    ).first()
+    if ya:
+        return
+    # Reducir la del closer y crear la del setter (suman exactamente el bruto).
+    c_closer.comision_usd = round(bruto - parte_setter, 2)
+    c_setter = Comision(
+        aliado_id=setter_id, plan=plan_label,
+        monto_plan_usd=c_closer.monto_plan_usd,
+        comision_pct=round(float(p.comision_pct) * float(split), 4),
+        comision_usd=parte_setter, nombre_cliente=cliente_eq,
+        estado="pendiente", fecha_pago=fecha_pago,
+    )
+    db.add(c_setter)
+    notificar_aliado(
+        db, setter_id, "comision",
+        "Comision de equipo: USD %s" % format(parte_setter, ",.2f"),
+        "Tu closer cerro %s. Te toca tu parte como setter del deal." % p.nombre_cliente,
+        tab="comisiones",
+    )
+
+
+def _stampear_setter_desde_lead(db, p, lead_id, closer_id):
+    """Copia la atribucion setter->closer del lead handed-off al plan, para que el
+    split corra al generar comision. Solo si el lead es del closer y trae setter."""
+    if not lead_id:
+        return
+    from models import LeadBolsa
+    try:
+        lead = db.query(LeadBolsa).filter(LeadBolsa.id == int(lead_id)).first()
+    except (TypeError, ValueError):
+        return
+    if not lead or lead.aliado_id != closer_id:
+        return
+    if not getattr(lead, "setter_id", None) or not getattr(lead, "setter_split_pct", None):
+        return
+    if lead.setter_id == closer_id:
+        return
+    p.setter_id = lead.setter_id
+    p.setter_split_pct = lead.setter_split_pct
+
+
 def _crear_comisiones_recurrentes_para_plan(db: Session,
                                             p: PlanContinuidadActivo,
                                             mes: int,
@@ -556,9 +621,10 @@ def _crear_comisiones_recurrentes_para_plan(db: Session,
         )
         db.add(c)
         creado["titular"] = True
+        _repartir_comision_titular_equipo(db, p, c, plan_label, mes, anio, fecha_pago)
         notificar_aliado(
             db, p.aliado_id, "comision",
-            f"🔁 Comisión recurrente: USD {p.comision_mensual_usd:,.2f}",
+            f"🔁 Comisión recurrente: USD {c.comision_usd:,.2f}",
             f"Se generó tu comisión mensual de {p.nombre_cliente} ({p.plan_continuidad}).",
             tab="comisiones",
         )

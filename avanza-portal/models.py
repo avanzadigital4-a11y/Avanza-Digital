@@ -243,6 +243,9 @@ class Prospecto(Base):
     estado      = Column(String, default="sin_contactar")
     nota        = Column(Text)
     interesante = Column(Boolean, default=False)
+    # --- ATRIBUCION DE EQUIPO (handoff setter->closer) ---
+    setter_id = Column(Integer, nullable=True)  # id del aliado setter (sin FK para no ambiguar relaciones)
+    setter_split_pct = Column(Float, nullable=True)
     fecha_contacto  = Column(DateTime, nullable=True)
     fecha_respuesta = Column(DateTime, nullable=True)
     creado_en   = Column(DateTime, default=func.now())
@@ -382,6 +385,9 @@ class LeadBolsa(Base):
     fecha_carga = Column(DateTime, default=datetime.now)
     fecha_reclamo = Column(DateTime, nullable=True)
     notif_24h_enviada = Column(Boolean, default=False)
+    # --- ATRIBUCION DE EQUIPO (handoff setter->closer) ---
+    setter_id = Column(Integer, nullable=True)  # id del aliado setter (sin FK para no ambiguar relaciones)
+    setter_split_pct = Column(Float, nullable=True)
 
     # --- MARKETPLACE ---
     tier = Column(String, default="basico")
@@ -662,6 +668,9 @@ class PlanContinuidadActivo(Base):
     precio_mensual_usd = Column(Float, nullable=False)       # precio que paga el cliente cada mes
     comision_pct = Column(Float, default=0.10, nullable=False)  # fijo 10% para el aliado
     fecha_alta = Column(DateTime, default=func.now(), nullable=False)
+    # --- ATRIBUCION DE EQUIPO (handoff setter->closer) ---
+    setter_id = Column(Integer, nullable=True)  # id del aliado setter (sin FK para no ambiguar relaciones)
+    setter_split_pct = Column(Float, nullable=True)
     fecha_baja = Column(DateTime, nullable=True)             # NULL = activo. Si tiene fecha, está dado de baja.
     motivo_baja = Column(Text, nullable=True)
     notas = Column(Text, nullable=True)
@@ -807,3 +816,32 @@ class EmailEnviado(Base):
     clicks       = Column(Integer, default=0)
 
     aliado = relationship("Aliado")
+
+#  EQUIPOS (setter + closer)  Bloque 1: formacion del vinculo 
+# Un Equipo es un vinculo SIMETRICO entre dos aliados que trabajan deals juntos.
+# El rol (setter/closer) NO se fija aca: se define por deal segun la direccion
+# del handoff (Bloque 2). Por eso guardamos un unico `setter_split_pct`: la
+# fraccion de la comision del deal que se lleva el que actuo de setter; el closer
+# se lleva el resto. El total que paga Avanza NO cambia: se reparte, no se suma.
+class Equipo(Base):
+    __tablename__ = "equipos"
+
+    id = Column(Integer, primary_key=True, index=True)
+    # aliado_a = quien envio la solicitud; aliado_b = quien la recibe/acepta.
+    # El orden a/b es solo de origen; el vinculo es simetrico.
+    aliado_a_id = Column(Integer, ForeignKey("aliados.id"), index=True, nullable=False)
+    aliado_b_id = Column(Integer, ForeignKey("aliados.id"), index=True, nullable=False)
+
+    # 'pendiente' (espera que b acepte) | 'activo' | 'rechazado' | 'disuelto'
+    estado = Column(String, default="pendiente", index=True)
+
+    # Fraccion de la comision que se lleva el SETTER en cada deal de equipo.
+    # Default 0.40; ajustable 0.25-0.50 (la banda se valida en el router).
+    setter_split_pct = Column(Float, default=0.40)
+
+    creado_en     = Column(DateTime, default=func.now())
+    confirmado_en = Column(DateTime, nullable=True)   # cuando b acepto
+    disuelto_en   = Column(DateTime, nullable=True)
+
+    aliado_a = relationship("Aliado", foreign_keys=[aliado_a_id])
+    aliado_b = relationship("Aliado", foreign_keys=[aliado_b_id])

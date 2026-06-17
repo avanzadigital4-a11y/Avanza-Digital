@@ -85,6 +85,13 @@ def _aplicar_migracion(sql: str) -> None:
 # Migraciones legacy (orden cronológico de versiones)
 _aplicar_migracion("ALTER TABLE aliados ADD COLUMN ultimo_login TIMESTAMP")
 _aplicar_migracion("ALTER TABLE aliados ADD COLUMN cantidad_logins INTEGER DEFAULT 0")
+# Atribucion de equipo (handoff setter->closer)  Bloque 2
+_aplicar_migracion("ALTER TABLE bolsa_leads ADD COLUMN setter_id INTEGER")
+_aplicar_migracion("ALTER TABLE bolsa_leads ADD COLUMN setter_split_pct FLOAT")
+_aplicar_migracion("ALTER TABLE prospectos ADD COLUMN setter_id INTEGER")
+_aplicar_migracion("ALTER TABLE prospectos ADD COLUMN setter_split_pct FLOAT")
+_aplicar_migracion("ALTER TABLE planes_continuidad_activos ADD COLUMN setter_id INTEGER")
+_aplicar_migracion("ALTER TABLE planes_continuidad_activos ADD COLUMN setter_split_pct FLOAT")
 _aplicar_migracion("ALTER TABLE aliados ADD COLUMN notif_inact_55d_en TIMESTAMP")
 
 # Migraciones para columnas nuevas de LeadBolsa y Red de Aliados
@@ -3340,6 +3347,7 @@ import solicitudes_creditos
 import prospectos
 import notificaciones as _notificaciones_mod  # ya importado arriba; acá solo el router
 import email_tracking      # Hueco 1: analítica de email
+import equipos             # Feature Mi Equipo (setter+closer)
 import referidos_aliados   # Hueco 2: loop de reclutamiento aliado→aliado
 
 app.include_router(academia.router)
@@ -3360,6 +3368,7 @@ app.include_router(comisiones.router)
 # ─── HUECOS 1 y 2 ────────────────────────────────────────────────────────────
 app.include_router(email_tracking.router)       # /e/o, /e/c, /admin/email/metricas
 app.include_router(referidos_aliados.router)     # /aliados/{codigo}/red
+app.include_router(equipos.router)               # /aliados/{codigo}/equipo
 
 # Job diario: cuando un referido entra por primera vez, acreditamos el bono de
 # activación a su sponsor (idempotente). Mismo patrón que los demás jobs.

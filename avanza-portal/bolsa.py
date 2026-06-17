@@ -421,6 +421,9 @@ def _crear_prospecto_desde_lead(db: Session, a: Aliado, lead: LeadBolsa) -> Pros
         telefono  = lead.telefono,
         whatsapp  = lead.whatsapp or lead.telefono,
         email     = lead.email,
+        # Atribucion de equipo (si el lead vino de un handoff setter->closer)
+        setter_id = getattr(lead, "setter_id", None),
+        setter_split_pct = getattr(lead, "setter_split_pct", None),
     )
     db.add(p)
     db.flush()  # necesitamos p.id antes del commit

@@ -634,6 +634,7 @@ function cambiarTab(tab, btn) {
     cargarBolsa(); cargarHistorialBolsa(); cargarMarketplace();
   }
   if(tab==='red') { cargarRed(); iniciarAutoRefreshRed(); }
+  if(tab==='equipo') cargarEquipo();
   if(tab==='comunidad') cargarComunidad();
   if(tab==='academia') inicializarAcademia();
   // v1.4: refrescar TC al entrar al cotizador y comisiones al entrar a su tab
@@ -1558,6 +1559,7 @@ async function cargarNuevoContinuidad() {
       plan_continuidad: plan,
       cliente_email: email || null,
       notas: notas || null,
+      lead_id: window._continuidadLeadId || null,
     });
     const data = await res.json().catch(() => ({}));
     if (!res.ok) {
@@ -1572,6 +1574,7 @@ async function cargarNuevoContinuidad() {
       document.getElementById('nc-plan').value = '';
       document.getElementById('nc-email').value = '';
       document.getElementById('nc-notas').value = '';
+      window._continuidadLeadId = null;
       actualizarPreviewContinuidad();
     }
     // Re-render comisiones para mostrar el cliente nuevo + la comisión recién creada
@@ -3259,6 +3262,10 @@ async function cargarBolsa() {
           ${fila('📱','WhatsApp', l.whatsapp && l.whatsapp !== l.telefono ? l.whatsapp : '', 'var(--green)')}
           ${fila('✉️','Email', l.email)}
           ${_contactoAccionesBolsa(l)}
+          <div style="display:flex;gap:8px;margin-top:8px;">
+            <button onclick="abrirHandoff(${l.id})" style="flex:1;background:rgba(124,58,237,.12);color:#c084fc;border:1px solid rgba(124,58,237,.3);border-radius:8px;padding:9px;font-size:.78rem;font-weight:700;cursor:pointer;"><i class="fa-solid fa-people-arrows"></i> Pasar a companero</button>
+            <button onclick="prepararContinuidadDesdeLead(${l.id}, '${encodeURIComponent(l.empresa||'')}')" style="flex:1;background:rgba(34,197,94,.10);color:var(--green);border:1px solid rgba(34,197,94,.3);border-radius:8px;padding:9px;font-size:.78rem;font-weight:700;cursor:pointer;"><i class="fa-solid fa-handshake"></i> Cerrar (continuidad)</button>
+          </div>
           ${l.web ? `
           <div style="margin-top:6px;display:flex;align-items:center;gap:6px;">
             <span style="font-size:.8rem;color:var(--text-dim);">🌐</span>

@@ -1430,6 +1430,7 @@ html.avz-collapsed #avz-sidebar .avz-exit span{ display:none; }
       <button class="avz-nav-item tab-btn" id="btn-tab-academia-primary" data-tab="academia" onclick="cambiarTab('academia',this)"><i class="fa-solid fa-graduation-cap"></i><span class="lb">Academia</span><span id="academia-progress-badge" class="pill" style="display:none;background:var(--orange);color:#000;"></span><span class="tip">Academia</span></button>
       <button class="avz-nav-item tab-btn" data-tab="herramientas" onclick="cambiarTab('herramientas',this)"><i class="fa-solid fa-magnifying-glass"></i><span class="lb">Auditorías</span><span class="tip">Auditorías</span></button>
       <button class="avz-nav-item tab-btn" data-tab="red" onclick="cambiarTab('red',this)"><i class="fa-solid fa-users-rays"></i><span class="lb">Mi Red</span><span class="tip">Mi Red</span></button>
+      <button class="avz-nav-item tab-btn" data-tab="equipo" onclick="cambiarTab('equipo',this)"><i class="fa-solid fa-people-arrows"></i><span class="lb">Mi Equipo</span><span class="tip">Mi Equipo</span></button>
       <button class="avz-nav-item tab-btn" data-tab="comunidad" onclick="cambiarTab('comunidad',this)"><i class="fa-solid fa-comments"></i><span class="lb">Comunidad</span><span class="tip">Comunidad</span></button>
       <button class="avz-nav-item tab-btn" data-tab="jarvis" onclick="cambiarTab('jarvis',this)"><i class="fa-solid fa-bolt" style="color:#7fd8ff;"></i><span class="lb">JARVIS IA</span><span class="tip">JARVIS IA</span></button>
     </nav>
@@ -2959,6 +2960,42 @@ html.avz-collapsed #avz-sidebar .avz-exit span{ display:none; }
     </div>
 
     
+    <div id="tab-equipo" class="tab-panel">
+      <div style="max-width:780px;margin:0 auto;">
+        <h2 style="font-size:1.5rem;font-weight:900;color:var(--text);margin-bottom:4px;">Mi Equipo</h2>
+        <p style="color:var(--text-muted);font-size:.9rem;margin-bottom:22px;line-height:1.55;">
+          Arma equipo con otro aliado para trabajar deals juntos. El que pasa el lead actua de <strong>setter</strong>
+          y el que cierra de <strong>closer</strong>: la comision del deal se reparte entre los dos segun el split que acuerden.
+          El total que paga Avanza no cambia.
+        </p>
+        <div style="background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:var(--radius-sm);padding:18px;margin-bottom:26px;">
+          <h3 style="font-size:1rem;font-weight:800;color:var(--text);margin-bottom:12px;">Armar equipo</h3>
+          <input id="equipo-companero-input" type="text" placeholder="Codigo del companero (ej: AL-014)"
+            style="width:100%;background:rgba(0,0,0,.3);border:1px solid var(--border);border-radius:8px;padding:11px 13px;color:var(--text);font-size:.9rem;margin-bottom:14px;">
+          <label style="display:block;font-size:.82rem;font-weight:700;color:var(--text-muted);margin-bottom:6px;">
+            Split del setter: <span id="equipo-split-label" style="color:var(--primary);"></span>
+          </label>
+          <input id="equipo-split-input" type="range" min="25" max="50" value="40" step="1"
+            oninput="_eqActualizarLabelSplit()" style="width:100%;accent-color:var(--primary);margin-bottom:6px;">
+          <small style="display:block;color:var(--text-dim);font-size:.74rem;margin-bottom:14px;">
+            El setter (quien pasa el lead) se lleva ese % de la comision; el closer el resto. Ajustable 25-50%.
+          </small>
+          <button onclick="solicitarEquipo()"
+            style="background:var(--primary);color:#fff;border:none;border-radius:8px;padding:11px 20px;font-weight:700;font-size:.88rem;cursor:pointer;">Enviar solicitud</button>
+        </div>
+        <div id="equipo-recibidas-wrap" style="display:none;margin-bottom:26px;">
+          <h3 style="font-size:1rem;font-weight:800;color:var(--text);margin-bottom:12px;">Solicitudes recibidas</h3>
+          <div id="equipo-recibidas"></div>
+        </div>
+        <h3 style="font-size:1rem;font-weight:800;color:var(--text);margin-bottom:12px;">Mis equipos</h3>
+        <div id="equipo-activos"></div>
+        <div id="equipo-enviadas-wrap" style="display:none;margin-top:26px;">
+          <h3 style="font-size:1rem;font-weight:800;color:var(--text);margin-bottom:12px;">Solicitudes enviadas</h3>
+          <div id="equipo-enviadas"></div>
+        </div>
+      </div>
+    </div>
+
     <div id="tab-red" class="tab-panel">
       <div class="bento-box" style="margin-bottom:24px; background:linear-gradient(135deg, rgba(250,204,21,0.05), transparent); border-color:rgba(250,204,21,0.2);">
         <h3 style="font-size:1.2rem;font-weight:900;margin-bottom:8px;color:var(--amber);"><i class="fa-solid fa-network-wired"></i> Construí tu Agencia Descentralizada</h3>
@@ -5855,6 +5892,7 @@ window.__MODS = {
 </div>
 
 <script defer src="assets/js/portal.capturas.js"></script>
+<script defer src="assets/js/portal.equipos.js"></script>
 
 </body>
 </html>
