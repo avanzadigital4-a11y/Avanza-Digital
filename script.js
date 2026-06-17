@@ -177,7 +177,7 @@ document.addEventListener('DOMContentLoaded', function () {
             .catch(function (err) {
                 console.warn('[Avanza] form fallback:', err.message);
                 formStatus.style.cssText = 'display:block;padding:12px;border-radius:8px;color:#065f46;background:#d1fae5;';
-                formStatus.innerHTML = '✅ ¡Mensaje recibido! Te contactamos pronto.<br><small>También: <a href="mailto:avanzadigital4@gmail.com" style="color:inherit">avanzadigital4@gmail.com</a></small>';
+                formStatus.innerHTML = '✅ ¡Mensaje recibido! Te contactamos pronto.<br><small>También: <a href="mailto:contacto@avanzadigital.digital" style="color:inherit">contacto@avanzadigital.digital</a></small>';
             })
             .finally(function () {
                 submitBtn.disabled    = false;

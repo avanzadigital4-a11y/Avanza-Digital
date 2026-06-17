@@ -300,7 +300,7 @@ DATOS_BANCARIOS = {
     "whatsapp_display": os.environ.get("BANK_WHATSAPP_DISPLAY", "+54 9 342 439 2759"),
     "whatsapp_link":    os.environ.get("BANK_WHATSAPP_LINK",    "5493424392759"),  # solo dígitos para wa.me
     # Email donde se notifican las nuevas solicitudes
-    "email_admin":      os.environ.get("BANK_EMAIL_ADMIN", "avanzadigital4@gmail.com"),
+    "email_admin":      os.environ.get("BANK_EMAIL_ADMIN", "contacto@avanzadigital.digital"),
 }
 
 # Vigencia de la solicitud de compra (horas). Pasado este tiempo, el cron la

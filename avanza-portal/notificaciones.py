@@ -36,7 +36,7 @@ SMTP_PORT   = int(os.environ.get("SMTP_PORT", "587"))
 SMTP_USER   = os.environ.get("SMTP_USER", "")
 SMTP_PASS   = os.environ.get("SMTP_PASS", "")
 EMAIL_FROM  = os.environ.get("EMAIL_FROM", SMTP_USER)
-ADMIN_EMAIL = os.environ.get("ADMIN_EMAIL", "avanzadigital4@gmail.com")
+ADMIN_EMAIL = os.environ.get("ADMIN_EMAIL", "contacto@avanzadigital.digital")
 
 # ─── RESEND (fallback de emails) ─────────────────────────────────────────────
 RESEND_API_KEY = os.environ.get("RESEND_API_KEY", "")

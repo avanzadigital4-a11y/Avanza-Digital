@@ -38,7 +38,7 @@ AVANZA = {
     "domicilio":    os.environ.get("AVANZA_DOMICILIO", "Santa Fe, Argentina"),
     "representante":os.environ.get("AVANZA_REPRESENTANTE", "[representante de Avanza]"),
     "cargo":        os.environ.get("AVANZA_CARGO", "Titular"),
-    "email":        os.environ.get("AVANZA_EMAIL", "avanzadigital4@gmail.com"),
+    "email":        os.environ.get("AVANZA_EMAIL", "contacto@avanzadigital.digital"),
     "jurisdiccion": os.environ.get("AVANZA_JURISDICCION", "Santa Fe"),
     "web":          "avanzadigital.digital",
     # Logo opcional: ruta a un PNG/SVG local o data-URI. Si no existe, se usa

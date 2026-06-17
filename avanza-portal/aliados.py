@@ -470,7 +470,7 @@ def solicitar_baja_voluntaria(
         <p style="margin:0;font-size:.9rem;line-height:1.6;">
           📅 <strong>Tu cuenta será eliminada definitivamente el {fecha_elim}.</strong><br>
           Hasta esa fecha, si te arrepentís, escribinos a 
-          <a href="mailto:avanzadigital4@gmail.com" style="color:var(--primary,#3b82f6);">avanzadigital4@gmail.com</a>
+          <a href="mailto:contacto@avanzadigital.digital" style="color:var(--primary,#3b82f6);">contacto@avanzadigital.digital</a>
           o por WhatsApp y reactivamos tu cuenta sin perder nada.
         </p>
       </div>

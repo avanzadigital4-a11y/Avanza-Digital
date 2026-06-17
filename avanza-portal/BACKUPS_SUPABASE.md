@@ -27,7 +27,7 @@ siempre** — no depende de que te acuerdes ni de tener la compu prendida.
 
 ### Lo único que tenés que configurar (una vez)
 - Confirmá que `ADMIN_EMAIL` apunta a un correo que revises (hoy:
-  `avanzadigital4@gmail.com`). Si querés que el backup vaya a OTRA casilla
+  `contacto@avanzadigital.digital`). Si querés que el backup vaya a OTRA casilla
   distinta de las notificaciones, seteá `BACKUP_EMAIL` en Render.
 - Asegurate de que `BREVO_API_KEY` (o `RESEND_API_KEY`) esté seteada en Render
   — son las mismas que ya usás para mandar emails, así que probablemente ya
