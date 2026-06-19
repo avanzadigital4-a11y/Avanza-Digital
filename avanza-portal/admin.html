@@ -1124,6 +1124,27 @@ tr:hover td { background:rgba(255,255,255,0.02); }
 
       <div id="pagos-kpis" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin-bottom:20px;"></div>
 
+      <!-- Pagos manuales (USDT/Payoneer) esperando verificación -->
+      <div class="table-wrap" id="pagos-pendientes-wrap" style="margin-bottom:20px;border:1px solid rgba(245,158,11,0.3);">
+        <div class="table-head">
+          <div>
+            <h3><i class="fa-solid fa-clock" style="color:var(--amber);"></i> Pagos manuales por confirmar <span id="cnt-pagos-pend" style="background:var(--amber);color:#000;font-size:.7rem;font-weight:800;padding:1px 8px;border-radius:50px;margin-left:6px;">0</span></h3>
+            <div style="font-size:.82rem;color:var(--text-muted);margin-top:4px;">USDT / Payoneer reportados por el aliado o el cliente. Verificá que llegó la transferencia y confirmá: se graba la venta y la comisión a nombre del aliado automáticamente.</div>
+          </div>
+          <button onclick="cargarPagosPendientes()" style="background:transparent;border:1px solid var(--border);color:var(--text-muted);border-radius:8px;padding:7px 14px;font-size:.8rem;cursor:pointer;"><i class="fa-solid fa-rotate-right"></i> Actualizar</button>
+        </div>
+        <div style="overflow-x:auto;">
+          <table>
+            <thead><tr>
+              <th>Estado</th><th>Aliado</th><th>Plan</th><th>Cliente</th><th>Contacto</th><th>Monto USD</th><th>Método</th><th style="width:150px;">Acción</th>
+            </tr></thead>
+            <tbody id="tabla-pagos-pend-body">
+              <tr><td colspan="8" style="padding:24px;text-align:center;color:var(--text-muted);">Cargando...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
       <div class="table-wrap">
         <div class="table-head">
           <div>
@@ -4028,9 +4049,71 @@ async function cargarAdminPagos() {
     pagosCache = await r.json();
     renderPagos();
     renderKpisPagos();
+    cargarPagosPendientes();
   } catch(e) {
     console.error(e);
     body.innerHTML = `<tr><td colspan="7" style="padding:32px;text-align:center;color:var(--red);">Error de conexión</td></tr>`;
+  }
+}
+
+// ── Pagos manuales (USDT/Payoneer) por confirmar ──────────────────────────────
+async function cargarPagosPendientes() {
+  const body = document.getElementById('tabla-pagos-pend-body');
+  const cnt  = document.getElementById('cnt-pagos-pend');
+  if (!body) return;
+  try {
+    const r = await apiFetch(`${API}/admin/pagos/pendientes`);
+    if (!r.ok) {
+      body.innerHTML = `<tr><td colspan="8" style="padding:24px;text-align:center;color:var(--red);">Error (${r.status})</td></tr>`;
+      return;
+    }
+    const pend = await r.json();
+    if (cnt) cnt.textContent = pend.length;
+    if (!pend.length) {
+      body.innerHTML = `<tr><td colspan="8" style="padding:24px;text-align:center;color:var(--text-muted);">No hay pagos manuales por confirmar.</td></tr>`;
+      return;
+    }
+    body.innerHTML = pend.map(p => {
+      const reportado = p.estado === 'reportado';
+      const estadoBadge = reportado
+        ? '<span style="background:rgba(74,222,128,0.15);color:#4ade80;font-size:.7rem;font-weight:800;padding:2px 8px;border-radius:20px;">Reportado</span>'
+        : '<span style="background:rgba(245,158,11,0.15);color:var(--amber);font-size:.7rem;font-weight:800;padding:2px 8px;border-radius:20px;">Pendiente</span>';
+      const metodo = (p.metodo||'').toUpperCase();
+      const contacto = [p.cliente_email, p.cliente_whatsapp].filter(Boolean).join(' · ') || '—';
+      return `<tr>
+        <td>${estadoBadge}</td>
+        <td>${p.aliado_nombre||'—'}<br><span style="font-size:.72rem;color:var(--text-muted);">${p.aliado_codigo||''}</span></td>
+        <td>${p.plan||'—'}</td>
+        <td>${p.nombre_cliente||'—'}</td>
+        <td style="font-size:.78rem;color:var(--text-muted);">${contacto}</td>
+        <td><strong>USD ${Math.round(p.precio_usd||0).toLocaleString()}</strong></td>
+        <td>${metodo}</td>
+        <td><button onclick="confirmarPagoManual(${p.id}, this)" style="background:var(--green);color:#000;border:none;border-radius:6px;padding:7px 12px;font-size:.78rem;font-weight:800;cursor:pointer;"><i class="fa-solid fa-circle-check"></i> Confirmar</button></td>
+      </tr>`;
+    }).join('');
+  } catch(e) {
+    console.error(e);
+    body.innerHTML = `<tr><td colspan="8" style="padding:24px;text-align:center;color:var(--red);">Error de conexión</td></tr>`;
+  }
+}
+
+async function confirmarPagoManual(id, btn) {
+  if (!confirm('¿Confirmás que la transferencia llegó? Se va a registrar la venta y la comisión del aliado.')) return;
+  if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>'; }
+  try {
+    const r = await apiFetch(`${API}/admin/pagos/${id}/confirmar`, { method: 'POST' });
+    const data = await r.json();
+    if (r.ok) {
+      mostrarToast('Pago confirmado. Comisión registrada.', 'green');
+      cargarPagosPendientes();
+      cargarAdminPagos();
+    } else {
+      mostrarToast(data.detail || 'No se pudo confirmar.', 'red');
+      if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fa-solid fa-circle-check"></i> Confirmar'; }
+    }
+  } catch(e) {
+    mostrarToast('Error de conexión.', 'red');
+    if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fa-solid fa-circle-check"></i> Confirmar'; }
   }
 }
 

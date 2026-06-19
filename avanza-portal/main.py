@@ -17,7 +17,7 @@ from models import (
     LinkPago, Comision, AcademiaModulo, AliadoModuloCompletado,
     SolicitudCompraCreditos, ReporteMalContacto,
     PlanContinuidadActivo, PasswordResetToken, Novedad,
-    PLANES, PAQUETES_CREDITOS, NIVELES, CUOTAS_RECARGO, REPUTACION_BADGES,
+    PLANES, PAQUETES_CREDITOS, NIVELES, REPUTACION_BADGES,
     PLANES_CONTINUIDAD, COMISION_RECURRENTE_PCT,
 )
 import random, string, os, httpx, json, hmac as hmac_lib, hashlib, base64, sys, secrets
@@ -538,13 +538,16 @@ def job_liberar_leads_48h():
 
 # ─── SCHEDULER: EXPIRACIÓN DE LINKS DE PAGO ──────────────────────────────────
 def job_expirar_links_pago():
-    """Corre cada hora. Marca como 'vencido' los links de pago cuya fecha expires_at ya pasó."""
+    """Corre cada hora. Marca como 'vencido' los links de pago cuya fecha expires_at ya pasó.
+    Incluye los pagos manuales 'pendiente' (USDT/Payoneer que nadie reportó = miró y no
+    pagó), para que no se acumulen en el panel de admin. Los 'reportado' NO se vencen:
+    son pagos que alguien afirmó haber hecho y el admin debe verificar sí o sí."""
     from database import SessionLocal
     db = SessionLocal()
     try:
         ahora = datetime.now()
         vencidos = db.query(LinkPago).filter(
-            LinkPago.estado == "activo",
+            LinkPago.estado.in_(["activo", "pendiente"]),
             LinkPago.expires_at != None,
             LinkPago.expires_at < ahora,
         ).all()
@@ -2864,33 +2867,7 @@ scheduler.add_job(job_lock.con_lock(job_recordatorios_tareas, "recordatorios_tar
 
 # ─ BOLSA: CARGA MASIVA Y DUPLICADOS → bolsa.py ──────────────────────────────
 
-# ─── FINANCIACIÓN / CUOTAS (E) ───────────────────────────────────────────────
-
-@app.get("/cotizador/cuotas")
-def simular_cuotas(plan: str, cuotas: int = 1):
-    """Simulador de cuotas. Devuelve cuota, total con recargo, recargo pct."""
-    if plan not in PLANES:
-        raise HTTPException(400, "Plan inválido.")
-    if cuotas not in CUOTAS_RECARGO:
-        raise HTTPException(400, f"Cuotas inválidas. Opciones: {list(CUOTAS_RECARGO.keys())}")
-    base = PLANES[plan]
-    recargo_pct = CUOTAS_RECARGO[cuotas]
-    total = base * (1 + recargo_pct)
-    valor_cuota = total / cuotas
-    return {
-        "plan": plan,
-        "valor_base": base,
-        "cuotas": cuotas,
-        "recargo_pct": round(recargo_pct * 100, 1),
-        "total_financiado": round(total, 2),
-        "valor_cuota": round(valor_cuota, 2),
-        "opciones": [
-            {"cuotas": c, "recargo_pct": round(r * 100, 1),
-             "total": round(base * (1 + r), 2),
-             "valor_cuota": round(base * (1 + r) / c, 2)}
-            for c, r in CUOTAS_RECARGO.items()
-        ],
-    }
+# ─── FINANCIACIÓN / CUOTAS — removido (sistema de pago único / mantenimiento mensual) ──
 
 
 # ─── COMUNIDAD INTERNA (F) ───────────────────────────────────────────────────

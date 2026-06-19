@@ -960,7 +960,7 @@ input[type=text]:focus{{outline:none;border-color:#3b82f6;}}
       </p>
       <div style="display:flex;gap:10px;">
         <button class="btn-cancel" onclick="volverAPaso1()">← Volver</button>
-        <a href="https://wa.me/{wa_contacto}?text=Hola%2C+realic%C3%A9+la+transferencia+en+USDT+para+el+%7B%7Bplan%7D%7D" id="modal-usdt-wa-btn"
+        <a href="https://wa.me/{wa_contacto}?text=Hola%2C+realic%C3%A9+la+transferencia+en+USDT+para+el+%7B%7Bplan%7D%7D" id="modal-usdt-wa-btn" onclick="reportarPagoPublico('usdt')"
            target="_blank"
            style="flex:1;padding:12px;border-radius:8px;border:none;background:#25d366;color:#fff;cursor:pointer;font-weight:700;font-size:.95rem;text-decoration:none;text-align:center;display:flex;align-items:center;justify-content:center;gap:6px;">
           <i class="fa-brands fa-whatsapp"></i> Confirmar por WhatsApp
@@ -992,7 +992,7 @@ input[type=text]:focus{{outline:none;border-color:#3b82f6;}}
       </p>
       <div style="display:flex;gap:10px;">
         <button class="btn-cancel" onclick="volverAPaso1()">← Volver</button>
-        <a href="https://wa.me/{wa_contacto}" id="modal-payoneer-wa-btn"
+        <a href="https://wa.me/{wa_contacto}" id="modal-payoneer-wa-btn" onclick="reportarPagoPublico('payoneer')"
            target="_blank"
            style="flex:1;padding:12px;border-radius:8px;border:none;background:#25d366;color:#fff;cursor:pointer;font-weight:700;font-size:.95rem;text-decoration:none;text-align:center;display:flex;align-items:center;justify-content:center;gap:6px;">
           <i class="fa-brands fa-whatsapp"></i> Confirmar por WhatsApp
@@ -1128,6 +1128,27 @@ input[type=text]:focus{{outline:none;border-color:#3b82f6;}}
       setTimeout(() => btn.innerHTML = _o, 1200);
     }}).catch(() => {{}});
   }}
+  let _pagosPubIds = {{ usdt: null, payoneer: null }};
+  async function registrarPagoManualPublico(metodo) {{
+    if (!_ref || !_plan) return;
+    const nombre = (document.getElementById("modal-nombre").value || "Cliente").trim();
+    const email = (document.getElementById("modal-email").value || "").trim();
+    const whatsapp = (document.getElementById("modal-whatsapp").value || "").trim();
+    try {{
+      const url = "/checkout/manual?plan=" + encodeURIComponent(_plan) + "&ref_code=" + encodeURIComponent(_ref)
+        + "&nombre_cliente=" + encodeURIComponent(nombre) + "&metodo=" + metodo
+        + "&cliente_email=" + encodeURIComponent(email) + "&cliente_whatsapp=" + encodeURIComponent(whatsapp);
+      const res = await fetch(url, {{ method: "POST" }});
+      if (!res.ok) return;
+      const data = await res.json();
+      _pagosPubIds[metodo] = data.link_id;
+    }} catch(_) {{}}
+  }}
+  async function reportarPagoPublico(metodo) {{
+    const id = _pagosPubIds[metodo];
+    if (!id) return;
+    try {{ await fetch("/checkout/manual/" + id + "/reportar", {{ method: "POST" }}); }} catch(_) {{}}
+  }}
   async function confirmarContratacion() {{
     const nombre = document.getElementById(\'modal-nombre\').value.trim();
     const email = document.getElementById(\'modal-email\').value.trim();
@@ -1179,6 +1200,7 @@ input[type=text]:focus{{outline:none;border-color:#3b82f6;}}
         const texto = encodeURIComponent(`Hola, realicé la transferencia de USD $${{precio}} por Payoneer para el ${{_plan}} de Avanza Digital. Mi nombre: ${{nombre}}, email: ${{email}}`);
         waBtn.href = `https://wa.me/{wa_contacto}?text=${{texto}}`;
       }}
+      registrarPagoManualPublico("payoneer");
       mostrarPaso(\'step-payoneer\');
       return;
     }}
@@ -1193,6 +1215,7 @@ input[type=text]:focus{{outline:none;border-color:#3b82f6;}}
         const texto = encodeURIComponent(`Hola, realicé la transferencia de USD ${{precio}} en USDT para el ${{_plan}} de Avanza Digital. Mi nombre: ${{nombre}}, email: ${{email}}`);
         waBtn.href = `https://wa.me/{wa_contacto}?text=${{texto}}`;
       }}
+      registrarPagoManualPublico("usdt");
       mostrarPaso(\'step-usdt\');
       return;
     }}

@@ -453,6 +453,98 @@ def checkout_ultimo_link(codigo: str = "", db: Session = Depends(get_db)):
     }
 
 
+# ─── PAGOS MANUALES (USDT / Payoneer) — registro pendiente + confirmación admin ──
+# El cliente paga por fuera (cripto / Payoneer): no hay webhook. Creamos un
+# LinkPago "pendiente" con la atribución del aliado adentro, para que cuando
+# Avanza verifique la transferencia, un solo click registre venta + comisión con
+# el mismo helper del dinero (_procesar_pago_confirmado). Misma cadena que MP,
+# pero la confirmación es manual. Lo usan tanto el cotizador (aliado) como la
+# página de ventas (cliente): mismo endpoint, distinto disparador.
+
+_METODOS_MANUALES = {"usdt", "payoneer"}
+
+
+@router.post("/checkout/manual")
+def crear_pago_manual(plan: str,
+                      ref_code: str,
+                      nombre_cliente: str = "Cliente",
+                      metodo: str = "usdt",
+                      cliente_email: str = "",
+                      cliente_whatsapp: str = "",
+                      prospecto_id: int = None,
+                      db: Session = Depends(get_db)):
+    """Crea un registro de pago PENDIENTE para un método manual (USDT/Payoneer).
+    No genera link de cobro: deja guardada la atribución (aliado + plan + cliente)
+    para que el admin la confirme cuando verifique la transferencia. Reusa un
+    pendiente reciente (mismo aliado+plan+método, <48hs) para no duplicar."""
+    metodo = (metodo or "usdt").lower()
+    if metodo not in _METODOS_MANUALES:
+        raise HTTPException(400, "Método inválido. Debe ser 'usdt' o 'payoneer'.")
+    a = db.query(Aliado).filter(Aliado.ref_code == ref_code).first()
+    if not a:
+        raise HTTPException(404, "Código de referido inválido.")
+    if plan not in PLANES and plan not in PLANES_CONTINUIDAD:
+        raise HTTPException(400, "Plan inválido.")
+    valor_usd = _precio_de_plan(plan)
+
+    # external_ref con el mismo formato que /checkout/crear: ref|plan|cliente|email|wa
+    ref_guardada = "|".join([ref_code, plan, nombre_cliente or "", cliente_email or "", cliente_whatsapp or ""])
+
+    existente = (db.query(LinkPago)
+                 .filter(LinkPago.aliado_id == a.id,
+                         LinkPago.plan == plan,
+                         LinkPago.processor == metodo,
+                         LinkPago.external_ref == ref_guardada,
+                         LinkPago.estado.in_(["pendiente", "reportado"]),
+                         LinkPago.created_at >= datetime.now() - timedelta(hours=LINK_EXPIRATION_HOURS))
+                 .order_by(LinkPago.created_at.desc())
+                 .first())
+    if existente:
+        return {"link_id": existente.id, "precio_usd": existente.precio_usd,
+                "estado": existente.estado, "reusado": True}
+
+    lp = LinkPago(
+        aliado_id    = a.id,
+        prospecto_id = prospecto_id,
+        plan         = plan,
+        moneda       = "usd",
+        precio_usd   = valor_usd,
+        checkout_url = f"manual:{metodo}",
+        processor    = metodo,            # 'usdt' | 'payoneer'
+        external_ref = ref_guardada,
+        estado       = "pendiente",
+        expires_at   = datetime.now() + timedelta(hours=LINK_EXPIRATION_HOURS),
+    )
+    db.add(lp)
+    db.commit()
+    db.refresh(lp)
+    return {"link_id": lp.id, "precio_usd": valor_usd, "estado": "pendiente", "reusado": False}
+
+
+@router.post("/checkout/manual/{link_id}/reportar")
+def reportar_pago_manual(link_id: int, db: Session = Depends(get_db)):
+    """El cliente o el aliado avisa que ya transfirió. Marca el registro como
+    'reportado' para que el admin lo priorice en el panel. No mueve plata."""
+    lp = db.query(LinkPago).filter(LinkPago.id == link_id).first()
+    if not lp:
+        raise HTTPException(404, "Registro no encontrado.")
+    if lp.processor not in _METODOS_MANUALES:
+        raise HTTPException(400, "Este registro no es de pago manual.")
+    if lp.estado == "pagado":
+        return {"estado": "pagado", "mensaje": "Este pago ya fue confirmado."}
+    lp.estado = "reportado"
+    db.commit()
+    try:
+        notificar_aliado(
+            db, lp.aliado_id, "sistema", "Pago reportado",
+            f"Se reportó un pago {lp.processor.upper()} del {lp.plan}. Avanza verificará la "
+            f"transferencia y se acreditará tu comisión.", tab="comisiones",
+        )
+    except Exception as _e:
+        print(f"[PAGO MANUAL] No pude notificar al aliado: {_e}")
+    return {"estado": "reportado", "mensaje": "Reportado. Avanza verificará la transferencia."}
+
+
 @router.get("/checkout/exitoso")
 def checkout_exitoso(ref: str = "", plan: str = "", payment_id: str = "", db: Session = Depends(get_db)):
     """Redirección post-pago de MP (legacy; mantener por compatibilidad con back_urls viejos)."""
@@ -1023,6 +1115,32 @@ def config_usdt_publico():
     }
 
 
+@router.get("/config/payoneer")
+def config_payoneer_publico():
+    """Endpoint público que devuelve los datos de cobro por Payoneer
+    (email + transferencia bancaria en USD). Usado por el cotizador del portal
+    para mostrar instrucciones al cliente. Son los mismos datos que ya muestra
+    la página de ventas pública; no expone nada sensible más allá de lo que el
+    cliente necesita para transferir.
+    """
+    from main import DATOS_PAYONEER  # diferido: const de main (evita import circular)
+    _email = DATOS_PAYONEER.get("destinatario", "")
+    _banco = DATOS_PAYONEER.get("banco") or {}
+    return {
+        "activo": bool(_email),
+        "email":  _email,
+        "banco": {
+            "beneficiario": _banco.get("beneficiario", ""),
+            "banco":        _banco.get("banco", ""),
+            "direccion":    _banco.get("direccion", ""),
+            "cuenta":       _banco.get("cuenta", ""),
+            "tipo_cuenta":  _banco.get("tipo_cuenta", ""),
+            "aba":          _banco.get("aba", ""),
+            "swift":        _banco.get("swift", ""),
+        },
+    }
+
+
 # (/alias/{ref_code} y la landing /p/{ref_code} migrados a portal_publico.py.)
 
 
@@ -1048,3 +1166,63 @@ def admin_listar_pagos(db: Session = Depends(get_db),
             "created_at": lp.created_at.isoformat() if lp.created_at else None,
         })
     return out
+
+
+@router.get("/admin/pagos/pendientes")
+def admin_listar_pagos_pendientes(db: Session = Depends(get_db),
+                                  _admin=Depends(current_admin_required)):
+    """Pagos manuales (USDT/Payoneer) esperando verificación de Avanza.
+    Los 'reportado' (el cliente ya avisó que transfirió) van primero."""
+    pend = (db.query(LinkPago)
+            .filter(LinkPago.processor.in_(list(_METODOS_MANUALES)),
+                    LinkPago.estado.in_(["pendiente", "reportado"]))
+            .order_by(LinkPago.created_at.desc()).all())
+    pend.sort(key=lambda lp: 0 if lp.estado == "reportado" else 1)
+    out = []
+    for lp in pend:
+        aliado = lp.aliado
+        partes = (lp.external_ref or "").split("|")
+        out.append({
+            "id": lp.id, "plan": lp.plan, "precio_usd": lp.precio_usd,
+            "metodo": lp.processor, "estado": lp.estado,
+            "aliado_codigo": aliado.codigo if aliado else None,
+            "aliado_nombre": aliado.nombre if aliado else "—",
+            "nombre_cliente":   partes[2] if len(partes) > 2 else "",
+            "cliente_email":    partes[3] if len(partes) > 3 else "",
+            "cliente_whatsapp": partes[4] if len(partes) > 4 else "",
+            "created_at": lp.created_at.isoformat() if lp.created_at else None,
+        })
+    return out
+
+
+@router.post("/admin/pagos/{link_id}/confirmar")
+def admin_confirmar_pago_manual(link_id: int, db: Session = Depends(get_db),
+                                _admin=Depends(current_admin_required)):
+    """Avanza verificó que la transferencia (USDT/Payoneer) llegó. Registra
+    venta + comisión con el mismo helper del dinero y marca el link pagado.
+    Idempotente: si se confirma dos veces no duplica comisión."""
+    lp = db.query(LinkPago).filter(LinkPago.id == link_id).first()
+    if not lp:
+        raise HTTPException(404, "Registro no encontrado.")
+    if lp.processor not in _METODOS_MANUALES:
+        raise HTTPException(400, "Este registro no es de pago manual.")
+    if lp.estado == "pagado":
+        return {"status": "already_processed", "mensaje": "Ya estaba confirmado."}
+    a = lp.aliado
+    if not a:
+        raise HTTPException(400, "El registro no tiene aliado asociado.")
+    partes = (lp.external_ref or "").split("|")
+    nombre_cli = partes[2] if len(partes) > 2 and partes[2] else "Cliente"
+
+    res = _procesar_pago_confirmado(
+        db, ref_code=a.ref_code, plan=lp.plan, nombre_cliente=nombre_cli,
+        processor=lp.processor, payment_id=f"manual-{lp.id}", link_pago_id=lp.id,
+    )
+    if res.get("status") in ("invalid_plan", "aliado_not_found"):
+        raise HTTPException(400, f"No se pudo registrar la venta: {res.get('status')}")
+
+    # _procesar_pago_confirmado ya marca el LinkPago pagado y commitea; defensivo:
+    if lp.estado != "pagado":
+        lp.estado = "pagado"
+        db.commit()
+    return {"status": "ok", "comision_registrada": True, "resultado": res}

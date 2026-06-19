@@ -3406,22 +3406,66 @@ async function cargarBolsa() {
   } catch(e) { console.error(e); }
 }
 
+// ─── MODAL DE CONFIRMACIÓN REUTILIZABLE ──────────────────────────────────
+// Reemplaza al confirm() nativo del navegador por el modal con el estilo del
+// portal. Devuelve una Promise<boolean>: true si confirma, false si cancela.
+function confirmarModal({ titulo, cuerpoHTML = '', textoOk = 'Confirmar', textoCancel = 'Cancelar', icono = '⏰' }) {
+  return new Promise((resolve) => {
+    const overlay = document.createElement('div');
+    overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:10000;display:flex;align-items:center;justify-content:center;';
+    overlay.innerHTML = `
+      <div style="background:#1e293b;border:1px solid rgba(255,255,255,0.1);border-radius:16px;padding:32px;max-width:440px;width:90%;text-align:center;">
+        <div style="font-size:2.2rem;margin-bottom:12px;">${icono}</div>
+        <h3 style="margin-bottom:8px;font-size:1.15rem;">${titulo}</h3>
+        ${cuerpoHTML}
+        <div style="display:flex;gap:10px;margin-top:16px;">
+          <button data-rol="cancelar" style="flex:1;padding:12px;border-radius:10px;border:1px solid rgba(255,255,255,0.1);background:transparent;color:#94a3b8;font-weight:700;cursor:pointer;">${textoCancel}</button>
+          <button data-rol="ok" style="flex:1;padding:12px;border-radius:10px;border:none;background:#f97316;color:#000;font-weight:800;cursor:pointer;">${textoOk}</button>
+        </div>
+      </div>
+    `;
+    const cerrar = (valor) => { overlay.remove(); resolve(valor); };
+    overlay.querySelector('[data-rol="ok"]').onclick = () => cerrar(true);
+    overlay.querySelector('[data-rol="cancelar"]').onclick = () => cerrar(false);
+    overlay.addEventListener('click', (e) => { if (e.target === overlay) cerrar(false); });
+    document.body.appendChild(overlay);
+  });
+}
+
 // ─── CRM BRIDGE: convertir un lead reclamado en prospecto del CRM ─────────
 async function convertirLeadEnProspecto(id, empresa) {
-  if (!confirm(`¿Pasar "${empresa}" a Mi CRM como prospecto?\n\nSe copian todos los datos (contacto, teléfono, email, rubro y observaciones) y el lead queda gestionado en la bolsa. Después lo trabajás con etapas, notas y tareas desde la pestaña "Mi CRM".`)) return;
+  const ok = await confirmarModal({
+    icono: '➡️',
+    titulo: `¿Pasar "${empresa}" a Mi CRM como prospecto?`,
+    textoOk: 'Sí, pasar a Mi CRM',
+    cuerpoHTML: `
+      <div style="background:rgba(96,165,250,0.1);border:1px solid rgba(96,165,250,0.3);border-radius:10px;padding:16px;margin:16px 0;text-align:left;">
+        <ul style="margin:0;padding-left:18px;color:#cbd5e1;font-size:.85rem;line-height:1.8;">
+          <li>Se copian todos los datos: <strong>contacto, teléfono, email, rubro y observaciones</strong>.</li>
+          <li>El lead queda gestionado en la bolsa.</li>
+          <li>Después lo trabajás con <strong>etapas, notas y tareas</strong> desde la pestaña "Mi CRM".</li>
+        </ul>
+      </div>`
+  });
+  if (!ok) return;
   try {
     const res = await apiFetch(`${API}/bolsa/${id}/convertir-prospecto`, { method: 'POST' });
     const data = await res.json();
     if (!res.ok) {
-      alert(typeof data.detail === 'string' ? data.detail : (data.detail?.mensaje || 'Error al convertir.'));
+      mostrarToast(typeof data.detail === 'string' ? data.detail : (data.detail?.mensaje || 'Error al convertir.'), 'red');
       return;
     }
     mostrarToast(data.ya_existia ? 'ℹ️ Este lead ya estaba en tu CRM' : `✅ ${empresa} agregado a Mi CRM`, 'green');
     await cargarBolsa();   // refresca la tarjeta: ahora muestra "Ver pipeline →"
-    if (confirm('¿Abrir Mi CRM ahora para trabajarlo (etapa, notas, próxima tarea)?')) {
-      cambiarTabDesdeNBA('pipeline');
-    }
-  } catch (e) { alert('Error de conexión.'); }
+    const abrir = await confirmarModal({
+      icono: '🗂️',
+      titulo: '¿Abrir Mi CRM ahora?',
+      cuerpoHTML: `<p style="margin:8px 0 0;color:#cbd5e1;font-size:.9rem;">Para trabajarlo con etapa, notas y próxima tarea.</p>`,
+      textoOk: 'Abrir Mi CRM',
+      textoCancel: 'Más tarde'
+    });
+    if (abrir) cambiarTabDesdeNBA('pipeline');
+  } catch (e) { mostrarToast('Error de conexión.', 'red'); }
 }
 
 async function reclamarLead(id) {
@@ -3848,8 +3892,9 @@ function actualizarPrecioARS() {
   const plan = document.getElementById('cot-plan').value;
   const el   = document.getElementById('cot-precio-ars');
   if(!el) return;
-  if(!plan || !_tipoDeCambio) { el.textContent = 'ARS —'; return; }
-  const arsEstimado = Math.round(PLANES[plan] * _tipoDeCambio);
+  const precioUsd = PLANES[plan] ?? PLANES_CONTINUIDAD[plan];
+  if(!plan || !precioUsd || !_tipoDeCambio) { el.textContent = 'ARS —'; return; }
+  const arsEstimado = Math.round(precioUsd * _tipoDeCambio);
   el.textContent = 'ARS ' + arsEstimado.toLocaleString('es-AR');
 }
 
@@ -3860,14 +3905,16 @@ function actualizarCotizador() {
   const aiBox    = document.getElementById('cot-ai-box');
   if(!plan) { resDiv.style.display='none'; return; }
 
-  const precio     = PLANES[plan];
+  const esContinuidad = (plan in PLANES_CONTINUIDAD);
+  const precio     = esContinuidad ? PLANES_CONTINUIDAD[plan] : PLANES[plan];
   const nivel      = aliado.nivel_calculado || aliado.nivel_actual || 'BASIC';
-  const porcentaje = pct(nivel);
+  const porcentaje = esContinuidad ? COMISION_RECURRENTE_PCT : pct(nivel);
   const comision   = Math.round(precio * porcentaje);
+  const suf        = esContinuidad ? '/mes' : '';
 
-  document.getElementById('cot-precio').textContent   = 'USD ' + precio.toLocaleString();
-  document.getElementById('cot-comision').textContent = 'USD ' + comision.toLocaleString();
-  document.getElementById('cot-pct-badge').textContent = (porcentaje * 100) + '%';
+  document.getElementById('cot-precio').textContent   = 'USD ' + precio.toLocaleString() + suf;
+  document.getElementById('cot-comision').textContent = 'USD ' + comision.toLocaleString() + suf;
+  document.getElementById('cot-pct-badge').textContent = Math.round(porcentaje * 100) + '%';
 
   const cliente = document.getElementById('cot-cliente').value || 'tu-cliente';
   const link    = `https://avanzadigital.digital/contratar?plan=${encodeURIComponent(plan)}&ref=${aliado.ref_code}&cliente=${encodeURIComponent(cliente)}`;
@@ -3879,6 +3926,14 @@ function actualizarCotizador() {
     checkoutBox.style.display = 'block';
     if(!_tipoDeCambio) cargarTipoDeCambio(); else actualizarPrecioARS();
   }
+
+  // Continuidad (mensual): el link automático credita comisión de pago único,
+  // así que para mensuales ocultamos los botones de link y dejamos solo las
+  // instrucciones manuales (USDT/Payoneer) + nota para registrar la continuidad.
+  const autoLinks = document.getElementById('cot-auto-links');
+  const contNota  = document.getElementById('cot-continuidad-nota');
+  if(autoLinks) autoLinks.style.display = esContinuidad ? 'none' : 'grid';
+  if(contNota)  contNota.style.display  = esContinuidad ? 'block' : 'none';
 
   // Ocultar link previo (si el aliado cambia de plan, queda stale)
   const lgBox = document.getElementById('cot-link-generado');
@@ -4070,12 +4125,10 @@ async function mostrarInstruccionesUSDT() {
       return;
     }
 
-    // Calcular precio USD del plan seleccionado
-    const PLAN_PRECIOS = {
-      'Plan Base': 1050, 'Plan Pro': 2900,
-      'Plan Industrial': 4900, 'Estratégico 360': 7500
-    };
-    const precioUSD = PLAN_PRECIOS[plan] || '—';
+    // Precio USD del plan (pago único o continuidad mensual)
+    const esContinuidad = (plan in PLANES_CONTINUIDAD);
+    const precioUSD = (PLANES[plan] ?? PLANES_CONTINUIDAD[plan]) || '—';
+    const sufMes = esContinuidad ? '/mes' : '';
     const redLabel = red || 'TRC20';
     const monedaLabel = metodo && metodo.toUpperCase().includes('USDC') ? 'USDT/USDC' : 'USDT';
 
@@ -4083,15 +4136,16 @@ async function mostrarInstruccionesUSDT() {
     document.getElementById('cot-usdt-direccion').value = direccion;
 
     const msg = `Hola! Te comparto los datos para el pago del ${plan} de Avanza Digital en ${monedaLabel}:\n\n` +
-      `💰 Monto exacto: USD ${precioUSD}\n` +
+      `💰 Monto exacto: USD ${precioUSD}${sufMes}\n` +
       `🌐 Red: ${redLabel}\n` +
       `📋 Dirección:\n${direccion}\n\n` +
-      `⚠ Importante: enviá exactamente USD ${precioUSD} y avisame cuando lo hagas para confirmar con Avanza. ` +
+      `⚠ Importante: enviá exactamente USD ${precioUSD}${sufMes} y avisame cuando lo hagas para confirmar con Avanza. ` +
       `Una vez confirmado el pago iniciamos la implementación.`;
     document.getElementById('cot-usdt-wpp-msg').value = msg;
 
     loading.style.display = 'none';
     content.style.display = 'block';
+    _registrarPagoManual('usdt');
   } catch (err) {
     loading.innerHTML = `<i class="fa-solid fa-triangle-exclamation" style="color:#ef4444;"></i> ${err.message}`;
   }
@@ -4111,6 +4165,141 @@ function copiarMensajeUSDT() {
   navigator.clipboard.writeText(msg)
     .then(() => mostrarToast('Mensaje copiado — pegalo en WhatsApp', 'green'))
     .catch(() => mostrarToast('No se pudo copiar', 'red'));
+}
+
+// ── Payoneer (email + transferencia bancaria USD) — instrucciones para el cliente ──
+let _payoneerConfig = null;
+
+async function mostrarInstruccionesPayoneer() {
+  const plan = document.getElementById('cot-plan')?.value;
+  if (!plan) { mostrarToast('Seleccioná un plan primero', 'red'); return; }
+
+  const panel   = document.getElementById('cot-payoneer-instrucciones');
+  const loading = document.getElementById('cot-payoneer-loading');
+  const content = document.getElementById('cot-payoneer-content');
+
+  panel.style.display = 'block';
+  loading.style.display = 'block';
+  content.style.display = 'none';
+  panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+
+  try {
+    if (!_payoneerConfig) {
+      const res = await fetch(`${API}/config/payoneer`);
+      if (!res.ok) throw new Error('No se pudo obtener la configuración de Payoneer.');
+      _payoneerConfig = await res.json();
+    }
+
+    const cfg = _payoneerConfig;
+    if (!cfg.activo || !cfg.email) {
+      loading.innerHTML = '<i class="fa-solid fa-triangle-exclamation" style="color:#ef4444;"></i> Pago por Payoneer no configurado. Contactá al admin de Avanza.';
+      return;
+    }
+
+    const esContinuidad = (plan in PLANES_CONTINUIDAD);
+    const precioUSD = (PLANES[plan] ?? PLANES_CONTINUIDAD[plan]) || '—';
+    const sufMes = esContinuidad ? '/mes' : '';
+
+    document.getElementById('cot-payoneer-email').value = cfg.email;
+
+    // Construir bloque de transferencia bancaria (si hay datos)
+    const b = cfg.banco || {};
+    const bankRows = [
+      ['Beneficiario', b.beneficiario],
+      ['Banco', b.banco],
+      ['Dirección del banco', b.direccion],
+      ['Número de cuenta', b.cuenta],
+      ['Tipo de cuenta', b.tipo_cuenta],
+      ['ABA / Routing', b.aba],
+      ['SWIFT / BIC', b.swift],
+    ].filter(([, v]) => v);
+
+    const bankBox = document.getElementById('cot-payoneer-bank');
+    if (bankRows.length) {
+      bankBox.innerHTML =
+        '<div style="font-size:0.72rem; font-weight:700; color:#ff7a45; text-transform:uppercase; letter-spacing:1px; margin-bottom:8px;"><i class="fa-solid fa-building-columns"></i> Opción 2 · Transferencia bancaria en USD (desde cualquier banco)</div>' +
+        '<div style="background:rgba(0,0,0,0.3); border:1px solid rgba(255,122,69,0.2); border-radius:8px; padding:12px;">' +
+        bankRows.map(([label, val]) =>
+          `<div style="margin-bottom:8px;"><div style="font-size:0.66rem; font-weight:700; color:var(--text-dim); text-transform:uppercase; letter-spacing:.5px; margin-bottom:2px;">${label}</div>` +
+          `<div style="font-family:monospace; font-size:0.8rem; color:var(--text); word-break:break-all;">${val}</div></div>`
+        ).join('') +
+        '</div>';
+    } else {
+      bankBox.innerHTML = '';
+    }
+
+    // Mensaje para WhatsApp con ambas opciones
+    let msg = `Hola! Te comparto los datos para pagar el ${plan} de Avanza Digital (USD ${precioUSD}${sufMes}) por Payoneer:\n\n` +
+      `💳 Opción 1 — Email de Payoneer:\n${cfg.email}\n`;
+    if (bankRows.length) {
+      msg += `\n🏦 Opción 2 — Transferencia bancaria en USD (desde cualquier banco):\n` +
+        bankRows.map(([label, val]) => `${label}: ${val}`).join('\n') + '\n';
+    }
+    msg += `\n⚠ Enviá exactamente USD ${precioUSD}${sufMes} y avisame cuando lo hagas. Tu plan se activa en cuanto Avanza confirma el pago (hasta 24hs hábiles).`;
+    document.getElementById('cot-payoneer-wpp-msg').value = msg;
+
+    loading.style.display = 'none';
+    content.style.display = 'block';
+    _registrarPagoManual('payoneer');
+  } catch (err) {
+    loading.innerHTML = `<i class="fa-solid fa-triangle-exclamation" style="color:#ef4444;"></i> ${err.message}`;
+  }
+}
+
+function copiarCampoPayoneer(id) {
+  const val = document.getElementById(id)?.value;
+  if (!val) return;
+  navigator.clipboard.writeText(val)
+    .then(() => mostrarToast('Copiado al portapapeles', 'green'))
+    .catch(() => mostrarToast('No se pudo copiar', 'red'));
+}
+
+function copiarMensajePayoneer() {
+  const msg = document.getElementById('cot-payoneer-wpp-msg')?.value;
+  if (!msg) return;
+  navigator.clipboard.writeText(msg)
+    .then(() => mostrarToast('Mensaje copiado — pegalo en WhatsApp', 'green'))
+    .catch(() => mostrarToast('No se pudo copiar', 'red'));
+}
+
+// ── Pago manual: registra el pendiente (atribución) y permite reportar el pago ──
+// USDT/Payoneer no tienen webhook. Al mostrar las instrucciones creamos un
+// LinkPago "pendiente" con la atribución del aliado; cuando el cliente paga, el
+// aliado avisa con "el cliente ya pagó" y el admin lo confirma → comisión grabada.
+const _pagosManualIds = { usdt: null, payoneer: null };
+
+async function _registrarPagoManual(metodo) {
+  if (!aliado) return;
+  const plan = document.getElementById('cot-plan')?.value;
+  if (!plan) return;
+  const nombre = document.getElementById('cot-cliente')?.value || 'Cliente';
+  const email  = (document.getElementById('cot-cliente-email')?.value || '').trim();
+  const wa     = (document.getElementById('cot-cliente-whatsapp')?.value || '').trim();
+  try {
+    const url = `${API}/checkout/manual?plan=${encodeURIComponent(plan)}&ref_code=${encodeURIComponent(aliado.ref_code)}` +
+      `&nombre_cliente=${encodeURIComponent(nombre)}&metodo=${metodo}` +
+      `&cliente_email=${encodeURIComponent(email)}&cliente_whatsapp=${encodeURIComponent(wa)}`;
+    const res = await fetch(url, { method: 'POST' });
+    if (!res.ok) return;
+    const data = await res.json();
+    _pagosManualIds[metodo] = data.link_id;
+  } catch (e) { console.warn('No se pudo registrar el pago pendiente:', e); }
+}
+
+async function reportarPagoManual(metodo) {
+  const id = _pagosManualIds[metodo];
+  if (!id) { mostrarToast('Generá las instrucciones primero.', 'amber'); return; }
+  const btn = document.getElementById(`btn-reportar-${metodo}`);
+  try {
+    const res = await fetch(`${API}/checkout/manual/${id}/reportar`, { method: 'POST' });
+    const data = await res.json();
+    if (res.ok) {
+      mostrarToast('Aviso enviado. Avanza verifica la transferencia y acredita tu comisión.', 'green');
+      if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fa-solid fa-check"></i> Avisado a Avanza'; }
+    } else {
+      mostrarToast(data.detail || 'No se pudo avisar.', 'red');
+    }
+  } catch (e) { mostrarToast('Error de conexión.', 'red'); }
 }
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -4514,21 +4703,7 @@ async function cargarCreditos() {
   } catch(e){ console.error('creditos:', e); }
 }
 
-// ─── SIMULADOR DE CUOTAS ─────────────────────────────────────────────
-async function actualizarCuotas() {
-  const plan = document.getElementById('cot-plan').value;
-  const cuotas = parseInt(document.getElementById('cot-cuotas').value);
-  const box = document.getElementById('cot-cuotas-resultado');
-  if (!plan) { if(box) box.style.display='none'; return; }
-  try {
-    const res = await apiFetch(`${API}/cotizador/cuotas?plan=${encodeURIComponent(plan)}&cuotas=${cuotas}`);
-    if (!res.ok) return;
-    const data = await res.json();
-    document.getElementById('cot-cuotas-valor').textContent = `USD ${data.valor_cuota.toLocaleString('es-AR',{maximumFractionDigits:0})}`;
-    document.getElementById('cot-cuotas-total').textContent = `USD ${data.total_financiado.toLocaleString('es-AR',{maximumFractionDigits:0})} (${data.recargo_pct}% recargo)`;
-    box.style.display='block';
-  } catch(e){ console.error('cuotas:', e); }
-}
+// ─── SIMULADOR DE CUOTAS — removido (sistema de pago único / mantenimiento mensual) ──
 
 // ─── PERFILADO IA ────────────────────────────────────────────────────
 
@@ -5217,19 +5392,45 @@ async function cargarMarketplace() {
 async function comprarLead(id) {
   // Mantenemos el nombre por compatibilidad, pero ahora reclamar es GRATIS:
   // los créditos quedaron sólo para Jarvis IA.
-  if (!confirm('¿Reclamar este lead? Es gratis. Tenés 48hs para contactarlo o vuelve a la bolsa.')) return;
-  try {
-    const res = await apiFetch(`${API}/bolsa/${id}/comprar?codigo_aliado=${aliado.codigo}`, {method:'POST'});
-    const data = await res.json();
-    if (!res.ok) {
-      const detail = data.detail;
-      alert(typeof detail === 'string' ? detail : (detail?.mensaje || 'Error'));
-      return;
-    }
-    mostrarToast('✅ Lead reclamado gratis — el contacto ya está desbloqueado', 'green');
-    await cargarMarketplace();
-    await cargarBolsa();
-  } catch(e) { alert('Error de conexión.'); }
+  // Mismo modal de confirmación que la bolsa básica (antes era un confirm() nativo).
+  const overlay = document.createElement('div');
+  overlay.id = 'modal-reclamar-mkt';
+  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:9999;display:flex;align-items:center;justify-content:center;';
+  overlay.innerHTML = `
+    <div style="background:#1e293b;border:1px solid rgba(255,255,255,0.1);border-radius:16px;padding:32px;max-width:420px;width:90%;text-align:center;">
+      <div style="font-size:2.2rem;margin-bottom:12px;">⏰</div>
+      <h3 style="margin-bottom:8px;font-size:1.15rem;">¿Reclamar este lead?</h3>
+      <div style="background:rgba(245,158,11,0.1);border:1px solid rgba(245,158,11,0.3);border-radius:10px;padding:16px;margin:16px 0;text-align:left;">
+        <p style="margin:0 0 8px;color:#f59e0b;font-weight:700;font-size:.9rem;">⚠️ Importante antes de reclamar:</p>
+        <ul style="margin:0;padding-left:18px;color:#cbd5e1;font-size:.85rem;line-height:1.8;">
+          <li>El contador de <strong style="color:#f59e0b;">48 horas empieza ahora</strong>, no cuando lo contactes.</li>
+          <li>Si no marcás el lead como <strong>"Contactado"</strong> dentro de ese tiempo, vuelve automáticamente a la bolsa.</li>
+          <li>Reclamá solo cuando estés lista para contactarlo pronto.</li>
+        </ul>
+      </div>
+      <div style="display:flex;gap:10px;margin-top:8px;">
+        <button onclick="document.getElementById('modal-reclamar-mkt').remove()" style="flex:1;padding:12px;border-radius:10px;border:1px solid rgba(255,255,255,0.1);background:transparent;color:#94a3b8;font-weight:700;cursor:pointer;">Cancelar</button>
+        <button id="btn-confirmar-reclamo-mkt" style="flex:1;padding:12px;border-radius:10px;border:none;background:#f97316;color:#000;font-weight:800;cursor:pointer;">Sí, reclamar ahora</button>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(overlay);
+
+  document.getElementById('btn-confirmar-reclamo-mkt').onclick = async () => {
+    document.getElementById('modal-reclamar-mkt').remove();
+    try {
+      const res = await apiFetch(`${API}/bolsa/${id}/comprar?codigo_aliado=${aliado.codigo}`, {method:'POST'});
+      const data = await res.json();
+      if (!res.ok) {
+        const detail = data.detail;
+        mostrarToast(typeof detail === 'string' ? detail : (detail?.mensaje || 'Error al reclamar'), 'red');
+        return;
+      }
+      mostrarToast('✅ Lead reclamado gratis — el contacto ya está desbloqueado', 'green');
+      await cargarMarketplace();
+      await cargarBolsa();
+    } catch(e) { mostrarToast('Error de conexión.', 'red'); }
+  };
 }
 
 // ─── COMPRA DE CRÉDITOS POR TRANSFERENCIA (v1.7) ─────────────────────
@@ -5643,11 +5844,7 @@ async function comentarPost(id) {
   } catch(e){}
 }
 
-// Hook: cuando cambia el plan en el cotizador, refrescar cuotas
 document.addEventListener('DOMContentLoaded', () => {
-  const planSelect = document.getElementById('cot-plan');
-  if (planSelect) planSelect.addEventListener('change', actualizarCuotas);
-
   // Aplicar tema/canal si la URL trae ?canal=canal1 o ?canal=canal2
   if (typeof aplicarCanalDesdeURL === 'function') {
     aplicarCanalDesdeURL();
@@ -6343,7 +6540,7 @@ const ACADEMIA_MODULOS = [
     tiempo: '2 min',
     icon: 'fa-download',
     content: `
-      <div class="av-explainer"><div class="av-tag"><i class="fa-solid fa-circle-play"></i> Tu kit de ventas &middot; M&Oacute;DULO 08</div><div class="av-stage"><div class="av-slide center" data-dur="5500"><div class="av-kicker r d1">Tu kit &middot; M&oacute;dulo 08</div><div class="av-h r d2">Qu&eacute; mandar<br>en <span class="o">cada momento</span></div><div class="av-sub r d3">Todo lo que necesit&aacute;s para vender est&aacute; listo para descargar abajo. Ac&aacute; va el orden y tus herramientas.</div></div><div class="av-slide" data-dur="6500"><div class="av-kicker r d1">El flujo de una venta</div><div class="av-flow"><div class="av-step r d2"><div class="sn">01</div><div class="st">Auditor&iacute;a</div><div class="sd">Antes de la reuni&oacute;n, como anticipo.</div></div><div class="av-step r d3"><div class="sn">02</div><div class="st">Brochure</div><div class="sd">Para mostrarle en la charla.</div></div><div class="av-step r d4"><div class="sn">03</div><div class="st">Gui&oacute;n por rubro</div><div class="sd">El caso exacto de su industria.</div></div><div class="av-step r d5"><div class="sn">04</div><div class="st">Contrato</div><div class="sd">Tras el s&iacute;, para formalizar.</div></div></div></div><div class="av-slide" data-dur="8000"><div class="av-kicker r d1">Herramientas del portal</div><div class="av-grid g2"><div class="av-card r d2"><div class="t"><i class="fa-solid fa-layer-group" style="color:#3b82f6"></i> Bolsa de Leads</div><div class="d">Reclam&aacute;s, 48hs para contactar, m&aacute;x 3 activos.</div></div><div class="av-card r d3"><div class="t"><i class="fa-solid fa-robot" style="color:#4ade80"></i> Perfilado IA + NBA</div><div class="d">Score, plan y siguiente mejor acci&oacute;n.</div></div><div class="av-card r d4"><div class="t"><i class="fa-solid fa-paper-plane" style="color:#3b82f6"></i> Piloto Autom&aacute;tico</div><div class="d">Secuencia de emails por etapa.</div></div><div class="av-card r d5"><div class="t"><i class="fa-solid fa-calculator" style="color:#f97316"></i> Cotizador con cuotas</div><div class="d">Propuestas en 3, 6 o 12 cuotas.</div></div></div></div><div class="av-slide" data-dur="7500"><div class="av-kicker r d1">Tus dos links</div><div class="av-cols"><div class="av-col good r d2"><div class="hd">Para vender</div><div class="it"><b>P&aacute;gina de ventas</b> &mdash; /p/tu-link</div><div class="it">Se la mand&aacute;s al cliente que quer&eacute;s cerrar.</div></div><div class="av-col r d3" style="border-color:rgba(59,130,246,.25);background:rgba(59,130,246,.06)"><div class="hd" style="color:#93c5fd">Para reclutar</div><div class="it"><b>Link de reclutamiento</b> &mdash; /alianzas?ref=tu-link</div><div class="it">Para sumar aliados a tu red (Mi Red, ingreso pasivo).</div></div></div></div><div class="av-slide" data-dur="6500"><div class="av-kicker r d1">Kit de marca</div><div class="av-list"><div class="av-li r d2"><i class="fa-brands fa-linkedin"></i><span><b>Banner LinkedIn</b> (1584&times;396) &mdash; sub&iacute; sin recortar</span></div><div class="av-li r d3"><i class="fa-solid fa-image"></i><span><b>Logos</b> fondo claro/oscuro + isotipo transparente</span></div><div class="av-li r d4"><i class="fa-solid fa-palette"></i><span><b>Kit de identidad</b>: colores, tipograf&iacute;a y c&oacute;mo presentarte</span></div><div class="av-li r d5"><i class="fa-solid fa-share-nodes"></i><span><b>Casos para postear</b>: Aleametal, Logística Cordillera, Soluciones Técnicas Generales, PLI</span></div></div></div><div class="av-slide center" data-dur="6000"><div class="av-ok r d1"><span class="lab">Listo para usar</span>Todos estos materiales est&aacute;n <b>m&aacute;s abajo en este mismo m&oacute;dulo</b>, listos para descargar. Guard&aacute;los en el celu y tenelos a mano en cada llamada.</div></div></div><div class="av-controls"><button class="av-btn prev" aria-label="Anterior"><i class="fa-solid fa-backward-step"></i></button><button class="av-btn play" aria-label="Pausar"><i class="fa-solid fa-pause"></i></button><button class="av-btn next" aria-label="Siguiente"><i class="fa-solid fa-forward-step"></i></button><div class="av-progress"><div class="av-progress-fill"></div></div><div class="av-dots"></div><div class="av-counter">1 / 1</div></div></div>
+      <div class="av-explainer"><div class="av-tag"><i class="fa-solid fa-circle-play"></i> Tu kit de ventas &middot; M&Oacute;DULO 08</div><div class="av-stage"><div class="av-slide center" data-dur="5500"><div class="av-kicker r d1">Tu kit &middot; M&oacute;dulo 08</div><div class="av-h r d2">Qu&eacute; mandar<br>en <span class="o">cada momento</span></div><div class="av-sub r d3">Todo lo que necesit&aacute;s para vender est&aacute; listo para descargar abajo. Ac&aacute; va el orden y tus herramientas.</div></div><div class="av-slide" data-dur="6500"><div class="av-kicker r d1">El flujo de una venta</div><div class="av-flow"><div class="av-step r d2"><div class="sn">01</div><div class="st">Auditor&iacute;a</div><div class="sd">Antes de la reuni&oacute;n, como anticipo.</div></div><div class="av-step r d3"><div class="sn">02</div><div class="st">Brochure</div><div class="sd">Para mostrarle en la charla.</div></div><div class="av-step r d4"><div class="sn">03</div><div class="st">Gui&oacute;n por rubro</div><div class="sd">El caso exacto de su industria.</div></div><div class="av-step r d5"><div class="sn">04</div><div class="st">Contrato</div><div class="sd">Tras el s&iacute;, para formalizar.</div></div></div></div><div class="av-slide" data-dur="8000"><div class="av-kicker r d1">Herramientas del portal</div><div class="av-grid g2"><div class="av-card r d2"><div class="t"><i class="fa-solid fa-layer-group" style="color:#3b82f6"></i> Bolsa de Leads</div><div class="d">Reclam&aacute;s, 48hs para contactar, m&aacute;x 3 activos.</div></div><div class="av-card r d3"><div class="t"><i class="fa-solid fa-robot" style="color:#4ade80"></i> Perfilado IA + NBA</div><div class="d">Score, plan y siguiente mejor acci&oacute;n.</div></div><div class="av-card r d4"><div class="t"><i class="fa-solid fa-paper-plane" style="color:#3b82f6"></i> Piloto Autom&aacute;tico</div><div class="d">Secuencia de emails por etapa.</div></div><div class="av-card r d5"><div class="t"><i class="fa-solid fa-calculator" style="color:#f97316"></i> Cotizador con IA</div><div class="d">Precio, comisi&oacute;n, link de pago y pitch.</div></div></div></div><div class="av-slide" data-dur="7500"><div class="av-kicker r d1">Tus dos links</div><div class="av-cols"><div class="av-col good r d2"><div class="hd">Para vender</div><div class="it"><b>P&aacute;gina de ventas</b> &mdash; /p/tu-link</div><div class="it">Se la mand&aacute;s al cliente que quer&eacute;s cerrar.</div></div><div class="av-col r d3" style="border-color:rgba(59,130,246,.25);background:rgba(59,130,246,.06)"><div class="hd" style="color:#93c5fd">Para reclutar</div><div class="it"><b>Link de reclutamiento</b> &mdash; /alianzas?ref=tu-link</div><div class="it">Para sumar aliados a tu red (Mi Red, ingreso pasivo).</div></div></div></div><div class="av-slide" data-dur="6500"><div class="av-kicker r d1">Kit de marca</div><div class="av-list"><div class="av-li r d2"><i class="fa-brands fa-linkedin"></i><span><b>Banner LinkedIn</b> (1584&times;396) &mdash; sub&iacute; sin recortar</span></div><div class="av-li r d3"><i class="fa-solid fa-image"></i><span><b>Logos</b> fondo claro/oscuro + isotipo transparente</span></div><div class="av-li r d4"><i class="fa-solid fa-palette"></i><span><b>Kit de identidad</b>: colores, tipograf&iacute;a y c&oacute;mo presentarte</span></div><div class="av-li r d5"><i class="fa-solid fa-share-nodes"></i><span><b>Casos para postear</b>: Aleametal, Logística Cordillera, Soluciones Técnicas Generales, PLI</span></div></div></div><div class="av-slide center" data-dur="6000"><div class="av-ok r d1"><span class="lab">Listo para usar</span>Todos estos materiales est&aacute;n <b>m&aacute;s abajo en este mismo m&oacute;dulo</b>, listos para descargar. Guard&aacute;los en el celu y tenelos a mano en cada llamada.</div></div></div><div class="av-controls"><button class="av-btn prev" aria-label="Anterior"><i class="fa-solid fa-backward-step"></i></button><button class="av-btn play" aria-label="Pausar"><i class="fa-solid fa-pause"></i></button><button class="av-btn next" aria-label="Siguiente"><i class="fa-solid fa-forward-step"></i></button><div class="av-progress"><div class="av-progress-fill"></div></div><div class="av-dots"></div><div class="av-counter">1 / 1</div></div></div>
 
       <h3>Lo que vas a aprender</h3>
       <ul>

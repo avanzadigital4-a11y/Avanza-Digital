@@ -2379,10 +2379,18 @@ html.avz-collapsed #avz-sidebar .avz-exit span{ display:none; }
             <label>Plan a ofrecer</label>
             <select id="cot-plan" onchange="actualizarCotizador()" style="background:#111; border:1px solid var(--primary); color:white; font-weight:bold;">
               <option value="">— Seleccioná el plan —</option>
-              <option value="Plan Base">Plan Base (USD 1.050 · Inicio rápido)</option>
-              <option value="Plan Pro">Plan Pro (USD 2.900 · Crecimiento)</option>
-              <option value="Plan Industrial">Plan Industrial (USD 4.900 · Fábricas)</option>
-              <option value="Estrategico 360">Estratégico 360 (USD 7.500 · Escala Total)</option>
+              <optgroup label="Sistemas — pago único">
+                <option value="Plan Base">Plan Base (USD 1.050 · Inicio rápido)</option>
+                <option value="Plan Pro">Plan Pro (USD 2.900 · Crecimiento)</option>
+                <option value="Plan Industrial">Plan Industrial (USD 4.900 · Fábricas)</option>
+                <option value="Estrategico 360">Estratégico 360 (USD 7.500 · Escala Total)</option>
+              </optgroup>
+              <optgroup label="Mantenimiento — mensual">
+                <option value="Plan Cuidado">Plan Cuidado (USD 80/mes · para Base)</option>
+                <option value="Plan Crecimiento">Plan Crecimiento (USD 170/mes · para Pro)</option>
+                <option value="Plan Escala">Plan Escala (USD 280/mes · para Industrial)</option>
+                <option value="Plan Liderazgo">Plan Liderazgo (USD 450/mes · para 360)</option>
+              </optgroup>
             </select>
           </div>
           <div class="form-row" style="margin-bottom:0;">
@@ -2430,7 +2438,7 @@ html.avz-collapsed #avz-sidebar .avz-exit span{ display:none; }
                   </div>
                 </div>
 
-                <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+                <div id="cot-auto-links" style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
                   <button id="btn-checkout-ars" onclick="generarLinkPago('ars')" style="background:linear-gradient(135deg,#00a8e8,#007ea7); color:#fff; border:none; border-radius:8px; padding:14px; font-weight:800; cursor:pointer; font-size:0.88rem; display:flex; align-items:center; justify-content:center; gap:8px;">
                     <i class="fa-solid fa-peso-sign"></i> Generar link en pesos (MP)
                   </button>
@@ -2438,9 +2446,15 @@ html.avz-collapsed #avz-sidebar .avz-exit span{ display:none; }
                     <i class="fa-solid fa-coins"></i> Generar link en dólares (USDT TRC20)
                   </button>
                 </div>
-                <div style="margin-top:10px;">
-                  <button id="btn-checkout-usdt" onclick="mostrarInstruccionesUSDT()" style="background:linear-gradient(135deg,rgba(247,147,26,0.25),rgba(247,147,26,0.12)); color:#f7931a; border:1px solid rgba(247,147,26,0.4); border-radius:8px; padding:14px; font-weight:800; cursor:pointer; font-size:0.88rem; display:flex; align-items:center; justify-content:center; gap:8px; width:100%; transition:all 0.2s;">
-                    <i class="fa-solid fa-circle-dollar-to-slot"></i> Generar instrucciones USDT/USDC
+                <div id="cot-continuidad-nota" style="display:none; margin-bottom:4px; font-size:0.78rem; color:var(--amber); background:rgba(245,158,11,0.06); border:1px solid rgba(245,158,11,0.2); border-radius:8px; padding:10px 12px; line-height:1.5;">
+                  <i class="fa-solid fa-circle-info"></i> Plan mensual: el cobro recurrente no usa link automático. Pasale al cliente las <strong>instrucciones USDT o Payoneer</strong>, y una vez que paga registrá la continuidad desde <strong>Comisiones → Continuidad</strong> (ahí se acredita tu 10% mensual).
+                </div>
+                <div style="margin-top:10px; display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+                  <button id="btn-checkout-usdt" onclick="mostrarInstruccionesUSDT()" style="background:linear-gradient(135deg,rgba(247,147,26,0.25),rgba(247,147,26,0.12)); color:#f7931a; border:1px solid rgba(247,147,26,0.4); border-radius:8px; padding:14px; font-weight:800; cursor:pointer; font-size:0.88rem; display:flex; align-items:center; justify-content:center; gap:8px; transition:all 0.2s;">
+                    <i class="fa-solid fa-circle-dollar-to-slot"></i> Instrucciones USDT/USDC
+                  </button>
+                  <button id="btn-checkout-payoneer" onclick="mostrarInstruccionesPayoneer()" style="background:linear-gradient(135deg,rgba(255,122,69,0.25),rgba(255,122,69,0.12)); color:#ff7a45; border:1px solid rgba(255,122,69,0.4); border-radius:8px; padding:14px; font-weight:800; cursor:pointer; font-size:0.88rem; display:flex; align-items:center; justify-content:center; gap:8px; transition:all 0.2s;">
+                    <i class="fa-solid fa-credit-card"></i> Instrucciones Payoneer
                   </button>
                 </div>
 
@@ -2481,11 +2495,60 @@ html.avz-collapsed #avz-sidebar .avz-exit span{ display:none; }
                         <button onclick="copiarMensajeUSDT()" style="flex:1; background:rgba(37,211,102,0.1); color:#25d366; border:1px solid rgba(37,211,102,0.3); border-radius:6px; padding:9px 14px; font-weight:700; cursor:pointer; font-size:0.8rem; display:flex; align-items:center; justify-content:center; gap:6px; transition:all 0.2s;">
                           <i class="fa-solid fa-copy"></i> Copiar mensaje
                         </button>
+                        <button id="btn-reportar-usdt" onclick="reportarPagoManual('usdt')" style="flex:1; background:rgba(74,222,128,0.12); color:#4ade80; border:1px solid rgba(74,222,128,0.3); border-radius:6px; padding:9px 14px; font-weight:700; cursor:pointer; font-size:0.8rem; display:flex; align-items:center; justify-content:center; gap:6px;">
+                          <i class="fa-solid fa-circle-check"></i> El cliente ya pagó
+                        </button>
                       </div>
                     </div>
                     <div style="font-size:0.75rem; color:var(--text-dim); line-height:1.5; padding:10px; background:rgba(0,0,0,0.3); border-radius:6px; border-left:2px solid rgba(247,147,26,0.4);">
                       <i class="fa-solid fa-triangle-exclamation" style="color:#f7931a; margin-right:4px;"></i>
                       <strong style="color:var(--text-muted);">Flujo manual:</strong> el cliente te avisa cuando transfiere. Vos confirmás el pago al admin de Avanza por WhatsApp para que lo procesen. La comisión se acredita igual que con los otros métodos.
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Panel de instrucciones Payoneer (oculto por defecto) -->
+                <div id="cot-payoneer-instrucciones" style="display:none; margin-top:14px; padding:16px; background:rgba(255,122,69,0.05); border:1px solid rgba(255,122,69,0.25); border-radius:10px;">
+                  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; flex-wrap:wrap; gap:8px;">
+                    <div style="font-size:0.82rem; font-weight:700; color:#ff7a45;">
+                      <i class="fa-solid fa-circle-check"></i> Instrucciones de pago · Payoneer
+                    </div>
+                    <button onclick="document.getElementById('cot-payoneer-instrucciones').style.display='none'" style="background:transparent; border:none; color:var(--text-dim); cursor:pointer; font-size:0.75rem;">✕ Cerrar</button>
+                  </div>
+
+                  <div id="cot-payoneer-loading" style="color:var(--text-muted); font-size:0.85rem; text-align:center; padding:10px 0;">
+                    <i class="fa-solid fa-spinner fa-spin"></i> Cargando datos de pago…
+                  </div>
+
+                  <div id="cot-payoneer-content" style="display:none;">
+                    <!-- Opción 1: email Payoneer -->
+                    <div style="margin-bottom:12px;">
+                      <div style="font-size:0.72rem; font-weight:700; color:#ff7a45; text-transform:uppercase; letter-spacing:1px; margin-bottom:6px;"><i class="fa-solid fa-envelope"></i> Opción 1 · Email de Payoneer</div>
+                      <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
+                        <input type="text" id="cot-payoneer-email" readonly style="flex:1; min-width:200px; background:rgba(0,0,0,0.5); border:1px solid rgba(255,122,69,0.2); border-radius:6px; padding:10px; color:var(--text); font-family:monospace; font-size:0.78rem; outline:none;">
+                        <button onclick="copiarCampoPayoneer('cot-payoneer-email')" style="background:rgba(255,122,69,0.15); color:#ff7a45; border:1px solid rgba(255,122,69,0.35); border-radius:6px; padding:0 14px; height:38px; font-weight:700; cursor:pointer; font-size:0.78rem; white-space:nowrap;">
+                          <i class="fa-solid fa-copy"></i> Copiar
+                        </button>
+                      </div>
+                    </div>
+                    <!-- Opción 2: transferencia bancaria USD (rellenado por JS) -->
+                    <div id="cot-payoneer-bank" style="margin-bottom:12px;"></div>
+                    <!-- Mensaje WhatsApp -->
+                    <div style="margin-bottom:12px;">
+                      <div style="font-size:0.72rem; font-weight:700; color:var(--text-dim); text-transform:uppercase; letter-spacing:1px; margin-bottom:6px;">Mensaje listo para WhatsApp</div>
+                      <textarea id="cot-payoneer-wpp-msg" readonly rows="6" style="width:100%; background:rgba(0,0,0,0.4); border:1px solid rgba(255,255,255,0.08); border-radius:6px; padding:10px; color:var(--text-muted); font-size:0.78rem; line-height:1.5; resize:none; outline:none; font-family:inherit;"></textarea>
+                      <div style="display:flex; gap:8px; flex-wrap:wrap; margin-top:8px;">
+                        <button onclick="copiarMensajePayoneer()" style="flex:1; background:rgba(37,211,102,0.1); color:#25d366; border:1px solid rgba(37,211,102,0.3); border-radius:6px; padding:9px 14px; font-weight:700; cursor:pointer; font-size:0.8rem; display:flex; align-items:center; justify-content:center; gap:6px;">
+                          <i class="fa-solid fa-copy"></i> Copiar mensaje
+                        </button>
+                        <button id="btn-reportar-payoneer" onclick="reportarPagoManual('payoneer')" style="flex:1; background:rgba(74,222,128,0.12); color:#4ade80; border:1px solid rgba(74,222,128,0.3); border-radius:6px; padding:9px 14px; font-weight:700; cursor:pointer; font-size:0.8rem; display:flex; align-items:center; justify-content:center; gap:6px;">
+                          <i class="fa-solid fa-circle-check"></i> El cliente ya pagó
+                        </button>
+                      </div>
+                    </div>
+                    <div style="font-size:0.75rem; color:var(--text-dim); line-height:1.5; padding:10px; background:rgba(0,0,0,0.3); border-radius:6px; border-left:2px solid rgba(255,122,69,0.4);">
+                      <i class="fa-solid fa-triangle-exclamation" style="color:#ff7a45; margin-right:4px;"></i>
+                      <strong style="color:var(--text-muted);">Flujo manual:</strong> el cliente paga al email de Payoneer o por transferencia bancaria en USD desde cualquier banco, y te avisa. Vos confirmás el pago al admin de Avanza por WhatsApp. La comisión se acredita igual que con los otros métodos.
                     </div>
                   </div>
                 </div>
@@ -2512,22 +2575,8 @@ html.avz-collapsed #avz-sidebar .avz-exit span{ display:none; }
               </div>
             </div>
 
-            <!-- SIMULADOR DE CUOTAS (v1.3) -->
-            <div id="cot-cuotas-box" style="margin-top:20px; padding:16px; background:rgba(74,222,128,0.04); border:1px solid rgba(74,222,128,0.15); border-radius:10px;">
-              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
-                <label style="font-size:0.85rem; font-weight:700; color:var(--green);"><i class="fa-solid fa-credit-card"></i> Financiación en cuotas</label>
-                <select id="cot-cuotas" onchange="actualizarCuotas()" style="background:#111; border:1px solid var(--border); color:white; padding:6px 10px; border-radius:6px; font-size:.82rem;">
-                  <option value="1">1 pago (sin recargo)</option>
-                  <option value="3">3 cuotas (+8%)</option>
-                  <option value="6">6 cuotas (+15%)</option>
-                  <option value="12">12 cuotas (+28%)</option>
-                </select>
-              </div>
-              <div id="cot-cuotas-resultado" style="font-size:0.85rem; color:var(--text); display:none;">
-                <div>Cuota: <strong id="cot-cuotas-valor" style="color:var(--green);">—</strong></div>
-                <div style="color:var(--text-muted); font-size:0.78rem; margin-top:4px;">Total financiado: <span id="cot-cuotas-total">—</span></div>
-              </div>
-            </div>
+            <!-- SIMULADOR DE CUOTAS removido: el sistema es pago único / mantenimiento mensual -->
+
           </div>
 
           <!-- ANÁLISIS IA -->

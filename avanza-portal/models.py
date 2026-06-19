@@ -768,13 +768,6 @@ NIVELES = {
     "ELITE":   {"comision": 0.20, "requisito": 5,  "bono": False},
 }
 
-CUOTAS_RECARGO = {
-    1:  0.00,
-    3:  0.08,
-    6:  0.15,
-    12: 0.28,
-}
-
 REPUTACION_BADGES = {
     "CLOSER":        {"label": "Closer",        "icono": "🎯", "desc": "Tasa de cierre ≥ 40%"},
     "RAPIDO":        {"label": "Rápido",        "icono": "⚡", "desc": "Contacta leads en < 6hs"},
