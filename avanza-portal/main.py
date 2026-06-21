@@ -11,6 +11,7 @@ from pydantic import Field as PydField
 import re
 from typing import Optional
 from models import (
+    EmailEnviado, Equipo,
     PushSubscription,
     Aliado, Admin, AdminAuditLog, Venta, Referido, Prospecto, AuditoriaLog, LeadBolsa,
     TransaccionCredito, PostComunidad, ComentarioComunidad, AutomationLog, ActividadProspecto, ContactoProspecto,
@@ -1211,6 +1212,15 @@ def job_eliminacion_definitiva():
                 _sp(lambda: db.query(LeadBolsa).filter(LeadBolsa.aliado_id == aid).update({LeadBolsa.aliado_id: None, LeadBolsa.estado: "disponible", LeadBolsa.fecha_reclamo: None}, synchronize_session=False))
                 _sp(lambda: db.query(Aliado).filter(Aliado.sponsor_id == aid).update({Aliado.sponsor_id: None}, synchronize_session=False))
 
+                _sp(lambda: db.query(EmailEnviado).filter(EmailEnviado.aliado_id == aid).update({EmailEnviado.aliado_id: None}, synchronize_session=False))
+                _sp(lambda: db.query(Equipo).filter((Equipo.aliado_a_id == aid) | (Equipo.aliado_b_id == aid)).delete(synchronize_session=False))
+                _sp(lambda: db.query(Novedad).filter(Novedad.aliado_id == aid).delete(synchronize_session=False))
+                _sp(lambda: db.query(ReporteMalContacto).filter(ReporteMalContacto.aliado_id == aid).delete(synchronize_session=False))
+                _sp(lambda: db.query(AliadoModuloCompletado).filter(AliadoModuloCompletado.aliado_id == aid).delete(synchronize_session=False))
+                _sp(lambda: db.query(SolicitudCompraCreditos).filter(SolicitudCompraCreditos.aliado_id == aid).delete(synchronize_session=False))
+                _sp(lambda: db.query(PlanContinuidadActivo).filter(PlanContinuidadActivo.aliado_id == aid).delete(synchronize_session=False))
+                _sp(lambda: db.query(PasswordResetToken).filter(PasswordResetToken.aliado_id == aid).delete(synchronize_session=False))
+                _sp(lambda: db.query(PushSubscription).filter(PushSubscription.aliado_id == aid).delete(synchronize_session=False))
                 db.delete(a)
                 db.commit()
                 eliminados += 1

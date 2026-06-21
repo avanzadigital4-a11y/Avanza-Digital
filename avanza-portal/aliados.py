@@ -45,6 +45,8 @@ from auth import (
 )
 from database import get_db
 from models import (
+    AliadoModuloCompletado, EmailEnviado, Equipo, PasswordResetToken,
+    PushSubscription, ReporteMalContacto, SolicitudCompraCreditos,
     ActividadProspecto, Aliado, AuditoriaLog, AutomationLog,
     ComentarioComunidad, Comision, ContactoProspecto, LeadBolsa, LinkPago,
     NIVELES, Novedad, PlanContinuidadActivo, PostComunidad,
@@ -679,6 +681,40 @@ def eliminar_aliado(codigo: str, db: Session = Depends(get_db),
         _sp(lambda: db.query(Aliado)
             .filter(Aliado.sponsor_id == aid)
             .update({Aliado.sponsor_id: None}, synchronize_session=False))
+
+        # 13.5) Resto de FKs directas a aliados.id que faltaban limpiar.
+        #       Sin estas, el commit final disparaba ForeignKeyViolation
+        #       (p.ej. emails_enviados, equipos, password_reset_tokens...).
+        # emails_enviados: preservar métricas de campaña → solo desvincular (col nullable)
+        _sp(lambda: db.query(EmailEnviado)
+            .filter(EmailEnviado.aliado_id == aid)
+            .update({EmailEnviado.aliado_id: None}, synchronize_session=False))
+        # Equipos setter/closer: el aliado puede ser A o B → borrar el vínculo
+        _sp(lambda: db.query(Equipo)
+            .filter((Equipo.aliado_a_id == aid) | (Equipo.aliado_b_id == aid))
+            .delete(synchronize_session=False))
+        # Tablas NOT NULL (no se pueden nulear → se borran):
+        _sp(lambda: db.query(Novedad)
+            .filter(Novedad.aliado_id == aid)
+            .delete(synchronize_session=False))
+        _sp(lambda: db.query(ReporteMalContacto)
+            .filter(ReporteMalContacto.aliado_id == aid)
+            .delete(synchronize_session=False))
+        _sp(lambda: db.query(AliadoModuloCompletado)
+            .filter(AliadoModuloCompletado.aliado_id == aid)
+            .delete(synchronize_session=False))
+        _sp(lambda: db.query(SolicitudCompraCreditos)
+            .filter(SolicitudCompraCreditos.aliado_id == aid)
+            .delete(synchronize_session=False))
+        _sp(lambda: db.query(PlanContinuidadActivo)
+            .filter(PlanContinuidadActivo.aliado_id == aid)
+            .delete(synchronize_session=False))
+        _sp(lambda: db.query(PasswordResetToken)
+            .filter(PasswordResetToken.aliado_id == aid)
+            .delete(synchronize_session=False))
+        _sp(lambda: db.query(PushSubscription)
+            .filter(PushSubscription.aliado_id == aid)
+            .delete(synchronize_session=False))
 
         # 14) Por fin: el aliado mismo
         db.delete(a)
