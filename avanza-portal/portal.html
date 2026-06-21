@@ -691,67 +691,10 @@
   .toast.red   { border-color:rgba(239,68,68,0.3); color:var(--red); }
   .toast.amber { border-color:rgba(245,158,11,0.3); color:var(--amber); }
 
-  /* ─── SALÓN DE LA FAMA (LEADERBOARD) CSS ─── */
-  .lb-header { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 24px; flex-wrap: wrap; gap: 16px; }
-  .lb-title { font-size: 1.4rem; font-weight: 900; letter-spacing: -0.5px; display: flex; align-items: center; gap: 10px; }
-  .lb-title i { color: var(--amber); filter: drop-shadow(0 0 8px rgba(250,204,21,0.4)); }
-  .lb-dynamic-msg { background: rgba(249,115,22,0.1); border: 1px solid rgba(249,115,22,0.2); color: var(--orange); padding: 8px 16px; border-radius: 50px; font-size: 0.85rem; font-weight: 700; display: inline-flex; align-items: center; gap: 8px; animation: pulseGlow 2s infinite alternate; }
-  @keyframes pulseGlow { from { box-shadow: 0 0 0 0 rgba(249,115,22,0); } to { box-shadow: 0 0 10px 0 rgba(249,115,22,0.2); } }
-  
-  .podium-wrap { display: flex; align-items: flex-end; justify-content: center; gap: 16px; margin-bottom: 40px; padding-top: 30px; }
-  .podium-card { background: rgba(255,255,255,0.03); border: 1px solid var(--border); border-radius: 16px; padding: 20px 16px; text-align: center; position: relative; width: 160px; transition: transform 0.3s; display: flex; flex-direction: column; justify-content: flex-end; }
-  .podium-card:hover { transform: translateY(-5px); border-color: var(--border-h); }
-  
-  .podium-1 { border-color: rgba(250,204,21,0.4); background: linear-gradient(to top, rgba(250,204,21,0.08), rgba(0,0,0,0)); height: 190px; z-index: 3; }
-  .podium-2 { border-color: rgba(148,163,184,0.3); background: linear-gradient(to top, rgba(148,163,184,0.05), rgba(0,0,0,0)); height: 160px; z-index: 2; }
-  .podium-3 { border-color: rgba(217,119,6,0.3); background: linear-gradient(to top, rgba(217,119,6,0.05), rgba(0,0,0,0)); height: 140px; z-index: 1; }
-  
-  .avatar { width: 56px; height: 56px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 1.3rem; margin: 0 auto 12px; position: absolute; top: -28px; left: 50%; transform: translateX(-50%); border: 4px solid #050505; box-shadow: 0 4px 10px rgba(0,0,0,0.5); }
-  .avatar-1 { background: linear-gradient(135deg, #fde047, #ca8a04); color: #422006; }
-  .avatar-2 { background: linear-gradient(135deg, #cbd5e1, #64748b); color: #0f172a; }
-  .avatar-3 { background: linear-gradient(135deg, #fcd34d, #b45309); color: #451a03; }
-  
-  .podium-name { font-weight: 800; font-size: 1rem; margin-bottom: 2px; }
-  .podium-sales { font-size: 0.75rem; color: var(--text-dim); margin-bottom: 8px; }
-  .podium-comision { font-size: 1.1rem; font-weight: 900; color: var(--green); display: flex; align-items: center; justify-content: center; gap: 4px; }
-  .podium-medal { position: absolute; top: -10px; right: -10px; font-size: 1.5rem; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5)); }
-
-  .lb-list-wrap { display: flex; flex-direction: column; gap: 8px; }
-  .lb-row { display: flex; align-items: center; gap: 16px; padding: 16px 20px; background: rgba(255,255,255,0.015); border: 1px solid var(--border); border-radius: 12px; transition: all 0.2s; }
-  .lb-row:hover { background: rgba(255,255,255,0.03); border-color: rgba(255,255,255,0.1); transform: scale(1.01); }
-  .lb-row.is-me { background: rgba(59,130,246,0.08); border-color: var(--primary); box-shadow: 0 0 20px rgba(59,130,246,0.15); }
-  .lb-row.is-me:hover { transform: scale(1.02); }
-  
-  .lb-pos { width: 30px; font-weight: 800; font-size: 1.1rem; color: var(--text-muted); text-align: center; }
-  .lb-avatar-mini { width: 40px; height: 40px; border-radius: 50%; background: rgba(255,255,255,0.08); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.9rem; color: white; flex-shrink: 0; }
-  .lb-info { flex: 1; min-width: 0; }
-  .lb-name { font-weight: 700; font-size: 0.95rem; display: flex; align-items: center; gap: 8px; }
-  .lb-badge-me { background: var(--primary); color: white; font-size: 0.65rem; padding: 2px 6px; border-radius: 4px; text-transform: uppercase; font-weight: 800; letter-spacing: 0.5px; }
-  .lb-stats { display: flex; gap: 12px; font-size: 0.8rem; color: var(--text-dim); margin-top: 2px; }
-  
-  .lb-nivel { font-size: 0.65rem; font-weight: 800; padding: 3px 8px; border-radius: 50px; text-transform: uppercase; letter-spacing: 0.5px; }
-  .nivel-BASIC { background: rgba(255,255,255,0.05); color: var(--text-muted); border: 1px solid rgba(255,255,255,0.1); }
-  .nivel-SILVER { background: rgba(148,163,184,0.1); color: #cbd5e1; border: 1px solid rgba(148,163,184,0.2); }
-  .nivel-PREMIUM { background: rgba(59,130,246,0.1); color: #93c5fd; border: 1px solid rgba(59,130,246,0.2); }
-  .nivel-ELITE { background: rgba(250,204,21,0.1); color: #fde047; border: 1px solid rgba(250,204,21,0.2); }
-
-  .lb-money { font-weight: 900; font-size: 1.1rem; color: var(--green); text-align: right; display: flex; align-items: center; gap: 6px; }
 
   .skeleton { background: linear-gradient(90deg, rgba(255,255,255,0.03) 25%, rgba(255,255,255,0.08) 50%, rgba(255,255,255,0.03) 75%); background-size: 200% 100%; animation: loading 1.5s infinite; border-radius: 8px; }
   @keyframes loading { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
 
-  @media (max-width: 700px) {
-    .podium-wrap { align-items: center; flex-direction: column; gap: 32px; padding-top: 10px; }
-    .podium-card { width: 100%; max-width: 300px; height: auto !important; padding: 24px; }
-    .podium-1 { order: -1; border-color: rgba(250,204,21,0.5); }
-    .avatar { top: -20px; left: 24px; transform: none; width: 40px; height: 40px; font-size: 1rem; }
-    .podium-medal { top: 10px; right: 10px; font-size: 1.2rem; }
-    .podium-card { text-align: left; display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 10px; }
-    .podium-comision { justify-content: flex-end; }
-    .lb-row { flex-wrap: wrap; padding: 14px; }
-    .lb-money { width: 100%; text-align: left; margin-top: 8px; justify-content: flex-start; padding-left: 46px; }
-    .lb-pos { width: 20px; }
-  }
 
   @media (max-width: 600px) {
     .login-box { padding: 32px 24px; }
@@ -1436,6 +1379,7 @@ html.avz-collapsed #avz-sidebar .avz-exit span{ display:none; }
     </nav>
 
     <div class="avz-foot">
+      <button class="avz-nav-item" id="btn-tour-portal" onclick="window.AvanzaTour&&AvanzaTour.start()" style="margin-bottom:6px;"><i class="fa-solid fa-circle-question"></i><span class="lb">¿Cómo funciona?</span><span class="tip">Tour del portal</span></button>
       <button class="avz-nav-item tab-btn" id="btn-tab-mi-cuenta" data-tab="mi-cuenta" onclick="cambiarTab('mi-cuenta',this)" style="margin-bottom:6px;"><i class="fa-solid fa-gear"></i><span class="lb">Mi Cuenta</span><span class="tip">Mi Cuenta</span></button>
       <div class="avz-user">
         <div class="av"><i class="fa-solid fa-user"></i></div>
@@ -1906,18 +1850,6 @@ html.avz-collapsed #avz-sidebar .avz-exit span{ display:none; }
         </div>
       </div>
 
-      <!-- BANNER GRUPO WHATSAPP — posición nueva: después de métricas, menos intrusivo -->
-      <a href="https://chat.whatsapp.com/CqHsCyLUTmQK9I5JnvhCYx" target="_blank" rel="noopener" style="display:flex; align-items:center; gap:16px; background:linear-gradient(135deg,rgba(37,211,102,0.08),rgba(37,211,102,0.03)); border:1px solid rgba(37,211,102,0.25); border-radius:var(--radius); padding:16px 20px; margin-bottom:24px; text-decoration:none; transition:border-color 0.2s,background 0.2s;" onmouseover="this.style.borderColor='rgba(37,211,102,0.5)'" onmouseout="this.style.borderColor='rgba(37,211,102,0.25)'">
-        <div style="width:44px;height:44px;border-radius:50%;background:#25D366;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="white" xmlns="http://www.w3.org/2000/svg"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
-        </div>
-        <div style="flex:1;">
-          <div style="font-size:0.9rem;font-weight:700;color:#4ade80;margin-bottom:2px;">📲 Únete al grupo de Avanza Partners</div>
-          <div style="font-size:0.8rem;color:var(--text-muted);">Tips de ventas, novedades del portal y comunidad de aliados</div>
-        </div>
-        <div style="font-size:0.78rem;font-weight:600;color:#25D366;white-space:nowrap;display:flex;align-items:center;gap:6px;">Unirme <i class="fa-solid fa-arrow-right" style="font-size:0.7rem;"></i></div>
-      </a>
-
       <!-- REPUTACIÓN + CRÉDITOS — bloque principal está arriba en el dashboard -->
 
       <!-- PROGRESO DE NIVEL -->
@@ -1943,29 +1875,6 @@ html.avz-collapsed #avz-sidebar .avz-exit span{ display:none; }
       <div class="bento-box">
         <h3 style="font-size:0.95rem;font-weight:700;margin-bottom:16px;"><i class="fa-solid fa-star" style="color:var(--amber);"></i> &nbsp;Beneficios de tu nivel</h3>
         <div id="d-beneficios" style="display:grid;gap:10px;"></div>
-      </div>
-
-      <div class="bento-box d-canal1-only" style="margin-top:40px; padding:32px;" id="bloque-leaderboard">
-        <div class="lb-header">
-          <div>
-            <div class="lb-title"><i class="fa-solid fa-trophy"></i> Salón de la Fama</div>
-            <p style="font-size:0.85rem; color:var(--text-dim); margin-top:4px;">Ranking por ganancias · Tasa de cierre · Velocidad de ventas.</p>
-          </div>
-          <div id="lb-dynamic-msg" class="lb-dynamic-msg">
-            <div class="skeleton" style="width:200px; height:16px;"></div>
-          </div>
-        </div>
-
-        <div class="podium-wrap" id="lb-podium">
-           <div class="podium-card podium-2"><div class="avatar skeleton"></div><div class="skeleton" style="width:80%;height:14px;margin:0 auto 10px;"></div></div>
-           <div class="podium-card podium-1"><div class="avatar skeleton"></div><div class="skeleton" style="width:80%;height:14px;margin:0 auto 10px;"></div></div>
-           <div class="podium-card podium-3"><div class="avatar skeleton"></div><div class="skeleton" style="width:80%;height:14px;margin:0 auto 10px;"></div></div>
-        </div>
-
-        <div class="lb-list-wrap" id="lb-list">
-           <div class="lb-row"><div class="skeleton" style="width:100%;height:40px;"></div></div>
-           <div class="lb-row"><div class="skeleton" style="width:100%;height:40px;"></div></div>
-        </div>
       </div>
     </div>
 
@@ -4631,6 +4540,7 @@ window.__MODS = {
 };
 </script>
 <script defer src="assets/js/portal.core.js"></script>
+<script defer src="assets/js/portal.tour.js"></script>
 
 
 

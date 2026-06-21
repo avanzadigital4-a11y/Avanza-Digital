@@ -713,13 +713,6 @@ body{{font-family:Inter,sans-serif;background:#050505;color:#e2e8f0;line-height:
 .benefit-icon{{font-size:1.4rem;margin-bottom:8px;}}
 .benefit-title{{font-size:.88rem;font-weight:800;margin-bottom:4px;}}
 .benefit-desc{{font-size:.78rem;color:#71717a;line-height:1.5;}}
-.caso-card{{background:#0a0a0a;border:1px solid rgba(255,255,255,0.06);border-radius:12px;padding:20px;margin-bottom:12px;}}
-.caso-header{{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px;flex-wrap:wrap;gap:8px;}}
-.caso-empresa{{font-size:.88rem;font-weight:800;}}
-.caso-rubro{{font-size:.7rem;color:#71717a;font-weight:600;text-transform:uppercase;letter-spacing:1px;margin-top:2px;}}
-.caso-badge{{background:rgba(74,222,128,0.1);color:#4ade80;padding:4px 10px;border-radius:20px;font-size:.72rem;font-weight:700;white-space:nowrap;}}
-.caso-resultado{{font-size:.85rem;color:#a1a1aa;line-height:1.5;}}
-.caso-resultado strong{{color:#e2e8f0;}}
 .divider{{border:none;border-top:1px solid rgba(255,255,255,0.06);margin:8px 0;}}
 .planes-title{{font-size:1.4rem;font-weight:900;margin-bottom:6px;}}
 .planes-sub{{color:#a1a1aa;font-size:.88rem;margin-bottom:24px;}}
@@ -728,7 +721,6 @@ body{{font-family:Inter,sans-serif;background:#050505;color:#e2e8f0;line-height:
 .garantia-box{{background:rgba(74,222,128,0.05);border:1px solid rgba(74,222,128,0.15);border-radius:12px;padding:20px;text-align:center;margin-top:20px;}}
 .garantia-box h3{{font-size:1rem;font-weight:800;color:#4ade80;margin-bottom:6px;}}
 .garantia-box p{{font-size:.83rem;color:#a1a1aa;}}
-.resultados-reales-box{{margin-top:32px;padding-top:28px;border-top:1px solid rgba(255,255,255,0.06);}}
 .footer{{margin-top:48px;text-align:center;color:#3f3f46;font-size:.75rem;}}
 .footer a{{color:#52525b;}}
 .audit-cta-box{{background:rgba(59,130,246,0.05);border:1px solid rgba(59,130,246,0.18);border-radius:14px;padding:28px 22px;margin:8px 0 28px;text-align:center;}}
@@ -856,31 +848,6 @@ input[type=text]:focus{{outline:none;border-color:#3b82f6;}}
       <p>Todos los planes incluyen soporte técnico prioritario los primeros 90 días. Si algo no funciona, lo resolvemos nosotros.</p>
     </div>
 
-    <div class="resultados-reales-box">
-      <div class="section-label" style="text-align:center;margin-bottom:14px;">Resultados reales</div>
-      <p class="planes-title" style="text-align:center;font-size:1.15rem;margin-bottom:20px;">Lo que lograron empresas como la tuya</p>
-      <div class="caso-card">
-        <div class="caso-header">
-          <div><div class="caso-empresa">Aleametal · Perú</div><div class="caso-rubro">Fabricación de estructuras</div></div>
-          <div class="caso-badge">+47% conversión</div>
-        </div>
-        <p class="caso-resultado">Tenían el mismo problema de presupuestos que se perdían. En <strong>21 días</strong> implementaron el sistema. Primer trimestre: <strong>3 contratos nuevos</strong> desde canales digitales.</p>
-      </div>
-      <div class="caso-card">
-        <div class="caso-header">
-          <div><div class="caso-empresa">Logística Cordillera · Chile</div><div class="caso-rubro">Logística y transporte</div></div>
-          <div class="caso-badge">31hs → 4hs</div>
-        </div>
-        <p class="caso-resultado">Pasaron de tardar <strong>31 horas</strong> en responder cotizaciones a <strong>menos de 4 horas</strong>. Cerraron <strong>3 contratos nuevos</strong> el primer mes.</p>
-      </div>
-      <div class="caso-card">
-        <div class="caso-header">
-          <div><div class="caso-empresa">Soluciones Técnicas Generales · Argentina</div><div class="caso-rubro">Servicios técnicos industriales</div></div>
-          <div class="caso-badge">USD 8.400 primer trimestre</div>
-        </div>
-        <p class="caso-resultado">En <strong>7 días</strong> activaron el Plan Base. En 20 días les entró la primera consulta digital. Primer trimestre: <strong>USD 8.400 en contratos nuevos</strong>.</p>
-      </div>
-    </div>
 {_faq_html}
   </section>
 {_planes_js}

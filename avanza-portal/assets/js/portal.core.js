@@ -911,7 +911,6 @@ async function cargarTodo() {
   renderDashboard(); 
   renderVentas(); 
   renderComisiones();
-  renderLeaderboard();
   cargarReputacion();
   cargarCreditos();
   cargarSiguienteAccion();
@@ -940,7 +939,11 @@ async function cargarTodo() {
   // Onboarding primer login
   const key = `portal_onboarded_${aliado.codigo}`;
   if (!localStorage.getItem(key)) {
+    // Aliado nuevo: primero el modal de bienvenida; el tour se encadena al cerrarlo (cerrarOnboarding).
     setTimeout(() => document.getElementById('modal-onboarding').classList.add('open'), 600);
+  } else {
+    // Aliado que ya pasó el onboarding: si todavía no vio el tour, se lo mostramos una vez.
+    setTimeout(() => { try { window.AvanzaTour && AvanzaTour.maybeStart(); } catch (e) {} }, 900);
   }
 }
 
@@ -976,6 +979,8 @@ function _inyectarGuionRecomendado(aliado) {
 function cerrarOnboarding() {
   document.getElementById('modal-onboarding').classList.remove('open');
   if (aliado) localStorage.setItem(`portal_onboarded_${aliado.codigo}`, '1');
+  // Encadenar el tour guiado del portal (solo la primera vez)
+  setTimeout(() => { try { window.AvanzaTour && AvanzaTour.maybeStart(); } catch (e) {} }, 450);
 }
 
 // ── GATE SUAVE: Bolsa de Leads ────────────────────────────────────────────────
@@ -3021,135 +3026,6 @@ async function guardarNota(id) {
   } catch {}
 }
 
-// ─── LÓGICA DEL LEADERBOARD GAMIFICADO ───
-function getInitials(name) {
-  const parts = name.split(' ');
-  if (parts.length >= 2) return (parts[0][0] + parts[1][0]).toUpperCase();
-  return name.substring(0, 2).toUpperCase();
-}
-
-// ─── Helpers de render del leaderboard (top + ver completo) ───────────────────
-let _lbData = null;          // lista completa del leaderboard
-let _lbExpandido = false;    // ¿mostrar todos o solo el top?
-const LB_TOP_VISIBLE = 10;   // total visible colapsado (incluye el podio top 3)
-
-function _lbRowHtml(item) {
-  const isMe = item.codigo === aliado.codigo;
-  return `
-      <div class="lb-row ${isMe?'is-me':''}">
-        <div class="lb-pos">#${item.posicion}</div>
-        <div class="lb-avatar-mini">${getInitials(item.nombre)}</div>
-        <div class="lb-info">
-          <div class="lb-name">
-            ${item.nombre} ${isMe?'<span class="lb-badge-me">Vos</span>':''}
-            <span class="lb-nivel nivel-${item.nivel}">${item.nivel}</span>
-          </div>
-          <div class="lb-stats">
-            <span><i class="fa-solid fa-chart-line"></i> ${item.ventas_6m} ventas</span>
-            ${item.tasa_cierre!=null ? `<span><i class="fa-solid fa-percent"></i> ${item.tasa_cierre}% cierre</span>` : ''}
-          </div>
-        </div>
-        <div class="lb-money"><i class="fa-solid fa-sack-dollar" style="font-size:0.9rem;color:var(--text-dim);"></i> USD ${item.total_ganado.toLocaleString()}</div>
-      </div>`;
-}
-
-function _pintarListaLeaderboard() {
-  const lb = _lbData; if (!lb) return;
-  const myIdx = lb.findIndex(x => x.codigo === aliado.codigo);
-  const me = lb[myIdx];
-  const resto = lb.slice(3);
-  const visibles = _lbExpandido ? resto : resto.slice(0, LB_TOP_VISIBLE - 3);
-  let html = visibles.map(_lbRowHtml).join('');
-  if (!_lbExpandido && me && me.posicion > LB_TOP_VISIBLE) {
-    html += `<div style="text-align:center;color:var(--text-dim);padding:4px 0 8px;letter-spacing:3px;">···</div>` + _lbRowHtml(me);
-  }
-  if (resto.length > (LB_TOP_VISIBLE - 3)) {
-    html += `<button onclick="toggleLeaderboardCompleto()" style="display:block;width:100%;margin-top:12px;padding:10px;background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:8px;color:var(--text-muted);font-weight:700;font-size:0.85rem;cursor:pointer;">${_lbExpandido ? 'Ver menos ▲' : 'Ver ranking completo ('+lb.length+') ▼'}</button>`;
-  }
-  document.getElementById('lb-list').innerHTML = html;
-}
-
-function toggleLeaderboardCompleto() {
-  _lbExpandido = !_lbExpandido;
-  _pintarListaLeaderboard();
-}
-
-async function renderLeaderboard() {
-  try {
-    const res = await apiFetch(`${API}/leaderboard`);
-    if (!res.ok) return;
-    const lb = await res.json();
-    
-    // 1. Encontrar al usuario actual
-    const myPosIndex = lb.findIndex(x => x.codigo === aliado.codigo);
-    const me = lb[myPosIndex];
-
-    // 2. Calcular Mensaje Dinámico
-    let msg = "¡Sumá ventas para escalar posiciones!";
-    if (me) {
-        if (me.posicion === 1) {
-            msg = "¡Sos el #1! Defendé tu corona. 👑";
-        } else if (me.posicion <= 3) {
-            msg = "¡Estás en el podio! A un paso de la gloria. 🔥";
-        } else if (me.posicion <= 10) {
-            const diff = lb[2].ventas_6m - me.ventas_6m;
-            msg = diff > 0 
-                ? `Estás en el Top 10. ¡A solo ${diff} venta${diff>1?'s':''} del podio! 🚀` 
-                : `¡Estás empatado en ventas con el podio! Cerrá una más para subir. 🚀`;
-        } else {
-            const top10 = lb[9];
-            if(top10) {
-               const diff = top10.ventas_6m - me.ventas_6m;
-               msg = `Estás a ${Math.max(1, diff)} venta${diff>1?'s':''} de entrar al codiciado Top 10. ¡Vos podés!`;
-            }
-        }
-    }
-    document.getElementById('lb-dynamic-msg').innerHTML = `<i class="fa-solid fa-fire"></i> ${msg}`;
-
-    // 3. Renderizar Podio (Top 3)
-    const podiumContainer = document.getElementById('lb-podium');
-    let podiumHtml = '';
-    
-    // Orden visual del podio: Segundo (Izq), Primero (Centro), Tercero (Der)
-    const podiumOrder = [
-        { rank: 2, obj: lb[1], cls: 'podium-2', medal: '🥈' },
-        { rank: 1, obj: lb[0], cls: 'podium-1', medal: '🥇' },
-        { rank: 3, obj: lb[2], cls: 'podium-3', medal: '🥉' }
-    ];
-
-    podiumOrder.forEach(p => {
-        if (!p.obj) return;
-        const isMe = p.obj.codigo === aliado.codigo;
-        podiumHtml += `
-        <div class="podium-card ${p.cls} ${isMe ? 'is-me' : ''}">
-           <div class="podium-medal">${p.medal}</div>
-           <div class="avatar avatar-${p.rank}">${getInitials(p.obj.nombre)}</div>
-           <div style="flex:1;">
-               <div class="podium-name">${p.obj.nombre} ${isMe ? '<br><span class="lb-badge-me">Vos</span>' : ''}</div>
-               <div class="podium-sales">${p.obj.ventas_6m} ventas</div>
-           </div>
-           <div class="podium-comision"><i class="fa-solid fa-sack-dollar" style="font-size:0.8rem;"></i> ${p.obj.total_ganado.toLocaleString()}</div>
-        </div>`;
-    });
-    podiumContainer.innerHTML = podiumHtml;
-
-    // 4. Renderizar Lista (Resto)
-    const listContainer = document.getElementById('lb-list');
-    _lbData = lb;
-    _pintarListaLeaderboard();
-
-    // 5. UX: Hacer scroll suave hacia la fila del usuario si no está en el top 3
-    if (me && me.posicion > 3) {
-        setTimeout(() => {
-            const myRow = document.querySelector('.lb-row.is-me');
-            if (myRow) {
-                myRow.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            }
-        }, 500);
-    }
-
-  } catch(e) { console.warn('Error cargando leaderboard', e); }
-}
 // ── BOLSA DE LEADS (ALIADO) ──────────────────────────────────────────────────
 
 // ── Bolsa Canal 1: WhatsApp normalizado a formato internacional para wa.me ────
@@ -4466,67 +4342,6 @@ async function togglePiloto(id, actual) {
       await cargarProspectos();
     }
   } catch(e) { console.warn('Error toggle piloto', e); }
-}
-
-// ─── LEADERBOARD (actualizado con métricas avanzadas) ─────────────────────────
-
-async function renderLeaderboard() {
-  try {
-    const res = await apiFetch(`${API}/leaderboard`);
-    if (!res.ok) return;
-    const lb = await res.json();
-
-    const myPosIndex = lb.findIndex(x => x.codigo === aliado.codigo);
-    const me = lb[myPosIndex];
-
-    let msg = '¡Sumá ventas para escalar posiciones!';
-    if (me) {
-      if (me.posicion === 1)       msg = '¡Sos el #1! Defendé tu corona. 👑';
-      else if (me.posicion <= 3)   msg = '¡Estás en el podio! A un paso de la gloria. 🔥';
-      else if (me.posicion <= 10)  {
-        const diff = lb[2].ventas_6m - me.ventas_6m;
-        msg = diff > 0 ? `Estás en el Top 10. ¡A solo ${diff} venta${diff>1?'s':''} del podio! 🚀`
-                       : '¡Empatado con el podio! Cerrá una más para subir. 🚀';
-      } else {
-        const top10 = lb[9];
-        if(top10) { const diff = Math.max(1, top10.ventas_6m - me.ventas_6m);
-          msg = `A ${diff} venta${diff>1?'s':''} de entrar al Top 10. ¡Vos podés!`; }
-      }
-    }
-    document.getElementById('lb-dynamic-msg').innerHTML = `<i class="fa-solid fa-fire"></i> ${msg}`;
-
-    const podiumOrder = [
-      { rank:2, obj:lb[1], cls:'podium-2', medal:'🥈' },
-      { rank:1, obj:lb[0], cls:'podium-1', medal:'🥇' },
-      { rank:3, obj:lb[2], cls:'podium-3', medal:'🥉' },
-    ];
-    let podiumHtml = '';
-    podiumOrder.forEach(p => {
-      if (!p.obj) return;
-      const isMe = p.obj.codigo === aliado.codigo;
-      podiumHtml += `
-      <div class="podium-card ${p.cls} ${isMe?'is-me':''}">
-        <div class="podium-medal">${p.medal}</div>
-        <div class="avatar avatar-${p.rank}">${getInitials(p.obj.nombre)}</div>
-        <div style="flex:1;">
-          <div class="podium-name">${p.obj.nombre} ${isMe?'<br><span class="lb-badge-me">Vos</span>':''}</div>
-          <div class="podium-sales">${p.obj.ventas_6m} ventas · ${p.obj.tasa_cierre||0}% cierre</div>
-        </div>
-        <div class="podium-comision"><i class="fa-solid fa-sack-dollar" style="font-size:0.8rem;"></i> ${p.obj.total_ganado.toLocaleString()}</div>
-      </div>`;
-    });
-    document.getElementById('lb-podium').innerHTML = podiumHtml;
-
-    _lbData = lb;
-    _pintarListaLeaderboard();
-
-    if (me && me.posicion > 3) {
-      setTimeout(() => {
-        const myRow = document.querySelector('.lb-row.is-me');
-        if (myRow) myRow.scrollIntoView({ behavior:'smooth', block:'center' });
-      }, 500);
-    }
-  } catch(e) { console.warn('Error cargando leaderboard', e); }
 }
 
 // ─── HISTORIAL BOLSA (fixes para los nuevos KPI IDs) ─────────────────────────
@@ -6567,7 +6382,7 @@ const ACADEMIA_MODULOS = [
       <div class="d-canal1-only">
         <h3>Materiales Canal 1</h3>
         <div class="aca-downloads">
-          <a class="aca-download" href="#" onclick="descargarPDF('https://drive.google.com/uc?export=download&id=1vYqcCUKjsxZ_qm8El-gK5LxKmdYVzS4-','Brochure_Comercial_AvanzaDigital_v4.pdf');return false;">
+          <a class="aca-download" href="#" onclick="descargarPDF('https://drive.google.com/uc?export=download&id=1hj4ZUv2SDL5VtlpFODMqXPsrF0Ou8Zxn','Brochure_Comercial_AvanzaDigital_v4.pdf');return false;">
             <i class="fa-solid fa-file-pdf" style="color:#ef4444;"></i>
             <div><div class="dl-title">Brochure Comercial v4</div><div class="dl-sub">Para mostrarle al cliente</div></div>
           </a>
