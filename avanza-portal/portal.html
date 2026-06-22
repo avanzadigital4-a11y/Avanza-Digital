@@ -1363,7 +1363,6 @@ html.avz-collapsed #avz-sidebar .avz-exit span{ display:none; }
       <button class="avz-nav-item tab-btn tab-canal1" data-tab="bolsa" data-c="1" onclick="cambiarTab('bolsa',this)"><i class="fa-solid fa-bullhorn"></i><span class="lb">Bolsa de Leads</span><span class="pill" style="background:var(--green);color:#000;">NUEVO</span><span class="tip">Bolsa de Leads</span></button>
       <button class="avz-nav-item tab-btn" data-tab="capturas" onclick="cambiarTab('capturas',this)"><i class="fa-solid fa-fire" style="color:#f97316;"></i><span class="lb">Mis Capturas</span><span class="pill" id="capturas-pill" style="display:none;background:#f97316;color:#000;">0</span><span class="tip">Mis Capturas</span></button>
       <button class="avz-nav-item tab-btn tab-canal2" data-tab="kit-ventas" data-c="2" onclick="cambiarTab('kit-ventas',this)"><i class="fa-solid fa-briefcase"></i><span class="lb">Kit de Ventas</span><span class="pill" style="background:var(--green);color:#000;">C2</span><span class="tip">Kit de Ventas</span></button>
-      <button class="avz-nav-item tab-btn tab-canal2" data-tab="selector-rubro" data-c="2" onclick="cambiarTab('selector-rubro',this)"><i class="fa-solid fa-crosshairs"></i><span class="lb">Selector de Rubro</span><span class="tip">Selector de Rubro</span></button>
       <button class="avz-nav-item tab-btn" id="btn-tab-pipeline" data-tab="pipeline" onclick="cambiarTab('pipeline',this)"><i class="fa-solid fa-bars-progress"></i><span class="lb">Mi CRM</span><span class="tip">Mi CRM</span></button>
       <button class="avz-nav-item tab-btn" data-tab="ventas" onclick="cambiarTab('ventas',this)"><i class="fa-solid fa-handshake"></i><span class="lb">Ventas</span><span class="tip">Ventas</span></button>
       <button class="avz-nav-item tab-btn" data-tab="comisiones" onclick="cambiarTab('comisiones',this)"><i class="fa-solid fa-dollar-sign"></i><span class="lb">Comisiones</span><span class="tip">Comisiones</span></button>
@@ -1373,7 +1372,7 @@ html.avz-collapsed #avz-sidebar .avz-exit span{ display:none; }
       <button class="avz-nav-item tab-btn" id="btn-tab-academia-primary" data-tab="academia" onclick="cambiarTab('academia',this)"><i class="fa-solid fa-graduation-cap"></i><span class="lb">Academia</span><span id="academia-progress-badge" class="pill" style="display:none;background:var(--orange);color:#000;"></span><span class="tip">Academia</span></button>
       <button class="avz-nav-item tab-btn" data-tab="herramientas" onclick="cambiarTab('herramientas',this)"><i class="fa-solid fa-magnifying-glass"></i><span class="lb">Auditorías</span><span class="tip">Auditorías</span></button>
       <button class="avz-nav-item tab-btn" data-tab="red" onclick="cambiarTab('red',this)"><i class="fa-solid fa-users-rays"></i><span class="lb">Mi Red</span><span class="tip">Mi Red</span></button>
-      <button class="avz-nav-item tab-btn" data-tab="equipo" onclick="cambiarTab('equipo',this)"><i class="fa-solid fa-people-arrows"></i><span class="lb">Mi Equipo</span><span class="tip">Mi Equipo</span></button>
+      <button class="avz-nav-item tab-btn tab-canal1" data-tab="equipo" onclick="cambiarTab('equipo',this)"><i class="fa-solid fa-people-arrows"></i><span class="lb">Mi Equipo</span><span class="tip">Mi Equipo</span></button>
       <button class="avz-nav-item tab-btn" data-tab="comunidad" onclick="cambiarTab('comunidad',this)"><i class="fa-solid fa-comments"></i><span class="lb">Comunidad</span><span class="tip">Comunidad</span></button>
       <button class="avz-nav-item tab-btn" data-tab="jarvis" onclick="cambiarTab('jarvis',this)"><i class="fa-solid fa-bolt" style="color:#7fd8ff;"></i><span class="lb">JARVIS IA</span><span class="tip">JARVIS IA</span></button>
     </nav>
@@ -1515,18 +1514,6 @@ html.avz-collapsed #avz-sidebar .avz-exit span{ display:none; }
       </div>
 
       <!-- BANNER DE BIENVENIDA CANAL 2 -->
-      <div id="d-canal2-banner" class="d-canal2-only" style="display:none;background:linear-gradient(135deg,rgba(74,222,128,0.08),rgba(74,222,128,0.03));border:1px solid rgba(74,222,128,0.2);border-radius:var(--radius);padding:20px 24px;margin-bottom:20px;">
-        <div style="display:flex;align-items:center;gap:12px;margin-bottom:8px;">
-          <i class="fa-solid fa-briefcase" style="color:#4ade80;font-size:1.1rem;"></i>
-          <span style="font-size:.95rem;font-weight:800;">Modo: Tengo mis clientes</span>
-          <span style="background:rgba(74,222,128,0.2);color:#4ade80;font-size:.65rem;font-weight:800;padding:2px 8px;border-radius:50px;letter-spacing:1px;">CANAL 2</span>
-        </div>
-        <p style="font-size:.83rem;color:var(--text-muted);margin-bottom:12px;line-height:1.5;">Arrancá por el <strong style="color:#4ade80;">Selector de Rubro</strong> — elegí el rubro de tu próximo cliente y tenés el pitch listo en 30 segundos.</p>
-        <button onclick="cambiarTab('selector-rubro', document.querySelector('.tab-canal2[onclick*=selector-rubro]'))" style="background:#4ade80;color:#000;border:none;padding:9px 18px;border-radius:8px;font-size:.82rem;font-weight:800;cursor:pointer;display:inline-flex;align-items:center;gap:6px;">
-          <i class="fa-solid fa-crosshairs"></i> Ir al Selector de Rubro
-        </button>
-      </div>
-
       <!-- BANNER KIT DE VENTAS PDF — CANAL 1 -->
       <div id="d-canal1-kit-banner" class="d-canal1-only" style="display:none;position:relative;background:linear-gradient(135deg,rgba(249,115,22,0.10),rgba(249,115,22,0.03));border:1px solid rgba(249,115,22,0.3);border-radius:var(--radius);padding:20px 24px;margin-bottom:20px;">
         <button onclick="cerrarBannerKitVentas()" aria-label="Cerrar" style="position:absolute;top:10px;right:12px;background:transparent;border:none;color:var(--text-dim);cursor:pointer;font-size:1rem;padding:4px 8px;line-height:1;" onmouseover="this.style.color='#fff'" onmouseout="this.style.color='var(--text-dim)'">
@@ -1535,13 +1522,13 @@ html.avz-collapsed #avz-sidebar .avz-exit span{ display:none; }
         <div style="display:flex;align-items:center;gap:12px;margin-bottom:8px;flex-wrap:wrap;">
           <i class="fa-solid fa-box-open" style="color:#f97316;font-size:1.1rem;"></i>
           <span style="font-size:.95rem;font-weight:800;">Tu kit de ventas en PDF te espera 📦</span>
-          <span style="background:rgba(249,115,22,0.2);color:#f97316;font-size:.65rem;font-weight:800;padding:2px 8px;border-radius:50px;letter-spacing:1px;">MÓDULO 8</span>
+          <span style="background:rgba(249,115,22,0.2);color:#f97316;font-size:.65rem;font-weight:800;padding:2px 8px;border-radius:50px;letter-spacing:1px;">MÓDULO 7</span>
         </div>
         <p style="font-size:.83rem;color:var(--text-muted);margin-bottom:14px;line-height:1.5;padding-right:24px;">
-          En el <strong style="color:#f97316;">Módulo 8 de la Academia</strong> tenés todos los PDF descargables: Brochure Comercial, Guión de Ventas, Guión por Rubro y Partner Intro. Listos para mandar a tu cliente.
+          En el <strong style="color:#f97316;">Módulo 7 de la Academia</strong> tenés todos los PDF descargables: Brochure Comercial, Guión de Ventas, Guión por Rubro y Partner Intro. Listos para mandar a tu cliente.
         </p>
         <button onclick="irAModulo8KitVentas()" style="background:#f97316;color:#000;border:none;padding:9px 18px;border-radius:8px;font-size:.82rem;font-weight:800;cursor:pointer;display:inline-flex;align-items:center;gap:6px;">
-          <i class="fa-solid fa-download"></i> Ir al Módulo 8 — Descargar kit
+          <i class="fa-solid fa-download"></i> Ir al Módulo 7 — Descargar kit
         </button>
       </div>
 
@@ -1945,9 +1932,6 @@ html.avz-collapsed #avz-sidebar .avz-exit span{ display:none; }
           <a href="#" onclick="descargarPDF('https://drive.google.com/uc?export=download&id=1V9HIVq6UCAIu1a_UsG8_dW3msXXtvhBX','Guion_Ventas_Por_Rubro_v2.pdf');return false;" class="btn-primary" style="display:inline-flex;align-items:center;gap:6px;font-size:.82rem;padding:10px 16px;text-decoration:none;border-radius:8px;width:fit-content;">
             <i class="fa-solid fa-download"></i> Descargar PDF
           </a>
-          <button onclick="cambiarTab('selector-rubro', document.querySelector('.tab-canal2[onclick*=selector-rubro]'))" style="background:transparent;border:1px solid rgba(74,222,128,0.4);color:#4ade80;display:inline-flex;align-items:center;gap:6px;font-size:.82rem;padding:10px 16px;border-radius:8px;width:fit-content;cursor:pointer;">
-            <i class="fa-solid fa-crosshairs"></i> Ir al Selector de Rubro
-          </button>
         </div>
 
       </div>
@@ -2034,214 +2018,6 @@ html.avz-collapsed #avz-sidebar .avz-exit span{ display:none; }
       </div>
     </div>
 
-    <!-- ══════════════════════════════════════════════════════════════════════
-         TAB SELECTOR DE RUBRO — Solo Canal 2
-    ══════════════════════════════════════════════════════════════════════ -->
-    <div id="tab-selector-rubro" class="tab-panel">
-      <div class="welcome-header">
-        <div>
-          <div class="welcome-name">¿Con quién vas a hablar? 🎯</div>
-          <div class="welcome-sub" style="font-size:.9rem;">Elegí el rubro de tu cliente. Te damos el pitch, el mensaje de WhatsApp y el primer paso para cerrar.</div>
-        </div>
-      </div>
-
-      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px;" id="rubros-grid">
-
-        <!-- RUBRO 1: Metalúrgica -->
-        <div class="rubro-card" id="rubro-metalurgica" onclick="toggleRubro('metalurgica')" style="cursor:pointer;border:2px solid rgba(249,115,22,0.3);border-radius:var(--radius);padding:20px;background:rgba(249,115,22,0.04);transition:all .25s;">
-          <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px;">
-            <div>
-              <div style="font-size:1rem;font-weight:800;margin-bottom:6px;">🏭 Metalúrgica / Fábrica / Agroindustria</div>
-              <div style="display:flex;gap:8px;flex-wrap:wrap;">
-                <span style="background:rgba(249,115,22,0.15);color:#f97316;border:1px solid rgba(249,115,22,0.3);font-size:.7rem;font-weight:800;padding:3px 10px;border-radius:50px;">Plan Industrial · USD 4.900</span>
-                <span style="background:rgba(74,222,128,0.12);color:#4ade80;border:1px solid rgba(74,222,128,0.25);font-size:.7rem;font-weight:800;padding:3px 10px;border-radius:50px;">Comisión USD 490–980</span>
-              </div>
-            </div>
-            <i class="fa-solid fa-chevron-down rubro-chevron" id="chevron-metalurgica" style="color:var(--text-muted);margin-top:4px;transition:transform .25s;"></i>
-          </div>
-          <div style="font-size:.78rem;color:var(--text-muted);">📍 Caso: Aleametal, Perú — conversión +47% en 21 días</div>
-
-          <div class="rubro-detalle" id="detalle-metalurgica" style="display:none;margin-top:20px;border-top:1px solid rgba(249,115,22,0.2);padding-top:20px;">
-
-            <!-- Bloque A: Pitch verbal -->
-            <div style="margin-bottom:20px;">
-              <div style="font-size:.7rem;font-weight:800;color:#f97316;letter-spacing:1px;text-transform:uppercase;margin-bottom:8px;"><i class="fa-solid fa-microphone"></i> &nbsp;PITCH VERBAL</div>
-              <div style="background:rgba(0,0,0,0.3);border:1px solid rgba(249,115,22,0.15);border-radius:10px;padding:16px;font-size:.83rem;color:var(--text-muted);line-height:1.6;font-style:italic;">"Te cuento rápido: uno de los clientes que te va a sonar parecido es Aleametal, en Perú. Hacen equipos para agroindustria, 38 empleados. Tenían exactamente el problema que vos describís — las consultas entraban por WhatsApp del vendedor, email y teléfono, sin control. El dueño revisaba el WhatsApp del vendedor para saber qué estaba pasando con cada presupuesto. Armamos un panel único en 21 días. Hoy tienen cero consultas sin respuesta en 24 horas y mejoraron un 47% la conversión. Recuperaron dos clientes grandes que ya habían dado por perdidos. ¿Te suena el problema? ¿Querés que te pase el detalle del plan para tu empresa?"</div>
-            </div>
-
-            <!-- Bloque B: Mensaje WhatsApp -->
-            <div style="margin-bottom:20px;">
-              <div style="font-size:.7rem;font-weight:800;color:#4ade80;letter-spacing:1px;text-transform:uppercase;margin-bottom:8px;"><i class="fa-brands fa-whatsapp"></i> &nbsp;MENSAJE DE WHATSAPP</div>
-              <div style="background:rgba(0,0,0,0.3);border:1px solid rgba(74,222,128,0.15);border-radius:10px;padding:16px;font-size:.83rem;color:var(--text-muted);line-height:1.6;" id="wa-metalurgica">"Hola [Nombre], como charlamos, te dejo el caso de Aleametal en Perú — mismo rubro que [empresa]. Tenían el mismo problema de presupuestos que se perdían. En 21 días montaron el sistema y mejoraron un 47% la conversión. Te paso el brochure con el caso completo y el detalle del Plan Industrial (USD 4.900). Si querés avanzar, coordinamos una llamada de 15 minutos con el equipo técnico para arrancar con tu implementación. ¿Esta semana te queda bien?"</div>
-              <button onclick="copiarTexto('wa-metalurgica')" style="margin-top:8px;background:rgba(74,222,128,0.12);border:1px solid rgba(74,222,128,0.25);color:#4ade80;padding:7px 14px;border-radius:7px;font-size:.78rem;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:5px;"><i class="fa-solid fa-copy"></i> Copiar mensaje</button>
-            </div>
-
-            <!-- Bloque C: Objeción -->
-            <div style="margin-bottom:20px;">
-              <div style="font-size:.7rem;font-weight:800;color:#a855f7;letter-spacing:1px;text-transform:uppercase;margin-bottom:8px;"><i class="fa-solid fa-shield-halved"></i> &nbsp;OBJECIÓN MÁS COMÚN</div>
-              <div style="background:rgba(168,85,247,0.06);border:1px solid rgba(168,85,247,0.2);border-radius:10px;padding:14px 16px;">
-                <div style="font-size:.78rem;font-weight:700;color:#c084fc;margin-bottom:6px;">"Ya tenemos WhatsApp Business."</div>
-                <div style="font-size:.82rem;color:var(--text-muted);line-height:1.5;">Aleametal también lo tenía. El problema no es tener WhatsApp, es que nadie ve lo que pasa ahí adentro. Lo que se agrega es el panel que unifica WhatsApp, email y teléfono, con etapas visibles para el dueño. Por eso recuperaron los dos clientes grandes.</div>
-              </div>
-            </div>
-
-            <!-- Bloque D: Acción directa -->
-            <div style="background:rgba(249,115,22,0.06);border:1px solid rgba(249,115,22,0.2);border-radius:10px;padding:16px;">
-              <div style="font-size:.8rem;font-weight:800;margin-bottom:10px;"><i class="fa-solid fa-bolt" style="color:#f97316;"></i> &nbsp;¿El cliente mostró interés?</div>
-              <div style="font-size:.78rem;color:var(--text-muted);margin-bottom:8px;"><strong style="color:var(--text);">Paso 1:</strong> Mandá el mensaje de WhatsApp de arriba con el brochure adjunto.</div>
-              <div style="font-size:.78rem;color:var(--text-muted);margin-bottom:10px;"><strong style="color:var(--text);">Paso 2:</strong> Registrá el prospecto ANTES de que pague.</div>
-              <div style="display:flex;gap:8px;flex-wrap:wrap;">
-                <button onclick="irARegistrarProspecto('Plan Industrial')" style="background:var(--primary);color:#fff;border:none;padding:9px 16px;border-radius:8px;font-size:.8rem;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:5px;"><i class="fa-solid fa-user-plus"></i> Registrar prospecto ahora</button>
-                <button onclick="irACotizadorConRubro('Metalúrgica / Manufactura','Plan Industrial')" style="background:rgba(255,255,255,0.05);border:1px solid var(--border);color:var(--text-muted);padding:9px 16px;border-radius:8px;font-size:.8rem;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:5px;"><i class="fa-solid fa-link"></i> Generar link de pago</button>
-              </div>
-            </div>
-
-          </div>
-        </div>
-
-        <!-- RUBRO 2: Logística -->
-        <div class="rubro-card" id="rubro-logistica" onclick="toggleRubro('logistica')" style="cursor:pointer;border:2px solid rgba(59,130,246,0.3);border-radius:var(--radius);padding:20px;background:rgba(59,130,246,0.04);transition:all .25s;">
-          <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px;">
-            <div>
-              <div style="font-size:1rem;font-weight:800;margin-bottom:6px;">🚛 Logística / Transporte / Distribución</div>
-              <div style="display:flex;gap:8px;flex-wrap:wrap;">
-                <span style="background:rgba(59,130,246,0.15);color:var(--primary);border:1px solid rgba(59,130,246,0.3);font-size:.7rem;font-weight:800;padding:3px 10px;border-radius:50px;">Plan Pro · USD 2.900</span>
-                <span style="background:rgba(74,222,128,0.12);color:#4ade80;border:1px solid rgba(74,222,128,0.25);font-size:.7rem;font-weight:800;padding:3px 10px;border-radius:50px;">Comisión USD 290–580</span>
-              </div>
-            </div>
-            <i class="fa-solid fa-chevron-down rubro-chevron" id="chevron-logistica" style="color:var(--text-muted);margin-top:4px;transition:transform .25s;"></i>
-          </div>
-          <div style="font-size:.78rem;color:var(--text-muted);">📍 Caso: Logística Cordillera, Chile — de 31hs a 4hs en responder cotizaciones</div>
-
-          <div class="rubro-detalle" id="detalle-logistica" style="display:none;margin-top:20px;border-top:1px solid rgba(59,130,246,0.2);padding-top:20px;">
-
-            <div style="margin-bottom:20px;">
-              <div style="font-size:.7rem;font-weight:800;color:var(--primary);letter-spacing:1px;text-transform:uppercase;margin-bottom:8px;"><i class="fa-solid fa-microphone"></i> &nbsp;PITCH VERBAL</div>
-              <div style="background:rgba(0,0,0,0.3);border:1px solid rgba(59,130,246,0.15);border-radius:10px;padding:16px;font-size:.83rem;color:var(--text-muted);line-height:1.6;font-style:italic;">"Hay un caso que te puede interesar. Logística Cordillera, en Chile. 22 empleados. Recibían cotizaciones de flete por 4 canales distintos — teléfono, email, Instagram, WhatsApp personal de tres empleados. Se duplicaban o se perdían. Tardaban 31 horas en contestar un presupuesto. En transporte eso es muerte — el cliente cotiza con la competencia. En 14 días les montamos el sistema. Hoy responden en 4 horas automáticamente y cerraron 3 contratos nuevos el primer mes. ¿Cuánto tardan ustedes hoy en responder una cotización? ¿Te sirve arreglar eso en 14 días?"</div>
-            </div>
-
-            <div style="margin-bottom:20px;">
-              <div style="font-size:.7rem;font-weight:800;color:#4ade80;letter-spacing:1px;text-transform:uppercase;margin-bottom:8px;"><i class="fa-brands fa-whatsapp"></i> &nbsp;MENSAJE DE WHATSAPP</div>
-              <div style="background:rgba(0,0,0,0.3);border:1px solid rgba(74,222,128,0.15);border-radius:10px;padding:16px;font-size:.83rem;color:var(--text-muted);line-height:1.6;" id="wa-logistica">"Hola [Nombre], como charlamos, te paso el caso de Logística Cordillera en Chile — mismo tamaño y rubro que [empresa]. Pasaron de tardar 31hs a 4hs en responder cotizaciones y cerraron 3 contratos nuevos el primer mes. Te dejo el brochure completo y el detalle del Plan Pro (USD 2.900). Si te cierra, coordinamos una llamada técnica de 15 minutos para arrancar la implementación. ¿Esta semana o la próxima?"</div>
-              <button onclick="copiarTexto('wa-logistica')" style="margin-top:8px;background:rgba(74,222,128,0.12);border:1px solid rgba(74,222,128,0.25);color:#4ade80;padding:7px 14px;border-radius:7px;font-size:.78rem;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:5px;"><i class="fa-solid fa-copy"></i> Copiar mensaje</button>
-            </div>
-
-            <div style="margin-bottom:20px;">
-              <div style="font-size:.7rem;font-weight:800;color:#a855f7;letter-spacing:1px;text-transform:uppercase;margin-bottom:8px;"><i class="fa-solid fa-shield-halved"></i> &nbsp;OBJECIÓN MÁS COMÚN</div>
-              <div style="background:rgba(168,85,247,0.06);border:1px solid rgba(168,85,247,0.2);border-radius:10px;padding:14px 16px;">
-                <div style="font-size:.78rem;font-weight:700;color:#c084fc;margin-bottom:6px;">"Nosotros cotizamos a mano porque cada carga es distinta."</div>
-                <div style="font-size:.82rem;color:var(--text-muted);line-height:1.5;">Exacto, por eso no es un cotizador automático lo que necesitás. El sistema recibe el pedido, lo segmenta por tipo de carga y destino, manda respuesta automática de recepción con tiempo estimado, y pasa el pedido al operador que corresponde. Vos seguís cotizando a mano, pero ya no perdés clientes por demora.</div>
-              </div>
-            </div>
-
-            <div style="background:rgba(59,130,246,0.06);border:1px solid rgba(59,130,246,0.2);border-radius:10px;padding:16px;">
-              <div style="font-size:.8rem;font-weight:800;margin-bottom:10px;"><i class="fa-solid fa-bolt" style="color:var(--primary);"></i> &nbsp;¿El cliente mostró interés?</div>
-              <div style="font-size:.78rem;color:var(--text-muted);margin-bottom:8px;"><strong style="color:var(--text);">Paso 1:</strong> Mandá el mensaje de WhatsApp de arriba con el brochure adjunto.</div>
-              <div style="font-size:.78rem;color:var(--text-muted);margin-bottom:10px;"><strong style="color:var(--text);">Paso 2:</strong> Registrá el prospecto ANTES de que pague.</div>
-              <div style="display:flex;gap:8px;flex-wrap:wrap;">
-                <button onclick="irARegistrarProspecto('Plan Pro')" style="background:var(--primary);color:#fff;border:none;padding:9px 16px;border-radius:8px;font-size:.8rem;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:5px;"><i class="fa-solid fa-user-plus"></i> Registrar prospecto ahora</button>
-                <button onclick="irACotizadorConRubro('Logística / Transporte','Plan Pro')" style="background:rgba(255,255,255,0.05);border:1px solid var(--border);color:var(--text-muted);padding:9px 16px;border-radius:8px;font-size:.8rem;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:5px;"><i class="fa-solid fa-link"></i> Generar link de pago</button>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- RUBRO 3: Servicios técnicos -->
-        <div class="rubro-card" id="rubro-servicios" onclick="toggleRubro('servicios')" style="cursor:pointer;border:2px solid rgba(74,222,128,0.3);border-radius:var(--radius);padding:20px;background:rgba(74,222,128,0.04);transition:all .25s;">
-          <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px;">
-            <div>
-              <div style="font-size:1rem;font-weight:800;margin-bottom:6px;">🔧 Servicios Técnicos / Mantenimiento / Construcción</div>
-              <div style="display:flex;gap:8px;flex-wrap:wrap;">
-                <span style="background:rgba(74,222,128,0.12);color:#4ade80;border:1px solid rgba(74,222,128,0.25);font-size:.7rem;font-weight:800;padding:3px 10px;border-radius:50px;">Plan Base · USD 1.050</span>
-                <span style="background:rgba(74,222,128,0.12);color:#4ade80;border:1px solid rgba(74,222,128,0.25);font-size:.7rem;font-weight:800;padding:3px 10px;border-radius:50px;">Comisión USD 105–210</span>
-              </div>
-            </div>
-            <i class="fa-solid fa-chevron-down rubro-chevron" id="chevron-servicios" style="color:var(--text-muted);margin-top:4px;transition:transform .25s;"></i>
-          </div>
-          <div style="font-size:.78rem;color:var(--text-muted);">📍 Caso: Soluciones Técnicas Generales, Argentina — USD 8.400 en contratos nuevos el 1er trimestre</div>
-
-          <div class="rubro-detalle" id="detalle-servicios" style="display:none;margin-top:20px;border-top:1px solid rgba(74,222,128,0.2);padding-top:20px;">
-
-            <div style="margin-bottom:20px;">
-              <div style="font-size:.7rem;font-weight:800;color:#4ade80;letter-spacing:1px;text-transform:uppercase;margin-bottom:8px;"><i class="fa-solid fa-microphone"></i> &nbsp;PITCH VERBAL</div>
-              <div style="background:rgba(0,0,0,0.3);border:1px solid rgba(74,222,128,0.15);border-radius:10px;padding:16px;font-size:.83rem;color:var(--text-muted);line-height:1.6;font-style:italic;">"Te cuento un caso ideal para empresas de tu perfil. Soluciones Técnicas Generales, en Argentina. 9 empleados, 12 años en el mercado. Conseguían todos sus clientes solo por referidos — no tenían presencia digital. Perdían trabajo contra competidores más jóvenes que aparecían primero en Google. En 7 días montamos el Plan Base. A los 20 días les entró la primera consulta de una empresa con la que nunca habían tenido contacto. USD 8.400 en contratos nuevos el primer trimestre. El plan se pagó solo con la primera venta. Por USD 1.050 arrancás en 7 días. Con una sola consulta nueva al mes ya te conviene, ¿no?"</div>
-            </div>
-
-            <div style="margin-bottom:20px;">
-              <div style="font-size:.7rem;font-weight:800;color:#4ade80;letter-spacing:1px;text-transform:uppercase;margin-bottom:8px;"><i class="fa-brands fa-whatsapp"></i> &nbsp;MENSAJE DE WHATSAPP</div>
-              <div style="background:rgba(0,0,0,0.3);border:1px solid rgba(74,222,128,0.15);border-radius:10px;padding:16px;font-size:.83rem;color:var(--text-muted);line-height:1.6;" id="wa-servicios">"Hola [Nombre], como charlamos, te dejo el caso de Soluciones Técnicas Generales en Argentina. Mismo perfil que vos. En 7 días activaron el Plan Base (USD 1.050) y en 20 días les entró la primera consulta digital. Primer trimestre: USD 8.400 en contratos nuevos. Te paso el brochure. Si querés arrancar, coordinamos llamada técnica esta semana para que empiecen a recibir consultas lo antes posible."</div>
-              <button onclick="copiarTexto('wa-servicios')" style="margin-top:8px;background:rgba(74,222,128,0.12);border:1px solid rgba(74,222,128,0.25);color:#4ade80;padding:7px 14px;border-radius:7px;font-size:.78rem;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:5px;"><i class="fa-solid fa-copy"></i> Copiar mensaje</button>
-            </div>
-
-            <div style="margin-bottom:20px;">
-              <div style="font-size:.7rem;font-weight:800;color:#a855f7;letter-spacing:1px;text-transform:uppercase;margin-bottom:8px;"><i class="fa-solid fa-shield-halved"></i> &nbsp;OBJECIÓN MÁS COMÚN</div>
-              <div style="background:rgba(168,85,247,0.06);border:1px solid rgba(168,85,247,0.2);border-radius:10px;padding:14px 16px;">
-                <div style="font-size:.78rem;font-weight:700;color:#c084fc;margin-bottom:6px;">"Ya me conocen por referidos, no necesito."</div>
-                <div style="font-size:.82rem;color:var(--text-muted);line-height:1.5;">Perfecto, por eso te va a funcionar. Los referidos siguen entrando igual. Lo que se suma es el cliente nuevo que no te conoce — el que hoy está buscando tu servicio en Google y encuentra a tu competencia. No cambiás nada de lo que ya funciona, solo le agregás otro canal.</div>
-              </div>
-            </div>
-
-            <div style="background:rgba(74,222,128,0.06);border:1px solid rgba(74,222,128,0.2);border-radius:10px;padding:16px;">
-              <div style="font-size:.8rem;font-weight:800;margin-bottom:10px;"><i class="fa-solid fa-bolt" style="color:#4ade80;"></i> &nbsp;¿El cliente mostró interés?</div>
-              <div style="font-size:.78rem;color:var(--text-muted);margin-bottom:8px;"><strong style="color:var(--text);">Paso 1:</strong> Mandá el mensaje de WhatsApp de arriba con el brochure adjunto.</div>
-              <div style="font-size:.78rem;color:var(--text-muted);margin-bottom:10px;"><strong style="color:var(--text);">Paso 2:</strong> Registrá el prospecto ANTES de que pague.</div>
-              <div style="display:flex;gap:8px;flex-wrap:wrap;">
-                <button onclick="irARegistrarProspecto('Plan Base')" style="background:var(--primary);color:#fff;border:none;padding:9px 16px;border-radius:8px;font-size:.8rem;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:5px;"><i class="fa-solid fa-user-plus"></i> Registrar prospecto ahora</button>
-                <button onclick="irACotizadorConRubro('Construcción / Obras','Plan Base')" style="background:rgba(255,255,255,0.05);border:1px solid var(--border);color:var(--text-muted);padding:9px 16px;border-radius:8px;font-size:.8rem;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:5px;"><i class="fa-solid fa-link"></i> Generar link de pago</button>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- RUBRO 4: Corporativo -->
-        <div class="rubro-card" id="rubro-corporativo" onclick="toggleRubro('corporativo')" style="cursor:pointer;border:2px solid rgba(168,85,247,0.3);border-radius:var(--radius);padding:20px;background:rgba(168,85,247,0.04);transition:all .25s;">
-          <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px;">
-            <div>
-              <div style="font-size:1rem;font-weight:800;margin-bottom:6px;">🏢 Parque Industrial / Corporativo / +100 empleados</div>
-              <div style="display:flex;gap:8px;flex-wrap:wrap;">
-                <span style="background:rgba(168,85,247,0.15);color:#a855f7;border:1px solid rgba(168,85,247,0.3);font-size:.7rem;font-weight:800;padding:3px 10px;border-radius:50px;">Estratégico 360 · USD 7.500</span>
-                <span style="background:rgba(74,222,128,0.12);color:#4ade80;border:1px solid rgba(74,222,128,0.25);font-size:.7rem;font-weight:800;padding:3px 10px;border-radius:50px;">Comisión USD 750–1.500</span>
-              </div>
-            </div>
-            <i class="fa-solid fa-chevron-down rubro-chevron" id="chevron-corporativo" style="color:var(--text-muted);margin-top:4px;transition:transform .25s;"></i>
-          </div>
-          <div style="font-size:.78rem;color:var(--text-muted);">📍 Caso: Parque Logístico Industrial, 120 Ha, norte argentino — Andreani, Grido, YPF Gas</div>
-
-          <div class="rubro-detalle" id="detalle-corporativo" style="display:none;margin-top:20px;border-top:1px solid rgba(168,85,247,0.2);padding-top:20px;">
-
-            <div style="margin-bottom:20px;">
-              <div style="font-size:.7rem;font-weight:800;color:#a855f7;letter-spacing:1px;text-transform:uppercase;margin-bottom:8px;"><i class="fa-solid fa-microphone"></i> &nbsp;PITCH VERBAL</div>
-              <div style="background:rgba(0,0,0,0.3);border:1px solid rgba(168,85,247,0.15);border-radius:10px;padding:16px;font-size:.83rem;color:var(--text-muted);line-height:1.6;font-style:italic;">"Para que veas la escala que manejamos: hay un proyecto en implementación con un Parque Logístico Industrial de 120 hectáreas en el norte argentino, 89 lotes y empresas ancla como Andreani, Grido e YPF Gas. Se está construyendo con 4 embudos segmentados y un cotizador inteligente de lotes. Lo tuyo puede ser más chico, pero el enfoque y la metodología son los mismos. El Estratégico 360 son USD 7.500, pago único. Una sola empresa o inversor captado por el sistema lo paga. ¿Avanzamos?"</div>
-            </div>
-
-            <div style="margin-bottom:20px;">
-              <div style="font-size:.7rem;font-weight:800;color:#4ade80;letter-spacing:1px;text-transform:uppercase;margin-bottom:8px;"><i class="fa-brands fa-whatsapp"></i> &nbsp;MENSAJE DE WHATSAPP</div>
-              <div style="background:rgba(0,0,0,0.3);border:1px solid rgba(74,222,128,0.15);border-radius:10px;padding:16px;font-size:.83rem;color:var(--text-muted);line-height:1.6;" id="wa-corporativo">"Hola [Nombre], como charlamos, te paso información sobre el Plan Estratégico 360 (USD 7.500). Incluye desarrollo a medida, integración con ERP (Tango/SAP), formularios hiper-segmentados y lead scoring automático. No es un plan estándar, es una plataforma corporativa construida específicamente para tu proyecto. ¿Coordinamos una llamada técnica esta semana para definir la arquitectura?"</div>
-              <button onclick="copiarTexto('wa-corporativo')" style="margin-top:8px;background:rgba(74,222,128,0.12);border:1px solid rgba(74,222,128,0.25);color:#4ade80;padding:7px 14px;border-radius:7px;font-size:.78rem;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:5px;"><i class="fa-solid fa-copy"></i> Copiar mensaje</button>
-            </div>
-
-            <div style="margin-bottom:20px;">
-              <div style="font-size:.7rem;font-weight:800;color:#a855f7;letter-spacing:1px;text-transform:uppercase;margin-bottom:8px;"><i class="fa-solid fa-shield-halved"></i> &nbsp;OBJECIÓN MÁS COMÚN</div>
-              <div style="background:rgba(168,85,247,0.06);border:1px solid rgba(168,85,247,0.2);border-radius:10px;padding:14px 16px;">
-                <div style="font-size:.78rem;font-weight:700;color:#c084fc;margin-bottom:6px;">"Nuestro proyecto es muy específico, ¿pueden armar algo a medida?"</div>
-                <div style="font-size:.82rem;color:var(--text-muted);line-height:1.5;">Sí — por eso existe el Estratégico 360. Incluye desarrollo a medida, integración con ERP (Tango/SAP), formularios hiper-segmentados y lead scoring automático. No es un plan estándar, es una plataforma corporativa construida específicamente para tu proyecto.</div>
-              </div>
-            </div>
-
-            <div style="background:rgba(168,85,247,0.06);border:1px solid rgba(168,85,247,0.2);border-radius:10px;padding:16px;">
-              <div style="font-size:.8rem;font-weight:800;margin-bottom:10px;"><i class="fa-solid fa-bolt" style="color:#a855f7;"></i> &nbsp;¿El cliente mostró interés?</div>
-              <div style="font-size:.78rem;color:var(--text-muted);margin-bottom:8px;"><strong style="color:var(--text);">Paso 1:</strong> Mandá el mensaje de WhatsApp de arriba con el brochure adjunto.</div>
-              <div style="font-size:.78rem;color:var(--text-muted);margin-bottom:10px;"><strong style="color:var(--text);">Paso 2:</strong> Registrá el prospecto ANTES de que pague.</div>
-              <div style="display:flex;gap:8px;flex-wrap:wrap;">
-                <button onclick="irARegistrarProspecto('Estratégico 360')" style="background:var(--primary);color:#fff;border:none;padding:9px 16px;border-radius:8px;font-size:.8rem;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:5px;"><i class="fa-solid fa-user-plus"></i> Registrar prospecto ahora</button>
-                <button onclick="irACotizadorConRubro('Servicios B2B / Consultoría','Estratégico 360')" style="background:rgba(255,255,255,0.05);border:1px solid var(--border);color:var(--text-muted);padding:9px 16px;border-radius:8px;font-size:.8rem;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:5px;"><i class="fa-solid fa-link"></i> Generar link de pago</button>
-              </div>
-            </div>
-          </div>
-        </div>
-
-      </div><!-- /rubros-grid -->
-    </div><!-- /tab-selector-rubro -->
 
     <div id="tab-cotizador" class="tab-panel">
       <div class="bento-box">

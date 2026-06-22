@@ -602,7 +602,7 @@ function cambiarTab(tab, btn) {
 
   // Gestionar estado del botón "Herramientas" y visibilidad de fila secundaria
   // Nota: 'academia' se quitó de TABS_SEC — es tab primario para Canal 1
-  const TABS_SEC = ['selector-rubro','cotizador','herramientas','prospectos','ventas','red','comunidad','jarvis'];
+  const TABS_SEC = ['cotizador','herramientas','prospectos','ventas','red','comunidad','jarvis'];
   const extraRow = document.getElementById('tabs-extra-row');
   const btnMas   = document.getElementById('btn-mas-tabs');
   if (TABS_SEC.includes(tab)) {
@@ -617,7 +617,6 @@ function cambiarTab(tab, btn) {
   if(tab==='pipeline') { cargarProspectosPipeline(); plRenderReferidos(); plRenderVentas(); }
   if(tab==='dashboard') { renderTareasHoy(); }
   if(tab==='mi-cuenta') { try { _renderEstadoPush(); } catch (e) {} }
-  if(tab==='selector-rubro') cargarBadgesRubro();
   if(tab==='bolsa') {
     // Soft-gate: verificar si el aliado completó al menos los primeros 3 módulos de la Academia
     const progresoBolsa = getAcademiaProgreso ? getAcademiaProgreso() : [];
@@ -661,78 +660,11 @@ function toggleMasTabsRow() {
   if (!visible) btn.classList.remove('active');
   else {
     // Verificar si el tab activo actual es secundario
-    const TABS_SEC = ['selector-rubro','cotizador','herramientas','prospectos','ventas','red','comunidad','jarvis'];
+    const TABS_SEC = ['cotizador','herramientas','prospectos','ventas','red','comunidad','jarvis'];
     const panelActivo = document.querySelector('.tab-panel.active');
     const tabId = panelActivo ? panelActivo.id.replace('tab-','') : '';
     if (TABS_SEC.includes(tabId)) btn.classList.add('active');
   }
-}
-
-// ── CANAL 2: Selector de rubro ──────────────────────────────────────────────
-function toggleRubro(id) {
-  const detalle = document.getElementById(`detalle-${id}`);
-  const chevron = document.getElementById(`chevron-${id}`);
-  const estaAbierto = detalle.style.display !== 'none';
-  // Cerrar todos
-  ['metalurgica','logistica','servicios','corporativo'].forEach(r => {
-    const d = document.getElementById(`detalle-${r}`);
-    const c = document.getElementById(`chevron-${r}`);
-    if (d) d.style.display = 'none';
-    if (c) c.style.transform = 'rotate(0deg)';
-  });
-  // Abrir el clickeado si estaba cerrado
-  if (!estaAbierto) {
-    detalle.style.display = 'block';
-    chevron.style.transform = 'rotate(180deg)';
-  }
-}
-
-
-// Mapeo: valor guardado en el prospecto → ID de la card del Selector
-const RUBRO_A_CARD = {
-  'Metalúrgica / Manufactura':   'metalurgica',
-  'Agro / Maquinaria agrícola':  'metalurgica',
-  'Logística / Transporte':      'logistica',
-  'Servicios B2B / Consultoría': 'servicios',
-  'Educación / Capacitación':    'servicios',
-  'Tecnología / Software':       'servicios',
-  'Comercio / Retail B2B':       'corporativo',
-  'Construcción / Obras':        'corporativo',
-  'Salud / Clínicas':            'corporativo',
-  'Otro':                        null,
-};
-
-async function cargarBadgesRubro() {
-  // Si todosProspectos aún no está cargado, lo traemos primero
-  if (!todosProspectos.length) {
-    try {
-      const res = await apiFetch(`${API}/prospectos/aliado/${aliado.codigo}`);
-      if (res.ok) todosProspectos = await res.json();
-    } catch { return; }
-  }
-
-  // Contar prospectos por card
-  const conteo = { metalurgica: 0, logistica: 0, servicios: 0, corporativo: 0 };
-  todosProspectos.forEach(p => {
-    const card = RUBRO_A_CARD[p.rubro];
-    if (card) conteo[card]++;
-  });
-
-  // Inyectar o actualizar badge en cada card
-  Object.entries(conteo).forEach(([id, n]) => {
-    const card = document.getElementById(`rubro-${id}`);
-    if (!card) return;
-    let badge = card.querySelector('.rubro-badge-count');
-    if (n === 0) { if (badge) badge.remove(); return; }
-    if (!badge) {
-      badge = document.createElement('span');
-      badge.className = 'rubro-badge-count';
-      badge.style.cssText = 'display:inline-flex;align-items:center;gap:4px;background:rgba(74,222,128,0.15);border:1px solid rgba(74,222,128,0.35);color:#4ade80;font-size:.7rem;font-weight:700;padding:3px 9px;border-radius:50px;margin-left:8px;white-space:nowrap;';
-      const header = card.querySelector('div[style*="display:flex"]') || card.firstElementChild;
-      if (header) header.appendChild(badge);
-    }
-    badge.innerHTML = `<i class="fa-solid fa-user" style="font-size:.6rem;"></i> ${n} prospecto${n > 1 ? 's' : ''}`;
-  });
 }
 
 function copiarTexto(id) {
@@ -5939,7 +5871,7 @@ const ACADEMIA_MODULOS = [
       <p>El cliente asiente. Ahí ya ganaste — el cliente escuchó el diagnóstico de su propia boca. Ahora solo falta presentar la solución.</p>
 
       <h4>Minuto 10-13 · Presentás la solución con el caso de su rubro</h4>
-      <p>Este es el momento donde usás el Módulo 7 (Casos de éxito). Elegís el caso del rubro del cliente y lo contás brevemente. Por ejemplo, si es una metalúrgica:</p>
+      <p>Elegís el caso del rubro del cliente y lo contás brevemente. Por ejemplo, si es una metalúrgica:</p>
       <div class="aca-pitch-box">
         <div class="label">CONEXIÓN CON EL CASO</div>
         <div class="text">"Te cuento rápido. <strong>Aleametal en Perú</strong> tenía exactamente lo que me acabás de describir — 38 empleados, consultas por 3 canales distintos, 40% de presupuestos sin seguimiento. En 21 días les armamos un sistema. Hoy tienen +47% de conversión y cero consultas sin respuesta en 24hs. El Plan Industrial — USD 4.900, pago único."</div>
@@ -6259,103 +6191,16 @@ const ACADEMIA_MODULOS = [
     `
   },
   {
-    id: 7,
-    num: 'MÓDULO 07',
-    title: 'Casos de éxito en detalle',
-    slug: 'mod-casos',
-    desc: 'Los 4 casos reales con cifras, antes/después y lecciones aprendidas — para contar con confianza.',
-    tiempo: '5 min',
-    icon: 'fa-trophy',
-    content: `
-      <div class="av-explainer"><div class="av-tag"><i class="fa-solid fa-circle-play"></i> Prueba social &middot; M&Oacute;DULO 07</div><div class="av-stage"><div class="av-slide center" data-dur="5500"><div class="av-kicker r d1">Prueba social &middot; M&oacute;dulo 07</div><div class="av-h r d2">Casos de &eacute;xito,<br>con <span class="g">n&uacute;meros</span></div><div class="av-sub r d3">Cuatro casos reales, uno por rubro. Memoriz&aacute; el resultado en una l&iacute;nea: los n&uacute;meros cierran ventas.</div></div><div class="av-slide" data-dur="7500"><div class="av-kicker r d1">Aleametal &middot; Perú</div><div class="av-row r d2" style="gap:10px"><div class="av-kpi"><div class="v">+47%</div><div class="k">conversi&oacute;n</div></div><div class="av-kpi"><div class="v">21</div><div class="k">d&iacute;as implementaci&oacute;n</div></div><div class="av-kpi"><div class="v">11</div><div class="k">leads calif./mes</div></div></div><div class="av-quote r d3"><span class="lab">En una l&iacute;nea</span>38 empleados, consultas por 3 canales sin control &rarr; panel &uacute;nico. <b>0 consultas sin respuesta en 24hs</b> y recuperaron 2 clientes grandes. &rarr; Industrial USD 4.900.</div></div><div class="av-slide" data-dur="7500"><div class="av-kicker r d1">Transportes Logística Cordillera &middot; Rosario</div><div class="av-stat r d2"><span class="o">31h</span> &rarr; <span class="g">4.2h</span></div><div class="av-quote r d3"><span class="lab">En una l&iacute;nea</span>22 empleados, cotizaciones por 4 canales que se duplicaban. Hoy responden autom&aacute;tico: <b>+38% de cierre y 3 contratos nuevos el primer mes</b>. &rarr; Pro USD 2.900.</div></div><div class="av-slide" data-dur="7500"><div class="av-kicker r d1">Soluciones Técnicas Generales &middot; Argentina</div><div class="av-stat r d2 g">USD 8.400</div><div class="av-quote r d3"><span class="lab">En una l&iacute;nea</span>9 empleados, 12 a&ntilde;os, solo por referidos. Plan Base en 7 d&iacute;as &rarr; <b>3-4 clientes nuevos/mes, 1&ordm; en Google local y USD 8.400 en contratos el primer trimestre</b>. El plan se pag&oacute; con la 1&ordf; venta.</div></div><div class="av-slide" data-dur="7000"><div class="av-kicker r d1">PLI Norte Argentino &middot; gran escala</div><div class="av-grid g3"><div class="av-card r d2"><div class="n">120 ha</div><div class="d">superficie</div></div><div class="av-card r d3"><div class="n o">89</div><div class="d">lotes</div></div><div class="av-card r d4"><div class="n g">360</div><div class="d">Andreani, Grido, YPF</div></div></div><div class="av-sub r d5">El caso de autoridad: aunque lo tuyo sea m&aacute;s chico, el enfoque es el mismo. &rarr; Estrat&eacute;gico 360 USD 7.500.</div></div><div class="av-slide center" data-dur="6500"><div class="av-quote r d1"><span class="lab">C&oacute;mo usar los casos</span>Eleg&iacute; el del <b>rubro del cliente</b> y cont&aacute; el antes/despu&eacute;s con los n&uacute;meros. Si vas con Aleametal a un transportista, no se reconoce. El caso correcto cierra <b>3&times; m&aacute;s</b>.</div></div></div><div class="av-controls"><button class="av-btn prev" aria-label="Anterior"><i class="fa-solid fa-backward-step"></i></button><button class="av-btn play" aria-label="Pausar"><i class="fa-solid fa-pause"></i></button><button class="av-btn next" aria-label="Siguiente"><i class="fa-solid fa-forward-step"></i></button><div class="av-progress"><div class="av-progress-fill"></div></div><div class="av-dots"></div><div class="av-counter">1 / 1</div></div></div>
-
-      <h3>Lo que vas a aprender</h3>
-      <ul>
-        <li>Los 4 casos reales en profundidad</li>
-        <li>Qué números usar cuando el cliente pregunta por resultados</li>
-        <li>Cómo adaptar cada caso al cliente que tenés enfrente</li>
-      </ul>
-
-      <h3>🔧 Soluciones Técnicas Generales</h3>
-      <p><strong>Perfil:</strong> Mantenimiento y calibración industrial · Argentina · 9 empleados</p>
-      <p><strong>Plan contratado:</strong> Base · USD 1.050 · Implementación 7 días</p>
-      <h4>Problema antes</h4>
-      <p>Empresa con 12 años en el mercado conseguía clientes <strong>exclusivamente por referidos</strong>. Sin presencia digital activa ni forma de recibir consultas online. Perdía trabajo frente a competidores más jóvenes posicionados en Google.</p>
-      <h4>Qué se implementó</h4>
-      <p>Canal digital operativo con página web técnica optimizada para búsquedas locales, formulario de solicitud de servicio con clasificación por tipo de mantenimiento y urgencia, e integración a WhatsApp Business.</p>
-      <h4>Resultados a 45 días</h4>
-      <ul>
-        <li><strong>3–4 clientes nuevos</strong> por mes desde canal digital</li>
-        <li><strong>1° puesto en Google local</strong> para su rubro en Buenos Aires</li>
-        <li><strong>USD 8.400</strong> en contratos nuevos el primer trimestre</li>
-      </ul>
-
-      <h3>🚚 Logística Cordillera</h3>
-      <p><strong>Perfil:</strong> Transporte de cargas regional · Chile · 22 empleados</p>
-      <p><strong>Plan contratado:</strong> Pro · USD 2.900 · Implementación 14 días</p>
-      <h4>Problema antes</h4>
-      <p>Solicitudes de cotización entraban por teléfono, email, Instagram y WhatsApp personal de tres empleados distintos. <strong>Pedidos duplicados o perdidos</strong>, con tiempos de respuesta superiores a 48 horas. Los clientes nuevos conseguían precio antes con la competencia.</p>
-      <h4>Qué se implementó</h4>
-      <p>Formulario inteligente de cotización segmentado por tipo de carga y destino, integrado al WhatsApp oficial. Respuesta automática con tiempo estimado y operador asignado. Panel con historial por CUIT.</p>
-      <h4>Resultados a 60 días</h4>
-      <ul>
-        <li><strong>–14 horas semanales</strong> de gestión manual de consultas</li>
-        <li><strong>+38%</strong> en tasa de cierre con clientes nuevos</li>
-        <li><strong>4.2 horas</strong> de primera respuesta (antes: 31 horas)</li>
-        <li><strong>3 contratos nuevos</strong> el primer mes</li>
-      </ul>
-
-      <h3>🏭 Aleametal</h3>
-      <p><strong>Perfil:</strong> Fundición, transformación y comercializaciones de metales · Perú · 38 empleados</p>
-      <p><strong>Plan contratado:</strong> Industrial · USD 4.900 · Implementación 21 días</p>
-      <h4>Problema antes</h4>
-      <p>Consultas de acopiadoras y feedlots entraban por WhatsApp del gerente comercial, email y teléfono, <strong>sin sistema de seguimiento</strong>. El 40% de los presupuestos enviados quedaban sin seguimiento posterior. No había visibilidad sobre en qué etapa estaba cada cliente ni quién era responsable de cada cotización.</p>
-      <h4>Qué se implementó</h4>
-      <p>Canal unificado de consultas técnicas con formulario segmentado por tipo de equipo (silos, intercambiadores, estructuras), integración con WhatsApp Business, panel de seguimiento por etapa comercial y respuesta automática con ficha técnica del producto consultado.</p>
-      <h4>Resultados a 90 días</h4>
-      <ul>
-        <li><strong>+47%</strong> en conversión de presupuestos enviados</li>
-        <li><strong>11 leads calificados</strong> por mes de promedio</li>
-        <li><strong>0 consultas</strong> sin respuesta en 24 horas</li>
-        <li><strong>2 clientes grandes recuperados</strong> que ya habían sido dados por perdidos</li>
-      </ul>
-      <h4>Frase de cierre del dueño</h4>
-      <div class="aca-pitch-box">
-        <div class="text">"Antes yo mismo revisaba el WhatsApp del vendedor. Hoy entro al panel y en dos minutos sé qué presupuesto está caliente." — Aleametal, Socio Gerente</div>
-      </div>
-
-      <h3>🏗️ Parque Logístico Industrial · Norte Argentino (en curso)</h3>
-      <p><strong>Perfil:</strong> 120 hectáreas · 89 lotes industriales · 4 empresas ancla instaladas</p>
-      <p><strong>Plan contratado:</strong> Estratégico 360 · USD 7.500 · Implementación 45-60 días</p>
-      <h4>El desafío</h4>
-      <p>Parque industrial de gran escala con infraestructura operativa y certificación ambiental provincial. Toda la captación dependía del contacto directo. Empresas logísticas nacionales e inversores que evaluaban el NOA <strong>no encontraban el parque en búsquedas activas</strong>.</p>
-      <h4>Arquitectura del sistema</h4>
-      <p>Plataforma corporativa con 4 embudos segmentados (operador logístico · inversor en renta · distribuidor regional · PYME en expansión). Panel ejecutivo con métricas en tiempo real. Cotizador inteligente de lotes.</p>
-      <h4>Escala del proyecto</h4>
-      <ul>
-        <li><strong>120 hectáreas</strong> de superficie total</li>
-        <li><strong>89 lotes</strong> disponibles</li>
-        <li><strong>4 embudos</strong> segmentados por tipo de cliente</li>
-        <li><strong>Implementación 45-60 días</strong></li>
-      </ul>
-
-      <div class="aca-highlight">
-        <div class="label">CÓMO USAR LOS CASOS</div>
-        <div class="text">No contés el caso completo en la charla. Contá solo el <strong>problema antes + qué se hizo + un resultado concreto con número</strong>. Total: 30 segundos. El resto de la info está para cuando el cliente pregunte detalles después.</div>
-      </div>
-    `
-  },
-  {
     id: 8,
     canal: 'canal1',
-    num: 'MÓDULO 08',
+    num: 'MÓDULO 07',
     title: 'Materiales descargables',
     slug: 'mod-materiales-c1',
     desc: 'Brochure comercial, guión por rubro, contrato y kit corto — todo lo que necesitás para vender.',
     tiempo: '2 min',
     icon: 'fa-download',
     content: `
-      <div class="av-explainer"><div class="av-tag"><i class="fa-solid fa-circle-play"></i> Tu kit de ventas &middot; M&Oacute;DULO 08</div><div class="av-stage"><div class="av-slide center" data-dur="5500"><div class="av-kicker r d1">Tu kit &middot; M&oacute;dulo 08</div><div class="av-h r d2">Qu&eacute; mandar<br>en <span class="o">cada momento</span></div><div class="av-sub r d3">Todo lo que necesit&aacute;s para vender est&aacute; listo para descargar abajo. Ac&aacute; va el orden y tus herramientas.</div></div><div class="av-slide" data-dur="6500"><div class="av-kicker r d1">El flujo de una venta</div><div class="av-flow"><div class="av-step r d2"><div class="sn">01</div><div class="st">Auditor&iacute;a</div><div class="sd">Antes de la reuni&oacute;n, como anticipo.</div></div><div class="av-step r d3"><div class="sn">02</div><div class="st">Brochure</div><div class="sd">Para mostrarle en la charla.</div></div><div class="av-step r d4"><div class="sn">03</div><div class="st">Gui&oacute;n por rubro</div><div class="sd">El caso exacto de su industria.</div></div><div class="av-step r d5"><div class="sn">04</div><div class="st">Contrato</div><div class="sd">Tras el s&iacute;, para formalizar.</div></div></div></div><div class="av-slide" data-dur="8000"><div class="av-kicker r d1">Herramientas del portal</div><div class="av-grid g2"><div class="av-card r d2"><div class="t"><i class="fa-solid fa-layer-group" style="color:#3b82f6"></i> Bolsa de Leads</div><div class="d">Reclam&aacute;s, 48hs para contactar, m&aacute;x 3 activos.</div></div><div class="av-card r d3"><div class="t"><i class="fa-solid fa-robot" style="color:#4ade80"></i> Perfilado IA + NBA</div><div class="d">Score, plan y siguiente mejor acci&oacute;n.</div></div><div class="av-card r d4"><div class="t"><i class="fa-solid fa-paper-plane" style="color:#3b82f6"></i> Piloto Autom&aacute;tico</div><div class="d">Secuencia de emails por etapa.</div></div><div class="av-card r d5"><div class="t"><i class="fa-solid fa-calculator" style="color:#f97316"></i> Cotizador con IA</div><div class="d">Precio, comisi&oacute;n, link de pago y pitch.</div></div></div></div><div class="av-slide" data-dur="7500"><div class="av-kicker r d1">Tus dos links</div><div class="av-cols"><div class="av-col good r d2"><div class="hd">Para vender</div><div class="it"><b>P&aacute;gina de ventas</b> &mdash; /p/tu-link</div><div class="it">Se la mand&aacute;s al cliente que quer&eacute;s cerrar.</div></div><div class="av-col r d3" style="border-color:rgba(59,130,246,.25);background:rgba(59,130,246,.06)"><div class="hd" style="color:#93c5fd">Para reclutar</div><div class="it"><b>Link de reclutamiento</b> &mdash; /alianzas?ref=tu-link</div><div class="it">Para sumar aliados a tu red (Mi Red, ingreso pasivo).</div></div></div></div><div class="av-slide" data-dur="6500"><div class="av-kicker r d1">Kit de marca</div><div class="av-list"><div class="av-li r d2"><i class="fa-brands fa-linkedin"></i><span><b>Banner LinkedIn</b> (1584&times;396) &mdash; sub&iacute; sin recortar</span></div><div class="av-li r d3"><i class="fa-solid fa-image"></i><span><b>Logos</b> fondo claro/oscuro + isotipo transparente</span></div><div class="av-li r d4"><i class="fa-solid fa-palette"></i><span><b>Kit de identidad</b>: colores, tipograf&iacute;a y c&oacute;mo presentarte</span></div><div class="av-li r d5"><i class="fa-solid fa-share-nodes"></i><span><b>Casos para postear</b>: Aleametal, Logística Cordillera, Soluciones Técnicas Generales, PLI</span></div></div></div><div class="av-slide center" data-dur="6000"><div class="av-ok r d1"><span class="lab">Listo para usar</span>Todos estos materiales est&aacute;n <b>m&aacute;s abajo en este mismo m&oacute;dulo</b>, listos para descargar. Guard&aacute;los en el celu y tenelos a mano en cada llamada.</div></div></div><div class="av-controls"><button class="av-btn prev" aria-label="Anterior"><i class="fa-solid fa-backward-step"></i></button><button class="av-btn play" aria-label="Pausar"><i class="fa-solid fa-pause"></i></button><button class="av-btn next" aria-label="Siguiente"><i class="fa-solid fa-forward-step"></i></button><div class="av-progress"><div class="av-progress-fill"></div></div><div class="av-dots"></div><div class="av-counter">1 / 1</div></div></div>
+      <div class="av-explainer"><div class="av-tag"><i class="fa-solid fa-circle-play"></i> Tu kit de ventas &middot; M&Oacute;DULO 07</div><div class="av-stage"><div class="av-slide center" data-dur="5500"><div class="av-kicker r d1">Tu kit &middot; M&oacute;dulo 07</div><div class="av-h r d2">Qu&eacute; mandar<br>en <span class="o">cada momento</span></div><div class="av-sub r d3">Todo lo que necesit&aacute;s para vender est&aacute; listo para descargar abajo. Ac&aacute; va el orden y tus herramientas.</div></div><div class="av-slide" data-dur="6500"><div class="av-kicker r d1">El flujo de una venta</div><div class="av-flow"><div class="av-step r d2"><div class="sn">01</div><div class="st">Auditor&iacute;a</div><div class="sd">Antes de la reuni&oacute;n, como anticipo.</div></div><div class="av-step r d3"><div class="sn">02</div><div class="st">Brochure</div><div class="sd">Para mostrarle en la charla.</div></div><div class="av-step r d4"><div class="sn">03</div><div class="st">Gui&oacute;n por rubro</div><div class="sd">El caso exacto de su industria.</div></div><div class="av-step r d5"><div class="sn">04</div><div class="st">Contrato</div><div class="sd">Tras el s&iacute;, para formalizar.</div></div></div></div><div class="av-slide" data-dur="8000"><div class="av-kicker r d1">Herramientas del portal</div><div class="av-grid g2"><div class="av-card r d2"><div class="t"><i class="fa-solid fa-layer-group" style="color:#3b82f6"></i> Bolsa de Leads</div><div class="d">Reclam&aacute;s, 48hs para contactar, m&aacute;x 3 activos.</div></div><div class="av-card r d3"><div class="t"><i class="fa-solid fa-robot" style="color:#4ade80"></i> Perfilado IA + NBA</div><div class="d">Score, plan y siguiente mejor acci&oacute;n.</div></div><div class="av-card r d4"><div class="t"><i class="fa-solid fa-paper-plane" style="color:#3b82f6"></i> Piloto Autom&aacute;tico</div><div class="d">Secuencia de emails por etapa.</div></div><div class="av-card r d5"><div class="t"><i class="fa-solid fa-calculator" style="color:#f97316"></i> Cotizador con IA</div><div class="d">Precio, comisi&oacute;n, link de pago y pitch.</div></div></div></div><div class="av-slide" data-dur="7500"><div class="av-kicker r d1">Tus dos links</div><div class="av-cols"><div class="av-col good r d2"><div class="hd">Para vender</div><div class="it"><b>P&aacute;gina de ventas</b> &mdash; /p/tu-link</div><div class="it">Se la mand&aacute;s al cliente que quer&eacute;s cerrar.</div></div><div class="av-col r d3" style="border-color:rgba(59,130,246,.25);background:rgba(59,130,246,.06)"><div class="hd" style="color:#93c5fd">Para reclutar</div><div class="it"><b>Link de reclutamiento</b> &mdash; /alianzas?ref=tu-link</div><div class="it">Para sumar aliados a tu red (Mi Red, ingreso pasivo).</div></div></div></div><div class="av-slide" data-dur="6500"><div class="av-kicker r d1">Kit de marca</div><div class="av-list"><div class="av-li r d2"><i class="fa-brands fa-linkedin"></i><span><b>Banner LinkedIn</b> (1584&times;396) &mdash; sub&iacute; sin recortar</span></div><div class="av-li r d3"><i class="fa-solid fa-image"></i><span><b>Logos</b> fondo claro/oscuro + isotipo transparente</span></div><div class="av-li r d4"><i class="fa-solid fa-palette"></i><span><b>Kit de identidad</b>: colores, tipograf&iacute;a y c&oacute;mo presentarte</span></div><div class="av-li r d5"><i class="fa-solid fa-share-nodes"></i><span><b>Casos para postear</b>: Aleametal, Logística Cordillera, Soluciones Técnicas Generales, PLI</span></div></div></div><div class="av-slide center" data-dur="6000"><div class="av-ok r d1"><span class="lab">Listo para usar</span>Todos estos materiales est&aacute;n <b>m&aacute;s abajo en este mismo m&oacute;dulo</b>, listos para descargar. Guard&aacute;los en el celu y tenelos a mano en cada llamada.</div></div></div><div class="av-controls"><button class="av-btn prev" aria-label="Anterior"><i class="fa-solid fa-backward-step"></i></button><button class="av-btn play" aria-label="Pausar"><i class="fa-solid fa-pause"></i></button><button class="av-btn next" aria-label="Siguiente"><i class="fa-solid fa-forward-step"></i></button><div class="av-progress"><div class="av-progress-fill"></div></div><div class="av-dots"></div><div class="av-counter">1 / 1</div></div></div>
 
       <h3>Lo que vas a aprender</h3>
       <ul>
@@ -6486,11 +6331,11 @@ const ACADEMIA_MODULOS = [
     `
   },
 
-  // ── MÓDULO 8 · CANAL 2 ──────────────────────────────────────────────────────
+  // ── MÓDULO 07 · CANAL 2 ──────────────────────────────────────────────────────
   {
     id: 9,
     canal: 'canal2',
-    num: 'MÓDULO 08',
+    num: 'MÓDULO 07',
     title: 'Tu kit de materiales',
     slug: 'mod-materiales-c2',
     desc: 'Guiones por perfil, brochure v5 y guía por rubro — todo adaptado a tu canal.',
@@ -6608,14 +6453,14 @@ const ACADEMIA_MODULOS = [
   },
   {
     id: 10,
-    num: 'MÓDULO 09',
+    num: 'MÓDULO 08',
     title: 'LinkedIn B2B: el canal con más potencial a mediano plazo',
     slug: 'mod-linkedin',
     desc: 'Cómo usar LinkedIn para prospectar gerentes industriales, publicar contenido que genera autoridad y cerrar reuniones sin parecer vendedor.',
     tiempo: '12 min',
     icon: 'fa-linkedin',
     content: `
-      <div class="av-explainer"><div class="av-tag"><i class="fa-solid fa-circle-play"></i> Prospecci&oacute;n LinkedIn &middot; M&Oacute;DULO 09</div><div class="av-stage"><div class="av-slide center" data-dur="5500"><div class="av-kicker r d1">Prospecci&oacute;n &middot; M&oacute;dulo 09</div><div class="av-h r d2"><span class="b">LinkedIn</span> B2B</div><div class="av-sub r d3">El canal con m&aacute;s potencial a mediano plazo para llegar a due&ntilde;os y gerentes industriales.</div></div><div class="av-slide center" data-dur="6500"><div class="av-kicker r d1">Por qu&eacute; es distinto</div><div class="av-sub r d2" style="max-width:48ch">WhatsApp sirve para cerrar. Instagram para awareness. <b>LinkedIn es el &uacute;nico canal</b> donde un gerente de compras busca proveedores con intenci&oacute;n declarada, en horario laboral.</div></div><div class="av-slide center" data-dur="6500"><div class="av-kicker r d1">La regla de oro</div><div class="av-h r d2" style="font-size:clamp(1.3rem,3.6vw,2.1rem)">LinkedIn <span class="o">calienta</span>,<br>WhatsApp <span class="g">cierra</span></div><div class="av-sub r d3">No es para vender en el primer mensaje. Es para que cuando el prospecto tenga el problema, vos seas el primero que recuerda.</div></div><div class="av-slide" data-dur="7500"><div class="av-kicker r d1">Tu perfil = landing, no CV</div><div class="av-cols"><div class="av-col bad r d2"><div class="hd">Titular que NO</div><div class="it">&ldquo;Consultor de Marketing | Especialista en Redes | Freelance&rdquo;</div></div><div class="av-col good r d3"><div class="hd">Titular que convierte</div><div class="it">&ldquo;Sistemas de ventas B2B para empresas industriales en LATAM &middot; Canal certificado Avanza&rdquo;</div></div></div></div><div class="av-slide center" data-dur="6500"><div class="av-kicker r d1">A qui&eacute;n conectar</div><div class="av-stat r d2"><span class="b">30&ndash;50</span></div><div class="av-sub r d3">prospectos calificados por semana con la cuenta gratis. Filtr&aacute; por Cargo &rarr; Industria &rarr; Ubicaci&oacute;n. Busc&aacute; due&ntilde;os y gerentes comerciales de PYMEs industriales.</div></div><div class="av-slide" data-dur="8000"><div class="av-kicker r d1">El mensaje de conexi&oacute;n &middot; 3 pasos</div><div class="av-tl"><div class="tr r d2"><div class="tm">01</div><div class="tx"><b>Person&aacute;.</b> Mencion&aacute; algo concreto de su empresa o rubro.</div></div><div class="tr r d3"><div class="tm">02</div><div class="tx"><b>Aport&aacute; valor.</b> Un dato o caso de su sector (Aleametal, Logística Cordillera&hellip;).</div></div><div class="tr r d4"><div class="tm">03</div><div class="tx"><b>No vendas.</b> En el primer mensaje solo abr&iacute;s la puerta. M&aacute;ximo 280 caracteres.</div></div></div></div><div class="av-slide center" data-dur="6000"><div class="av-quote r d1"><span class="lab">El puente a WhatsApp</span>Cuando responde y hay inter&eacute;s, llev&aacute; la charla a WhatsApp: ah&iacute; aplic&aacute;s el cierre del M&oacute;dulo 5. LinkedIn abre, WhatsApp cierra.</div></div></div><div class="av-controls"><button class="av-btn prev" aria-label="Anterior"><i class="fa-solid fa-backward-step"></i></button><button class="av-btn play" aria-label="Pausar"><i class="fa-solid fa-pause"></i></button><button class="av-btn next" aria-label="Siguiente"><i class="fa-solid fa-forward-step"></i></button><div class="av-progress"><div class="av-progress-fill"></div></div><div class="av-dots"></div><div class="av-counter">1 / 1</div></div></div>
+      <div class="av-explainer"><div class="av-tag"><i class="fa-solid fa-circle-play"></i> Prospecci&oacute;n LinkedIn &middot; M&Oacute;DULO 08</div><div class="av-stage"><div class="av-slide center" data-dur="5500"><div class="av-kicker r d1">Prospecci&oacute;n &middot; M&oacute;dulo 08</div><div class="av-h r d2"><span class="b">LinkedIn</span> B2B</div><div class="av-sub r d3">El canal con m&aacute;s potencial a mediano plazo para llegar a due&ntilde;os y gerentes industriales.</div></div><div class="av-slide center" data-dur="6500"><div class="av-kicker r d1">Por qu&eacute; es distinto</div><div class="av-sub r d2" style="max-width:48ch">WhatsApp sirve para cerrar. Instagram para awareness. <b>LinkedIn es el &uacute;nico canal</b> donde un gerente de compras busca proveedores con intenci&oacute;n declarada, en horario laboral.</div></div><div class="av-slide center" data-dur="6500"><div class="av-kicker r d1">La regla de oro</div><div class="av-h r d2" style="font-size:clamp(1.3rem,3.6vw,2.1rem)">LinkedIn <span class="o">calienta</span>,<br>WhatsApp <span class="g">cierra</span></div><div class="av-sub r d3">No es para vender en el primer mensaje. Es para que cuando el prospecto tenga el problema, vos seas el primero que recuerda.</div></div><div class="av-slide" data-dur="7500"><div class="av-kicker r d1">Tu perfil = landing, no CV</div><div class="av-cols"><div class="av-col bad r d2"><div class="hd">Titular que NO</div><div class="it">&ldquo;Consultor de Marketing | Especialista en Redes | Freelance&rdquo;</div></div><div class="av-col good r d3"><div class="hd">Titular que convierte</div><div class="it">&ldquo;Sistemas de ventas B2B para empresas industriales en LATAM &middot; Canal certificado Avanza&rdquo;</div></div></div></div><div class="av-slide center" data-dur="6500"><div class="av-kicker r d1">A qui&eacute;n conectar</div><div class="av-stat r d2"><span class="b">30&ndash;50</span></div><div class="av-sub r d3">prospectos calificados por semana con la cuenta gratis. Filtr&aacute; por Cargo &rarr; Industria &rarr; Ubicaci&oacute;n. Busc&aacute; due&ntilde;os y gerentes comerciales de PYMEs industriales.</div></div><div class="av-slide" data-dur="8000"><div class="av-kicker r d1">El mensaje de conexi&oacute;n &middot; 3 pasos</div><div class="av-tl"><div class="tr r d2"><div class="tm">01</div><div class="tx"><b>Person&aacute;.</b> Mencion&aacute; algo concreto de su empresa o rubro.</div></div><div class="tr r d3"><div class="tm">02</div><div class="tx"><b>Aport&aacute; valor.</b> Un dato o caso de su sector (Aleametal, Logística Cordillera&hellip;).</div></div><div class="tr r d4"><div class="tm">03</div><div class="tx"><b>No vendas.</b> En el primer mensaje solo abr&iacute;s la puerta. M&aacute;ximo 280 caracteres.</div></div></div></div><div class="av-slide center" data-dur="6000"><div class="av-quote r d1"><span class="lab">El puente a WhatsApp</span>Cuando responde y hay inter&eacute;s, llev&aacute; la charla a WhatsApp: ah&iacute; aplic&aacute;s el cierre del M&oacute;dulo 5. LinkedIn abre, WhatsApp cierra.</div></div></div><div class="av-controls"><button class="av-btn prev" aria-label="Anterior"><i class="fa-solid fa-backward-step"></i></button><button class="av-btn play" aria-label="Pausar"><i class="fa-solid fa-pause"></i></button><button class="av-btn next" aria-label="Siguiente"><i class="fa-solid fa-forward-step"></i></button><div class="av-progress"><div class="av-progress-fill"></div></div><div class="av-dots"></div><div class="av-counter">1 / 1</div></div></div>
 
       <h3>Por qué LinkedIn es diferente a todos los otros canales</h3>
       <p>WhatsApp sirve para cerrar. Instagram sirve para awareness. LinkedIn es el único canal donde un <strong>gerente de compras industrial</strong> está activamente buscando proveedores y soluciones, con intención declarada, dentro de su horario laboral.</p>
@@ -6768,14 +6613,14 @@ const ACADEMIA_MODULOS = [
   {
     id: 11,
     canal: 'canal1',
-    num: 'MÓDULO 10',
+    num: 'MÓDULO 09',
     title: 'Setting B2B: cómo llegar al que decide',
     slug: 'mod-setting',
     desc: 'Identificá al que firma, pasá la recepción sin que te filtren y ganate los primeros 30 segundos con el dueño.',
     tiempo: '9 min',
     icon: 'fa-key',
     content: `
-    <div class="av-explainer"><div class="av-tag"><i class="fa-solid fa-circle-play"></i> Setting B2B &middot; M&Oacute;DULO 10</div><div class="av-stage">
+    <div class="av-explainer"><div class="av-tag"><i class="fa-solid fa-circle-play"></i> Setting B2B &middot; M&Oacute;DULO 09</div><div class="av-stage">
 
       <div class="av-slide center" data-dur="6000">
         <div class="av-kicker r d1">Avanza Partner Network &middot; Canal 1</div>
