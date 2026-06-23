@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Float, Boolean, DateTime, ForeignKey, Text, Numeric
+from sqlalchemy import Column, Integer, String, Float, Boolean, DateTime, ForeignKey, Text, Numeric, LargeBinary
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 from database import Base
@@ -838,3 +838,40 @@ class Equipo(Base):
 
     aliado_a = relationship("Aliado", foreign_keys=[aliado_a_id])
     aliado_b = relationship("Aliado", foreign_keys=[aliado_b_id])
+
+# ─── ONBOARDING (reemplazo de Tally) ─────────────────────────────────────────
+# Respuestas del formulario de inicio que completa el cliente tras pagar, más
+# los archivos que sube (logo, fotos, Excel, etc.). El binario de los archivos
+# vive en Postgres; para migrar a R2/S3 se cambia _guardar_archivo() en
+# onboarding.py y el campo `data` pasa a guardar la URL.
+class OnboardingRespuesta(Base):
+    __tablename__ = "onboarding_respuestas"
+
+    id              = Column(Integer, primary_key=True, index=True)
+    plan            = Column(String)                                  # base | pro | industrial | 360
+    aliado_id       = Column(Integer, ForeignKey("aliados.id"), nullable=True)
+    link_pago_id    = Column(Integer, nullable=True)                  # vínculo opcional con la venta
+    cliente_nombre  = Column(String, nullable=True)
+    cliente_email   = Column(String, nullable=True)
+    respuestas_json = Column(Text)                                    # todas las respuestas en JSON
+    creado_en       = Column(DateTime, default=func.now())
+
+    archivos = relationship(
+        "OnboardingArchivo",
+        back_populates="respuesta",
+        cascade="all, delete-orphan",
+    )
+
+
+class OnboardingArchivo(Base):
+    __tablename__ = "onboarding_archivos"
+
+    id           = Column(Integer, primary_key=True, index=True)
+    respuesta_id = Column(Integer, ForeignKey("onboarding_respuestas.id"))
+    campo        = Column(String)                  # id del campo del form (ej: logo_fotos)
+    filename     = Column(String)
+    content_type = Column(String, nullable=True)
+    data         = Column(LargeBinary)             # binario del archivo
+    subido_en    = Column(DateTime, default=func.now())
+
+    respuesta = relationship("OnboardingRespuesta", back_populates="archivos")

@@ -882,11 +882,12 @@ def _procesar_pago_confirmado(db: Session,
     # Se manda al email del cliente si lo tenemos guardado en el LinkPago.
     # El link del Tally se elige según el plan que pagó — cada plan tiene su
     # formulario específico con las preguntas correspondientes.
+    # Onboarding propio (reemplazo de Tally). El form lee ?plan= en el front.
     TALLY_POR_PLAN = {
-        "Plan Base":        "https://tally.so/r/EkXy0X",
-        "Plan Pro":         "https://tally.so/r/obyX41",
-        "Plan Industrial":  "https://tally.so/r/J92qxY",
-        "Estrategico 360":  "https://tally.so/r/NpArxb",
+        "Plan Base":        f"{PORTAL_URL}/onboarding?plan=base",
+        "Plan Pro":         f"{PORTAL_URL}/onboarding?plan=pro",
+        "Plan Industrial":  f"{PORTAL_URL}/onboarding?plan=industrial",
+        "Estrategico 360":  f"{PORTAL_URL}/onboarding?plan=360",
     }
     tally_url = TALLY_POR_PLAN.get(plan, "")
 

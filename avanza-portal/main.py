@@ -3336,6 +3336,7 @@ import notificaciones as _notificaciones_mod  # ya importado arriba; acá solo e
 import email_tracking      # Hueco 1: analítica de email
 import equipos             # Feature Mi Equipo (setter+closer)
 import referidos_aliados   # Hueco 2: loop de reclutamiento aliado→aliado
+import onboarding          # Onboarding de clientes post-venta (reemplazo de Tally)
 
 app.include_router(academia.router)
 app.include_router(bolsa.router)
@@ -3356,6 +3357,7 @@ app.include_router(comisiones.router)
 app.include_router(email_tracking.router)       # /e/o, /e/c, /admin/email/metricas
 app.include_router(referidos_aliados.router)     # /aliados/{codigo}/red
 app.include_router(equipos.router)               # /aliados/{codigo}/equipo
+app.include_router(onboarding.router)             # /onboarding + /admin/onboarding
 
 # Job diario: cuando un referido entra por primera vez, acreditamos el bono de
 # activación a su sponsor (idempotente). Mismo patrón que los demás jobs.

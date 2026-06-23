@@ -1,0 +1,716 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex,nofollow">
+<title>Onboarding · Avanza Digital</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg-page:#000000;
+    --bg-card:#121212;
+    --bg-card-2:#1c1c1c;
+    --line:#262626;
+    --line-soft:#1f1f1f;
+    --txt:#ffffff;
+    --txt-dim:#a1a1aa;
+    --txt-faint:#71717a;
+    --primary:#3b82f6;
+    --primary-dim:#1d4ed8;
+    --ok:#4ade80;
+    --warn:#fbbf24;
+    --radius:12px;
+    --font:'Inter',system-ui,sans-serif;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  body{
+    font-family:var(--font);
+    background:var(--bg-page);
+    color:var(--txt);
+    line-height:1.55;
+    -webkit-font-smoothing:antialiased;
+    min-height:100vh;
+  }
+  a{color:var(--primary);text-decoration:none}
+  ::selection{background:rgba(59,130,246,.3)}
+
+  /* ---------- LANDING / SELECTOR ---------- */
+  .wrap{max-width:1080px;margin:0 auto;padding:0 22px}
+  .landing{min-height:100vh;display:flex;flex-direction:column;justify-content:center;padding:64px 0}
+  .brand-row{display:flex;align-items:center;gap:10px;margin-bottom:40px}
+  .brand-dot{width:11px;height:11px;border-radius:50%;background:var(--primary);box-shadow:0 0 16px var(--primary)}
+  .brand-name{font-weight:800;letter-spacing:-.02em;font-size:1.05rem}
+  .brand-name span{color:var(--txt-dim);font-weight:500}
+  .landing h1{font-size:clamp(2rem,5vw,3.1rem);font-weight:900;letter-spacing:-.035em;line-height:1.05;margin-bottom:18px}
+  .landing h1 em{font-style:normal;color:var(--primary)}
+  .landing .sub{color:var(--txt-dim);font-size:1.08rem;max-width:560px;margin-bottom:44px}
+  .plan-eyebrow{font-size:.72rem;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--txt-faint);margin-bottom:16px}
+  .plan-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+  .plan-card{
+    background:var(--bg-card);border:1px solid var(--line);border-radius:var(--radius);
+    padding:22px 18px;cursor:pointer;text-align:left;color:inherit;font-family:inherit;
+    transition:border-color .18s,transform .18s,background .18s;display:flex;flex-direction:column;gap:8px;
+  }
+  .plan-card:hover{border-color:var(--primary);transform:translateY(-3px);background:var(--bg-card-2)}
+  .plan-card:focus-visible{outline:2px solid var(--primary);outline-offset:2px}
+  .plan-card .pc-name{font-weight:800;font-size:1.05rem;letter-spacing:-.01em}
+  .plan-card .pc-q{font-size:.8rem;color:var(--txt-faint)}
+  .plan-card .pc-arrow{margin-top:auto;color:var(--primary);font-weight:700;font-size:.85rem}
+  .preview-note{margin-top:34px;font-size:.8rem;color:var(--txt-faint);border-top:1px solid var(--line-soft);padding-top:18px;max-width:620px}
+
+  /* ---------- FORM SHELL ---------- */
+  .form-shell{display:none;min-height:100vh}
+  .form-shell.active{display:grid;grid-template-columns:282px 1fr}
+
+  /* stepper (signature element) */
+  .stepper{
+    background:var(--bg-card);border-right:1px solid var(--line);
+    padding:36px 26px;position:sticky;top:0;height:100vh;overflow-y:auto;
+  }
+  .stepper .brand-row{margin-bottom:38px}
+  .step-plan{font-size:.7rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--primary);margin-bottom:6px}
+  .step-progress-txt{font-size:.8rem;color:var(--txt-dim);margin-bottom:26px}
+  .step-list{list-style:none;display:flex;flex-direction:column;gap:2px}
+  .step-item{display:flex;align-items:flex-start;gap:13px;padding:9px 0;color:var(--txt-faint);font-size:.9rem;position:relative}
+  .step-item .si-mark{
+    flex:0 0 24px;height:24px;border-radius:50%;border:1.5px solid var(--line);
+    display:flex;align-items:center;justify-content:center;font-size:.72rem;font-weight:700;
+    color:var(--txt-faint);transition:all .2s;background:var(--bg-page)
+  }
+  .step-item .si-label{padding-top:2px;font-weight:500;letter-spacing:-.01em}
+  .step-item.done .si-mark{background:var(--ok);border-color:var(--ok);color:#04210f}
+  .step-item.current{color:var(--txt)}
+  .step-item.current .si-mark{border-color:var(--primary);color:var(--primary);box-shadow:0 0 0 4px rgba(59,130,246,.14)}
+  .step-item.current .si-label{font-weight:700}
+  .step-item:not(:last-child)::after{content:"";position:absolute;left:11.5px;top:33px;bottom:-2px;width:1.5px;background:var(--line-soft)}
+  .step-item.done:not(:last-child)::after{background:var(--ok);opacity:.4}
+
+  /* mobile top progress */
+  .mobile-bar{display:none}
+
+  /* form body */
+  .form-body{padding:48px 0 120px}
+  .form-body .wrap{max-width:680px}
+  .panel{display:none;animation:fade .35s ease}
+  .panel.active{display:block}
+  @keyframes fade{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+  @media (prefers-reduced-motion:reduce){.panel{animation:none}.plan-card{transition:none}}
+
+  .panel-eyebrow{font-size:.72rem;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--primary);margin-bottom:10px}
+  .panel-title{font-size:1.7rem;font-weight:800;letter-spacing:-.03em;margin-bottom:8px}
+  .panel-intro{color:var(--txt-dim);font-size:.96rem;margin-bottom:34px}
+
+  .field{margin-bottom:30px}
+  .field.cond{border-left:2px solid var(--primary);padding-left:18px;margin-left:2px}
+  .field-label{display:block;font-weight:600;font-size:.98rem;margin-bottom:5px;letter-spacing:-.01em}
+  .field-label .req{color:var(--primary);margin-left:3px}
+  .field-help{display:block;color:var(--txt-faint);font-size:.83rem;margin-bottom:12px;line-height:1.45}
+  .field-note{background:rgba(251,191,36,.07);border:1px solid rgba(251,191,36,.28);border-radius:9px;padding:11px 14px;font-size:.83rem;color:#fcd34d;margin-bottom:14px;line-height:1.5}
+  .field-note b{color:#fde68a}
+
+  input[type=text],input[type=email],input[type=tel],input[type=url],textarea,select{
+    width:100%;background:#0a0a0a;border:1px solid var(--line);border-radius:9px;
+    color:var(--txt);font-family:inherit;font-size:.98rem;padding:13px 15px;transition:border-color .15s,box-shadow .15s
+  }
+  textarea{resize:vertical;min-height:96px;line-height:1.55}
+  input::placeholder,textarea::placeholder{color:#52525b}
+  input:focus,textarea:focus,select:focus{outline:none;border-color:var(--primary);box-shadow:0 0 0 3px rgba(59,130,246,.13)}
+  select{appearance:none;cursor:pointer;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%23a1a1aa' stroke-width='2.5'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 15px center;padding-right:40px}
+
+  /* choice chips (single + multi) */
+  .choices{display:flex;flex-direction:column;gap:9px}
+  .choice{
+    display:flex;align-items:center;gap:12px;background:#0a0a0a;border:1px solid var(--line);
+    border-radius:9px;padding:13px 15px;cursor:pointer;transition:border-color .15s,background .15s;font-size:.95rem
+  }
+  .choice:hover{border-color:#3f3f46}
+  .choice input{position:absolute;opacity:0;width:0;height:0}
+  .choice .box{flex:0 0 19px;height:19px;border:1.5px solid #3f3f46;display:flex;align-items:center;justify-content:center;transition:all .15s}
+  .choice .box.radio{border-radius:50%}
+  .choice .box.check{border-radius:5px}
+  .choice .box::after{content:"";opacity:0;transition:opacity .15s}
+  .choice .box.radio::after{width:9px;height:9px;border-radius:50%;background:var(--primary)}
+  .choice .box.check::after{width:11px;height:11px;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23fff' stroke-width='3.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 6L9 17l-5-5'/%3E%3C/svg%3E");background-size:contain;background-repeat:no-repeat}
+  .choice.sel{border-color:var(--primary);background:rgba(59,130,246,.07)}
+  .choice.sel .box{border-color:var(--primary)}
+  .choice.sel .box.check{background:var(--primary)}
+  .choice.sel .box::after{opacity:1}
+
+  /* file input */
+  .file-drop{
+    border:1.5px dashed var(--line);border-radius:10px;padding:24px;text-align:center;cursor:pointer;
+    transition:border-color .15s,background .15s;background:#0a0a0a
+  }
+  .file-drop:hover{border-color:var(--primary);background:rgba(59,130,246,.04)}
+  .file-drop .fd-ico{font-size:1.5rem;margin-bottom:6px}
+  .file-drop .fd-txt{font-size:.9rem;color:var(--txt-dim)}
+  .file-drop .fd-sub{font-size:.78rem;color:var(--txt-faint);margin-top:4px}
+  .file-list{margin-top:10px;display:flex;flex-direction:column;gap:6px}
+  .file-pill{display:flex;align-items:center;gap:8px;background:var(--bg-card-2);border:1px solid var(--line);border-radius:7px;padding:8px 12px;font-size:.83rem;color:var(--txt-dim)}
+  .file-pill .ok{color:var(--ok)}
+
+  .err{color:#f87171;font-size:.82rem;margin-top:7px;display:none}
+  .field.invalid .err{display:block}
+  .field.invalid input,.field.invalid textarea,.field.invalid select{border-color:#dc2626}
+  .field.invalid .choices,.field.invalid .file-drop{border-radius:9px;box-shadow:0 0 0 1px #dc2626}
+
+  /* nav */
+  .form-nav{display:flex;justify-content:space-between;gap:14px;margin-top:42px;padding-top:26px;border-top:1px solid var(--line-soft)}
+  .btn{font-family:inherit;font-weight:700;font-size:.95rem;border-radius:9px;padding:13px 26px;cursor:pointer;border:1px solid transparent;transition:all .15s}
+  .btn-primary{background:var(--primary);color:#fff}
+  .btn-primary:hover{background:#2563eb}
+  .btn-ghost{background:transparent;color:var(--txt-dim);border-color:var(--line)}
+  .btn-ghost:hover{color:var(--txt);border-color:#3f3f46}
+  .btn:focus-visible{outline:2px solid var(--primary);outline-offset:2px}
+  .btn-primary.full{width:100%}
+
+  /* success */
+  .done-screen{display:none;min-height:100vh;align-items:center;justify-content:center;text-align:center;padding:40px 22px}
+  .done-screen.active{display:flex}
+  .done-card{max-width:520px}
+  .done-ico{width:68px;height:68px;border-radius:50%;background:rgba(74,222,128,.12);border:1px solid rgba(74,222,128,.4);display:flex;align-items:center;justify-content:center;margin:0 auto 24px;font-size:1.9rem}
+  .done-card h2{font-size:1.8rem;font-weight:800;letter-spacing:-.02em;margin-bottom:12px}
+  .done-card p{color:var(--txt-dim);margin-bottom:8px}
+  .done-card .next{background:var(--bg-card);border:1px solid var(--line);border-radius:10px;padding:18px;margin-top:26px;text-align:left;font-size:.9rem;color:var(--txt-dim)}
+  .dev-toggle{margin-top:28px;font-size:.78rem;color:var(--txt-faint);cursor:pointer;text-decoration:underline;text-underline-offset:3px}
+  .dev-json{display:none;margin-top:16px;text-align:left;background:#0a0a0a;border:1px solid var(--line);border-radius:9px;padding:14px;font-family:ui-monospace,monospace;font-size:.74rem;color:var(--txt-dim);max-height:340px;overflow:auto;white-space:pre-wrap;word-break:break-word}
+
+  @media(max-width:860px){
+    .form-shell.active{grid-template-columns:1fr}
+    .stepper{display:none}
+    .mobile-bar{display:block;position:sticky;top:0;z-index:10;background:rgba(0,0,0,.92);backdrop-filter:blur(8px);border-bottom:1px solid var(--line);padding:14px 22px}
+    .mb-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+    .mb-plan{font-size:.7rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--primary)}
+    .mb-count{font-size:.8rem;color:var(--txt-dim)}
+    .mb-track{height:4px;background:var(--line);border-radius:4px;overflow:hidden}
+    .mb-fill{height:100%;background:var(--primary);width:0;transition:width .3s}
+    .form-body{padding:30px 0 110px}
+    .plan-grid{grid-template-columns:1fr 1fr;gap:11px}
+    .panel-title{font-size:1.45rem}
+    .form-nav .btn{padding:13px 20px}
+  }
+  @media(max-width:480px){.plan-grid{grid-template-columns:1fr}}
+
+  /* modo revisión (interno, no lo ve el cliente) */
+  .rev-toggle{
+    position:fixed;right:18px;bottom:18px;z-index:50;display:none;align-items:center;gap:9px;
+    background:var(--bg-card-2);border:1px solid var(--line);border-radius:30px;padding:9px 15px;
+    font-family:var(--font);font-size:.8rem;font-weight:600;color:var(--txt-dim);cursor:pointer;
+    box-shadow:0 6px 24px rgba(0,0,0,.5);transition:border-color .15s,color .15s
+  }
+  .rev-toggle.show{display:flex}
+  .rev-toggle:hover{border-color:#3f3f46;color:var(--txt)}
+  .rev-toggle .dot{width:9px;height:9px;border-radius:50%;background:#3f3f46;transition:background .15s,box-shadow .15s}
+  .rev-toggle.on{border-color:var(--warn);color:#fcd34d}
+  .rev-toggle.on .dot{background:var(--warn);box-shadow:0 0 10px var(--warn)}
+</style>
+</head>
+<body>
+
+<!-- ============ LANDING / PLAN ROUTER ============ -->
+<div id="landing" class="landing">
+  <div class="wrap">
+    <div class="brand-row"><span class="brand-dot"></span><span class="brand-name">Avanza Digital <span>· Onboarding</span></span></div>
+    <h1>Empecemos a construir <em>tu ecosistema digital.</em></h1>
+    <p class="sub">Este formulario reemplaza la primera reunión: con lo que completes acá, arrancamos a trabajar sin tener que pedirte nada más. Tomate los minutos que necesites.</p>
+    <div class="plan-eyebrow">Seleccioná tu plan para continuar</div>
+    <div class="plan-grid" id="planGrid"></div>
+    <p class="preview-note"><b>Nota interna (no la ve el cliente):</b> en producción, el cliente llega directo a su formulario con <code>?plan=base|pro|industrial|360</code> en el link del email — no elige el plan a mano. Esta pantalla de selección es tu acceso para previsualizar y probar los cuatro.</p>
+  </div>
+</div>
+
+<!-- ============ FORM SHELL ============ -->
+<div id="formShell" class="form-shell">
+  <!-- desktop stepper -->
+  <aside class="stepper">
+    <div class="brand-row"><span class="brand-dot"></span><span class="brand-name">Avanza Digital</span></div>
+    <div class="step-plan" id="stPlan"></div>
+    <div class="step-progress-txt" id="stProg"></div>
+    <ul class="step-list" id="stepList"></ul>
+  </aside>
+
+  <main>
+    <!-- mobile progress -->
+    <div class="mobile-bar">
+      <div class="mb-top"><span class="mb-plan" id="mbPlan"></span><span class="mb-count" id="mbCount"></span></div>
+      <div class="mb-track"><div class="mb-fill" id="mbFill"></div></div>
+    </div>
+    <div class="form-body"><div class="wrap" id="panelHost"></div></div>
+  </main>
+</div>
+
+<!-- ============ SUCCESS ============ -->
+<div id="doneScreen" class="done-screen">
+  <div class="done-card">
+    <div class="done-ico">✓</div>
+    <h2>¡Listo! Recibimos todo.</h2>
+    <p>Gracias por completar el formulario de inicio. Ya tenemos lo que necesitamos para empezar a trabajar en tu proyecto.</p>
+    <div class="next" id="doneNext"></div>
+    <div class="dev-toggle" id="devToggle">Ver datos capturados (modo prueba)</div>
+    <pre class="dev-json" id="devJson"></pre>
+  </div>
+</div>
+
+<!-- modo revisión: solo para vos, te deja avanzar sin completar nada -->
+<button id="revToggle" class="rev-toggle"><span class="dot"></span><span id="revLabel">Modo revisión: OFF</span></button>
+
+<script>
+/* =====================================================================
+   ESQUEMA DEL FORMULARIO
+   Cada sección se muestra según el plan. Cada campo puede tener showIf
+   (condicional). Editar acá es lo único que hace falta para cambiar
+   preguntas: el render y la validación se arman solos.
+   ===================================================================== */
+
+const PLANS = {
+  base:       { label:"Plan Base",          q:"8 preguntas" },
+  pro:        { label:"Plan Pro",           q:"~16 preguntas" },
+  industrial: { label:"Plan Industrial",    q:"~25 preguntas" },
+  "360":      { label:"Estratégico 360",    q:"~37 preguntas" }
+};
+
+// jerarquía de planes: cada plan incluye las secciones de los anteriores
+const PLAN_LEVEL = { base:1, pro:2, industrial:3, "360":4 };
+
+const SECTIONS = [
+  {
+    id:"negocio", nav:"Tu negocio", eyebrow:"Paso 1", minLevel:1,
+    title:"Contanos de tu negocio",
+    intro:"Lo esencial para entender qué vendés y a quién.",
+    fields:[
+      {id:"empresa", type:"text", label:"¿Cuál es el nombre de tu empresa o proyecto?", required:true, placeholder:"Ej: MetalPro SRL"},
+      {id:"rubro", type:"text", label:"¿En qué rubro o sector trabajás?", required:true, placeholder:"Ej: metalúrgica, logística, agro…"},
+      {id:"producto_estrella", type:"textarea", label:"¿Cuál es el producto o servicio estrella que querés destacar para generar consultas?", required:true},
+      {id:"diferencial", type:"textarea", label:"¿Por qué un cliente debería elegirte a vos y no a la competencia?", required:true}
+    ]
+  },
+  {
+    id:"marca", nav:"Contacto y marca", eyebrow:"Paso 2", minLevel:1,
+    title:"Contacto, dominio y marca",
+    intro:"Adónde mandamos las consultas y con qué identidad construimos.",
+    fields:[
+      {id:"email_consultas", type:"email", label:"¿A qué email deben llegar las consultas de los clientes?", required:true, placeholder:"ventas@tuempresa.com"},
+      {id:"wa_consultas", type:"tel", label:"¿A qué WhatsApp deben llegar los mensajes?", help:"Con código de país.", required:true, placeholder:"+54 9 11 5555 6666"},
+      {id:"web_actual", type:"url", label:"¿Tenés un sitio web actual?", help:"Si tenés, pegá el link — aunque no te guste, nos sirve verlo. Si no tenés, dejalo vacío.", required:false, placeholder:"https://…"},
+      {id:"dominio", type:"radio", label:"¿Ya tenés un dominio web registrado?", required:true,
+        options:["Sí, ya lo tengo","No, todavía no"]},
+      // rama SÍ
+      {id:"dominio_cual", type:"text", label:"¿Cuál es tu dominio?", required:true, placeholder:"www.tuempresa.com",
+        showIf:{field:"dominio", eq:"Sí, ya lo tengo"}},
+      {id:"dominio_donde", type:"text", label:"¿En qué plataforma lo registraste?", required:true, placeholder:"GoDaddy, Namecheap, NIC.ar, no sé…",
+        showIf:{field:"dominio", eq:"Sí, ya lo tengo"}},
+      {id:"dominio_acceso", type:"radio", label:"¿Tenés acceso al panel donde se administra ese dominio?", required:true,
+        options:["Sí, tengo acceso","No tengo acceso","No estoy seguro"],
+        showIf:{field:"dominio", eq:"Sí, ya lo tengo"}},
+      // rama NO
+      {id:"dominio_deseado", type:"text", label:"¿Qué nombre de dominio te gustaría?", help:"Poné 2 o 3 opciones por si alguna está ocupada.", required:true, placeholder:"tuempresa.com, tuempresa.com.ar…",
+        showIf:{field:"dominio", eq:"No, todavía no"}},
+      {id:"dominio_quien", type:"radio", label:"¿Quién lo registra?", required:true,
+        options:["Quiero que lo registren ustedes","Lo compro yo"],
+        showIf:{field:"dominio", eq:"No, todavía no"}},
+      {id:"logo_fotos", type:"file", multiple:true, label:"Subí tu logo y fotos de tu negocio", help:"Logo ideal en PNG, y hasta 5 fotos reales de tu negocio, planta, productos o equipo. Evitá fotos de stock — las fotos reales hacen toda la diferencia.", required:true},
+      {id:"identidad", type:"radio", label:"¿Tenés definidos colores de marca, tipografía o un manual?", required:true,
+        options:["Sí, los tengo","No, todavía no"]},
+      {id:"identidad_archivo", type:"file", multiple:true, label:"Subí tu manual de marca o paleta de colores", required:false,
+        showIf:{field:"identidad", eq:"Sí, los tengo"}},
+      {id:"identidad_sensacion", type:"textarea", label:"¿Qué sensación querés transmitir?", help:"Ej: sobrio y confiable · moderno y tecnológico · cercano y humano · premium.", required:true,
+        showIf:{field:"identidad", eq:"No, todavía no"}},
+      {id:"referencias", type:"textarea", label:"Referencias de diseño que te gusten", help:"Pegá de 1 a 3 links de webs que te gusten (de tu rubro o no) y, en una línea por cada una, qué te gusta de ellas. Esto es lo que más nos ayuda a no errarle al estilo.", required:true, placeholder:"https://ejemplo.com — me gusta lo limpio y los espacios en blanco"}
+    ]
+  },
+  {
+    id:"sitio", nav:"Tu sitio", eyebrow:"Paso 3", minLevel:2,
+    title:"Tu sitio web",
+    intro:"Qué páginas necesitás y con qué contenido.",
+    fields:[
+      {id:"visitante_accion", type:"checkbox", label:"¿Qué tiene que hacer el visitante en el sitio?", help:"Podés elegir más de una.", required:true,
+        options:["Completar un formulario","Escribir al WhatsApp","Llamar por teléfono"]},
+      {id:"paginas", type:"checkbox", label:"¿Qué páginas necesita el sitio?", help:"Elegí hasta 6.", required:true,
+        options:["Inicio","Nosotros / La empresa","Servicios / Productos","Casos de éxito / Clientes","Blog / Recursos","Contacto","Preguntas frecuentes"]},
+      {id:"tiene_textos", type:"radio", label:"¿Tenés los textos escritos para las páginas?", required:true,
+        options:["Sí, ya los tengo","No, necesito que los redacten"]},
+      {id:"textos_archivo", type:"file", multiple:true, label:"Subí el archivo con tus textos", required:true,
+        showIf:{field:"tiene_textos", eq:"Sí, ya los tengo"}},
+      {id:"textos_redaccion", type:"textarea", label:"Para redactarlos, contanos:", help:"Productos o servicios principales (en detalle), beneficios clave para el cliente, y qué te diferencia de la competencia.", required:true,
+        showIf:{field:"tiene_textos", eq:"No, necesito que los redacten"}},
+      {id:"tono", type:"radio", label:"¿Qué tono querés para los textos?", required:true,
+        options:["Formal / corporativo","Cercano / amigable","Técnico / especializado","Directo / comercial"]}
+    ]
+  },
+  {
+    id:"captacion", nav:"Captación", eyebrow:"Paso 4", minLevel:2,
+    title:"Captación y herramientas",
+    intro:"Cómo convertís visitas en contactos y qué medís.",
+    fields:[
+      {id:"lead_magnet", type:"radio", label:"¿Qué recurso gratuito vas a ofrecer para captar datos (lead magnet)?", required:true,
+        options:["Guía / Ebook en PDF","Checklist descargable","Calculadora / herramienta online","Presupuesto express","Webinar / video exclusivo","Plantilla descargable","Por ahora ninguno"]},
+      {id:"lm_creado", type:"radio", label:"¿Ya tenés ese material creado?", required:true,
+        options:["Sí, ya lo tengo","No, necesito que lo creen"],
+        showIf:{field:"lead_magnet", notEq:"Por ahora ninguno"}},
+      {id:"lm_tema", type:"textarea", label:"Describí brevemente de qué debería tratar", required:true,
+        showIf:{field:"lm_creado", eq:"No, necesito que lo creen"}},
+      {id:"post_descarga", type:"checkbox", label:"Cuando alguien completa un formulario o descarga el recurso, ¿qué debería pasar?", required:true,
+        options:["Enviar un email automático de agradecimiento con el material","Notificar al equipo de ventas por email","Guardar el contacto en un CRM"],
+        showIf:{field:"lead_magnet", notEq:"Por ahora ninguno"}},
+      {id:"crm", type:"radio", label:"¿Usás algún CRM o herramienta de email marketing?", required:true,
+        options:["HubSpot","Salesforce","Clientify","Mailchimp","ActiveCampaign","Google Sheets (planilla)","Ninguno — quiero que me recomienden"]},
+      {id:"metricas", type:"checkbox", label:"¿Qué métricas te gustaría ver en tu panel?", required:true,
+        options:["Cantidad de visitas por página","Cantidad de formularios completados","Origen de los leads (Google, redes, etc.)","Tasa de conversión"]}
+    ]
+  },
+  {
+    id:"operacion", nav:"Tu operación", eyebrow:"Paso 5", minLevel:3,
+    title:"Tu operación comercial",
+    intro:"Tu proceso real de ventas. Acá, mientras más material concreto nos pases, menos te vamos a tener que preguntar después.",
+    fields:[
+      {id:"proceso_ventas", type:"textarea", label:"Describí brevemente el proceso de ventas actual de tu empresa.", required:true},
+      {id:"material_real", type:"file", multiple:true, label:"Subí lo que ya uses hoy", help:"Tu lista de precios, catálogo, un presupuesto tipo que mandes, o el Excel con el que cotizás. Mientras más real, mejor: esto es lo que nos deja arrancar sin volver a pedirte nada.", required:false},
+      {id:"loom", type:"url", label:"Video corto de tu proceso (opcional, pero muy recomendado)", help:"Grabá 2-3 minutos de pantalla mostrando cómo gestionás hoy tus ventas, pedidos o cotizaciones. Podés usar Loom (gratis, loom.com) o el grabador del celular. Esto reemplaza una reunión entera. Pegá el link acá.", required:false, placeholder:"https://loom.com/share/…"},
+      {id:"segmentos", type:"textarea", label:"¿Tenés distintos tipos de clientes o segmentos?", help:"Ej: distribuidores, talleres, constructoras, consumidor final…", required:true},
+      {id:"formularios_diferentes", type:"radio", label:"¿Necesitás formularios diferentes para cada tipo de cliente o producto?", required:true,
+        options:["Sí","No","No estoy seguro"]},
+      {id:"form_dif_detalle", type:"textarea", label:"Explicá brevemente qué diferenciación necesitás", required:true,
+        showIf:{field:"formularios_diferentes", eq:"Sí"}},
+      {id:"crm_integracion", type:"radio", label:"¿Qué nivel de integración con el CRM necesitás?", required:true,
+        options:["Sincronización básica (contactos)","Sincronización de oportunidades / negocios"]},
+      {id:"kpis", type:"textarea", label:"En el panel en tiempo real, ¿qué indicadores (KPIs) son prioritarios para vos?", required:true},
+      {id:"req_tecnico", type:"textarea", label:"¿Tenés algún requerimiento técnico especial o integración con otros sistemas?", help:"Ej: ERP, Tango, SAP, facturación, logística… Si no aplica, escribí 'no'.", required:true},
+      {id:"flujo_aprobacion", type:"textarea", label:"¿Hay algún flujo de aprobación o proceso interno que deba reflejarse en el sistema?", help:"Si no aplica, escribí 'no'.", required:true},
+      {id:"plazo", type:"radio", label:"¿Qué plazo estimado tenés para la implementación?", required:true,
+        options:["Lo antes posible","En 1 mes","En 2-3 meses","Sin fecha definida"]}
+    ]
+  },
+  {
+    id:"medida", nav:"Desarrollo a medida", eyebrow:"Paso 6", minLevel:4,
+    title:"Desarrollo a medida",
+    intro:"La parte técnica del Estratégico 360. Si algo de esto no lo manejás vos, podés completarlo con quien lleve tus sistemas.",
+    fields:[
+      {id:"desarrollo_tipo", type:"checkbox", label:"¿Qué tipo de desarrollo a medida necesitás?", required:true,
+        options:["Cotizador avanzado (el cliente ingresa parámetros y obtiene precio)","Intranet para empleados","Portal de clientes (facturas, historial, pedidos)","Sistema de gestión de proyectos / órdenes de trabajo"]},
+      {id:"cotizador_vars", type:"textarea", label:"Para el cotizador: ¿qué variables entran en el precio?", help:"Ej: material, medidas, cantidad, plazo de entrega. Si tenés tu tabla de precios actual, subila en el paso anterior o describila acá.", required:true,
+        showIf:{field:"desarrollo_tipo", includes:"Cotizador avanzado (el cliente ingresa parámetros y obtiene precio)"}},
+      {id:"desarrollo_detalle", type:"textarea", label:"Describí en detalle la funcionalidad a medida que necesitás.", help:"Cuanto más concreto, mejor. Si podés, contá un caso de uso paso a paso.", required:true},
+      {id:"usa_erp", type:"radio", label:"¿Qué ERP usás actualmente?", required:true,
+        options:["Tango","SAP","Microsoft Dynamics","Bejerman","Ninguno"]},
+      // sub-bloque ERP (solo si NO es Ninguno)
+      {id:"erp_nota", type:"note", text:"⚠️ <b>Esta sección es técnica.</b> Si no la manejás vos, reenviásela a quien administra tu sistema/ERP o a tu proveedor — son los que tienen estos datos.",
+        showIf:{field:"usa_erp", notEq:"Ninguno"}},
+      {id:"erp_api", type:"radio", label:"¿Tu ERP tiene API o módulo de integración disponible?", required:true,
+        options:["Sí","No","No sé"],
+        showIf:{field:"usa_erp", notEq:"Ninguno"}},
+      {id:"erp_api_doc", type:"file", multiple:true, label:"Si tenés la documentación de la API, subila acá", required:false,
+        showIf:{field:"usa_erp", notEq:"Ninguno"}},
+      {id:"erp_sync", type:"textarea", label:"¿Qué información debería sincronizarse entre la web y el ERP?", help:"Ej: stock, precios, clientes, pedidos, facturas — y en qué dirección.", required:true,
+        showIf:{field:"usa_erp", notEq:"Ninguno"}},
+      {id:"erp_admin", type:"text", label:"¿Quién administra tu ERP y cómo lo contactamos?", help:"Interno o proveedor externo + un email o teléfono, para coordinar solo la parte técnica.", required:true,
+        showIf:{field:"usa_erp", notEq:"Ninguno"}},
+      {id:"automatizaciones", type:"radio", label:"¿Necesitás automatizaciones condicionales avanzadas?", help:"Ej: enviar un email distinto según el tipo de lead, o asignar a un vendedor según la región.", required:true,
+        options:["Sí","No"]},
+      {id:"automatizaciones_detalle", type:"textarea", label:"Describí las condiciones que imaginás", required:true,
+        showIf:{field:"automatizaciones", eq:"Sí"}},
+      {id:"decisores", type:"text", label:"¿Quién o quiénes toman las decisiones finales en este proyecto?", help:"Indicá el/los cargo/s.", required:true},
+      {id:"garantia", type:"radio", label:"¿La garantía extendida de 12 meses es un requisito fundamental para ustedes?", required:true,
+        options:["Sí","No","Me interesa, pero necesito más detalles"]},
+      {id:"sla", type:"radio", label:"¿Qué nivel de soporte técnico (SLA) esperás?", required:true,
+        options:["Horario comercial (respuesta en 24h)","Prioritario (respuesta en 4-8h)","24/7 para emergencias"]},
+      {id:"contacto_pref", type:"radio", label:"¿Cómo preferís que te contactemos para coordinar los próximos pasos?", required:true,
+        options:["Email","WhatsApp"]}
+    ]
+  },
+  {
+    id:"cierre", nav:"Cierre", eyebrow:"Último paso", minLevel:1,
+    title:"Para cerrar",
+    intro:"Lo último y listo.",
+    fields:[
+      {id:"comentarios", type:"textarea", label:"¿Algo más que quieras contarnos o que no hayamos preguntado?", required:false}
+    ]
+  }
+];
+
+/* ===================== ESTADO Y RENDER ===================== */
+const state = { plan:null, step:0, sections:[], answers:{}, files:{}, review:false };
+
+function getPlanFromUrl(){
+  const p = new URLSearchParams(location.search).get("plan");
+  return PLANS[p] ? p : null;
+}
+
+function visibleSections(plan){
+  const lvl = PLAN_LEVEL[plan];
+  return SECTIONS.filter(s => s.minLevel <= lvl);
+}
+
+/* ---- landing ---- */
+function renderLanding(){
+  const grid = document.getElementById("planGrid");
+  grid.innerHTML = "";
+  Object.entries(PLANS).forEach(([key,info])=>{
+    const b = document.createElement("button");
+    b.className="plan-card";
+    b.innerHTML = `<div class="pc-name">${info.label}</div><div class="pc-q">${info.q}</div><div class="pc-arrow">Comenzar →</div>`;
+    b.onclick = ()=>startForm(key);
+    grid.appendChild(b);
+  });
+}
+
+function startForm(plan){
+  state.plan = plan;
+  state.step = 0;
+  state.sections = visibleSections(plan);
+  document.getElementById("landing").style.display="none";
+  document.getElementById("formShell").classList.add("active");
+  document.getElementById("revToggle").classList.add("show");
+  document.getElementById("stPlan").textContent = PLANS[plan].label;
+  document.getElementById("mbPlan").textContent = PLANS[plan].label;
+  buildPanels();
+  renderStepper();
+  goStep(0);
+  window.scrollTo(0,0);
+}
+
+/* ---- build all panels ---- */
+function buildPanels(){
+  const host = document.getElementById("panelHost");
+  host.innerHTML = "";
+  state.sections.forEach((sec,i)=>{
+    const panel = document.createElement("section");
+    panel.className="panel"; panel.dataset.idx=i;
+    let html = `<div class="panel-eyebrow">${sec.eyebrow}</div><h2 class="panel-title">${sec.title}</h2><p class="panel-intro">${sec.intro}</p>`;
+    sec.fields.forEach(f=> html += renderField(f));
+    const isLast = i===state.sections.length-1;
+    html += `<div class="form-nav">
+      <button class="btn btn-ghost" data-back ${i===0?'style="visibility:hidden"':''}>← Atrás</button>
+      <button class="btn btn-primary" data-next>${isLast?'Enviar formulario':'Siguiente →'}</button>
+    </div>`;
+    panel.innerHTML = html;
+    host.appendChild(panel);
+  });
+  // wire nav + inputs
+  host.querySelectorAll("[data-next]").forEach(b=>b.onclick=onNext);
+  host.querySelectorAll("[data-back]").forEach(b=>b.onclick=onBack);
+  wireInputs();
+  applyConditionals();
+}
+
+function renderField(f){
+  if(f.type==="note"){
+    return `<div class="field" data-fid="${f.id}" data-cond="${f.showIf?1:0}"><div class="field-note">${f.text}</div></div>`;
+  }
+  const req = f.required ? '<span class="req">*</span>' : '';
+  const help = f.help ? `<span class="field-help">${f.help}</span>` : '';
+  let control = "";
+  if(f.type==="textarea"){
+    control = `<textarea data-input id="f_${f.id}" placeholder="${f.placeholder||''}"></textarea>`;
+  } else if(f.type==="radio"||f.type==="checkbox"){
+    control = `<div class="choices">` + f.options.map(o=>{
+      const boxcls = f.type==="radio"?"radio":"check";
+      return `<label class="choice"><input type="${f.type==='radio'?'radio':'checkbox'}" name="f_${f.id}" value="${o}" data-input><span class="box ${boxcls}"></span><span>${o}</span></label>`;
+    }).join("") + `</div>`;
+  } else if(f.type==="file"){
+    control = `<label class="file-drop" for="f_${f.id}">
+        <div class="fd-ico">📎</div>
+        <div class="fd-txt">Tocá para elegir ${f.multiple?'archivos':'un archivo'}</div>
+        <div class="fd-sub">Hasta 10 MB por archivo</div>
+        <input type="file" id="f_${f.id}" data-input ${f.multiple?'multiple':''} style="display:none">
+      </label><div class="file-list" id="fl_${f.id}"></div>`;
+  } else {
+    const t = f.type==="email"?"email":f.type==="tel"?"tel":f.type==="url"?"url":"text";
+    control = `<input type="${t}" data-input id="f_${f.id}" placeholder="${f.placeholder||''}">`;
+  }
+  return `<div class="field" data-fid="${f.id}" data-cond="${f.showIf?1:0}">
+      <label class="field-label" for="f_${f.id}">${f.label}${req}</label>${help}${control}
+      <div class="err">Por favor completá este campo.</div>
+    </div>`;
+}
+
+function fieldById(id){
+  for(const s of state.sections){ const f=s.fields.find(x=>x.id===id); if(f) return f; }
+  return null;
+}
+
+/* ---- inputs ---- */
+function wireInputs(){
+  document.querySelectorAll("[data-input]").forEach(el=>{
+    const handler = ()=>{ readInput(el); applyConditionals(); clearError(el); };
+    if(el.type==="file"){ el.addEventListener("change", ()=>{ readFile(el); applyConditionals(); clearError(el); }); }
+    else if(el.type==="radio"||el.type==="checkbox"){ el.addEventListener("change", handler); }
+    else { el.addEventListener("input", handler); }
+  });
+  // chip selected style
+  document.querySelectorAll(".choice input").forEach(inp=>{
+    inp.addEventListener("change", ()=>{
+      const group = inp.closest(".choices");
+      if(inp.type==="radio"){ group.querySelectorAll(".choice").forEach(c=>c.classList.remove("sel")); }
+      inp.closest(".choice").classList.toggle("sel", inp.checked);
+      if(inp.type==="radio"){ inp.closest(".choice").classList.add("sel"); }
+    });
+  });
+}
+
+function readInput(el){
+  const fid = el.id.replace("f_","");
+  const f = fieldById(fid);
+  if(!f) return;
+  if(f.type==="radio"){
+    const sel = document.querySelector(`input[name="f_${fid}"]:checked`);
+    state.answers[fid] = sel ? sel.value : "";
+  } else if(f.type==="checkbox"){
+    state.answers[fid] = [...document.querySelectorAll(`input[name="f_${fid}"]:checked`)].map(i=>i.value);
+  } else {
+    state.answers[fid] = el.value.trim();
+  }
+}
+
+function readFile(el){
+  const fid = el.id.replace("f_","");
+  const names = [...el.files].map(f=>f.name);
+  state.files[fid] = names;
+  const list = document.getElementById("fl_"+fid);
+  list.innerHTML = names.map(n=>`<div class="file-pill"><span class="ok">✓</span> ${n}</div>`).join("");
+  state.answers[fid] = names; // for validation/preview
+}
+
+/* ---- conditional visibility ---- */
+function applyConditionals(){
+  document.querySelectorAll('.field[data-cond="1"]').forEach(div=>{
+    const f = fieldById(div.dataset.fid);
+    const cond = f.showIf;
+    const val = state.answers[cond.field];
+    let show=false;
+    if(cond.eq!==undefined) show = val===cond.eq;
+    else if(cond.notEq!==undefined) show = (val!==undefined && val!=="" && val!==cond.notEq && !(Array.isArray(val)&&val.length===0));
+    else if(cond.includes!==undefined) show = Array.isArray(val) && val.includes(cond.includes);
+    div.style.display = show ? "" : "none";
+    if(show) div.classList.add("cond"); else div.classList.remove("cond","invalid");
+  });
+}
+
+function isVisible(fieldId){
+  const div = document.querySelector(`.field[data-fid="${fieldId}"]`);
+  return div && div.style.display!=="none";
+}
+
+/* ---- validation ---- */
+function clearError(el){
+  const div = el.closest(".field");
+  if(div) div.classList.remove("invalid");
+}
+function validateStep(idx){
+  if(state.review) return true;   // modo revisión: avanzar sin completar
+  const sec = state.sections[idx];
+  let ok=true, firstBad=null;
+  sec.fields.forEach(f=>{
+    if(f.type==="note") return;
+    if(!f.required) return;
+    if(!isVisible(f.id)) return;
+    const v = state.answers[f.id];
+    const empty = v===undefined || v==="" || (Array.isArray(v)&&v.length===0);
+    const div = document.querySelector(`.field[data-fid="${f.id}"]`);
+    if(empty){ div.classList.add("invalid"); ok=false; if(!firstBad) firstBad=div; }
+    else div.classList.remove("invalid");
+  });
+  if(firstBad) firstBad.scrollIntoView({behavior:"smooth",block:"center"});
+  return ok;
+}
+
+/* ---- navigation ---- */
+function onNext(){
+  if(!validateStep(state.step)) return;
+  if(state.step === state.sections.length-1){ submitForm(); return; }
+  goStep(state.step+1);
+}
+function onBack(){ if(state.step>0) goStep(state.step-1); }
+
+function goStep(i){
+  state.step=i;
+  document.querySelectorAll(".panel").forEach(p=>p.classList.toggle("active", +p.dataset.idx===i));
+  renderStepper();
+  window.scrollTo({top:0,behavior:"smooth"});
+}
+
+function renderStepper(){
+  const list = document.getElementById("stepList");
+  list.innerHTML="";
+  state.sections.forEach((s,i)=>{
+    const li=document.createElement("li");
+    li.className="step-item"+(i<state.step?" done":"")+(i===state.step?" current":"");
+    li.innerHTML=`<span class="si-mark">${i<state.step?'✓':i+1}</span><span class="si-label">${s.nav}</span>`;
+    if(i<state.step){ li.style.cursor="pointer"; li.onclick=()=>goStep(i); }
+    list.appendChild(li);
+  });
+  const total=state.sections.length;
+  document.getElementById("stProg").textContent=`Paso ${state.step+1} de ${total}`;
+  document.getElementById("mbCount").textContent=`Paso ${state.step+1} / ${total}`;
+  document.getElementById("mbFill").style.width=((state.step)/(total-1)*100)+"%";
+}
+
+/* ---- submit: POST real al backend, con fallback a modo prueba ---- */
+async function submitForm(){
+  const payload = {
+    plan: state.plan,
+    plan_label: PLANS[state.plan].label,
+    enviado_en: new Date().toISOString(),
+    respuestas: state.answers,
+    archivos: state.files
+  };
+  // armar FormData con respuestas + archivos reales
+  const fd = new FormData();
+  fd.append("plan", state.plan);
+  fd.append("respuestas", JSON.stringify(state.answers));
+  const tok = new URLSearchParams(location.search).get("t");
+  if(tok) fd.append("token", tok);
+  document.querySelectorAll('input[type=file][data-input]').forEach(inp=>{
+    const fid = inp.id.replace("f_","");
+    [...inp.files].forEach(file=> fd.append("archivo_"+fid, file));
+  });
+
+  let enviadoAlServidor = false;
+  try{
+    const r = await fetch("/onboarding/enviar", { method:"POST", body: fd });
+    if(r.ok) enviadoAlServidor = true;
+  }catch(e){ /* sin backend (archivo local / modo prueba) */ }
+
+  showDone(payload, enviadoAlServidor);
+}
+
+function showDone(payload, enviado){
+  document.getElementById("formShell").classList.remove("active");
+  document.getElementById("formShell").style.display="none";
+  document.getElementById("revToggle").classList.remove("show");
+  document.getElementById("doneScreen").classList.add("active");
+  document.getElementById("doneNext").innerHTML =
+    `<b style="color:#fff">¿Qué sigue?</b><br>Revisamos todo lo que cargaste y nos ponemos en contacto dentro de las próximas 24hs hábiles para arrancar con tu proyecto.`;
+  const dt = document.getElementById("devToggle");
+  dt.textContent = enviado ? "Ver datos enviados (modo prueba)" : "Ver datos capturados — sin backend (modo prueba)";
+  dt.onclick=()=>{
+    const pre=document.getElementById("devJson");
+    const open = pre.style.display==="block";
+    pre.style.display = open?"none":"block";
+    pre.textContent = (enviado?"// ✓ Enviado al servidor\n":"// ⚠ No hay backend conectado — esto es lo que se enviaría\n") + JSON.stringify(payload,null,2);
+  };
+  window.scrollTo(0,0);
+}
+
+/* ---- modo revisión ---- */
+function initReviewToggle(){
+  const btn=document.getElementById("revToggle");
+  btn.onclick=()=>{
+    state.review=!state.review;
+    btn.classList.toggle("on", state.review);
+    document.getElementById("revLabel").textContent="Modo revisión: "+(state.review?"ON":"OFF");
+    if(state.review){ document.querySelectorAll(".field.invalid").forEach(d=>d.classList.remove("invalid")); }
+  };
+}
+
+/* ---- init ---- */
+renderLanding();
+initReviewToggle();
+const urlPlan = getPlanFromUrl();
+if(urlPlan){ startForm(urlPlan); }
+</script>
+</body>
+</html>
