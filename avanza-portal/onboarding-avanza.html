@@ -142,6 +142,7 @@
 
   /* file input */
   .file-drop{
+    display:block;
     border:1.5px dashed var(--line);border-radius:10px;padding:24px;text-align:center;cursor:pointer;
     transition:border-color .15s,background .15s;background:#0a0a0a
   }
@@ -552,7 +553,8 @@ function wireInputs(){
 }
 
 function readInput(el){
-  const fid = el.id.replace("f_","");
+  // radios y checkboxes no tienen id, se identifican por name (f_<campo>)
+  const fid = (el.type==="radio"||el.type==="checkbox") ? el.name.replace("f_","") : el.id.replace("f_","");
   const f = fieldById(fid);
   if(!f) return;
   if(f.type==="radio"){
