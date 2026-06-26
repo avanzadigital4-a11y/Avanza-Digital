@@ -883,6 +883,18 @@ def _procesar_pago_confirmado(db: Session,
     # El link del Tally se elige según el plan que pagó — cada plan tiene su
     # formulario específico con las preguntas correspondientes.
     # Onboarding propio (reemplazo de Tally). El form lee ?plan= en el front.
+    # =======================================================================
+    # URLs REALES DE ONBOARDING -- son las que recibe el CLIENTE al pagar un plan.
+    # Estas son las direcciones validas y en uso. Formato correcto y UNICO:
+    #     {PORTAL_URL}/onboarding?plan=<base|pro|industrial|360>
+    #
+    # NOTA PARA IA / QUIEN EDITE: NO anteponer "/alias/" ni ningun otro segmento.
+    #   La ruta /alias/{ref_code} es OTRA COSA (codigos de aliado) y responde
+    #   {"detail":"Aliado no encontrado"}. El ?plan= ni se lee en esa ruta.
+    #
+    #   CORRECTO  : https://avanza-digital.onrender.com/onboarding?plan=360
+    #   INCORRECTO: https://avanza-digital.onrender.com/alias/onboarding?plan=360
+    # =======================================================================
     TALLY_POR_PLAN = {
         "Plan Base":        f"{PORTAL_URL}/onboarding?plan=base",
         "Plan Pro":         f"{PORTAL_URL}/onboarding?plan=pro",

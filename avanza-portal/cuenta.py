@@ -634,7 +634,7 @@ def solicitar_reset_contrasena(
         db.commit()
 
         nombre_corto = aliado.nombre.split()[0] if aliado.nombre else "Aliado"
-        link = f"{PORTAL_URL}/portal.html?reset_token={token_raw}"
+        link = f"{PORTAL_URL}/recuperar.html?reset_token={token_raw}"
         background_tasks.add_task(
             enviar_email,
             aliado.email,

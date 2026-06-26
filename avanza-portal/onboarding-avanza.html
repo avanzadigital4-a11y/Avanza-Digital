@@ -196,18 +196,6 @@
   }
   @media(max-width:480px){.plan-grid{grid-template-columns:1fr}}
 
-  /* modo revisión (interno, no lo ve el cliente) */
-  .rev-toggle{
-    position:fixed;right:18px;bottom:18px;z-index:50;display:none;align-items:center;gap:9px;
-    background:var(--bg-card-2);border:1px solid var(--line);border-radius:30px;padding:9px 15px;
-    font-family:var(--font);font-size:.8rem;font-weight:600;color:var(--txt-dim);cursor:pointer;
-    box-shadow:0 6px 24px rgba(0,0,0,.5);transition:border-color .15s,color .15s
-  }
-  .rev-toggle.show{display:flex}
-  .rev-toggle:hover{border-color:#3f3f46;color:var(--txt)}
-  .rev-toggle .dot{width:9px;height:9px;border-radius:50%;background:#3f3f46;transition:background .15s,box-shadow .15s}
-  .rev-toggle.on{border-color:var(--warn);color:#fcd34d}
-  .rev-toggle.on .dot{background:var(--warn);box-shadow:0 0 10px var(--warn)}
 </style>
 </head>
 <body>
@@ -256,9 +244,6 @@
   </div>
 </div>
 
-<!-- modo revisión: solo para vos, te deja avanzar sin completar nada -->
-<button id="revToggle" class="rev-toggle"><span class="dot"></span><span id="revLabel">Modo revisión: OFF</span></button>
-
 <script>
 /* =====================================================================
    ESQUEMA DEL FORMULARIO
@@ -285,6 +270,7 @@ const SECTIONS = [
     fields:[
       {id:"empresa", type:"text", label:"¿Cuál es el nombre de tu empresa o proyecto?", required:true, placeholder:"Ej: MetalPro SRL"},
       {id:"rubro", type:"text", label:"¿En qué rubro o sector trabajás?", required:true, placeholder:"Ej: metalúrgica, logística, agro…"},
+      {id:"cliente_ideal", type:"textarea", label:"¿Quién es tu cliente ideal? ¿A quién le vendés?", help:"Ej: pymes metalúrgicas, constructoras, distribuidores, consumidor final… Cuanto más claro lo tengas, mejor le apuntamos los textos y el diseño.", required:true},
       {id:"producto_estrella", type:"textarea", label:"¿Cuál es el producto o servicio estrella que querés destacar para generar consultas?", required:true},
       {id:"diferencial", type:"textarea", label:"¿Por qué un cliente debería elegirte a vos y no a la competencia?", required:true}
     ]
@@ -313,7 +299,11 @@ const SECTIONS = [
       {id:"dominio_quien", type:"radio", label:"¿Quién lo registra?", required:true,
         options:["Quiero que lo registren ustedes","Lo compro yo"],
         showIf:{field:"dominio", eq:"No, todavía no"}},
-      {id:"logo_fotos", type:"file", multiple:true, label:"Subí tu logo y fotos de tu negocio", help:"Logo ideal en PNG, y hasta 5 fotos reales de tu negocio, planta, productos o equipo. Evitá fotos de stock — las fotos reales hacen toda la diferencia.", required:true},
+      {id:"tiene_logo", type:"radio", label:"¿Tenés un logo?", required:true,
+        options:["Sí, lo tengo","No, necesito que me hagan uno"]},
+      {id:"logo_archivo", type:"file", multiple:true, label:"Subí tu logo", help:"Ideal en PNG con fondo transparente. Si tenés varias versiones, subilas todas.", required:true,
+        showIf:{field:"tiene_logo", eq:"Sí, lo tengo"}},
+      {id:"fotos", type:"file", multiple:true, label:"Subí fotos reales de tu negocio (recomendado)", help:"Hasta 5 fotos de tu negocio, planta, productos o equipo. Evitá fotos de stock — las reales hacen toda la diferencia. Si todavía no tenés, dejalo y las coordinamos después.", required:false},
       {id:"identidad", type:"radio", label:"¿Tenés definidos colores de marca, tipografía o un manual?", required:true,
         options:["Sí, los tengo","No, todavía no"]},
       {id:"identidad_archivo", type:"file", multiple:true, label:"Subí tu manual de marca o paleta de colores", required:false,
@@ -359,7 +349,7 @@ const SECTIONS = [
         showIf:{field:"lead_magnet", notEq:"Por ahora ninguno"}},
       {id:"crm", type:"radio", label:"¿Usás algún CRM o herramienta de email marketing?", required:true,
         options:["HubSpot","Salesforce","Clientify","Mailchimp","ActiveCampaign","Google Sheets (planilla)","Ninguno — quiero que me recomienden"]},
-      {id:"metricas", type:"checkbox", label:"¿Qué métricas te gustaría ver en tu panel?", required:true,
+      {id:"metricas", type:"checkbox", label:"¿Qué métricas de tu sitio web querés seguir en el panel?", required:true,
         options:["Cantidad de visitas por página","Cantidad de formularios completados","Origen de los leads (Google, redes, etc.)","Tasa de conversión"]}
     ]
   },
@@ -378,7 +368,7 @@ const SECTIONS = [
         showIf:{field:"formularios_diferentes", eq:"Sí"}},
       {id:"crm_integracion", type:"radio", label:"¿Qué nivel de integración con el CRM necesitás?", required:true,
         options:["Sincronización básica (contactos)","Sincronización de oportunidades / negocios"]},
-      {id:"kpis", type:"textarea", label:"En el panel en tiempo real, ¿qué indicadores (KPIs) son prioritarios para vos?", required:true},
+      {id:"kpis", type:"textarea", label:"Además de las métricas de la web, ¿qué KPIs de tu negocio querés seguir en el panel?", help:"Indicadores de negocio, no de la web. Ej: ventas cerradas, ticket promedio, costo por lead, tasa de cierre.", required:true},
       {id:"req_tecnico", type:"textarea", label:"¿Tenés algún requerimiento técnico especial o integración con otros sistemas?", help:"Ej: ERP, Tango, SAP, facturación, logística… Si no aplica, escribí 'no'.", required:true},
       {id:"flujo_aprobacion", type:"textarea", label:"¿Hay algún flujo de aprobación o proceso interno que deba reflejarse en el sistema?", help:"Si no aplica, escribí 'no'.", required:true},
       {id:"plazo", type:"radio", label:"¿Qué plazo estimado tenés para la implementación?", required:true,
@@ -414,10 +404,8 @@ const SECTIONS = [
       {id:"automatizaciones_detalle", type:"textarea", label:"Describí las condiciones que imaginás", required:true,
         showIf:{field:"automatizaciones", eq:"Sí"}},
       {id:"decisores", type:"text", label:"¿Quién o quiénes toman las decisiones finales en este proyecto?", help:"Indicá el/los cargo/s.", required:true},
-      {id:"garantia", type:"radio", label:"¿La garantía extendida de 12 meses es un requisito fundamental para ustedes?", required:true,
-        options:["Sí","No","Me interesa, pero necesito más detalles"]},
-      {id:"sla", type:"radio", label:"¿Qué nivel de soporte técnico (SLA) esperás?", required:true,
-        options:["Horario comercial (respuesta en 24h)","Prioritario (respuesta en 4-8h)","24/7 para emergencias"]},
+      {id:"sla", type:"radio", label:"Tu plan ya incluye soporte post-implementación. ¿Qué nivel de respuesta necesitás para tu operación?", help:"Esto nos sirve para coordinar tiempos; no cambia lo que ya contrataste.", required:true,
+        options:["Horario comercial (respuesta dentro de 24h hábiles)","Prioritario (respuesta en 4-8h)","24/7 para emergencias (servicio adicional)"]},
       {id:"contacto_pref", type:"radio", label:"¿Cómo preferís que te contactemos para coordinar los próximos pasos?", required:true,
         options:["Email","WhatsApp"]}
     ]
@@ -433,7 +421,7 @@ const SECTIONS = [
 ];
 
 /* ===================== ESTADO Y RENDER ===================== */
-const state = { plan:null, step:0, sections:[], answers:{}, files:{}, review:false };
+const state = { plan:null, step:0, sections:[], answers:{}, files:{} };
 
 function getPlanFromUrl(){
   const p = new URLSearchParams(location.search).get("plan");
@@ -464,7 +452,6 @@ function startForm(plan){
   state.sections = visibleSections(plan);
   document.getElementById("landing").style.display="none";
   document.getElementById("formShell").classList.add("active");
-  document.getElementById("revToggle").classList.add("show");
   document.getElementById("stPlan").textContent = PLANS[plan].label;
   document.getElementById("mbPlan").textContent = PLANS[plan].label;
   buildPanels();
@@ -602,7 +589,6 @@ function clearError(el){
   if(div) div.classList.remove("invalid");
 }
 function validateStep(idx){
-  if(state.review) return true;   // modo revisión: avanzar sin completar
   const sec = state.sections[idx];
   let ok=true, firstBad=null;
   sec.fields.forEach(f=>{
@@ -682,7 +668,6 @@ async function submitForm(){
 function showDone(payload, enviado){
   document.getElementById("formShell").classList.remove("active");
   document.getElementById("formShell").style.display="none";
-  document.getElementById("revToggle").classList.remove("show");
   document.getElementById("doneScreen").classList.add("active");
   document.getElementById("doneNext").innerHTML =
     `<b style="color:#fff">¿Qué sigue?</b><br>Revisamos todo lo que cargaste y nos ponemos en contacto dentro de las próximas 24hs hábiles para arrancar con tu proyecto.`;
@@ -697,20 +682,8 @@ function showDone(payload, enviado){
   window.scrollTo(0,0);
 }
 
-/* ---- modo revisión ---- */
-function initReviewToggle(){
-  const btn=document.getElementById("revToggle");
-  btn.onclick=()=>{
-    state.review=!state.review;
-    btn.classList.toggle("on", state.review);
-    document.getElementById("revLabel").textContent="Modo revisión: "+(state.review?"ON":"OFF");
-    if(state.review){ document.querySelectorAll(".field.invalid").forEach(d=>d.classList.remove("invalid")); }
-  };
-}
-
 /* ---- init ---- */
 renderLanding();
-initReviewToggle();
 const urlPlan = getPlanFromUrl();
 if(urlPlan){ startForm(urlPlan); }
 </script>

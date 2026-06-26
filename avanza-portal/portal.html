@@ -1372,7 +1372,7 @@ html.avz-collapsed #avz-sidebar .avz-exit span{ display:none; }
       <button class="avz-nav-item tab-btn" id="btn-tab-academia-primary" data-tab="academia" onclick="cambiarTab('academia',this)"><i class="fa-solid fa-graduation-cap"></i><span class="lb">Academia</span><span id="academia-progress-badge" class="pill" style="display:none;background:var(--orange);color:#000;"></span><span class="tip">Academia</span></button>
       <button class="avz-nav-item tab-btn" data-tab="herramientas" onclick="cambiarTab('herramientas',this)"><i class="fa-solid fa-magnifying-glass"></i><span class="lb">Auditorías</span><span class="tip">Auditorías</span></button>
       <button class="avz-nav-item tab-btn" data-tab="red" onclick="cambiarTab('red',this)"><i class="fa-solid fa-users-rays"></i><span class="lb">Mi Red</span><span class="tip">Mi Red</span></button>
-      <button class="avz-nav-item tab-btn tab-canal1" data-tab="equipo" onclick="cambiarTab('equipo',this)"><i class="fa-solid fa-people-arrows"></i><span class="lb">Mi Equipo</span><span class="tip">Mi Equipo</span></button>
+      <button class="avz-nav-item tab-btn" data-tab="equipo" onclick="cambiarTab('equipo',this)"><i class="fa-solid fa-people-arrows"></i><span class="lb">Mi Equipo</span><span class="tip">Mi Equipo</span></button>
       <button class="avz-nav-item tab-btn" data-tab="comunidad" onclick="cambiarTab('comunidad',this)"><i class="fa-solid fa-comments"></i><span class="lb">Comunidad</span><span class="tip">Comunidad</span></button>
       <button class="avz-nav-item tab-btn" data-tab="jarvis" onclick="cambiarTab('jarvis',this)"><i class="fa-solid fa-bolt" style="color:#7fd8ff;"></i><span class="lb">JARVIS IA</span><span class="tip">JARVIS IA</span></button>
     </nav>
@@ -1887,7 +1887,7 @@ html.avz-collapsed #avz-sidebar .avz-exit span{ display:none; }
             <div style="font-size:.95rem;font-weight:800;margin-bottom:4px;">Brochure de Planes</div>
             <div style="font-size:.8rem;color:var(--text-muted);line-height:1.5;">El PDF que le mostrás al cliente. Resume los 4 planes, los casos de éxito y los precios. Mandalo por WhatsApp antes o después de la conversación.</div>
           </div>
-          <a href="#" onclick="descargarPDF('https://drive.google.com/uc?export=download&id=1RL3N3TQLa4gZBBema51LNaqiCc2SsJ0M','Brochure_Comercial_AvanzaDigital_v4.pdf');return false;" class="btn-primary" style="display:inline-flex;align-items:center;gap:6px;font-size:.82rem;padding:10px 16px;text-decoration:none;border-radius:8px;width:fit-content;">
+          <a href="#" onclick="descargarPDF('https://drive.google.com/uc?export=download&id=1Zt0Z8mTih3z7ZFVqwdiaKV6nnXBM-LKU','Brochure_Comercial_AvanzaDigital_v4.pdf');return false;" class="btn-primary" style="display:inline-flex;align-items:center;gap:6px;font-size:.82rem;padding:10px 16px;text-decoration:none;border-radius:8px;width:fit-content;">
             <i class="fa-solid fa-download"></i> Descargar PDF
           </a>
         </div>
@@ -1931,6 +1931,38 @@ html.avz-collapsed #avz-sidebar .avz-exit span{ display:none; }
           </div>
           <a href="#" onclick="descargarPDF('https://drive.google.com/uc?export=download&id=1V9HIVq6UCAIu1a_UsG8_dW3msXXtvhBX','Guion_Ventas_Por_Rubro_v2.pdf');return false;" class="btn-primary" style="display:inline-flex;align-items:center;gap:6px;font-size:.82rem;padding:10px 16px;text-decoration:none;border-radius:8px;width:fit-content;">
             <i class="fa-solid fa-download"></i> Descargar PDF
+          </a>
+        </div>
+
+        <!-- Card 4: Manual de Producto -->
+        <div style="background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:var(--radius);padding:24px;display:flex;flex-direction:column;gap:12px;">
+          <div style="width:40px;height:40px;background:rgba(96,165,250,0.15);border-radius:10px;display:flex;align-items:center;justify-content:center;">
+            <i class="fa-solid fa-circle-info" style="color:#60a5fa;font-size:1.1rem;"></i>
+          </div>
+          <div>
+            <div style="font-size:.95rem;font-weight:800;margin-bottom:4px;">Manual de Producto</div>
+            <div style="font-size:.8rem;color:var(--text-muted);line-height:1.5;">Qué es Avanza por dentro, qué recibe el cliente en cada plan y las respuestas a las preguntas técnicas más comunes. Para que vendas con seguridad.</div>
+          </div>
+          <a href="#" onclick="descargarPDF('https://drive.google.com/uc?export=download&id=11Zoqcj4N5wiRb3pX_tnD4Sv2bTI2AhY2','Manual_Producto_Aliados_AvanzaDigital.pdf');return false;" class="btn-primary" style="display:inline-flex;align-items:center;gap:6px;font-size:.82rem;padding:10px 16px;text-decoration:none;border-radius:8px;width:fit-content;">
+            <i class="fa-solid fa-download"></i> Descargar PDF
+          </a>
+        </div>
+
+        <!-- Card 5: Ver Demo -->
+        <div style="background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:var(--radius);padding:24px;display:flex;flex-direction:column;gap:12px;">
+          <div style="width:40px;height:40px;background:rgba(167,139,250,0.15);border-radius:10px;display:flex;align-items:center;justify-content:center;">
+            <i class="fa-solid fa-display" style="color:#a78bfa;font-size:1.1rem;"></i>
+          </div>
+          <div>
+            <div style="font-size:.95rem;font-weight:800;margin-bottom:4px;">Demo de la Plataforma</div>
+            <div style="font-size:.8rem;color:var(--text-muted);line-height:1.5;">Mirá por dentro el sistema que vas a vender: así luce el panel con datos de ejemplo.</div>
+          </div>
+          <div style="background:rgba(249,115,22,0.08);border:1px solid rgba(249,115,22,0.25);border-radius:8px;padding:8px 10px;display:flex;gap:8px;align-items:flex-start;">
+            <i class="fa-solid fa-triangle-exclamation" style="color:#f97316;font-size:.75rem;margin-top:2px;flex-shrink:0;"></i>
+            <div style="font-size:.72rem;color:var(--text-muted);line-height:1.4;">Es solo una demo para que veas qué vas a vender. No se la compartas al cliente: no es el producto final, es de uso interno tuyo.</div>
+          </div>
+          <a href="https://avanzadigital.digital/demo.html" target="_blank" rel="noopener" class="btn-primary" style="display:inline-flex;align-items:center;gap:6px;font-size:.82rem;padding:10px 16px;text-decoration:none;border-radius:8px;width:fit-content;">
+            <i class="fa-solid fa-eye"></i> Ver Demo
           </a>
         </div>
 
@@ -2009,7 +2041,7 @@ html.avz-collapsed #avz-sidebar .avz-exit span{ display:none; }
               <div style="font-size:.92rem;font-weight:800;margin-bottom:4px;">Proveedor B2B</div>
               <div style="font-size:.78rem;color:var(--text-muted);line-height:1.5;">Si vendés insumos, servicios o productos a empresas industriales. Cómo presentarlo a clientes que ya confían en vos.</div>
             </div>
-            <a href="#" onclick="descargarPDF('https://drive.google.com/uc?export=download&id=1HzOldnXGD8jkPrFuY95XyXcQ5-7SKT7w','Guion_Ventas_Canal2_Proveedor_v1.pdf');return false;" class="btn-primary" style="display:inline-flex;align-items:center;gap:6px;font-size:.78rem;padding:9px 14px;text-decoration:none;border-radius:8px;width:fit-content;">
+            <a href="#" onclick="descargarPDF('https://drive.google.com/uc?export=download&id=1KBzZB9XMmwjDhGFOO0kuCp7yIe6eCXM7','Guion_Ventas_Canal2_Proveedor_v1.pdf');return false;" class="btn-primary" style="display:inline-flex;align-items:center;gap:6px;font-size:.78rem;padding:9px 14px;text-decoration:none;border-radius:8px;width:fit-content;">
               <i class="fa-solid fa-download"></i> Descargar PDF
             </a>
           </div>
@@ -3406,34 +3438,6 @@ html.avz-collapsed #avz-sidebar .avz-exit span{ display:none; }
     <div>
       <div style="font-size:.72rem; color:var(--text-dim); text-transform:uppercase; letter-spacing:.06em; font-weight:700; margin-bottom:6px;">Historial</div>
       <div id="ficha-timeline"></div>
-    </div>
-  </div>
-</div>
-
-<div class="modal-overlay" id="modal-nueva-pass">
-  <div class="onboarding-box" style="max-width:460px;padding:0;">
-    <div style="border-bottom:1px solid var(--border);padding:18px 24px;">
-      <h3 style="font-size:1rem;font-weight:800;margin:0;">
-        <i class="fa-solid fa-lock" style="color:var(--primary);"></i> &nbsp;Crear nueva contraseña
-      </h3>
-    </div>
-    <div style="padding:24px;">
-      <p style="font-size:.88rem;color:var(--text-muted);margin-bottom:18px;line-height:1.6;">
-        Elegí una nueva contraseña para tu cuenta. Mínimo 6 caracteres.
-      </p>
-      <label style="font-size:.75rem;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;display:block;margin-bottom:6px;">Nueva contraseña</label>
-      <input type="password" id="nueva-pass-input" placeholder="••••••••"
-             style="width:100%;background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:var(--radius-sm);padding:11px 14px;color:var(--text);font-size:.9rem;font-family:'Inter',sans-serif;outline:none;margin-bottom:10px;"
-             onkeydown="if(event.key==='Enter')confirmarNuevaPass()">
-      <label style="font-size:.75rem;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;display:block;margin-bottom:6px;">Confirmá la contraseña</label>
-      <input type="password" id="nueva-pass-confirm" placeholder="••••••••"
-             style="width:100%;background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:var(--radius-sm);padding:11px 14px;color:var(--text);font-size:.9rem;font-family:'Inter',sans-serif;outline:none;margin-bottom:14px;"
-             onkeydown="if(event.key==='Enter')confirmarNuevaPass()">
-      <div id="nueva-pass-estado" style="font-size:.82rem;min-height:20px;margin-bottom:14px;"></div>
-      <button onclick="confirmarNuevaPass()" id="btn-confirmar-nueva-pass"
-              style="width:100%;background:var(--primary);color:white;border:none;border-radius:8px;padding:12px;font-weight:800;cursor:pointer;font-size:.9rem;">
-        <i class="fa-solid fa-check"></i> Guardar contraseña
-      </button>
     </div>
   </div>
 </div>

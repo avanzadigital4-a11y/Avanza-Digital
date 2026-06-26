@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>Recuperar contraseña — Avanza Digital</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><path d=%22M10 20 L40 50 L10 80 L30 80 L60 50 L30 20 Z%22 fill=%22%230044cc%22/><path d=%22M45 20 L75 50 L45 80 L65 80 L95 50 L65 20 Z%22 fill=%22%2300cccc%22/></svg>">
+
+<style>
+  :root{
+    --bg:#050505; --bg2:#0a0a0a; --border:rgba(255,255,255,0.08); --border-h:rgba(255,255,255,0.15);
+    --orange:#f97316; --orange-h:#ea6a0c; --green:#4ade80; --red:#ef4444; --amber:#facc15;
+    --text:#ffffff; --text-muted:#a1a1aa; --text-dim:#71717a; --radius:16px; --radius-sm:10px;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0; padding:0;}
+  body{
+    font-family:'Inter',sans-serif; background:var(--bg); color:var(--text);
+    min-height:100vh; display:flex; align-items:center; justify-content:center;
+    padding:24px;
+    background-image:radial-gradient(ellipse at 50% 0%, rgba(249,115,22,0.08) 0%, transparent 60%);
+  }
+  .card{
+    width:100%; max-width:440px; background:var(--bg2); border:1px solid var(--border);
+    border-radius:var(--radius); overflow:hidden; box-shadow:0 24px 70px rgba(0,0,0,0.55);
+    animation:fadeIn .35s ease;
+  }
+  @keyframes fadeIn{from{opacity:0; transform:translateY(10px);} to{opacity:1; transform:none;}}
+  .card-head{
+    padding:26px 28px 18px; border-bottom:1px solid var(--border); text-align:center;
+  }
+  .logo{ font-size:1.7rem; margin-bottom:10px; }
+  .logo i{ color:var(--orange); }
+  .card-head h1{ font-size:1.15rem; font-weight:800; margin:0 0 4px; }
+  .card-head p{ font-size:.85rem; color:var(--text-muted); margin:0; line-height:1.5; }
+  .card-body{ padding:26px 28px 30px; }
+
+  label{
+    font-size:.72rem; font-weight:700; color:var(--text-muted); text-transform:uppercase;
+    letter-spacing:1px; display:block; margin-bottom:7px;
+  }
+  .field{ position:relative; margin-bottom:16px; }
+  input[type=password], input[type=text]{
+    width:100%; background:rgba(255,255,255,0.04); border:1px solid var(--border);
+    border-radius:var(--radius-sm); padding:12px 44px 12px 14px; color:var(--text);
+    font-size:.92rem; font-family:'Inter',sans-serif; outline:none; transition:border-color .2s;
+  }
+  input:focus{ border-color:var(--orange); }
+  .toggle-eye{
+    position:absolute; right:12px; top:38px; background:none; border:none; color:var(--text-dim);
+    cursor:pointer; font-size:.95rem; padding:4px;
+  }
+  .toggle-eye:hover{ color:var(--text-muted); }
+
+  .hint{ font-size:.76rem; color:var(--text-dim); margin:-8px 0 16px; }
+  .estado{ font-size:.84rem; min-height:22px; margin-bottom:14px; line-height:1.5; }
+  .estado .ok{ color:var(--green); } .estado .warn{ color:var(--amber); } .estado .err{ color:var(--red); }
+
+  button.primary{
+    width:100%; background:var(--orange); color:#000; border:none; border-radius:var(--radius-sm);
+    padding:13px; font-weight:800; cursor:pointer; font-size:.92rem; font-family:'Inter',sans-serif;
+    transition:background .2s; display:flex; align-items:center; justify-content:center; gap:8px;
+  }
+  button.primary:hover:not(:disabled){ background:var(--orange-h); }
+  button.primary:disabled{ opacity:.6; cursor:not-allowed; }
+
+  .spinner{
+    width:15px; height:15px; border:2px solid rgba(0,0,0,0.3); border-top-color:#000;
+    border-radius:50%; animation:spin .7s linear infinite; display:inline-block;
+  }
+  @keyframes spin{to{transform:rotate(360deg);}}
+
+  .foot{ text-align:center; margin-top:18px; font-size:.8rem; }
+  .foot a{ color:var(--orange); text-decoration:none; font-weight:600; }
+  .foot a:hover{ text-decoration:underline; }
+  .legal{ text-align:center; margin-top:22px; font-size:.72rem; color:var(--text-dim); }
+
+  /* Estados de pantalla completa (token faltante / éxito) */
+  .panel-msg{ text-align:center; padding:10px 4px; }
+  .panel-msg .big-ico{ font-size:2.6rem; margin-bottom:14px; }
+  .panel-msg .big-ico.ok{ color:var(--green); } .panel-msg .big-ico.err{ color:var(--red); }
+  .panel-msg h2{ font-size:1.1rem; font-weight:800; margin:0 0 8px; }
+  .panel-msg p{ font-size:.88rem; color:var(--text-muted); line-height:1.6; margin:0 0 22px; }
+  .hidden{ display:none !important; }
+</style>
+</head>
+<body>
+
+<div class="card">
+  <div class="card-head">
+    <div class="logo"><i class="fa-solid fa-key"></i></div>
+    <h1>Crear nueva contraseña</h1>
+    <p>Avanza Digital · Portal de Aliados</p>
+  </div>
+
+  <div class="card-body">
+
+    <!-- ── FORMULARIO (token válido en URL) ── -->
+    <div id="form-view">
+      <p class="hint" style="margin-top:0;margin-bottom:18px;color:var(--text-muted);font-size:.86rem;line-height:1.6;">
+        Elegí una contraseña nueva para tu cuenta. Mínimo 6 caracteres.
+      </p>
+
+      <div class="field">
+        <label for="pass1">Nueva contraseña</label>
+        <input type="password" id="pass1" placeholder="••••••••" autocomplete="new-password"
+               onkeydown="if(event.key==='Enter')document.getElementById('pass2').focus()">
+        <button type="button" class="toggle-eye" data-target="pass1" aria-label="Mostrar contraseña">
+          <i class="fa-solid fa-eye"></i>
+        </button>
+      </div>
+
+      <div class="field">
+        <label for="pass2">Confirmá la contraseña</label>
+        <input type="password" id="pass2" placeholder="••••••••" autocomplete="new-password"
+               onkeydown="if(event.key==='Enter')guardar()">
+        <button type="button" class="toggle-eye" data-target="pass2" aria-label="Mostrar contraseña">
+          <i class="fa-solid fa-eye"></i>
+        </button>
+      </div>
+
+      <div class="estado" id="estado"></div>
+
+      <button class="primary" id="btn-guardar" onclick="guardar()">
+        <i class="fa-solid fa-check"></i> Guardar contraseña
+      </button>
+    </div>
+
+    <!-- ── ÉXITO ── -->
+    <div id="ok-view" class="panel-msg hidden">
+      <div class="big-ico ok"><i class="fa-solid fa-circle-check"></i></div>
+      <h2>¡Contraseña actualizada!</h2>
+      <p>Ya podés iniciar sesión con tu nueva contraseña.</p>
+      <a href="portal.html" style="text-decoration:none;">
+        <button class="primary"><i class="fa-solid fa-arrow-right-to-bracket"></i> Ir al portal</button>
+      </a>
+    </div>
+
+    <!-- ── TOKEN FALTANTE / INVÁLIDO EN URL ── -->
+    <div id="notoken-view" class="panel-msg hidden">
+      <div class="big-ico err"><i class="fa-solid fa-link-slash"></i></div>
+      <h2>Link inválido o incompleto</h2>
+      <p>Este enlace no contiene un código de recuperación válido. Puede que haya expirado o que el link se haya cortado al copiarlo. Pedí uno nuevo desde el portal.</p>
+      <a href="portal.html" style="text-decoration:none;">
+        <button class="primary"><i class="fa-solid fa-rotate-right"></i> Pedir un link nuevo</button>
+      </a>
+    </div>
+
+    <div class="foot" id="foot">
+      <a href="portal.html"><i class="fa-solid fa-arrow-left" style="font-size:.72rem;"></i> Volver al portal</a>
+    </div>
+  </div>
+</div>
+
+<script>
+  const API = 'https://avanza-digital.onrender.com';
+
+  // Leer el token de la URL
+  const params = new URLSearchParams(window.location.search);
+  const TOKEN = (params.get('reset_token') || '').trim();
+
+  const $ = id => document.getElementById(id);
+
+  // Si no hay token → mostrar pantalla de link inválido
+  if (!TOKEN) {
+    $('form-view').classList.add('hidden');
+    $('notoken-view').classList.remove('hidden');
+    $('foot').classList.add('hidden');
+  }
+
+  // Mostrar/ocultar contraseña
+  document.querySelectorAll('.toggle-eye').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const inp = $(btn.dataset.target);
+      const ico = btn.querySelector('i');
+      if (inp.type === 'password') { inp.type = 'text'; ico.className = 'fa-solid fa-eye-slash'; }
+      else { inp.type = 'password'; ico.className = 'fa-solid fa-eye'; }
+    });
+  });
+
+  async function guardar() {
+    const nueva   = ($('pass1').value || '').trim();
+    const confirm = ($('pass2').value || '').trim();
+    const estado  = $('estado');
+    const btn     = $('btn-guardar');
+
+    if (!nueva || !confirm) { estado.innerHTML = '<span class="warn">Completá ambos campos.</span>'; return; }
+    if (nueva.length < 6)   { estado.innerHTML = '<span class="warn">La contraseña debe tener al menos 6 caracteres.</span>'; return; }
+    if (nueva !== confirm)  { estado.innerHTML = '<span class="warn">Las contraseñas no coinciden.</span>'; return; }
+
+    estado.innerHTML = '';
+    btn.innerHTML = '<span class="spinner"></span> Guardando...';
+    btn.disabled = true;
+
+    try {
+      const res = await fetch(`${API}/auth/resetear`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token: TOKEN, nueva_password: nueva }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.detail || 'El link es inválido o expiró. Pedí uno nuevo.');
+
+      // Éxito → cambiar a la vista de confirmación
+      $('form-view').classList.add('hidden');
+      $('foot').classList.add('hidden');
+      $('ok-view').classList.remove('hidden');
+    } catch (e) {
+      estado.innerHTML = `<span class="err"><i class="fa-solid fa-circle-xmark"></i> ${e.message}</span>`;
+      btn.innerHTML = '<i class="fa-solid fa-check"></i> Guardar contraseña';
+      btn.disabled = false;
+    }
+  }
+</script>
+
+</body>
+</html>

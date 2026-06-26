@@ -885,7 +885,7 @@ function _inyectarGuionRecomendado(aliado) {
     'Consultor Industrial':    { id: '1cZICwO6cfT4MmLj7gn37clCr-nN6mgcW', nombre: 'Guón Canal 2 — Consultores' },
     'Estudio Contable':        { id: '1hT4iHxV-2suvC4LAlg2Y0y7gvUsM25iN', nombre: 'Guón Canal 2 — Contadores' },
     'Agencia B2B':             { id: '1GH0y75Db9LtTRUweAnQBm4ZKw9fHkf1H', nombre: 'Guón Canal 2 — Agencias' },
-    'Proveedor de Industrias': { id: '1HzOldnXGD8jkPrFuY95XyXcQ5-7SKT7w', nombre: 'Guón Canal 2 — Proveedores' },
+    'Proveedor de Industrias': { id: '1KBzZB9XMmwjDhGFOO0kuCp7yIe6eCXM7', nombre: 'Guón Canal 2 — Proveedores' },
   };
   const guion = GUIONES_C2[aliado.perfil];
   if (!guion) return;
@@ -1842,55 +1842,6 @@ async function enviarRecuperacionPass() {
     estado.innerHTML = `<span style="color:var(--red);">Error al enviar. Intentá de nuevo.</span>`;
     btn.innerHTML = '<i class="fa-solid fa-paper-plane"></i> Enviar link';
     btn.disabled = false;
-  }
-}
-
-// ─── MODAL NUEVA CONTRASEÑA (desde ?reset_token=) ────────────────────────────
-let _resetToken = null;
-
-function checkResetToken() {
-  const params = new URLSearchParams(window.location.search);
-  const token  = params.get('reset_token');
-  if(!token) return;
-  _resetToken = token;
-  // Limpiar la URL sin recargar
-  window.history.replaceState({}, document.title, window.location.pathname);
-  // Abrir modal
-  document.getElementById('nueva-pass-input').value   = '';
-  document.getElementById('nueva-pass-confirm').value = '';
-  document.getElementById('nueva-pass-estado').innerHTML = '';
-  document.getElementById('modal-nueva-pass').classList.add('open');
-}
-
-async function confirmarNuevaPass() {
-  const nueva   = (document.getElementById('nueva-pass-input').value   || '').trim();
-  const confirm = (document.getElementById('nueva-pass-confirm').value || '').trim();
-  const estado  = document.getElementById('nueva-pass-estado');
-  const btn     = document.getElementById('btn-confirmar-nueva-pass');
-
-  if(!nueva || !confirm) { estado.innerHTML = `<span style="color:var(--amber);">Completá ambos campos.</span>`; return; }
-  if(nueva.length < 6)   { estado.innerHTML = `<span style="color:var(--amber);">Mínimo 6 caracteres.</span>`; return; }
-  if(nueva !== confirm)  { estado.innerHTML = `<span style="color:var(--amber);">Las contraseñas no coinciden.</span>`; return; }
-
-  btn.innerHTML = '<span class="spinner"></span> Guardando...';
-  btn.disabled  = true;
-
-  try {
-    const res = await fetch(`${API}/auth/resetear`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ token: _resetToken, nueva_password: nueva }),
-    });
-    const data = await res.json();
-    if(!res.ok) throw new Error(data.detail || 'Token inválido o expirado.');
-
-    estado.innerHTML = `<span style="color:var(--green);"><i class="fa-solid fa-circle-check"></i> ¡Contraseña actualizada! Ya podés iniciar sesión.</span>`;
-    btn.innerHTML = '<i class="fa-solid fa-check"></i> ¡Listo!';
-    setTimeout(() => document.getElementById('modal-nueva-pass').classList.remove('open'), 2500);
-  } catch(e) {
-    estado.innerHTML = `<span style="color:var(--red);"><i class="fa-solid fa-circle-xmark"></i> ${e.message}</span>`;
-    btn.innerHTML = '<i class="fa-solid fa-check"></i> Guardar contraseña';
-    btn.disabled  = false;
   }
 }
 
@@ -5605,8 +5556,6 @@ document.addEventListener('DOMContentLoaded', () => {
   // Auto-login con sesión guardada (30 días)
   intentarAutoLogin();
 
-  // Detectar ?reset_token= en la URL y abrir modal de nueva contraseña
-  checkResetToken();
 
   // Preservar ref sponsor si viene en la URL (ej: alianzas?ref=xyz)
   const _initRef = new URLSearchParams(window.location.search).get('ref');
@@ -6247,6 +6196,14 @@ const ACADEMIA_MODULOS = [
             <i class="fa-solid fa-book" style="color:#3b82f6;"></i>
             <div><div class="dl-title">Guión por Rubro v2</div><div class="dl-sub">Casos por industria para cerrar</div></div>
           </a>
+          <a class="aca-download" href="#" onclick="descargarPDF('https://drive.google.com/uc?export=download&id=1AbJJPQYD2js_QmrxTmpv2K73iCs6Z0hW','Manual_Producto_Aliados_AvanzaDigital.pdf');return false;">
+            <i class="fa-solid fa-circle-info" style="color:#a78bfa;"></i>
+            <div><div class="dl-title">Manual de Producto</div><div class="dl-sub">Qué vendés por dentro, para responder con seguridad</div></div>
+          </a>
+          <a class="aca-download" href="https://avanzadigital.digital/demo.html" target="_blank" rel="noopener">
+            <i class="fa-solid fa-display" style="color:#22d3ee;"></i>
+            <div><div class="dl-title">Ver Demo de la Plataforma</div><div class="dl-sub">Es solo una demo, no el producto final — no se la mandes al cliente</div></div>
+          </a>
         </div>
 
       <h3>Kit de Marca · Tu presencia online</h3>
@@ -6374,7 +6331,7 @@ const ACADEMIA_MODULOS = [
             <div class="dl-sub">Lo introducís en la revisión mensual con los números del cliente</div>
           </div>
         </a>
-        <a class="aca-download" href="#" onclick="descargarPDF('https://drive.google.com/uc?export=download&id=1HzOldnXGD8jkPrFuY95XyXcQ5-7SKT7w','Guion_Ventas_Canal2_Proveedor_v1.pdf');return false;">
+        <a class="aca-download" href="#" onclick="descargarPDF('https://drive.google.com/uc?export=download&id=1KBzZB9XMmwjDhGFOO0kuCp7yIe6eCXM7','Guion_Ventas_Canal2_Proveedor_v1.pdf');return false;">
           <i class="fa-solid fa-truck" style="color:#a78bfa;"></i>
           <div>
             <div class="dl-title">Guión — Proveedor B2B</div>

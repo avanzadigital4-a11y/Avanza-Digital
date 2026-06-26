@@ -348,6 +348,7 @@ tr:hover td { background:rgba(255,255,255,0.02); }
       <button class="tab-btn" onclick="cambiarTab('suspendidos',this)"><i class="fa-solid fa-user-slash"></i> Suspendidos <span id="badge-susp" style="display:none;background:var(--red);color:white;font-size:.65rem;font-weight:800;padding:2px 7px;border-radius:50px;margin-left:2px;">0</span></button>
       <button class="tab-btn" onclick="cambiarTab('referidos',this)"><i class="fa-solid fa-bell"></i> Referidos <span id="badge-ref" style="display:none;background:var(--red);color:white;font-size:.65rem;font-weight:800;padding:2px 7px;border-radius:50px;margin-left:2px;">0</span></button>
       <button class="tab-btn" onclick="cambiarTab('ventas',this)"><i class="fa-solid fa-handshake"></i> Ventas</button>
+      <button class="tab-btn" onclick="cambiarTab('onboarding',this)"><i class="fa-solid fa-clipboard-list"></i> Onboarding</button>
       <button class="tab-btn" onclick="cambiarTab('prospectos',this)"><i class="fa-solid fa-bullseye"></i> Prospectos <span id="badge-prosp" style="display:none;background:var(--red);color:white;font-size:.65rem;font-weight:800;padding:2px 7px;border-radius:50px;margin-left:2px;">0</span></button>
       <button class="tab-btn" onclick="cambiarTab('embudo',this)"><i class="fa-solid fa-filter"></i> Embudo</button>
       <button class="tab-btn" onclick="cambiarTab('auditorias',this)"><i class="fa-solid fa-magnifying-glass"></i> Auditorías</button>
@@ -360,6 +361,25 @@ tr:hover td { background:rgba(255,255,255,0.02); }
       <button class="tab-btn" onclick="cambiarTab('solicitudes',this)"><i class="fa-solid fa-coins"></i> Compra de créditos <span id="badge-sol" style="display:none;background:var(--amber);color:#000;font-size:.65rem;font-weight:800;padding:2px 7px;border-radius:50px;margin-left:2px;">0</span></button>
       <button class="tab-btn" onclick="cambiarTab('academia',this)"><i class="fa-solid fa-graduation-cap"></i> Academia</button>
       <button class="tab-btn" onclick="cambiarTab('nuevo-aliado',this)"><i class="fa-solid fa-user-plus"></i> Nuevo aliado</button>
+    </div>
+
+    <div id="tab-onboarding" class="tab-panel">
+      <div class="section-header">
+        <div>
+          <div class="section-title"><i class="fa-solid fa-clipboard-list" style="color:#3b82f6;"></i> Onboarding de clientes</div>
+          <div class="section-sub">Formularios de inicio que completan los clientes tras pagar. Mirá las respuestas y descargá los archivos.</div>
+        </div>
+        <button class="tab-btn" onclick="cargarOnboarding()"><i class="fa-solid fa-rotate"></i> Actualizar</button>
+      </div>
+
+      <div id="onb-lista-wrap" class="table-wrap" style="padding:0;overflow:hidden;">
+        <div id="onb-lista" style="padding:18px;color:var(--text-muted);">Cargando…</div>
+      </div>
+
+      <div id="onb-detalle" style="display:none;">
+        <button class="tab-btn" onclick="cerrarOnbDetalle()"><i class="fa-solid fa-arrow-left"></i> Volver a la lista</button>
+        <div id="onb-detalle-cont" style="margin-top:16px;"></div>
+      </div>
     </div>
 
     <div id="tab-dashboard" class="tab-panel active">
@@ -2525,9 +2545,111 @@ function cambiarTab(tab, btn) {
   if(tab==='academia')    cargarAdminAcademia();
       if(tab==='email')       cargarEmailMetricas();
       if(tab==='comunidad')   cargarAdminComunidad();
+  if(tab==='onboarding')  cargarOnboarding();
 }
 
 // ── EMBUDO DE ACTIVACIÓN ─────────────────────────────────────────────────────
+
+// ── ONBOARDING DE CLIENTES ───────────────────────────────────────────────────
+function onbEsc(x){ return String(x==null?'':x).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function onbPlanBadge(plan){
+  const labels = {base:'Base', pro:'Pro', industrial:'Industrial', '360':'360'};
+  const txt = labels[plan] || plan || '—';
+  return '<span style="background:rgba(59,130,246,.15);color:#60a5fa;font-size:.7rem;font-weight:700;padding:2px 8px;border-radius:50px;">'+onbEsc(txt)+'</span>';
+}
+
+async function cargarOnboarding(){
+  document.getElementById('onb-detalle').style.display = 'none';
+  document.getElementById('onb-lista-wrap').style.display = '';
+  const cont = document.getElementById('onb-lista');
+  cont.innerHTML = 'Cargando…';
+  try{
+    const r = await apiFetch('/admin/onboarding');
+    if(!r.ok) throw new Error('Error ' + r.status + ' (¿sesión de admin iniciada?)');
+    const data = await r.json();
+    if(!data.length){ cont.innerHTML = '<div style="padding:30px;text-align:center;color:var(--text-muted);">Todavía no hay onboardings recibidos.</div>'; return; }
+    let h = '<table style="width:100%;border-collapse:collapse;font-size:.86rem;">';
+    h += '<thead><tr style="text-align:left;color:var(--text-muted);font-size:.72rem;text-transform:uppercase;letter-spacing:.05em;">'
+       + '<th style="padding:11px 14px;">Fecha</th><th>Cliente</th><th>Plan</th><th>Email</th><th>Archivos</th><th></th></tr></thead><tbody>';
+    data.forEach(function(o){
+      const fecha = o.creado_en ? new Date(o.creado_en).toLocaleString('es-AR',{day:'2-digit',month:'2-digit',year:'2-digit',hour:'2-digit',minute:'2-digit'}) : '—';
+      h += '<tr style="border-top:1px solid #262626;">'
+        + '<td style="padding:11px 14px;white-space:nowrap;">'+fecha+'</td>'
+        + '<td style="font-weight:700;">'+onbEsc(o.cliente_nombre||'—')+'</td>'
+        + '<td>'+onbPlanBadge(o.plan)+'</td>'
+        + '<td style="color:var(--text-muted);">'+onbEsc(o.cliente_email||'—')+'</td>'
+        + '<td>'+(o.archivos>0 ? ('<i class="fa-solid fa-paperclip"></i> '+o.archivos) : '—')+'</td>'
+        + '<td style="text-align:right;padding-right:14px;"><button class="tab-btn" onclick="verOnboarding('+o.id+')"><i class="fa-solid fa-eye"></i> Ver</button></td>'
+        + '</tr>';
+    });
+    h += '</tbody></table>';
+    cont.innerHTML = h;
+  }catch(e){
+    cont.innerHTML = '<div style="padding:30px;text-align:center;color:var(--red);">'+onbEsc(e.message)+'</div>';
+  }
+}
+
+async function verOnboarding(id){
+  document.getElementById('onb-lista-wrap').style.display = 'none';
+  document.getElementById('onb-detalle').style.display = '';
+  const det = document.getElementById('onb-detalle-cont');
+  det.innerHTML = 'Cargando…';
+  try{
+    const r = await apiFetch('/admin/onboarding/'+id);
+    if(!r.ok) throw new Error('Error ' + r.status);
+    const o = await r.json();
+    let h = '<div class="section-title" style="margin-bottom:4px;">'+onbEsc(o.cliente_nombre||'Cliente')+' '+onbPlanBadge(o.plan)+'</div>';
+    h += '<div class="section-sub" style="margin-bottom:18px;">'+onbEsc(o.cliente_email||'')+' · respuesta #'+o.id+'</div>';
+    if(o.archivos && o.archivos.length){
+      h += '<div class="table-wrap" style="padding:16px;margin-bottom:18px;">'
+         + '<div style="font-weight:800;margin-bottom:11px;"><i class="fa-solid fa-paperclip" style="color:#4ade80;"></i> Archivos</div>'
+         + '<div style="display:flex;flex-wrap:wrap;gap:8px;">';
+      o.archivos.forEach(function(a){
+        h += '<button class="tab-btn" onclick="descargarOnbArchivo('+a.id+',this)"><i class="fa-solid fa-download"></i> '+onbEsc(a.filename)+'</button>';
+      });
+      h += '</div></div>';
+    }
+    h += '<div class="table-wrap" style="padding:0;overflow:hidden;"><table style="width:100%;border-collapse:collapse;font-size:.86rem;"><tbody>';
+    const resp = o.respuestas || {};
+    Object.keys(resp).forEach(function(k){
+      let v = resp[k];
+      if(Array.isArray(v)) v = v.join(', ');
+      h += '<tr style="border-top:1px solid #262626;">'
+         + '<td style="padding:9px 14px;color:var(--text-muted);white-space:nowrap;vertical-align:top;width:34%;">'+onbEsc(k)+'</td>'
+         + '<td style="padding:9px 14px;">'+onbEsc(String(v==null||v===''?'—':v))+'</td></tr>';
+    });
+    h += '</tbody></table></div>';
+    det.innerHTML = h;
+  }catch(e){
+    det.innerHTML = '<div style="padding:24px;color:var(--red);">'+onbEsc(e.message)+'</div>';
+  }
+}
+
+function cerrarOnbDetalle(){
+  document.getElementById('onb-detalle').style.display = 'none';
+  document.getElementById('onb-lista-wrap').style.display = '';
+}
+
+async function descargarOnbArchivo(id, btn){
+  const orig = btn.innerHTML;
+  btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Descargando…';
+  btn.disabled = true;
+  try{
+    const r = await apiFetch('/admin/onboarding/archivo/'+id);
+    if(!r.ok) throw new Error('Error ' + r.status);
+    let filename = 'archivo-'+id;
+    const cd = r.headers.get('Content-Disposition');
+    if(cd){ const m = cd.match(/filename="?([^"]+)"?/); if(m) filename = m[1]; }
+    const blob = await r.blob();
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = filename;
+    document.body.appendChild(a); a.click(); a.remove();
+    URL.revokeObjectURL(url);
+  }catch(e){ alert('No se pudo descargar: ' + e.message); }
+  btn.innerHTML = orig;
+  btn.disabled = false;
+}
 
 async function cargarEmbudo() {
   // Necesitamos prospectos y bolsa — los cargamos si no están listos
