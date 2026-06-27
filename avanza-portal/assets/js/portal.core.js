@@ -6184,7 +6184,7 @@ const ACADEMIA_MODULOS = [
             <i class="fa-solid fa-rocket" style="color:#f97316;"></i>
             <div><div class="dl-title">Partner Intro — Canal 1</div><div class="dl-sub">Presentación del programa para tu canal</div></div>
           </a>
-          <a class="aca-download" href="#" onclick="descargarPDF('https://drive.google.com/uc?export=download&id=1bGo74rk0lOHo-KxgyxE4UwUjhqKgYEBm','Guion_Ventas_Aliados_v2.pdf');return false;">
+          <a class="aca-download" href="#" onclick="descargarPDF('https://drive.google.com/uc?export=download&id=11WKAQPxlu3DHxG_dRN8y5WB5tdpiIFzM','Guion_Ventas_Aliados_v2.pdf');return false;">
             <i class="fa-solid fa-list-ol" style="color:#4ade80;"></i>
             <div><div class="dl-title">Guión de Ventas v2</div><div class="dl-sub">Qué decir en cada momento</div></div>
           </a>
@@ -6202,7 +6202,7 @@ const ACADEMIA_MODULOS = [
           </a>
           <a class="aca-download" href="https://avanzadigital.digital/demo.html" target="_blank" rel="noopener">
             <i class="fa-solid fa-display" style="color:#22d3ee;"></i>
-            <div><div class="dl-title">Ver Demo de la Plataforma</div><div class="dl-sub">Es solo una demo, no el producto final — no se la mandes al cliente</div></div>
+            <div><div class="dl-title">Lo que vendés, plan por plan</div><div class="dl-sub">La consola explicada por nivel (Base → 360). Es interna — no se la mandes al cliente</div></div>
           </a>
         </div>
 

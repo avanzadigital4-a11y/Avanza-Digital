@@ -28,7 +28,11 @@
   .app{display:grid;grid-template-columns:244px 1fr;height:100vh}
 
   /* ---------------- Sidebar ---------------- */
-  .side{background:var(--surface);border-right:1px solid var(--line);display:flex;flex-direction:column;padding:18px 14px}
+  .side{background:var(--surface);border-right:1px solid var(--line);display:flex;flex-direction:column;padding:18px 14px;overflow-y:auto;overflow-x:hidden;overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
+  .side>*{flex-shrink:0}
+  .side::-webkit-scrollbar{width:8px}
+  .side::-webkit-scrollbar-thumb{background:var(--line2);border-radius:4px}
+  .side::-webkit-scrollbar-track{background:transparent}
   .logo{display:flex;align-items:center;gap:10px;padding:4px 8px}
   .logo .mk{width:30px;height:30px;border-radius:8px;background:var(--brand);display:flex;align-items:center;justify-content:center;box-shadow:0 2px 6px rgba(223,90,14,.35)}
   .logo .nm{font-weight:700;font-size:15px;letter-spacing:-.01em;color:var(--ink)}
@@ -237,7 +241,29 @@
   .tst .ts{font-size:11.5px;color:var(--ink3)}
 
   @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
-  @media (max-width:820px){.app{grid-template-columns:1fr}.side{display:none}.tiles{grid-template-columns:1fr 1fr}.grid2{grid-template-columns:1fr}.hero{grid-template-columns:1fr}}
+  /* menu button + price pill + ideal-for */
+  .menu-btn{display:none;width:38px;height:38px;border-radius:9px;border:1px solid var(--line);background:var(--surface);align-items:center;justify-content:center;color:var(--ink2);box-shadow:var(--sh1);flex:none}
+  .menu-btn svg{width:19px;height:19px}
+  .pricetag{display:flex;align-items:baseline;gap:6px;background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:6px 11px;box-shadow:var(--sh1);white-space:nowrap}
+  .pricetag .pt-v{font-family:var(--mono);font-weight:700;font-size:13px;color:var(--ink)}
+  .pricetag .pt-u{font-size:10px;letter-spacing:.04em;text-transform:uppercase;color:var(--ink4)}
+  .sidescrim{display:none;position:fixed;inset:0;background:rgba(20,22,26,.34);z-index:19;opacity:0;pointer-events:none;transition:.2s}
+  .sidescrim.show{opacity:1;pointer-events:auto}
+  .wsfor{font-size:10.5px;color:var(--ink3);line-height:1.35;margin-top:5px}
+  .scope-head .pfor{font-size:11.5px;color:var(--ink2);margin-top:6px;display:flex;align-items:center;gap:6px}
+  .scope-head .pfor b{color:var(--ink);font-weight:650}
+  @media (max-width:820px){
+    .app{grid-template-columns:1fr}
+    .side{position:fixed;top:0;left:0;height:100%;width:264px;z-index:20;transform:translateX(-100%);transition:transform .26s cubic-bezier(.32,.72,0,1);box-shadow:var(--sh3)}
+    .side.open{transform:translateX(0)}
+    .menu-btn{display:flex}
+    .sidescrim{display:block}
+    .tiles{grid-template-columns:1fr 1fr}.grid2{grid-template-columns:1fr}.hero{grid-template-columns:1fr}
+    .top{flex-wrap:wrap;gap:10px;padding:12px 16px}
+    .top-r{width:100%;justify-content:flex-start;flex-wrap:wrap;gap:8px}
+    .view{padding:18px 16px 60px}
+  }
+  @media (max-width:520px){.sim-lbl{display:none}.pricetag .pt-u{display:none}.planseg button{padding:6px 9px;font-size:12px}}
   .ej{font-size:8.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--ink3);background:var(--paper);border:1px solid var(--line2);padding:1px 5px;border-radius:4px;vertical-align:middle}
   .prodgrid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:4px}
   .pintro{font-size:12px;color:var(--ink3);margin-bottom:13px}
@@ -253,6 +279,153 @@
   .realnote svg{width:18px;height:18px;color:var(--brand);flex:none;margin-top:1px}
   .realnote p{font-size:13px;color:var(--ink2);line-height:1.55} .realnote p b{color:var(--ink)}
   @media (max-width:820px){.prodgrid{grid-template-columns:1fr}}
+
+  /* ============ PLAN SYSTEM ============ */
+  :root{--p360:#7c3aed;--p360-t:#f1ecfd}
+  /* segmented plan selector */
+  .planseg{display:flex;align-items:center;gap:3px;background:var(--surface);border:1px solid var(--line);border-radius:9px;padding:3px;box-shadow:var(--sh1)}
+  .planseg .pl-lbl{font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--ink4);padding:0 6px 0 6px}
+  .planseg button{font-size:12.5px;font-weight:600;color:var(--ink2);padding:6px 11px;border-radius:7px;transition:.12s;white-space:nowrap}
+  .planseg button:hover{background:#f3f4f6;color:var(--ink)}
+  .planseg button.on{color:#fff}
+  .planseg button[data-plan="base"].on{background:var(--green)}
+  .planseg button[data-plan="pro"].on{background:var(--blue)}
+  .planseg button[data-plan="industrial"].on{background:var(--amber)}
+  .planseg button[data-plan="360"].on{background:var(--p360)}
+  /* tier badge */
+  .tbadge{display:inline-flex;align-items:center;gap:4px;font-size:9px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;padding:2px 6px;border-radius:5px;vertical-align:middle}
+  .tb-base{color:var(--green);background:var(--green-t)} .tb-pro{color:var(--blue);background:var(--blue-t)}
+  .tb-industrial{color:var(--amber);background:var(--amber-t)} .tb-360{color:var(--p360);background:var(--p360-t)}
+  .wsplan{font-size:9.5px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;padding:2px 7px;border-radius:5px;margin-top:3px;display:inline-block}
+  /* context banner */
+  .planctx{display:flex;align-items:center;gap:10px;border-radius:10px;padding:11px 15px;margin-bottom:18px;font-size:12.5px;font-weight:550;border:1px solid}
+  .planctx svg{width:16px;height:16px;flex:none}
+  .planctx.in{background:var(--green-t);border-color:#c2e3cf;color:#14613a} .planctx.in svg{color:var(--green)}
+  .planctx.out{background:var(--amber-t);border-color:#f0e2c2;color:#7a4d08} .planctx.out svg{color:var(--amber)}
+  .planctx b{font-weight:750}
+  /* nav lock state */
+  .nav-i.nav-locked{opacity:.6}
+  .nav-i .lk{margin-left:auto;display:inline-flex} .nav-i .lk svg{width:13px;height:13px;color:var(--ink4)}
+  .nav-i.on .lk{display:none}
+  /* premium widgets */
+  .pcard{background:var(--surface);border:1px solid var(--line);border-radius:12px;box-shadow:var(--sh1);padding:18px}
+  .pcard .pch{display:flex;align-items:center;gap:9px;margin-bottom:6px}
+  .pcard .pch h3{font-size:13.5px;font-weight:650;color:var(--ink)}
+  .pcard .psub{font-size:11.5px;color:var(--ink3);margin-bottom:14px}
+  .grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+  .grid2b{display:grid;grid-template-columns:1fr 1fr;gap:14px;align-items:start}
+  /* scoring */
+  .scrow{display:flex;align-items:center;gap:13px;padding:11px 0;border-bottom:1px solid var(--line)}
+  .scrow:last-child{border-bottom:none}
+  .scrow .scn{font-weight:600;font-size:12.5px;color:var(--ink);min-width:130px}
+  .scrow .scc{font-size:11.5px;color:var(--ink3);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .scbar{width:120px;height:7px;background:#eef0f2;border-radius:5px;overflow:hidden;flex:none}
+  .scbar i{display:block;height:100%;border-radius:5px}
+  .scval{font-family:var(--mono);font-size:13px;font-weight:600;min-width:30px;text-align:right}
+  .factor{display:flex;align-items:center;gap:9px;font-size:12.5px;color:var(--ink2);padding:8px 0;border-bottom:1px solid var(--line)}
+  .factor:last-child{border-bottom:none}
+  .factor .dotp{width:7px;height:7px;border-radius:50%;background:var(--p360);flex:none}
+  .factor .w{margin-left:auto;font-family:var(--mono);font-size:11.5px;color:var(--ink3)}
+  /* cotizador */
+  .qz .line{display:flex;justify-content:space-between;padding:9px 0;border-bottom:1px solid var(--line);font-size:12.5px}
+  .qz .line:last-child{border-bottom:none}
+  .qz .line .lq{color:var(--ink2)} .qz .line .vq{font-family:var(--mono);font-weight:600;color:var(--ink)}
+  .qz .tot{display:flex;justify-content:space-between;margin-top:10px;padding-top:13px;border-top:2px solid var(--line2);font-size:15px;font-weight:700}
+  .qz .tot .vq{font-family:var(--mono);color:var(--brand-ink)}
+  .qsel{display:flex;flex-direction:column;gap:8px}
+  .qopt{display:flex;align-items:center;gap:10px;border:1px solid var(--line2);border-radius:9px;padding:10px 12px;font-size:12.5px;transition:.12s}
+  .qopt:hover{border-color:var(--brand);background:var(--brand-tint)}
+  .qopt.sel{border-color:var(--brand);background:var(--brand-tint);font-weight:600;color:var(--brand-ink)}
+  .qopt .qp{margin-left:auto;font-family:var(--mono);color:var(--ink2)}
+  /* integraciones */
+  .intg{display:flex;align-items:center;gap:13px;padding:13px 15px;border:1px solid var(--line);border-radius:11px;background:var(--surface);margin-bottom:11px}
+  .intg:last-child{margin-bottom:0}
+  .intg .ilogo{width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:12px;flex:none;color:#fff;letter-spacing:.02em}
+  .intg .iname{font-weight:650;font-size:13px;color:var(--ink)}
+  .intg .idesc{font-size:11px;color:var(--ink3);margin-top:1px}
+  .intg .ist{margin-left:auto;display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:650;color:var(--green)}
+  .intg .ist .dt{width:7px;height:7px;border-radius:50%;background:var(--green)}
+  .flowmap{display:flex;align-items:center;gap:9px;flex-wrap:wrap;margin-top:6px}
+  .fmnode{border:1px solid var(--line2);border-radius:9px;padding:9px 13px;font-size:12px;font-weight:600;background:var(--surface2);color:var(--ink)}
+  .fmar{color:var(--ink4);font-weight:700}
+  /* presencia */
+  .zonebar{display:flex;flex-direction:column;gap:12px}
+  .zone{display:flex;align-items:center;gap:12px}
+  .zone .zn{font-size:12.5px;color:var(--ink);min-width:130px;font-weight:550}
+  .ztrk{flex:1;height:7px;background:#eef0f2;border-radius:5px;overflow:hidden}
+  .ztrk i{display:block;height:100%;border-radius:5px;background:var(--p360)}
+  .zpos{font-family:var(--mono);font-size:12px;color:var(--ink2);min-width:54px;text-align:right}
+  .maprev{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--ink2)}
+  .stars{color:#f5a623;letter-spacing:1.5px;font-size:14px}
+  /* plan & alcance */
+  .scope-head{display:flex;align-items:center;gap:14px;background:var(--surface);border:1px solid var(--line);border-radius:13px;padding:17px 20px;box-shadow:var(--sh1);margin-bottom:16px}
+  .scope-head .ph{width:46px;height:46px;border-radius:12px;display:flex;align-items:center;justify-content:center;flex:none;color:#fff}
+  .scope-head .ph svg{width:24px;height:24px}
+  .scope-head .pname{font-size:18px;font-weight:750;letter-spacing:-.01em;color:var(--ink)}
+  .scope-head .pgoal{font-size:12.5px;color:var(--ink3);margin-top:1px}
+  .scope-head .pprice{margin-left:auto;text-align:right}
+  .scope-head .pprice .pv{font-size:19px;font-weight:700;font-family:var(--mono);color:var(--ink)}
+  .scope-head .pprice .pu{font-size:10.5px;color:var(--ink4);letter-spacing:.04em;text-transform:uppercase}
+  .scope-cols{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  .scope-col h4{font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink4);font-weight:700;margin-bottom:12px}
+  .scope-list{list-style:none;display:flex;flex-direction:column;gap:12px}
+  .scope-list li{display:flex;align-items:flex-start;gap:10px;font-size:12.5px;color:var(--ink2);line-height:1.4}
+  .scope-list li .mk2{width:18px;height:18px;border-radius:5px;display:flex;align-items:center;justify-content:center;flex:none;margin-top:1px}
+  .scope-list li .mk2 svg{width:12px;height:12px}
+  .scope-list li .sl-tx{display:flex;flex-direction:column;gap:1px;min-width:0}
+  .scope-list li .sl-n{font-size:12.5px;font-weight:600;color:var(--ink);line-height:1.3}
+  .scope-list li .sl-w{font-size:11px;color:var(--ink3);line-height:1.4}
+  .scope-list.inc li .mk2{background:var(--green-t)} .scope-list.inc li .mk2 svg{color:var(--green)}
+  .scope-list.exc li .mk2{background:#f0f1f3} .scope-list.exc li .mk2 svg{color:var(--ink4)}
+  .scope-list.exc li .sl-n{color:var(--ink3)} .scope-list.exc li .sl-w{color:var(--ink4)}
+  .scope-list.exc li .unl{margin-left:auto;align-self:flex-start;margin-top:1px;font-size:9px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;padding:2px 6px;border-radius:4px;flex:none}
+  @media (max-width:820px){.grid3{grid-template-columns:1fr}.grid2b,.qz,.scope-cols{grid-template-columns:1fr}.planseg .pl-lbl{display:none}}
+
+  /* ===== Sitio & contenido ===== */
+  .ptabs{display:flex;gap:4px;border-bottom:1px solid var(--line);margin-bottom:14px;flex-wrap:wrap}
+  .ptab{font-size:12px;font-weight:600;color:var(--ink3);padding:8px 12px;border-radius:7px 7px 0 0;border-bottom:2px solid transparent;margin-bottom:-1px}
+  .ptab:hover{color:var(--ink);background:#f7f8f9}
+  .ptab.on{color:var(--brand-ink);border-bottom-color:var(--brand)}
+  .ptabbody{font-size:13px;color:var(--ink2);line-height:1.55;min-height:64px}
+  .ptabbody h5{font-size:14px;color:var(--ink);font-weight:700;margin-bottom:5px}
+  .ptabbody .chips{display:flex;gap:7px;flex-wrap:wrap;margin-top:10px}
+  .ptabbody .chips span{font-size:11.5px;color:var(--ink2);background:var(--surface2);border:1px solid var(--line2);padding:4px 10px;border-radius:7px}
+  .lmag{display:flex;gap:13px;align-items:center;border:1px dashed var(--line2);border-radius:11px;padding:14px;background:var(--surface2)}
+  .lmag .lmi{width:42px;height:42px;border-radius:10px;background:var(--brand-tint);display:flex;align-items:center;justify-content:center;flex:none}
+  .lmag .lmi svg{width:20px;height:20px;color:var(--brand)}
+  .lmag .lmt{font-weight:650;font-size:13px;color:var(--ink)} .lmag .lms{font-size:11.5px;color:var(--ink3)}
+  .lmag .lmget{margin-left:auto;font-size:11.5px;font-weight:650;color:#fff;background:var(--brand);padding:7px 12px;border-radius:7px;white-space:nowrap}
+  .baft{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:4px}
+  .baft .bx{border:1px solid var(--line);border-radius:10px;padding:13px}
+  .baft .bx .bl{font-size:9.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;margin-bottom:7px}
+  .baft .bx.bad .bl{color:var(--ink4)} .baft .bx.good{border-color:var(--green-t);background:var(--green-t)} .baft .bx.good .bl{color:var(--green)}
+  .baft .bx p{font-size:12.5px;color:var(--ink2);line-height:1.45}
+  /* ===== Embudo ===== */
+  .funnel{display:flex;flex-direction:column;gap:9px}
+  .fstage{display:flex;align-items:center;gap:12px}
+  .fstage .fsl{font-size:12px;color:var(--ink2);min-width:96px;font-weight:550}
+  .fbar{height:30px;border-radius:7px;background:var(--p360);display:flex;align-items:center;padding:0 11px;color:#fff;font-family:var(--mono);font-size:12.5px;font-weight:600;min-width:54px}
+  .fconv{font-size:11px;color:var(--ink4);font-family:var(--mono);margin-left:auto}
+  .segpick{display:flex;gap:7px;margin-bottom:13px;flex-wrap:wrap}
+  .segpick button{font-size:12px;font-weight:600;color:var(--ink2);border:1px solid var(--line2);border-radius:8px;padding:7px 12px}
+  .segpick button.on{border-color:var(--brand);background:var(--brand-tint);color:var(--brand-ink)}
+  .segform label{font-size:11px;color:var(--ink3);font-weight:600;display:block;margin:0 0 4px}
+  .segfield{border:1px solid var(--line2);border-radius:8px;padding:9px 11px;font-size:12.5px;color:var(--ink3);background:var(--surface2);margin-bottom:10px}
+  /* ===== Métricas en vivo ===== */
+  .livebadge{display:inline-flex;align-items:center;gap:7px;font-size:11px;font-weight:650;color:var(--green);background:var(--green-t);border:1px solid #c2e3cf;padding:4px 10px;border-radius:20px}
+  .livedot{width:7px;height:7px;border-radius:50%;background:var(--green);animation:pulse 1.6s infinite}
+  @keyframes pulse{0%{box-shadow:0 0 0 0 rgba(28,138,78,.5)}70%{box-shadow:0 0 0 6px rgba(28,138,78,0)}100%{box-shadow:0 0 0 0 rgba(28,138,78,0)}}
+  .lchart{display:flex;align-items:flex-end;gap:9px;height:110px;padding-top:10px}
+  .lcol{flex:1;display:flex;flex-direction:column;align-items:center;gap:6px}
+  .lcol .lbar{width:100%;max-width:34px;background:var(--brand);border-radius:6px 6px 0 0;transition:height .5s}
+  .lcol .lcl{font-size:10px;color:var(--ink4);font-family:var(--mono)}
+  /* ===== Servicios ===== */
+  .svc{display:flex;gap:13px;align-items:flex-start;border:1px solid var(--line);border-radius:12px;padding:16px;background:var(--surface)}
+  .svc .si{width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex:none}
+  .svc .si svg{width:20px;height:20px}
+  .svc .st{font-weight:650;font-size:13.5px;color:var(--ink);display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+  .svc .sd{font-size:12px;color:var(--ink3);margin-top:3px;line-height:1.5}
+  @media (max-width:820px){.baft{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
@@ -264,27 +437,50 @@
     </div>
     <div class="ws">
       <span class="av">MP</span>
-      <div class="meta"><div class="l">Empresa</div><div class="c">MetalPro SRL <span class="ej">ejemplo</span></div><div class="r">Metalúrgica · Santa Fe</div></div>
+      <div class="meta"><div class="l">Empresa</div><div class="c">MetalPro SRL <span class="ej">ejemplo</span></div><span class="wsplan" id="wsPlan">Estratégico 360</span><div class="wsfor" id="wsFor"></div></div>
     </div>
     <div class="navlbl">Gestión</div>
     <nav>
       <button class="nav-i on" data-view="resumen"><span class="ni" data-ic="grid"></span>Resumen</button>
-      <button class="nav-i" data-view="crm"><span class="ni" data-ic="rows"></span>Leads <span class="ct" id="navct">6</span></button>
+      <button class="nav-i" data-view="crm" data-feat="crm"><span class="ni" data-ic="rows"></span>Leads <span class="ct" id="navct">6</span></button>
       <button class="nav-i" data-view="sitio"><span class="ni" data-ic="globe"></span>Sitio web</button>
-      <button class="nav-i" data-view="producto"><span class="ni" data-ic="layers"></span>Producto real</button>
+    </nav>
+    <div class="navlbl">Capacidades del plan</div>
+    <nav>
+      <button class="nav-i" data-view="sitioplus" data-feat="multiseccion"><span class="ni" data-ic="web"></span>Sitio &amp; contenido</button>
+      <button class="nav-i" data-view="presencia" data-feat="maps"><span class="ni" data-ic="pin"></span>Presencia local</button>
+      <button class="nav-i" data-view="embudo" data-feat="embudo"><span class="ni" data-ic="funnel"></span>Embudo &amp; formularios</button>
+      <button class="nav-i" data-view="metricas" data-feat="metricas_live"><span class="ni" data-ic="chart"></span>Métricas en vivo</button>
+      <button class="nav-i" data-view="scoring" data-feat="scoring"><span class="ni" data-ic="gauge"></span>Lead Scoring IA</button>
+      <button class="nav-i" data-view="cotizador" data-feat="cotizador"><span class="ni" data-ic="doc"></span>Cotizador</button>
+      <button class="nav-i" data-view="integra" data-feat="erp"><span class="ni" data-ic="plug"></span>Integraciones</button>
+      <button class="nav-i" data-view="servicios" data-feat="capacitacion"><span class="ni" data-ic="headset"></span>Servicios &amp; soporte</button>
+    </nav>
+    <nav style="margin-top:6px">
+      <button class="nav-i" data-view="producto"><span class="ni" data-ic="layers"></span>Plan &amp; alcance</button>
     </nav>
     <div class="side-foot">
-      <span class="pill-demo">DEMO</span>
-      <p>Datos de ejemplo. El sistema real de cada cliente se construye a medida y es más completo.</p>
+      <span class="pill-demo">INTERNA</span>
+      <p>Para vos, el aliado: mirá qué incluye cada plan. No se la envíes al cliente.</p>
     </div>
   </aside>
 
   <main class="main">
     <div class="top">
-      <div><div class="ttl" id="vt">Resumen</div><div class="sub" id="vs">Tu operación comercial, en un vistazo</div></div>
+      <div style="display:flex;align-items:center;gap:12px;min-width:0">
+        <button class="menu-btn" id="menuBtn" aria-label="Abrir menú"><span data-ic="menu"></span></button>
+        <div><div class="ttl" id="vt">Resumen</div><div class="sub" id="vs">Tu operación comercial, en un vistazo</div></div>
+      </div>
       <div class="top-r">
-        <div class="period"><span data-ic="cal"></span> Junio 2026</div>
-        <button class="btn-sim" id="simBtn"><span data-ic="play"></span> Simular ingreso</button>
+        <div class="pricetag"><span class="pt-v" id="priceV">US$ 7.500</span><span class="pt-u">pago único</span></div>
+        <div class="planseg" id="planseg">
+          <span class="pl-lbl">Plan</span>
+          <button data-plan="base">Base</button>
+          <button data-plan="pro">Pro</button>
+          <button data-plan="industrial">Industrial</button>
+          <button data-plan="360" class="on">360</button>
+        </div>
+        <button class="btn-sim" id="simBtn"><span data-ic="play"></span> <span class="sim-lbl">Simular ingreso</span></button>
       </div>
     </div>
 
@@ -292,7 +488,7 @@
     <section class="view" id="v-resumen">
       <div class="intro" id="intro">
         <span class="ic" data-ic="spark"></span>
-        <p><b>Demo del sistema operando.</b> Tocá <b>Simular ingreso</b> y mirá cómo entra una consulta desde la web, el sistema responde solo, queda en el CRM y la IA la prioriza. El sistema real de cada cliente se construye a medida y es más completo — lo ves en la pestaña <b>Producto real</b>.</p>
+        <p><b>Esta consola es tu mapa de producto.</b> Cambiá el <b>Plan</b> arriba (Base → 360) y mirá cómo cambia lo que recibe el cliente. Tocá <b>Simular ingreso</b> para ver el flujo real de ese plan: una consulta entra desde la web y el sistema hace solo lo que ese nivel incluye. El alcance completo lo ves en <b>Plan &amp; alcance</b>.</p>
         <button class="close" onclick="document.getElementById('intro').remove()"><span data-ic="x"></span></button>
       </div>
 
@@ -343,6 +539,7 @@
 
     <!-- CRM -->
     <section class="view hide" id="v-crm">
+      <div class="planctx" data-feat="crm"></div>
       <div class="tbl-wrap">
         <div class="tbl-top">
           <div class="lft"><h3>Leads</h3><p>Nada se pierde entre WhatsApp, mail y teléfono. Tocá una fila para ver el detalle.</p></div>
@@ -383,47 +580,245 @@
       </div>
     </section>
 
-    <!-- PRODUCTO REAL -->
-    <section class="view hide" id="v-producto">
-      <div class="eyebrow">Qué es esto y qué recibe el cliente</div>
-      <div class="prodgrid">
-        <div class="card">
-          <div class="card-h"><h3>En esta demo ves…</h3></div>
-          <div class="card-b">
-            <p class="pintro">El funcionamiento del sistema, con datos de ejemplo.</p>
-            <ul class="plist">
-              <li>El sitio que capta la consulta</li>
-              <li>La respuesta automática al instante</li>
-              <li>El CRM que ordena cada lead</li>
-              <li>La IA que prioriza por intención de compra</li>
-              <li>El panel de métricas</li>
-            </ul>
-          </div>
+    <!-- SITIO & CONTENIDO (Pro) -->
+    <section class="view hide" id="v-sitioplus">
+      <div class="eyebrow">Web multi-sección · Lead magnet · Copywriting</div>
+      <div class="planctx" data-feat="multiseccion"></div>
+      <div class="pcard" style="margin-bottom:14px">
+        <div class="pch"><span data-ic="web" style="color:var(--blue)"></span><h3>Web multi-sección, no una sola página</h3><span class="tbadge tb-pro">Pro</span></div>
+        <div class="psub">Hasta 6 páginas pensadas para vender. Tocá cada sección para ver qué lleva.</div>
+        <div class="ptabs" id="siteTabs">
+          <button class="ptab on" data-pg="inicio">Inicio</button>
+          <button class="ptab" data-pg="servicios">Servicios</button>
+          <button class="ptab" data-pg="casos">Casos</button>
+          <button class="ptab" data-pg="nosotros">Nosotros</button>
+          <button class="ptab" data-pg="contacto">Contacto</button>
         </div>
-        <div class="card hl">
-          <div class="card-h"><h3>El sistema real del cliente, además…</h3></div>
-          <div class="card-b">
-            <p class="pintro">Construido a medida para su empresa.</p>
-            <ul class="plist pos">
-              <li>Su marca, sus textos y su dominio propio</li>
-              <li>Su CRM con sus datos y los usuarios de su equipo</li>
-              <li>Integración real con su WhatsApp</li>
-              <li>Las integraciones de su plan (CRM / ERP como Tango o SAP)</li>
-              <li>Panel de administración y métricas en vivo</li>
-              <li>Capacitación a su equipo</li>
-              <li>El código 100% suyo, pago único</li>
-            </ul>
+        <div class="ptabbody" id="siteBody"></div>
+      </div>
+      <div class="grid2b">
+        <div class="pcard">
+          <div class="pch"><span data-ic="inbox" style="color:var(--brand)"></span><h3>Lead magnet</h3><span class="tbadge tb-pro">Pro</span></div>
+          <div class="psub">Un material gratis que el visitante descarga dejando su mail — y entra como lead.</div>
+          <div class="lmag">
+            <span class="lmi" data-ic="doc"></span>
+            <div><div class="lmt">Guía: cómo elegir proveedor metalúrgico</div><div class="lms">PDF · 8 páginas · a cambio del email</div></div>
+            <span class="lmget">Descargar</span>
+          </div>
+          <div style="font-size:12px;color:var(--ink3);margin-top:12px;line-height:1.5">Cada descarga es un lead nuevo en el CRM, ya interesado en el tema.</div>
+        </div>
+        <div class="pcard">
+          <div class="pch"><span data-ic="spark" style="color:var(--brand)"></span><h3>Copywriting de ventas</h3><span class="tbadge tb-pro">Pro</span></div>
+          <div class="psub">El texto deja de describir y empieza a vender.</div>
+          <div class="baft">
+            <div class="bx bad"><div class="bl">Antes</div><p>“Fabricamos piezas metálicas para la industria.”</p></div>
+            <div class="bx good"><div class="bl">Después</div><p>“Piezas a medida en 15 días, con certificación. Pedí tu cotización hoy.”</p></div>
           </div>
         </div>
       </div>
+    </section>
+
+    <!-- EMBUDO & FORMULARIOS (Industrial) -->
+    <section class="view hide" id="v-embudo">
+      <div class="eyebrow">Arquitectura de embudo · Formularios segmentados</div>
+      <div class="planctx" data-feat="embudo"></div>
+      <div class="grid2b">
+        <div class="pcard">
+          <div class="pch"><span data-ic="funnel" style="color:var(--amber)"></span><h3>Embudo de ventas</h3><span class="tbadge tb-industrial">Industrial</span></div>
+          <div class="psub">Cada etapa medida: dónde entran, dónde se caen y dónde cierran.</div>
+          <div class="funnel">
+            <div class="fstage"><span class="fsl">Visitas</span><span class="fbar" style="width:100%;background:#cbd5e1;color:var(--ink)">1.000</span></div>
+            <div class="fstage"><span class="fsl">Consultas</span><span class="fbar" style="width:62%;background:var(--blue)">620</span><span class="fconv">62%</span></div>
+            <div class="fstage"><span class="fsl">Cotizados</span><span class="fbar" style="width:38%;background:var(--violet)">380</span><span class="fconv">61%</span></div>
+            <div class="fstage"><span class="fsl">Cerrados</span><span class="fbar" style="width:14%;background:var(--green)">140</span><span class="fconv">37%</span></div>
+          </div>
+          <div style="font-size:12px;color:var(--ink3);margin-top:14px;line-height:1.5">Con el embudo a la vista, se sabe qué etapa arreglar para vender más sin más tráfico.</div>
+        </div>
+        <div class="pcard">
+          <div class="pch"><span data-ic="rows" style="color:var(--amber)"></span><h3>Formularios segmentados</h3><span class="tbadge tb-industrial">Industrial</span></div>
+          <div class="psub">El formulario cambia según lo que necesita el visitante. Probá:</div>
+          <div class="segpick" id="segPick">
+            <button class="on" data-seg="cotizar">Quiero cotizar</button>
+            <button data-seg="soporte">Necesito soporte</button>
+            <button data-seg="info">Solo info</button>
+          </div>
+          <div id="segBody"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- MÉTRICAS EN VIVO (Industrial) -->
+    <section class="view hide" id="v-metricas">
+      <div class="eyebrow">Panel de métricas en tiempo real</div>
+      <div class="planctx" data-feat="metricas_live"></div>
+      <div class="pcard">
+        <div class="pch"><span data-ic="chart" style="color:var(--amber)"></span><h3>Lo que pasa, ahora</h3><span class="tbadge tb-industrial">Industrial</span><span class="livebadge" style="margin-left:auto"><span class="livedot"></span>En vivo</span></div>
+        <div class="psub">No un reporte de fin de mes: el dato se actualiza solo mientras la gente navega.</div>
+        <div class="tiles" style="grid-template-columns:repeat(4,1fr)">
+          <div class="tile"><div class="th"><span class="k">En la web ahora</span><span class="ico" data-ic="user"></span></div><div class="v num" id="m-now">7</div><div class="d">visitas activas</div></div>
+          <div class="tile"><div class="th"><span class="k">Consultas hoy</span><span class="ico" data-ic="inbox"></span></div><div class="v num" id="m-today">12</div><div class="d pos"><span data-ic="up"></span> +3 vs. ayer</div></div>
+          <div class="tile"><div class="th"><span class="k">Tasa de respuesta</span><span class="ico" data-ic="bolt"></span></div><div class="v num">2<small>min</small></div><div class="d">promedio</div></div>
+          <div class="tile"><div class="th"><span class="k">Conversión</span><span class="ico" data-ic="target"></span></div><div class="v num">14<small>%</small></div><div class="d pos"><span data-ic="up"></span> +2 pts</div></div>
+        </div>
+        <div style="font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink4);font-weight:700;margin:20px 0 4px">Consultas · últimos 7 días</div>
+        <div class="lchart" id="mChart"></div>
+      </div>
+    </section>
+
+    <!-- LEAD SCORING (360) -->
+    <section class="view hide" id="v-scoring">
+      <div class="eyebrow">Automatización condicional + Lead Scoring</div>
+      <div class="planctx" data-feat="scoring"></div>
+      <div class="grid2b">
+        <div class="pcard">
+          <div class="pch"><span data-ic="gauge" style="color:var(--p360)"></span><h3>Leads ordenados por intención de compra</h3></div>
+          <div class="psub">La IA puntúa cada consulta 0–100 y arma la agenda sola. Vos atendés primero lo que más vale.</div>
+          <div id="scList"></div>
+        </div>
+        <div class="pcard">
+          <div class="pch"><span data-ic="spark" style="color:var(--p360)"></span><h3>Cómo arma el puntaje</h3></div>
+          <div class="psub">Reglas que el sistema evalúa en cada lead, sin que nadie las toque.</div>
+          <div class="factor"><span class="dotp"></span>Urgencia en el mensaje (“urgente”, “hoy”)<span class="w">+30</span></div>
+          <div class="factor"><span class="dotp"></span>Volumen o monto mencionado<span class="w">+25</span></div>
+          <div class="factor"><span class="dotp"></span>Pide reunión o cotización concreta<span class="w">+20</span></div>
+          <div class="factor"><span class="dotp"></span>Origen cálido (referido)<span class="w">+15</span></div>
+          <div class="factor"><span class="dotp"></span>Solo pide info general<span class="w">−20</span></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- COTIZADOR (360) -->
+    <section class="view hide" id="v-cotizador">
+      <div class="eyebrow">Desarrollo a medida · Cotizador avanzado</div>
+      <div class="planctx" data-feat="cotizador"></div>
+      <div class="pcard">
+        <div class="pch"><span data-ic="doc" style="color:var(--brand)"></span><h3>El cliente arma su cotización solo, 24/7</h3></div>
+        <div class="psub">Una herramienta a medida en su web: el visitante elige, ve el precio al instante y el pedido entra ya cargado al CRM.</div>
+        <div class="qz">
+          <div>
+            <div style="font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink4);font-weight:700;margin-bottom:10px">Lo que elige el cliente</div>
+            <div class="qsel">
+              <div class="qopt sel" data-q="serv">Corte láser <span class="qp">base</span></div>
+              <div class="qopt" data-q="serv">Estructura metálica <span class="qp">base</span></div>
+              <div class="qopt" data-q="serv">Piezas a medida <span class="qp">base</span></div>
+            </div>
+            <div class="qsel" style="margin-top:10px">
+              <div class="qopt" data-q="cant" data-mult="50">Hasta 50 unidades <span class="qp">×1</span></div>
+              <div class="qopt sel" data-q="cant" data-mult="200">50–200 unidades <span class="qp">×3,6</span></div>
+              <div class="qopt" data-q="cant" data-mult="500">+200 unidades <span class="qp">×8</span></div>
+            </div>
+          </div>
+          <div>
+            <div style="font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink4);font-weight:700;margin-bottom:10px">Estimación automática</div>
+            <div class="line"><span class="lq">Servicio base</span><span class="vq" id="qBase">US$ 1.200</span></div>
+            <div class="line"><span class="lq">Volumen</span><span class="vq" id="qVol">×3,6</span></div>
+            <div class="line"><span class="lq">Plazo estimado</span><span class="vq" id="qPlazo">12–15 días</span></div>
+            <div class="tot"><span>Estimado</span><span class="vq" id="qTot">US$ 4.320</span></div>
+            <div style="font-size:11.5px;color:var(--ink3);margin-top:12px;line-height:1.5">El lead entra al CRM con el detalle ya cargado y marcado <b>Alta</b> por la IA. El vendedor llama sabiendo qué necesita.</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- INTEGRACIONES (360) -->
+    <section class="view hide" id="v-integra">
+      <div class="eyebrow">Integración bidireccional · ERP y CRM</div>
+      <div class="planctx" data-feat="erp"></div>
+      <div class="grid2b">
+        <div class="pcard">
+          <div class="pch"><span data-ic="plug" style="color:var(--p360)"></span><h3>Conectado a los sistemas que ya usa</h3></div>
+          <div class="psub">Los datos viajan en los dos sentidos: lo que entra por la web aparece en su ERP, y stock o precios del ERP vuelven a la web.</div>
+          <div class="intg"><span class="ilogo" style="background:#0a6e3b">TGO</span><div><div class="iname">Tango Gestión</div><div class="idesc">Clientes, stock y facturación</div></div><span class="ist"><span class="dt"></span>Sincronizado</span></div>
+          <div class="intg"><span class="ilogo" style="background:#1a3a8f">SAP</span><div><div class="iname">SAP Business One</div><div class="idesc">Pedidos y órdenes de compra</div></div><span class="ist"><span class="dt"></span>Sincronizado</span></div>
+          <div class="intg"><span class="ilogo" style="background:#e0682a">CRM</span><div><div class="iname">CRM comercial</div><div class="idesc">Leads, etapas y seguimiento</div></div><span class="ist"><span class="dt"></span>Sincronizado</span></div>
+        </div>
+        <div class="pcard">
+          <div class="pch"><span data-ic="bolt" style="color:var(--p360)"></span><h3>Un lead, sin recargar nada a mano</h3></div>
+          <div class="psub">Lo que pasa cuando entra una consulta, de punta a punta.</div>
+          <div class="flowmap">
+            <span class="fmnode">Web</span><span class="fmar">→</span>
+            <span class="fmnode">CRM</span><span class="fmar">→</span>
+            <span class="fmnode">ERP (Tango/SAP)</span>
+          </div>
+          <div class="flowmap" style="margin-top:8px">
+            <span class="fmnode">ERP: stock / precio</span><span class="fmar">→</span>
+            <span class="fmnode">Web actualizada</span>
+          </div>
+          <div style="font-size:12px;color:var(--ink3);margin-top:14px;line-height:1.55">Sin esto, alguien copia el pedido del mail al sistema. Con integración bidireccional, el dato entra una vez y queda en todos lados.</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- PRESENCIA LOCAL -->
+    <section class="view hide" id="v-presencia">
+      <div class="eyebrow">Google Maps · SEO local</div>
+      <div class="planctx" data-feat="maps"></div>
+      <div class="grid2b">
+        <div class="pcard">
+          <div class="pch"><span data-ic="pin" style="color:var(--p360)"></span><h3 id="presTitle">Posición por zona</h3></div>
+          <div class="psub" id="presSub">Dónde aparece la empresa cuando alguien busca su rubro cerca.</div>
+          <div class="zonebar" id="zoneBar"></div>
+        </div>
+        <div class="pcard">
+          <div class="pch"><span data-ic="g"></span><h3>Ficha de Google y reseñas</h3></div>
+          <div class="psub">La ficha que ve quien busca en Google Maps.</div>
+          <div class="line" style="display:flex;justify-content:space-between;padding:9px 0;border-bottom:1px solid var(--line);font-size:12.5px"><span style="color:var(--ink2)">Reputación</span><span class="maprev"><span class="stars">★★★★★</span> 4,8 · 126 reseñas</span></div>
+          <div class="line" style="display:flex;justify-content:space-between;padding:9px 0;border-bottom:1px solid var(--line);font-size:12.5px"><span style="color:var(--ink2)">Llamadas desde la ficha</span><span class="num" style="font-weight:600">38<small style="color:var(--ink3);font-weight:400"> /mes</small></span></div>
+          <div class="line" style="display:flex;justify-content:space-between;padding:9px 0;font-size:12.5px"><span style="color:var(--ink2)">Cómo llegar</span><span class="num" style="font-weight:600">54<small style="color:var(--ink3);font-weight:400"> /mes</small></span></div>
+          <div style="font-size:12px;color:var(--ink3);margin-top:14px;line-height:1.55" id="presNote"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SERVICIOS & SOPORTE -->
+    <section class="view hide" id="v-servicios">
+      <div class="eyebrow">Lo que no es software · servicio y acompañamiento</div>
+      <div class="planctx" data-feat="capacitacion"></div>
+      <div class="grid2b">
+        <div class="svc">
+          <span class="si" style="background:var(--amber-t)"><span data-ic="user" style="color:var(--amber)"></span></span>
+          <div><div class="st">Capacitación al equipo <span class="tbadge tb-industrial">Industrial</span></div><div class="sd">Onboarding en vivo + manual de uso, para que su gente arranque sin fricción.</div></div>
+        </div>
+        <div class="svc">
+          <span class="si" style="background:var(--p360-t)"><span data-ic="search" style="color:var(--p360)"></span></span>
+          <div><div class="st">Auditoría comercial B2B <span class="tbadge tb-360">360</span></div><div class="sd">Diagnóstico del proceso de ventas y un plan de acción concreto.</div></div>
+        </div>
+        <div class="svc">
+          <span class="si" style="background:var(--p360-t)"><span data-ic="check" style="color:var(--p360)"></span></span>
+          <div><div class="st">Garantía 12 meses + SLA <span class="tbadge tb-360">360</span></div><div class="sd">Soporte prioritario con tiempos de respuesta garantizados por contrato.</div></div>
+        </div>
+        <div class="svc">
+          <span class="si" style="background:var(--p360-t)"><span data-ic="spark" style="color:var(--p360)"></span></span>
+          <div><div class="st">Diseño de contenidos <span class="tbadge tb-360">360</span></div><div class="sd">Lead magnets y piezas para nutrir leads y sostener la presencia.</div></div>
+        </div>
+      </div>
+      <div class="realnote" style="margin-top:14px">
+        <span data-ic="spark"></span>
+        <p>Estos no son pantallas: son <b>servicio</b>. Son parte de por qué el cliente paga el plan, no solo la web. Sumalos al pitch cuando el cliente duda del precio.</p>
+      </div>
+    </section>
+
+    <!-- PLAN & ALCANCE (dinámico) -->
+    <section class="view hide" id="v-producto">
+      <div class="eyebrow">Qué incluye el plan seleccionado</div>
+      <div class="scope-head">
+        <span class="ph" id="scopeIco"><span data-ic="layers"></span></span>
+        <div><div class="pname" id="scopeName">Estratégico 360</div><div class="pgoal" id="scopeGoal"></div><div class="pfor" id="scopeFor"></div></div>
+        <div class="pprice"><div class="pv" id="scopePrice"></div><div class="pu">pago único</div></div>
+      </div>
+      <div class="scope-cols">
+        <div class="scope-col"><h4>Incluido en este plan</h4><ul class="scope-list inc" id="scopeInc"></ul></div>
+        <div class="scope-col"><h4>No incluido · upsell</h4><ul class="scope-list exc" id="scopeExc"></ul></div>
+      </div>
       <div class="realnote">
         <span data-ic="spark"></span>
-        <p><b>Esto es una demostración del funcionamiento, no el producto final.</b> El sistema de cada cliente se construye a medida con la información de su onboarding: lleva su identidad, sus datos y las integraciones de su plan, y es más completo que esta muestra. Usala para explicar cómo funciona — el resultado de cada empresa es propio.</p>
+        <p><b>Consola interna, no el producto final.</b> Sirve para que sepas qué vendés en cada nivel. El sistema de cada cliente se construye a medida en el onboarding, con su marca, sus datos y las integraciones de su plan. <b>No se la envíes al cliente.</b></p>
       </div>
     </section>
   </main>
 </div>
 
+<div class="sidescrim" id="sidescrim"></div>
 <div class="scrim" id="scrim" onclick="closeDrawer()"></div>
 <aside class="drawer" id="drawer"></aside>
 <div class="toasts" id="toasts"></div>
@@ -457,11 +852,136 @@
     ref:'<svg viewBox="0 0 24 24" fill="none"><path d="M16 11a3 3 0 10-3-3M8 13a3 3 0 100 6 3 3 0 000-6zM10.5 11l4-2M13 16l-2.5-1.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>',
     mail:'<svg viewBox="0 0 24 24" fill="none"><rect x="3.5" y="5.5" width="17" height="13" rx="2" stroke="currentColor" stroke-width="1.6"/><path d="M4.5 7l7.5 5 7.5-5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>',
     layers:'<svg viewBox="0 0 24 24" fill="none"><path d="M12 3.5l8.5 4.5L12 12.5 3.5 8 12 3.5z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="M4 12l8 4.3L20 12M4 16l8 4.3L20 16" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>',
-    user:'<svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="8.5" r="3.5" stroke="currentColor" stroke-width="1.6"/><path d="M5.5 19a6.5 6.5 0 0113 0" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>'
+    user:'<svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="8.5" r="3.5" stroke="currentColor" stroke-width="1.6"/><path d="M5.5 19a6.5 6.5 0 0113 0" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>',
+    gauge:'<svg viewBox="0 0 24 24" fill="none"><path d="M4.5 16a7.5 7.5 0 1115 0" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/><path d="M12 16l3.6-3.6" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/><circle cx="12" cy="16" r="1.5" fill="currentColor"/></svg>',
+    plug:'<svg viewBox="0 0 24 24" fill="none"><path d="M9 3v4.5M15 3v4.5M6.5 7.5h11V11a5.5 5.5 0 01-11 0V7.5zM12 16.5V21" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+    pin:'<svg viewBox="0 0 24 24" fill="none"><path d="M12 21c4-4.4 6.3-7.5 6.3-10.5A6.3 6.3 0 005.7 10.5C5.7 13.5 8 16.6 12 21z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><circle cx="12" cy="10.3" r="2.2" stroke="currentColor" stroke-width="1.6"/></svg>',
+    doc:'<svg viewBox="0 0 24 24" fill="none"><path d="M6.5 3.5h6.5l4.5 4.5V20a.8.8 0 01-.8.8H6.5a.8.8 0 01-.8-.8V4.3a.8.8 0 01.8-.8z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="M13 3.5V8.5h4.5M9 13h6M9 16.5h6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>',
+    menu:'<svg viewBox="0 0 24 24" fill="none"><path d="M4 7h16M4 12h16M4 17h16" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>',
+    funnel:'<svg viewBox="0 0 24 24" fill="none"><path d="M4 5h16l-6 7v6l-4 2v-8L4 5z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>',
+    chart:'<svg viewBox="0 0 24 24" fill="none"><path d="M4 20V4M4 20h16M8 16v-4M12 16V8M16 16v-6" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+    headset:'<svg viewBox="0 0 24 24" fill="none"><path d="M5 13v-1a7 7 0 0114 0v1M5 13h2.5a1 1 0 011 1v3a1 1 0 01-1 1H6a1 1 0 01-1-1v-4zM19 13h-2.5a1 1 0 00-1 1v3a1 1 0 001 1H18a1 1 0 001-1v-4zM19 17v1a3 3 0 01-3 3h-2.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>'
   };
   const ICN={Google:'g',WhatsApp:'wa','Sitio web':'web',Referido:'ref'};
   function ic(name,el){ if(P[name]) el.innerHTML=P[name]; }
   document.querySelectorAll('[data-ic]').forEach(el=>ic(el.dataset.ic,el));
+
+  /* ===================== PLAN SYSTEM ===================== */
+  const PORD=["base","pro","industrial","360"];
+  const PLANS={
+    base:{name:"Plan Base",abbr:"Base",price:"USD 1.050",color:"var(--green)",tint:"var(--green-t)",goal:"Empiezan a recibir consultas.",
+      idealFor:"Pymes que hoy no generan consultas online.",
+      feats:["sitio","form","maps","metricas"]},
+    pro:{name:"Plan Pro",abbr:"Pro",price:"USD 2.900",color:"var(--blue)",tint:"var(--blue-t)",goal:"Leads calificados y seguimiento.",
+      idealFor:"Empresas que quieren un canal de leads calificados.",
+      feats:["sitio","form","maps","metricas","multiseccion","leadmagnet","crm","autoresp","copy","maps_local"]},
+    industrial:{name:"Plan Industrial",abbr:"Industrial",price:"USD 4.900",color:"var(--amber)",tint:"var(--amber-t)",goal:"Web integrada al área comercial.",
+      idealFor:"Empresas con equipo de ventas y procesos a ordenar.",
+      feats:["sitio","form","maps","metricas","multiseccion","leadmagnet","crm","autoresp","copy","maps_local","embudo","segmentados","crm_av","metricas_live","maps_resenas","capacitacion"]},
+    "360":{name:"Estratégico 360",abbr:"360",price:"USD 7.500",color:"var(--p360)",tint:"var(--p360-t)",goal:"Ecosistema corporativo autónomo.",
+      idealFor:"Industrias complejas, con ERP y varias zonas de venta.",
+      feats:["sitio","form","maps","metricas","multiseccion","leadmagnet","crm","autoresp","copy","maps_local","embudo","segmentados","crm_av","metricas_live","maps_resenas","capacitacion","cotizador","erp","scoring","multizona","auditoria","sla","contenidos"]}
+  };
+  const FEATS={
+    sitio:"Landing / sitio web profesional",form:"Formulario + WhatsApp",maps:"Alta en Google Maps",metricas:"Métricas básicas",
+    multiseccion:"Web multi-sección (hasta 6 págs.)",leadmagnet:"Lead magnet / formulario avanzado",crm:"CRM con seguimiento de leads",
+    autoresp:"Respuesta automática al instante",copy:"Copywriting orientado a ventas",maps_local:"Posicionamiento en búsquedas locales",
+    embudo:"Arquitectura de embudo de ventas",segmentados:"Formularios segmentados",crm_av:"Integración con CRM avanzado",
+    metricas_live:"Panel de métricas en tiempo real",maps_resenas:"Gestión de Google Maps + reseñas",capacitacion:"Capacitación al equipo",
+    cotizador:"Cotizador avanzado / Intranet a medida",erp:"Integración bidireccional (Tango, SAP, CRMs)",scoring:"Lead Scoring IA + automatización condicional",
+    multizona:"SEO local multizona",auditoria:"Plan estratégico B2B + auditoría",sla:"Garantía extendida 12 meses + SLA",contenidos:"Lead magnet + diseño de contenidos"
+  };
+  const FWHY={
+    sitio:"Deja de ser invisible: una web seria que da confianza.",
+    form:"Las consultas entran por un solo lugar, no se pierden entre WhatsApp y mail.",
+    maps:"Aparece en Google Maps cuando buscan su rubro cerca.",
+    metricas:"Sabe cuántas consultas recibe, en vez de adivinar.",
+    multiseccion:"Cada servicio con su página: rankea mejor y convence más.",
+    leadmagnet:"Un material gratis que convierte visitantes en leads con nombre y mail.",
+    crm:"Cada lead ordenado y con seguimiento — nada se cae en el camino.",
+    autoresp:"El cliente recibe respuesta al instante, aunque sea de madrugada.",
+    copy:"Los textos dejan de describir y empiezan a vender.",
+    maps_local:"Mejor posición en las búsquedas de su ciudad.",
+    embudo:"Ordena el camino del visitante hasta la compra, sin perder consultas en el medio.",
+    segmentados:"El formulario se adapta a cada cliente, así el lead llega mejor cargado.",
+    crm_av:"Se conecta al CRM que ya usa, sin cargar nada dos veces.",
+    metricas_live:"Ve lo que pasa ahora, no un reporte de fin de mes.",
+    maps_resenas:"Gestiona reseñas para que la ficha de Google genere confianza.",
+    capacitacion:"Su equipo arranca sabiendo usar todo, sin fricción.",
+    cotizador:"El cliente arma su cotización solo, 24/7, y el pedido entra ya cargado.",
+    erp:"El dato viaja solo entre la web y su Tango/SAP, sin recargar a mano.",
+    scoring:"El sistema le dice a quién llamar primero, por intención de compra.",
+    multizona:"Aparece primero en varias ciudades a la vez, no solo en la suya.",
+    auditoria:"Diagnóstico de su proceso de ventas, con un plan concreto para mejorar.",
+    sla:"Soporte prioritario con tiempos de respuesta garantizados por contrato.",
+    contenidos:"Piezas y lead magnets para nutrir leads y sostener la presencia."
+  };
+  let plan="360";
+  const minPlan=f=>PORD.find(p=>PLANS[p].feats.includes(f));
+  const hasFeat=f=>PLANS[plan].feats.includes(f);
+  const tbadge=f=>{const m=minPlan(f);return `<span class="tbadge tb-${m}">${PLANS[m].abbr}</span>`;};
+
+  function fillCtx(el){
+    const f=el.dataset.feat,m=minPlan(f);
+    if(hasFeat(f)){el.className="planctx in";el.innerHTML=`${P.check}<span>Incluido en <b>${PLANS[plan].name}</b>.</span>`;}
+    else{el.className="planctx out";el.innerHTML=`${P.lock}<span>No está en ${PLANS[plan].name}. Se incluye desde <b>${PLANS[m].name}</b> — sirve para subir de plan.</span>`;}
+  }
+  function buildScope(){
+    const P0=PLANS[plan];
+    document.getElementById("scopeName").textContent=P0.name;
+    document.getElementById("scopeGoal").textContent=P0.goal;
+    document.getElementById("scopeFor").innerHTML=`<b>Ideal para:</b> ${P0.idealFor}`;
+    document.getElementById("scopePrice").textContent=P0.price;
+    document.getElementById("scopeIco").style.background=P0.color;
+    const inc=document.getElementById("scopeInc"),exc=document.getElementById("scopeExc");
+    inc.innerHTML="";exc.innerHTML="";
+    Object.keys(FEATS).forEach(f=>{
+      if(PLANS[plan].feats.includes(f)) inc.insertAdjacentHTML("beforeend",`<li><span class="mk2">${P.check}</span><div class="sl-tx"><span class="sl-n">${FEATS[f]}</span><span class="sl-w">${FWHY[f]}</span></div></li>`);
+      else{const m=minPlan(f);exc.insertAdjacentHTML("beforeend",`<li><span class="mk2">${P.lock}</span><div class="sl-tx"><span class="sl-n">${FEATS[f]}</span><span class="sl-w">${FWHY[f]}</span></div><span class="unl tb-${m}">${PLANS[m].abbr}</span></li>`);}
+    });
+    if(!exc.children.length) exc.innerHTML=`<li style="color:var(--green)"><span class="mk2">${P.check}</span>Nada afuera — es el plan más completo.</li>`;
+  }
+  function buildScoring(){
+    const el=document.getElementById("scList");if(!el)return;
+    const col=p=>p==="alta"?"var(--brand)":p==="media"?"var(--amber)":"var(--ink4)";
+    el.innerHTML=[...leads].sort((a,b)=>b.sc-a.sc).slice(0,6).map(l=>
+      `<div class="scrow"><span class="scn">${l.n}</span><span class="scc">${l.msg}</span><span class="scbar"><i style="width:${l.sc}%;background:${col(l.pri)}"></i></span><span class="scval" style="color:${col(l.pri)}">${l.sc}</span></div>`).join("");
+  }
+  function buildPresencia(){
+    const bar=document.getElementById("zoneBar");if(!bar)return;
+    const multi=hasFeat("multizona"),local=hasFeat("maps_local");
+    const zones=multi?[["Santa Fe Capital",92,"#1–2"],["Santo Tomé",88,"#1–3"],["Rosario",74,"#3–5"],["Paraná",81,"#2–4"],["Rafaela",69,"#4–6"]]
+      :[["Santa Fe Capital",local?86:60,local?"#2–3":"#6–9"]];
+    bar.innerHTML=zones.map(z=>`<div class="zone"><span class="zn">${z[0]}</span><span class="ztrk"><i style="width:${z[1]}%"></i></span><span class="zpos">${z[2]}</span></div>`).join("");
+    const t=document.getElementById("presTitle"),s=document.getElementById("presSub"),n=document.getElementById("presNote");
+    if(multi){t.textContent="Posición por zona · multizona";s.textContent="Aparece primero en varias ciudades a la vez.";n.innerHTML="Con SEO multizona la misma empresa rankea en cada ciudad donde vende, no solo en la suya.";}
+    else if(hasFeat("maps_resenas")){t.textContent="Posición local + reseñas";s.textContent="Bien posicionado en su ciudad, con reseñas gestionadas.";n.innerHTML="La cobertura multizona (varias ciudades) se incluye desde <b>360</b>.";}
+    else{t.textContent="Posición local";s.textContent="Presencia en el Google Maps de su ciudad.";n.innerHTML="Posicionamiento local más fuerte desde <b>Pro</b>; reseñas gestionadas desde <b>Industrial</b>; multizona desde <b>360</b>.";}
+  }
+  function seedFeed(){
+    const f=document.getElementById("feed");if(!f)return;
+    let h=`<div class="fe"><div class="fi t-in" data-ic="inbox"></div><div><div class="ft"><b>Sofía Romano</b> dejó una consulta desde la web.</div><div class="fm">hoy · 11:04</div></div></div>`;
+    if(hasFeat("autoresp")) h+=`<div class="fe"><div class="fi t-auto" data-ic="bolt"></div><div><div class="ft">Respuesta automática enviada a Sofía Romano.</div><div class="fm">hoy · 11:04</div></div></div>`;
+    if(hasFeat("scoring")) h+=`<div class="fe"><div class="fi t-ia" data-ic="spark"></div><div><div class="ft">IA priorizó el lead como <b>Alta</b> — cotización urgente.</div><div class="fm">hoy · 11:04</div></div></div>`;
+    else h+=`<div class="fe"><div class="fi t-auto" data-ic="bell"></div><div><div class="ft">Aviso al vendedor para contactar a Sofía Romano.</div><div class="fm">hoy · 11:04</div></div></div>`;
+    h+=`<div class="fe"><div class="fi t-auto" data-ic="bell"></div><div><div class="ft">Recordatorio: seguir a Carlos Méndez (2 días sin respuesta).</div><div class="fm">hoy · 09:40</div></div></div>`;
+    f.innerHTML=h;f.querySelectorAll('[data-ic]').forEach(el=>ic(el.dataset.ic,el));
+  }
+  function applyPlan(p){
+    plan=p;const P0=PLANS[p];
+    document.querySelectorAll('#planseg button').forEach(b=>b.classList.toggle('on',b.dataset.plan===p));
+    const wp=document.getElementById('wsPlan');wp.textContent=P0.name;wp.style.color=P0.color;wp.style.background=P0.tint;
+    document.getElementById('wsFor').textContent=P0.idealFor;
+    document.getElementById('priceV').textContent=P0.price.replace('USD','US$');
+    document.querySelectorAll('.nav-i[data-feat]').forEach(b=>{
+      const ok=hasFeat(b.dataset.feat);b.classList.toggle('nav-locked',!ok);
+      let lk=b.querySelector('.lk');
+      if(!ok&&!lk){lk=document.createElement('span');lk.className='lk';lk.innerHTML=P.lock;b.appendChild(lk);}
+      else if(ok&&lk){lk.remove();}
+    });
+    document.querySelectorAll('.planctx[data-feat]').forEach(fillCtx);
+    renderTable();buildScope();buildScoring();buildPresencia();seedFeed();
+  }
 
   /* ---------- avatars ---------- */
   const AVC=[['#fdefe4','#c64f0c'],['#eceffb','#2f54d4'],['#e6f3eb','#1c8a4e'],['#f1edfc','#6741d9'],['#fbf2df','#a16207']];
@@ -518,7 +1038,9 @@
       <td><span class="co">${l.co}</span></td>
       <td><span class="or"><span class="oic"></span>${l.or}</span></td>
       <td><span class="tag tg-${l.st}">${SL[l.st]}</span></td>
-      <td><span class="sig ${l.pri}"><span class="bars"><i></i><i></i><i></i></span><span class="sl">${PL[l.pri]}</span></span></td>
+      <td>${hasFeat('scoring')
+        ? `<span class="sig ${l.pri}"><span class="bars"><i></i><i></i><i></i></span><span class="sl">${PL[l.pri]} · ${l.sc}</span></span>`
+        : `<span style="color:var(--ink4);font-size:12px;display:inline-flex;align-items:center;gap:6px">— ${tbadge('scoring')}</span>`}</td>
       <td><span class="last">${l.last}</span></td>
       <td class="chev" data-ic="chev"></td></tr>`;
   }
@@ -546,12 +1068,12 @@
         <div class="kv"><span class="kk">Origen</span><span class="vv">${l.or}</span></div>
         <div class="kv"><span class="kk">Pedido</span><span class="vv">${l.msg}</span></div>
         <div class="kv"><span class="kk">Etapa</span><span class="vv"><span class="tag tg-${l.st}">${SL[l.st]}</span></span></div>
-        <div class="ia">
+        ${hasFeat('scoring') ? `<div class="ia">
           <div class="iah"><span data-ic="spark"></span><span class="t">Evaluación IA</span></div>
           <div class="score"><span class="big num">${l.sc}</span><span class="of">/ 100</span><span class="lab sig ${l.pri}" style="background:none"><span class="sl">${PL[l.pri]} prioridad</span></span></div>
           <div class="strk"><i style="width:${l.sc}%"></i></div>
           <div class="why">${l.why}</div>
-        </div>
+        </div>` : `<div class="planctx out" style="margin:16px 0 0">${P.lock}<span>El <b>Lead Scoring IA</b> (puntaje + prioridad automática) se incluye desde <b>Estratégico 360</b>. En ${PLANS[plan].name} el lead queda registrado para seguimiento manual.</span></div>`}
         <div class="dr-sec">Historial</div>
         <div class="tl">${l.tl.map(e=>`<div class="e"><div class="et">${e[0]}</div><div class="ed">${e[1]}</div></div>`).join("")}</div>
         <div class="dr-act">
@@ -590,17 +1112,23 @@
   function simulate(p){
     simBtn.disabled=true;
     const ev=evalLead(p.msg);
-    leads.unshift({n:p.n,co:p.co,or:p.or,msg:p.msg,st:"nuevo",pri:ev.pri,sc:ev.sc,why:ev.why,last:"recién",
-      tl:[["Dejó la consulta en la web","recién"],["Respuesta automática enviada","recién"]]});
-    toast("inbox","var(--blue-t)","var(--blue)",`Nueva consulta: ${p.n}`,`${p.co} · por ${p.or}`,0);
-    feedAdd("in","inbox",`<b>${p.n}</b> dejó una consulta desde la web.`); bump("t-cons",++cons);
-    toast("bolt","#f3f4f6","var(--ink2)","Respuesta automática enviada",`${p.n} recibió la confirmación`,650);
-    feedAdd("auto","bolt",`Respuesta automática enviada a ${p.n}.`);
-    toast("bell","var(--amber-t)","var(--amber)","Vendedor notificado","Aviso enviado a su WhatsApp",1300);
-    toast("spark","var(--brand-tint)","var(--brand)",`IA: prioridad ${PL[ev.pri]} · ${ev.sc}/100`,"Lead clasificado en tu agenda",1950);
-    feedAdd("ia","spark",`IA priorizó a <b>${p.n}</b> como <b>${PL[ev.pri]}</b> (${ev.sc}/100).`);
+    const tl=[["Dejó la consulta en la web","recién"]];
+    if(hasFeat("autoresp")) tl.push(["Respuesta automática enviada","recién"]);
+    leads.unshift({n:p.n,co:p.co,or:p.or,msg:p.msg,st:"nuevo",pri:ev.pri,sc:ev.sc,why:ev.why,last:"recién",tl});
+    let d=0;
+    toast("inbox","var(--blue-t)","var(--blue)",`Nueva consulta: ${p.n}`,`${p.co} · por ${p.or}`,d);
+    feedAdd("in","inbox",`<b>${p.n}</b> dejó una consulta desde la web.`); bump("t-cons",++cons); d+=700;
+    if(hasFeat("autoresp")){
+      toast("bolt","#f3f4f6","var(--ink2)","Respuesta automática enviada",`${p.n} recibió la confirmación`,d);
+      feedAdd("auto","bolt",`Respuesta automática enviada a ${p.n}.`); d+=700;
+    }
+    toast("bell","var(--amber-t)","var(--amber)","Aviso al vendedor",hasFeat("crm")?"Quedó en el CRM para seguimiento":"Aviso enviado a su WhatsApp",d); d+=700;
+    if(hasFeat("scoring")){
+      toast("spark","var(--brand-tint)","var(--brand)",`IA: prioridad ${PL[ev.pri]} · ${ev.sc}/100`,"Lead clasificado en tu agenda",d);
+      feedAdd("ia","spark",`IA priorizó a <b>${p.n}</b> como <b>${PL[ev.pri]}</b> (${ev.sc}/100).`); d+=700;
+    }
     document.getElementById("t-pend").textContent=++pend;
-    setTimeout(()=>{renderTable(p.n);simBtn.disabled=false;},2200);
+    setTimeout(()=>{renderTable(p.n);buildScoring();simBtn.disabled=false;},Math.max(2200,d+300));
   }
   let pi=0;
   simBtn.onclick=()=>{const p=POOL[pi++%POOL.length];go("crm");simulate(p);};
@@ -612,17 +1140,99 @@
 
   /* ---------- nav ---------- */
   const T={resumen:["Resumen","Tu operación comercial, en un vistazo"],
-    crm:["Leads","Todos tus contactos, ordenados y con seguimiento"],
-    sitio:["Sitio web","Lo que ve tu cliente y por dónde entra cada consulta"],
-    producto:["Producto real","Qué muestra esta demo y qué recibe el cliente final"]};
+    crm:["Leads","Todos los contactos, ordenados y con seguimiento"],
+    sitio:["Sitio web","Lo que ve el cliente y por dónde entra cada consulta"],
+    sitioplus:["Sitio & contenido","Web multi-sección, lead magnet y copywriting"],
+    embudo:["Embudo & formularios","Conversión por etapa y formularios que se adaptan"],
+    metricas:["Métricas en vivo","El tablero que se actualiza en tiempo real"],
+    scoring:["Lead Scoring IA","Leads ordenados por intención de compra"],
+    cotizador:["Cotizador","Herramienta de cotización a medida en la web del cliente"],
+    integra:["Integraciones","Conexión bidireccional con ERP y CRM"],
+    presencia:["Presencia local","Google Maps y posicionamiento por zona"],
+    servicios:["Servicios & soporte","Lo que recibe el cliente más allá del software"],
+    producto:["Plan & alcance","Qué incluye el plan que tenés seleccionado"]};
   function go(v){
     document.querySelectorAll(".nav-i").forEach(b=>b.classList.toggle("on",b.dataset.view===v));
     document.querySelectorAll(".view").forEach(s=>s.classList.add("hide"));
     document.getElementById("v-"+v).classList.remove("hide");
     document.getElementById("vt").textContent=T[v][0];document.getElementById("vs").textContent=T[v][1];
     document.querySelector(".main").scrollTo(0,0);
+    closeSide();
   }
   document.querySelectorAll(".nav-i").forEach(b=>b.onclick=()=>go(b.dataset.view));
+
+  /* ---------- menú mobile ---------- */
+  const side=document.querySelector('.side'),sidescrim=document.getElementById('sidescrim');
+  function openSide(){side.classList.add('open');sidescrim.classList.add('show');}
+  function closeSide(){side.classList.remove('open');sidescrim.classList.remove('show');}
+  document.getElementById('menuBtn').onclick=openSide;
+  sidescrim.onclick=closeSide;
+
+  /* ---------- cotizador interactivo ---------- */
+  const QBASE={"Corte láser":1200,"Estructura metálica":3500,"Piezas a medida":900};
+  const QMULT={"50":1,"200":3.6,"500":8}, QPLAZO={"50":"5–7 días","200":"12–15 días","500":"25–30 días"};
+  function quote(){
+    const servEl=document.querySelector('.qopt[data-q="serv"].sel');
+    const cantEl=document.querySelector('.qopt[data-q="cant"].sel');
+    const serv=servEl?servEl.textContent.trim().replace(/\s+base$/,''):"Corte láser";
+    const key=cantEl?cantEl.dataset.mult:"200";
+    const m=QMULT[key]||3.6, base=QBASE[serv]||1200, tot=Math.round(base*m);
+    const fmt=n=>"US$ "+n.toLocaleString("es-AR");
+    document.getElementById("qBase").textContent=fmt(base);
+    document.getElementById("qVol").textContent="×"+String(m).replace(".",",");
+    document.getElementById("qPlazo").textContent=QPLAZO[key]||"12–15 días";
+    document.getElementById("qTot").textContent=fmt(tot);
+  }
+  document.querySelectorAll('.qopt').forEach(o=>o.onclick=()=>{
+    o.parentElement.querySelectorAll('.qopt').forEach(s=>s.classList.remove('sel'));
+    o.classList.add('sel');quote();
+  });
+  quote();
+
+  /* ---------- plan selector ---------- */
+  document.querySelectorAll('#planseg button').forEach(b=>b.onclick=()=>applyPlan(b.dataset.plan));
+  applyPlan('360');
+
+  /* ---------- sitio multi-sección ---------- */
+  const SITE={
+    inicio:{h:"Inicio",t:"El mensaje principal y un CTA claro arriba de todo.",c:["Propuesta de valor","Botón de cotización","Pruebas de confianza"]},
+    servicios:{h:"Servicios",t:"Cada servicio con su página, pensada para rankear y convertir.",c:["Corte láser","Estructuras","Piezas a medida","Mantenimiento"]},
+    casos:{h:"Casos",t:"Trabajos reales con foto y resultado — lo que más convence a un comprador industrial.",c:["Antes / después","Cliente y rubro","Resultado concreto"]},
+    nosotros:{h:"Nosotros",t:"Trayectoria, planta y certificaciones. Da seriedad ante una compra grande.",c:["Años de experiencia","Certificaciones","Equipo"]},
+    contacto:{h:"Contacto",t:"Formulario + WhatsApp + ubicación en mapa. Sin vueltas para consultar.",c:["Formulario","WhatsApp directo","Mapa"]}
+  };
+  function siteShow(pg){
+    const s=SITE[pg];const b=document.getElementById('siteBody');if(!b)return;
+    b.innerHTML=`<h5>${s.h}</h5>${s.t}<div class="chips">${s.c.map(x=>`<span>${x}</span>`).join("")}</div>`;
+    document.querySelectorAll('#siteTabs .ptab').forEach(t=>t.classList.toggle('on',t.dataset.pg===pg));
+  }
+  document.querySelectorAll('#siteTabs .ptab').forEach(t=>t.onclick=()=>siteShow(t.dataset.pg));
+  siteShow('inicio');
+
+  /* ---------- formulario segmentado ---------- */
+  const SEG={
+    cotizar:[["¿Qué servicio?","Corte láser ▾"],["Cantidad / medidas","50 piezas, 3 mm"],["Plazo deseado","Esta semana ▾"],["Email o WhatsApp","tu contacto"]],
+    soporte:[["Equipo o máquina","Modelo / serie"],["¿Qué pasa?","Describí la falla"],["Urgencia","Alta ▾"],["Email o WhatsApp","tu contacto"]],
+    info:[["Email","tu@empresa.com"]]
+  };
+  function segShow(k){
+    const b=document.getElementById('segBody');if(!b)return;
+    b.innerHTML=SEG[k].map(f=>`<label>${f[0]}</label><div class="segfield">${f[1]}</div>`).join("");
+    document.querySelectorAll('#segPick button').forEach(x=>x.classList.toggle('on',x.dataset.seg===k));
+  }
+  document.querySelectorAll('#segPick button').forEach(x=>x.onclick=()=>segShow(x.dataset.seg));
+  segShow('cotizar');
+
+  /* ---------- métricas en vivo ---------- */
+  const mChart=document.getElementById('mChart');
+  if(mChart){
+    const days=["Lu","Ma","Mi","Ju","Vi","Sá","Do"], vals=[8,12,10,15,18,6,4], mx=Math.max(...vals);
+    mChart.innerHTML=days.map((d,i)=>`<div class="lcol"><div class="lbar" style="height:${Math.round(vals[i]/mx*88)}px"></div><div class="lcl">${d}</div></div>`).join("");
+    const nowEl=document.getElementById('m-now');
+    setInterval(()=>{ if(!document.getElementById('v-metricas').classList.contains('hide')){
+      let v=parseInt(nowEl.textContent,10)+Math.floor(Math.random()*3)-1; v=Math.max(3,Math.min(14,v)); nowEl.textContent=v;
+    }},2600);
+  }
 })();
 </script>
 </body>
