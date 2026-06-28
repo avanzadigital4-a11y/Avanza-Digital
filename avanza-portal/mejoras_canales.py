@@ -22,18 +22,7 @@ from sqlalchemy import text
 
 
 # (tabla, columna, tipo_sql, default_sql_o_None)
-# Sin server-default en los flags de canal: se backfillean desde tipo_aliado
-# (ver _backfill_canales). El modelo ORM ya trae defaults Python para inserts.
 _COLUMNAS = [
-    # --- ALIADOS: puente entre canales + rampa/mentor ---
-    ("aliados", "canal1_habilitado",   "BOOLEAN",  None),
-    ("aliados", "canal2_habilitado",   "BOOLEAN",  None),
-    ("aliados", "canal_activo",        "VARCHAR",  "'canal1'"),
-    ("aliados", "rampa_estado",        "VARCHAR",  "'nuevo'"),
-    ("aliados", "rampa_recompensa_en", "TIMESTAMP", None),
-    ("aliados", "primer_cierre_en",    "TIMESTAMP", None),
-    ("aliados", "mentor_id",           "INTEGER",  None),
-    ("aliados", "es_mentor",           "BOOLEAN",  "FALSE"),
     # --- BOLSA_LEADS: reciclado ---
     ("bolsa_leads", "intentos",            "INTEGER",  "0"),
     ("bolsa_leads", "reciclados",          "INTEGER",  "0"),
@@ -66,35 +55,14 @@ def _add_column(conn, dialect: str, tabla: str, col: str, tipo: str, default):
         raise
 
 
-def _backfill_canales(conn):
-    """Rellena los flags de canal de los aliados existentes a partir de
-    tipo_aliado. Solo toca filas con el flag en NULL (idempotente)."""
-    # Todo aliado canal1 (o sin tipo) puede operar en la bolsa.
-    conn.execute(text(
-        "UPDATE aliados SET canal1_habilitado = "
-        "CASE WHEN tipo_aliado IS NULL OR tipo_aliado = 'canal1' THEN TRUE ELSE FALSE END "
-        "WHERE canal1_habilitado IS NULL"
-    ))
-    conn.execute(text(
-        "UPDATE aliados SET canal2_habilitado = "
-        "CASE WHEN tipo_aliado = 'canal2' THEN TRUE ELSE FALSE END "
-        "WHERE canal2_habilitado IS NULL"
-    ))
-    conn.execute(text(
-        "UPDATE aliados SET canal_activo = COALESCE(tipo_aliado, 'canal1') "
-        "WHERE canal_activo IS NULL"
-    ))
-
-
 def run_migrations(engine) -> None:
-    """Crea las columnas nuevas si no existen y backfillea los flags de canal.
+    """Crea las columnas nuevas (reciclado, delivery) si no existen.
     Idempotente. Llamar una vez al boot, DESPUÉS de Base.metadata.create_all()."""
     dialect = engine.dialect.name
     try:
         with engine.begin() as conn:
             for tabla, col, tipo, default in _COLUMNAS:
                 _add_column(conn, dialect, tabla, col, tipo, default)
-            _backfill_canales(conn)
-        print("[MEJORAS] Migraciones OK (canales, rampa, reciclado, delivery)", flush=True)
+        print("[MEJORAS] Migraciones OK (reciclado, delivery)", flush=True)
     except Exception as e:
         print(f"[MEJORAS] Error en migraciones: {e}", file=sys.stderr, flush=True)

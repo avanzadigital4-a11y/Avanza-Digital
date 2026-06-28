@@ -243,7 +243,7 @@ def eliminar_lead_bolsa(id: int, db: Session = Depends(get_db),
 def ver_bolsa_aliado(codigo: str, pais: str = "", db: Session = Depends(get_db), _owner=Depends(verify_ownership_dep)):
     """Muestra los leads disponibles y los que este aliado ya reclamó."""
     a = _get_aliado(codigo, db)
-    if not a.puede_canal1:
+    if (getattr(a, "tipo_aliado", "canal1") or "canal1") == "canal2":
         raise HTTPException(403, "La bolsa de leads no está disponible para aliados Canal 2.")
     _aplicar_caducidad_bolsa(db) # Limpiamos antes de mostrar
     
@@ -319,7 +319,7 @@ def reclamar_lead(id: int,
     Siempre usa el aliado del JWT.
     """
     a = aliado  # del token, no del query
-    if not a.puede_canal1:
+    if (getattr(a, "tipo_aliado", "canal1") or "canal1") == "canal2":
         raise HTTPException(403, "Operación no disponible para aliados Canal 2.")
 
     # Verificar límite de reclamos activos simultáneos
@@ -360,7 +360,7 @@ def contactar_lead_bolsa(id: int,
     if body is not None:
         resultado = body.resultado
     a = aliado
-    if not a.puede_canal1:
+    if (getattr(a, "tipo_aliado", "canal1") or "canal1") == "canal2":
         raise HTTPException(403, "La bolsa de leads no está disponible para aliados Canal 2.")
     RESULTADOS_VALIDOS = {"exitoso", "no_interesado", "no_contesto"}
     if resultado not in RESULTADOS_VALIDOS:
@@ -468,7 +468,7 @@ def convertir_lead_en_prospecto(id: int,
     - Deja una actividad de sistema en el timeline del prospecto con el origen.
     """
     a = aliado
-    if not a.puede_canal1:
+    if (getattr(a, "tipo_aliado", "canal1") or "canal1") == "canal2":
         raise HTTPException(403, "La bolsa de leads no está disponible para aliados Canal 2.")
 
     lead = db.query(LeadBolsa).filter(LeadBolsa.id == id).first()
@@ -511,7 +511,7 @@ def convertir_lead_en_prospecto(id: int,
 def historial_bolsa_aliado(codigo: str, db: Session = Depends(get_db), _owner=Depends(verify_ownership_dep)):
     """Historial completo de leads de un aliado con estadísticas."""
     a = _get_aliado(codigo, db)
-    if not a.puede_canal1:
+    if (getattr(a, "tipo_aliado", "canal1") or "canal1") == "canal2":
         raise HTTPException(403, "La bolsa de leads no está disponible para aliados Canal 2.")
     leads = db.query(LeadBolsa).filter(LeadBolsa.aliado_id == a.id).order_by(LeadBolsa.fecha_reclamo.desc()).all()
 
@@ -584,7 +584,7 @@ def ver_marketplace(codigo_aliado: str = "",
     SECURITY: usa el aliado del JWT, no acepta `codigo_aliado` para spoofing.
     """
     a = aliado  # del JWT
-    if not a.puede_canal1:
+    if (getattr(a, "tipo_aliado", "canal1") or "canal1") == "canal2":
         raise HTTPException(403, "El marketplace de leads no está disponible para aliados Canal 2.")
     _aplicar_caducidad_bolsa(db)
     q = db.query(LeadBolsa).filter(
@@ -642,7 +642,7 @@ def comprar_lead(id: int,
     contacto del lead.
     """
     a = aliado
-    if not a.puede_canal1:
+    if (getattr(a, "tipo_aliado", "canal1") or "canal1") == "canal2":
         raise HTTPException(403, "El marketplace de leads no está disponible para aliados Canal 2.")
     lead = db.query(LeadBolsa).filter(
         LeadBolsa.id == id, LeadBolsa.estado == "disponible"

@@ -229,10 +229,6 @@ def auto_registro(request: Request,
     _ajustar_creditos(db, a, 100, "bienvenida", "registro")
     db.commit()
 
-    # Rampa: asigna mentor y abre mentoría para acompañar el primer cierre.
-    import rampa
-    rampa.iniciar_rampa(db, a); db.commit()
-
     # WhatsApp de bienvenida Canal 1 — EN SEGUNDO PLANO
     # Envía: código de aliado + link grupo WA + primer paso accionable
     if os.environ.get("ENABLE_CANAL1_WA", "0") == "1":

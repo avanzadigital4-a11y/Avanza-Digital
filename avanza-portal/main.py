@@ -1860,9 +1860,6 @@ def registrar_venta(body: schemas.RegistrarVentaIn | None = Body(default=None),
     bonus_info = None
     if es_primera_venta:
         bonus_info = _aplicar_bonus_primera_venta(db, a, v.id)
-        # Rampa: recompensa de primer cierre (mentee + mentor). Idempotente.
-        import rampa
-        rampa.procesar_primer_cierre(db, a.id)
     
     _nivel_anterior_reg = a.nivel  # capturar antes de actualizar
     a.nivel = a.nivel_calculado
@@ -3373,11 +3370,9 @@ app.include_router(equipos.router)               # /aliados/{codigo}/equipo
 app.include_router(onboarding.router)             # /onboarding + /admin/onboarding
 
 # ─── MEJORAS CANAL 1 / CANAL 2 ───────────────────────────────────────────────
-import rampa, reciclado, delivery, canales, reparto_visibilidad  # noqa: E402
-app.include_router(rampa.router)                  # /aliados/{cod}/rampa, /mentorias
+import reciclado, delivery, reparto_visibilidad  # noqa: E402
 app.include_router(reciclado.router)              # /bolsa/{id}/historial, /admin/bolsa/reciclados
 app.include_router(delivery.router)               # /aliados/{cod}/entregas, /admin/entregas
-app.include_router(canales.router)                # /aliados/{cod}/canales
 app.include_router(reparto_visibilidad.router)    # /aliados/{cod}/reparto/...
 
 # Job: devolver a la bolsa los leads cuyo cooldown de reciclado ya venció.

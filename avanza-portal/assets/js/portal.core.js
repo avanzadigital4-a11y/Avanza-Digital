@@ -634,9 +634,7 @@ function cambiarTab(tab, btn) {
   }
   if(tab==='red') { cargarRed(); iniciarAutoRefreshRed(); }
   if(tab==='equipo') cargarEquipo();
-  if(tab==='rampa') cargarRampa();
   if(tab==='entregas') cargarEntregas();
-  if(tab==='canales') cargarCanales();
   if(tab==='comunidad') cargarComunidad();
   if(tab==='academia') inicializarAcademia();
   // v1.4: refrescar TC al entrar al cotizador y comisiones al entrar a su tab
@@ -706,27 +704,23 @@ function irACotizadorConRubro(rubro, plan) {
 }
 
 // ── CANAL: configurar visibilidad de tabs y bloques ─────────────────────────
-// Puente entre canales: la visibilidad ya no es binaria por tipo_aliado. Cada
-// set de tabs se muestra según su flag (con fallback a tipo_aliado si el back
-// todavía no manda los flags). Un aliado con los dos canales habilitados ve
-// ambos sets.
+// ── CANAL: configurar visibilidad de tabs y bloques ─────────────────────────
+// El canal queda definido al registrarse (tipo_aliado) y no se cambia desde el
+// portal: Canal 1 = sin cartera (bolsa), Canal 2 = con cartera (referir).
 function configurarCanal() {
   if (!aliado) return;
-  const tipo = aliado.tipo_aliado || 'canal1';
-  const c1 = (aliado.canal1_habilitado != null) ? !!aliado.canal1_habilitado : (tipo === 'canal1');
-  const c2 = (aliado.canal2_habilitado != null) ? !!aliado.canal2_habilitado : (tipo === 'canal2');
-  // Solo-canal2 (sin canal1) conserva el arranque especial en kit-ventas.
-  const esCanal2 = c2 && !c1;
+  const canal = aliado.tipo_aliado || 'canal1';
+  const esCanal2 = canal === 'canal2';
 
-  // Tabs: cada una visible si su canal está habilitado.
-  document.querySelectorAll('.tab-canal1').forEach(el => { el.style.display = c1 ? '' : 'none'; });
-  document.querySelectorAll('.tab-canal2').forEach(el => { el.style.display = c2 ? '' : 'none'; });
+  // Tabs
+  document.querySelectorAll('.tab-canal1').forEach(el => { el.style.display = esCanal2 ? 'none' : ''; });
+  document.querySelectorAll('.tab-canal2').forEach(el => { el.style.display = esCanal2 ? '' : 'none'; });
 
-  // Bloques internos del dashboard (misma lógica por flag).
-  document.querySelectorAll('.d-canal1-only').forEach(el => { el.style.display = c1 ? '' : 'none'; });
-  document.querySelectorAll('.d-canal2-only').forEach(el => { el.style.display = c2 ? '' : 'none'; });
+  // Bloques internos del dashboard
+  document.querySelectorAll('.d-canal1-only').forEach(el => { el.style.display = esCanal2 ? 'none' : ''; });
+  document.querySelectorAll('.d-canal2-only').forEach(el => { el.style.display = esCanal2 ? '' : 'none'; });
 
-  // Para aliados solo-Canal 2: la primera tab activa es kit-ventas, no dashboard.
+  // Para Canal 2: la primera tab activa es kit-ventas, no dashboard
   if (esCanal2) {
     const tabKitVentas = document.querySelector('.tab-canal2[onclick*="kit-ventas"]');
     if (tabKitVentas) {
@@ -734,8 +728,8 @@ function configurarCanal() {
     }
   }
 
-  // Para Canal 1: mostrar banner del kit PDF (Módulo 8) si no fue cerrado.
-  if (c1) {
+  // Para Canal 1: mostrar banner del kit PDF (Módulo 8) si no fue cerrado
+  if (!esCanal2) {
     const dismissKey = `kit_banner_dismiss_${aliado.codigo}`;
     const banner = document.getElementById('d-canal1-kit-banner');
     if (banner) {
