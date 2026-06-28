@@ -76,7 +76,37 @@ class Aliado(Base):
     rubros_especialidad = Column(Text, default="[]")
 
     # --- CANAL DE ALIADO ---
+    # `tipo_aliado` queda como el canal PRIMARIO/origen (compatibilidad).
+    # El puente entre canales (canales.py) usa los flags de abajo: un aliado
+    # puede operar en los dos canales a la vez con una sola identidad.
     tipo_aliado = Column(String, default="canal1")
+
+    # --- PUENTE ENTRE CANALES (canales.py) ---
+    # canal1 = bolsa de leads (sin cartera) · canal2 = referir sobre cartera propia.
+    # Un closer de Canal 1 que arma cartera habilita canal2; un referidor de
+    # Canal 2 que quiere cerrar activo habilita canal1 (acceso a la bolsa).
+    # Default NULL a propósito: mientras el flag sea NULL, las properties
+    # puede_canal1/puede_canal2 caen a tipo_aliado (preserva el comportamiento
+    # original). Se setean explícito al activar el otro canal o en el backfill.
+    canal1_habilitado = Column(Boolean, nullable=True)
+    canal2_habilitado = Column(Boolean, nullable=True)
+    # Modo en el que está parado el aliado en el portal (solo UI; no restringe).
+    canal_activo = Column(String, default="canal1")
+
+    # --- RAMPA / PRIMER CIERRE ASISTIDO (rampa.py) ---
+    # Estado de rampa del aliado nuevo: nuevo → activado → primer_lead →
+    # primer_cierre → graduado. Sirve para acompañar el make-or-break (el
+    # tiempo al primer cierre) en vez de perder al 80% en silencio.
+    rampa_estado = Column(String, default="nuevo")
+    # Sello (idempotencia) de cuándo se otorgó la recompensa de primer cierre.
+    rampa_recompensa_en = Column(DateTime, nullable=True)
+    primer_cierre_en = Column(DateTime, nullable=True)
+    # Mentor asignado para el primer cierre (otro aliado senior).
+    # Sin FK a propósito: Aliado ya tiene un self-FK (sponsor_id) y un segundo
+    # volvería ambigua la relación `sponsor`. Mismo criterio que setter_id.
+    mentor_id = Column(Integer, nullable=True)
+    # El aliado está habilitado para mentorear a aliados nuevos.
+    es_mentor = Column(Boolean, default=False)
 
     # --- COBRO DE COMISIONES (NUEVO) ---
     cbu_alias = Column(String, nullable=True)
@@ -136,6 +166,20 @@ class Aliado(Base):
     def total_pendiente(self):
         return sum(v.comision_usd for v in self.ventas if v.confirmada and not v.pagada)
 
+    # --- PUENTE ENTRE CANALES: lectura tolerante (cae a tipo_aliado si los
+    # flags todavía no fueron backfilleados) ---
+    @property
+    def puede_canal1(self) -> bool:
+        if self.canal1_habilitado is not None:
+            return bool(self.canal1_habilitado)
+        return (self.tipo_aliado or "canal1") == "canal1"
+
+    @property
+    def puede_canal2(self) -> bool:
+        if self.canal2_habilitado is not None:
+            return bool(self.canal2_habilitado)
+        return (self.tipo_aliado or "canal1") == "canal2"
+
 
 # ─── REFERIDO ────────────────────────────────────────────────────────────────
 class Referido(Base):
@@ -156,6 +200,19 @@ class Referido(Base):
     aliado = relationship("Aliado", back_populates="referidos")
     venta = relationship("Venta", back_populates="referido", uselist=False)
     prospecto = relationship("Prospecto", back_populates="referido")
+
+    # --- VISIBILIDAD DE IMPLEMENTACIÓN (delivery.py) ---
+    # El aliado de Canal 2 arriesga una relación de años: necesita ver en qué
+    # estado va la implementación de SU cliente, no quedar a ciegas tras referir.
+    # Estados: sin_iniciar → onboarding → en_desarrollo → en_revision → entregado
+    # (+ 'pausado' como estado lateral). Cada cambio deja rastro y avisa al aliado.
+    # La venta vinculada se resuelve por la relación `venta` ya existente
+    # (Venta.referido_id), no se duplica el FK para no ambiguar el join.
+    estado_implementacion = Column(String, default="sin_iniciar", index=True)
+    impl_actualizado_en = Column(DateTime, nullable=True)
+    impl_eta = Column(String, nullable=True)            # ETA legible, ej "2 semanas"
+    impl_historial = Column(Text, default="[]")          # JSON timeline de cambios
+    impl_alerta_estancado_en = Column(DateTime, nullable=True)  # último aviso de estancamiento
 
 
 # ─── VENTA ───────────────────────────────────────────────────────────────────
@@ -385,6 +442,16 @@ class LeadBolsa(Base):
     fecha_carga = Column(DateTime, default=datetime.now)
     fecha_reclamo = Column(DateTime, nullable=True)
     notif_24h_enviada = Column(Boolean, default=False)
+
+    # --- RECICLADO (reciclado.py) ---
+    # Un lead trabajado y no cerrado NO vuelve crudo a la bolsa: registra el
+    # intento, entra en cooldown ('nurture') y reaparece con su historial visible
+    # para que el próximo no arranque a ciegas. Tras N reciclados → 'quemado'.
+    # estado puede valer además: 'nurture' (en cooldown) | 'quemado' (retirado).
+    intentos = Column(Integer, default=0)
+    reciclados = Column(Integer, default=0)
+    historial_intentos = Column(Text, default="[]")  # JSON: [{aliado, fecha, resultado, nota}]
+    cooldown_hasta = Column(DateTime, nullable=True)
     # --- ATRIBUCION DE EQUIPO (handoff setter->closer) ---
     setter_id = Column(Integer, nullable=True)  # id del aliado setter (sin FK para no ambiguar relaciones)
     setter_split_pct = Column(Float, nullable=True)
@@ -838,6 +905,29 @@ class Equipo(Base):
 
     aliado_a = relationship("Aliado", foreign_keys=[aliado_a_id])
     aliado_b = relationship("Aliado", foreign_keys=[aliado_b_id])
+
+
+# ─── MENTORÍA / PRIMER CIERRE ASISTIDO (rampa.py) ────────────────────────────
+# Vínculo temporal entre un aliado nuevo (mentee) y un aliado senior (mentor)
+# para acompañar el primer cierre. Se abre al ingresar el mentee, se cierra
+# cuando cierra su primer deal (o al graduarse / vencer). Una sola activa por
+# mentee. El mentor cobra un bonus de créditos cuando su mentee debuta.
+class Mentoria(Base):
+    __tablename__ = "mentorias"
+
+    id         = Column(Integer, primary_key=True, index=True)
+    mentee_id  = Column(Integer, ForeignKey("aliados.id"), index=True, nullable=False)
+    mentor_id  = Column(Integer, ForeignKey("aliados.id"), index=True, nullable=False)
+    # 'activa' | 'cerrada_cierre' (mentee debutó) | 'cerrada_manual' | 'vencida'
+    estado     = Column(String, default="activa", index=True)
+    # Lead que están co-trabajando (opcional; el setter→closer real corre por Equipo).
+    lead_id    = Column(Integer, nullable=True)
+    notas      = Column(Text, nullable=True)
+    abierta_en = Column(DateTime, default=func.now())
+    cerrada_en = Column(DateTime, nullable=True)
+
+    mentee = relationship("Aliado", foreign_keys=[mentee_id])
+    mentor = relationship("Aliado", foreign_keys=[mentor_id])
 
 # ─── ONBOARDING (reemplazo de Tally) ─────────────────────────────────────────
 # Respuestas del formulario de inicio que completa el cliente tras pagar, más

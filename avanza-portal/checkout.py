@@ -817,6 +817,9 @@ def _procesar_pago_confirmado(db: Session,
     bonus_info = None
     if es_primera_venta_aliado:
         bonus_info = _aplicar_bonus_primera_venta(db, a, v.id)
+        # Rampa: recompensa de primer cierre (mentee + mentor). Idempotente.
+        import rampa
+        rampa.procesar_primer_cierre(db, a.id)
 
     _nivel_anterior_pago = a.nivel  # capturar antes de actualizar
     a.nivel = a.nivel_calculado

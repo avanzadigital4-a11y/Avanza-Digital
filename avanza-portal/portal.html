@@ -1373,6 +1373,9 @@ html.avz-collapsed #avz-sidebar .avz-exit span{ display:none; }
       <button class="avz-nav-item tab-btn" data-tab="herramientas" onclick="cambiarTab('herramientas',this)"><i class="fa-solid fa-magnifying-glass"></i><span class="lb">Auditorías</span><span class="tip">Auditorías</span></button>
       <button class="avz-nav-item tab-btn" data-tab="red" onclick="cambiarTab('red',this)"><i class="fa-solid fa-users-rays"></i><span class="lb">Mi Red</span><span class="tip">Mi Red</span></button>
       <button class="avz-nav-item tab-btn" data-tab="equipo" onclick="cambiarTab('equipo',this)"><i class="fa-solid fa-people-arrows"></i><span class="lb">Mi Equipo</span><span class="tip">Mi Equipo</span></button>
+      <button class="avz-nav-item tab-btn tab-canal1" data-tab="rampa" data-c="1" onclick="cambiarTab('rampa',this)"><i class="fa-solid fa-rocket"></i><span class="lb">Mi Rampa</span><span class="tip">Mi Rampa</span></button>
+      <button class="avz-nav-item tab-btn tab-canal2" data-tab="entregas" data-c="2" onclick="cambiarTab('entregas',this)"><i class="fa-solid fa-box-open"></i><span class="lb">Entregas</span><span class="tip">Entregas</span></button>
+      <button class="avz-nav-item tab-btn" data-tab="canales" onclick="cambiarTab('canales',this)"><i class="fa-solid fa-shuffle"></i><span class="lb">Canales</span><span class="tip">Canales</span></button>
       <button class="avz-nav-item tab-btn" data-tab="comunidad" onclick="cambiarTab('comunidad',this)"><i class="fa-solid fa-comments"></i><span class="lb">Comunidad</span><span class="tip">Comunidad</span></button>
       <button class="avz-nav-item tab-btn" data-tab="jarvis" onclick="cambiarTab('jarvis',this)"><i class="fa-solid fa-bolt" style="color:#7fd8ff;"></i><span class="lb">JARVIS IA</span><span class="tip">JARVIS IA</span></button>
     </nav>
@@ -2726,6 +2729,44 @@ html.avz-collapsed #avz-sidebar .avz-exit span{ display:none; }
     </div>
 
     
+    <div id="tab-rampa" class="tab-panel">
+      <div style="max-width:780px;margin:0 auto;">
+        <h2 style="font-size:1.5rem;font-weight:900;color:var(--text);margin-bottom:4px;">Mi Rampa</h2>
+        <p style="color:var(--text-muted);font-size:.9rem;margin-bottom:22px;line-height:1.55;">
+          Tus primeros pasos hasta el primer cierre. Tenés un mentor para acompañarte:
+          el primer deal es el más difícil, después se hace solo.
+        </p>
+        <div id="rampa-cuerpo"></div>
+        <div id="rampa-mentor-wrap" style="display:none;margin-top:30px;">
+          <h3 style="font-size:1rem;font-weight:800;color:var(--text);margin-bottom:12px;">Aliados que estás mentoreando</h3>
+          <div id="rampa-mentees"></div>
+        </div>
+      </div>
+    </div>
+
+    <div id="tab-entregas" class="tab-panel">
+      <div style="max-width:780px;margin:0 auto;">
+        <h2 style="font-size:1.5rem;font-weight:900;color:var(--text);margin-bottom:4px;">Entregas</h2>
+        <p style="color:var(--text-muted);font-size:.9rem;margin-bottom:22px;line-height:1.55;">
+          Seguí cómo avanza la implementación de los clientes que referiste. Tu cartera es tu
+          relación: acá ves en qué estado va cada cuenta y te avisamos si algo se traba.
+        </p>
+        <div id="entregas-resumen"></div>
+        <div id="entregas-lista"></div>
+      </div>
+    </div>
+
+    <div id="tab-canales" class="tab-panel">
+      <div style="max-width:780px;margin:0 auto;">
+        <h2 style="font-size:1.5rem;font-weight:900;color:var(--text);margin-bottom:4px;">Canales</h2>
+        <p style="color:var(--text-muted);font-size:.9rem;margin-bottom:22px;line-height:1.55;">
+          Una identidad, dos formas de trabajar. Activá el canal que te sirva: reclamar leads
+          de la bolsa (Canal 1) o referir clientes de tu cartera (Canal 2). Podés tener los dos.
+        </p>
+        <div id="canales-lista"></div>
+      </div>
+    </div>
+
     <div id="tab-equipo" class="tab-panel">
       <div style="max-width:780px;margin:0 auto;">
         <h2 style="font-size:1.5rem;font-weight:900;color:var(--text);margin-bottom:4px;">Mi Equipo</h2>
@@ -5632,6 +5673,9 @@ window.__MODS = {
 
 <script defer src="assets/js/portal.capturas.js"></script>
 <script defer src="assets/js/portal.equipos.js"></script>
+<script defer src="assets/js/portal.rampa.js"></script>
+<script defer src="assets/js/portal.entregas.js"></script>
+<script defer src="assets/js/portal.canales.js"></script>
 
 </body>
 </html>

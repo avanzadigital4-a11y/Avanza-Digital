@@ -245,6 +245,13 @@ def _aliado_detalle(a, incluir_token: bool = False):
         "username_personalizado": bool(getattr(a, "username_personalizado_en", None)),
         "portal_publico_activo": bool(getattr(a, "portal_publico_activo", True)),
         "tipo_aliado": getattr(a, "tipo_aliado", "canal1") or "canal1",
+        # Puente entre canales + rampa: el front usa estos flags para mostrar
+        # las tabs de cada canal y la pestaña Mi Rampa.
+        "canal1_habilitado": bool(a.puede_canal1),
+        "canal2_habilitado": bool(a.puede_canal2),
+        "canal_activo": getattr(a, "canal_activo", None) or (getattr(a, "tipo_aliado", "canal1") or "canal1"),
+        "rampa_estado": getattr(a, "rampa_estado", "nuevo") or "nuevo",
+        "es_mentor": bool(getattr(a, "es_mentor", False)),
         "cbu_alias": getattr(a, "cbu_alias", None),
         "payment_method": getattr(a, "payment_method", None),
         "payment_info": getattr(a, "payment_info", None),
@@ -371,6 +378,10 @@ def crear_aliado(background_tasks: BackgroundTasks,
     db.add(a); db.commit(); db.refresh(a)
     _ajustar_creditos(db, a, 100, "bienvenida", "creacion_admin")
     db.commit()
+
+    # Rampa: asigna mentor y abre mentoría para acompañar el primer cierre.
+    import rampa
+    rampa.iniciar_rampa(db, a); db.commit()
 
     # ── Email de bienvenida al aliado con sus credenciales ─────────────────
     # El admin crea la cuenta pero el aliado nunca sabía que existía.

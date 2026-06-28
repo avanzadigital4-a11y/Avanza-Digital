@@ -634,6 +634,9 @@ function cambiarTab(tab, btn) {
   }
   if(tab==='red') { cargarRed(); iniciarAutoRefreshRed(); }
   if(tab==='equipo') cargarEquipo();
+  if(tab==='rampa') cargarRampa();
+  if(tab==='entregas') cargarEntregas();
+  if(tab==='canales') cargarCanales();
   if(tab==='comunidad') cargarComunidad();
   if(tab==='academia') inicializarAcademia();
   // v1.4: refrescar TC al entrar al cotizador y comisiones al entrar a su tab
@@ -703,28 +706,27 @@ function irACotizadorConRubro(rubro, plan) {
 }
 
 // ── CANAL: configurar visibilidad de tabs y bloques ─────────────────────────
+// Puente entre canales: la visibilidad ya no es binaria por tipo_aliado. Cada
+// set de tabs se muestra según su flag (con fallback a tipo_aliado si el back
+// todavía no manda los flags). Un aliado con los dos canales habilitados ve
+// ambos sets.
 function configurarCanal() {
   if (!aliado) return;
-  const canal = aliado.tipo_aliado || 'canal1';
-  const esCanal2 = canal === 'canal2';
+  const tipo = aliado.tipo_aliado || 'canal1';
+  const c1 = (aliado.canal1_habilitado != null) ? !!aliado.canal1_habilitado : (tipo === 'canal1');
+  const c2 = (aliado.canal2_habilitado != null) ? !!aliado.canal2_habilitado : (tipo === 'canal2');
+  // Solo-canal2 (sin canal1) conserva el arranque especial en kit-ventas.
+  const esCanal2 = c2 && !c1;
 
-  // Tabs
-  document.querySelectorAll('.tab-canal1').forEach(el => {
-    el.style.display = esCanal2 ? 'none' : '';
-  });
-  document.querySelectorAll('.tab-canal2').forEach(el => {
-    el.style.display = esCanal2 ? '' : 'none';
-  });
+  // Tabs: cada una visible si su canal está habilitado.
+  document.querySelectorAll('.tab-canal1').forEach(el => { el.style.display = c1 ? '' : 'none'; });
+  document.querySelectorAll('.tab-canal2').forEach(el => { el.style.display = c2 ? '' : 'none'; });
 
-  // Bloques internos del dashboard
-  document.querySelectorAll('.d-canal1-only').forEach(el => {
-    el.style.display = esCanal2 ? 'none' : '';
-  });
-  document.querySelectorAll('.d-canal2-only').forEach(el => {
-    el.style.display = esCanal2 ? '' : 'none';
-  });
+  // Bloques internos del dashboard (misma lógica por flag).
+  document.querySelectorAll('.d-canal1-only').forEach(el => { el.style.display = c1 ? '' : 'none'; });
+  document.querySelectorAll('.d-canal2-only').forEach(el => { el.style.display = c2 ? '' : 'none'; });
 
-  // Para Canal 2: la primera tab activa es kit-ventas, no dashboard
+  // Para aliados solo-Canal 2: la primera tab activa es kit-ventas, no dashboard.
   if (esCanal2) {
     const tabKitVentas = document.querySelector('.tab-canal2[onclick*="kit-ventas"]');
     if (tabKitVentas) {
@@ -732,8 +734,8 @@ function configurarCanal() {
     }
   }
 
-  // Para Canal 1: mostrar banner del kit PDF (Módulo 8) si no fue cerrado
-  if (!esCanal2) {
+  // Para Canal 1: mostrar banner del kit PDF (Módulo 8) si no fue cerrado.
+  if (c1) {
     const dismissKey = `kit_banner_dismiss_${aliado.codigo}`;
     const banner = document.getElementById('d-canal1-kit-banner');
     if (banner) {
@@ -3026,6 +3028,10 @@ async function cargarBolsa() {
             <button onclick="abrirHandoff(${l.id})" style="flex:1;background:rgba(124,58,237,.12);color:#c084fc;border:1px solid rgba(124,58,237,.3);border-radius:8px;padding:9px;font-size:.78rem;font-weight:700;cursor:pointer;"><i class="fa-solid fa-people-arrows"></i> Pasar a companero</button>
             <button onclick="prepararContinuidadDesdeLead(${l.id}, '${encodeURIComponent(l.empresa||'')}')" style="flex:1;background:rgba(34,197,94,.10);color:var(--green);border:1px solid rgba(34,197,94,.3);border-radius:8px;padding:9px;font-size:.78rem;font-weight:700;cursor:pointer;"><i class="fa-solid fa-handshake"></i> Cerrar (continuidad)</button>
           </div>
+          <div style="display:flex;gap:16px;margin-top:8px;">
+            <button onclick="verHistorialLead(${l.id})" style="background:none;border:none;color:var(--text-dim);font-size:.74rem;cursor:pointer;padding:0;">${(l.reciclados>0)?'♻ ':''}<i class="fa-solid fa-clock-rotate-left"></i> Ver historial</button>
+            ${l.setter_id ? `<button onclick="verReparto(${l.id})" style="background:none;border:none;color:#c084fc;font-size:.74rem;cursor:pointer;padding:0;"><i class="fa-solid fa-scale-balanced"></i> Ver reparto</button>` : ''}
+          </div>
           ${l.web ? `
           <div style="margin-top:6px;display:flex;align-items:center;gap:6px;">
             <span style="font-size:.8rem;color:var(--text-dim);">🌐</span>
@@ -4891,6 +4897,18 @@ function renderLeadCard(lead, opts = {}) {
     ? `<div style="margin-top:8px;padding:8px 10px;background:rgba(255,255,255,0.025);border-left:2px solid var(--border);border-radius:4px;font-size:.74rem;color:var(--text-muted);font-style:italic;line-height:1.4;">"${escapeHtml(lead.observacion.slice(0, 110))}${lead.observacion.length > 110 ? '…' : ''}"</div>`
     : '';
 
+  // ── RECICLADO: si el lead ya pasó por la bolsa, avisar al que lo va a
+  //    reclamar y dejarle ver el historial para no repetir el laburo. ──
+  const recicladoBlock = (lead.reciclados > 0)
+    ? `<div style="margin-top:8px;display:flex;align-items:center;justify-content:space-between;gap:8px;
+              background:rgba(168,85,247,0.08);border:1px solid rgba(168,85,247,0.25);
+              border-radius:8px;padding:7px 10px;">
+         <span style="font-size:.73rem;color:#c084fc;font-weight:700;">♻ Reaprovechado · ${lead.intentos||0} intento(s) previo(s)</span>
+         <button onclick="verHistorialLead(${lead.id})"
+           style="background:none;border:none;color:#c084fc;font-size:.73rem;font-weight:700;cursor:pointer;padding:0;text-decoration:underline;">Ver historial</button>
+       </div>`
+    : '';
+
   // ── ARMADO FINAL ────────────────────────────────────────────────────
   return `
     <div style="${skinStyle} border-radius:12px; padding:16px; display:flex; flex-direction:column; gap:0; position:relative;">
@@ -4911,6 +4929,7 @@ function renderLeadCard(lead, opts = {}) {
       ${scoreBlock}
       ${pillsRow}
       ${obsPreview}
+      ${recicladoBlock}
       ${costoBlock}
       <div style="margin-top:auto;padding-top:8px;">
         <div style="display:flex;align-items:center;gap:6px;margin-bottom:8px;font-size:.72rem;color:var(--text-dim);">

@@ -55,6 +55,12 @@ import backup_db                # Backup diario de Postgres por email (Supabase 
 
 Base.metadata.create_all(bind=engine)
 
+# Mejoras Canal 1 / Canal 2: columnas nuevas (aliados/bolsa_leads/referidos) +
+# backfill de canales. Idempotente — corre en cada boot sin efectos. Va DESPUÉS
+# de create_all (que ya creó la tabla `mentorias`).
+import mejoras_canales
+mejoras_canales.run_migrations(engine)
+
 
 # ─── MIGRACIONES IDEMPOTENTES ────────────────────────────────────────────────
 # Helper que solo traga errores de "columna ya existe" / "tabla no existe en
@@ -1843,13 +1849,20 @@ def registrar_venta(body: schemas.RegistrarVentaIn | None = Body(default=None),
 
     if referido_id:
         ref = db.query(Referido).filter(Referido.id == referido_id).first()
-        if ref: ref.convertido = True
+        if ref:
+            ref.convertido = True
+            # Canal 2: arranca la visibilidad de implementación para el aliado.
+            import delivery
+            delivery.iniciar_implementacion(db, ref)
 
     # 3. BONUS PRIMERA VENTA — créditos al aliado y al sponsor (si tiene).
     # Refuerza el loop "cerré → tengo más ammo para volver a cerrar".
     bonus_info = None
     if es_primera_venta:
         bonus_info = _aplicar_bonus_primera_venta(db, a, v.id)
+        # Rampa: recompensa de primer cierre (mentee + mentor). Idempotente.
+        import rampa
+        rampa.procesar_primer_cierre(db, a.id)
     
     _nivel_anterior_reg = a.nivel  # capturar antes de actualizar
     a.nivel = a.nivel_calculado
@@ -3358,6 +3371,33 @@ app.include_router(email_tracking.router)       # /e/o, /e/c, /admin/email/metri
 app.include_router(referidos_aliados.router)     # /aliados/{codigo}/red
 app.include_router(equipos.router)               # /aliados/{codigo}/equipo
 app.include_router(onboarding.router)             # /onboarding + /admin/onboarding
+
+# ─── MEJORAS CANAL 1 / CANAL 2 ───────────────────────────────────────────────
+import rampa, reciclado, delivery, canales, reparto_visibilidad  # noqa: E402
+app.include_router(rampa.router)                  # /aliados/{cod}/rampa, /mentorias
+app.include_router(reciclado.router)              # /bolsa/{id}/historial, /admin/bolsa/reciclados
+app.include_router(delivery.router)               # /aliados/{cod}/entregas, /admin/entregas
+app.include_router(canales.router)                # /aliados/{cod}/canales
+app.include_router(reparto_visibilidad.router)    # /aliados/{cod}/reparto/...
+
+# Job: devolver a la bolsa los leads cuyo cooldown de reciclado ya venció.
+def job_reciclar_cooldowns():
+    db = next(get_db())
+    try:
+        reciclado.procesar_cooldowns(db)
+    finally:
+        db.close()
+
+# Job: avisar al aliado de Canal 2 cuando la implementación de su cliente se estanca.
+def job_delivery_estancados():
+    db = next(get_db())
+    try:
+        delivery.procesar_estancados(db)
+    finally:
+        db.close()
+
+scheduler.add_job(job_lock.con_lock(job_reciclar_cooldowns, "reciclar_cooldowns", 1800), "interval", minutes=30)
+scheduler.add_job(job_lock.con_lock(job_delivery_estancados, "delivery_estancados", 3600), "interval", hours=6)
 
 # Job diario: cuando un referido entra por primera vez, acreditamos el bono de
 # activación a su sponsor (idempotente). Mismo patrón que los demás jobs.

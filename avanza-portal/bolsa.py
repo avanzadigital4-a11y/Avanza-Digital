@@ -75,9 +75,9 @@ def _aplicar_caducidad_bolsa(db: Session):
     ).all()
     
     for lead in vencidos:
-        lead.estado = "disponible"
-        lead.aliado_id = None
-        lead.fecha_reclamo = None
+        # No vuelve crudo: registra el abandono y aplica cooldown corto (o quema).
+        import reciclado
+        reciclado.registrar_intento(db, lead, lead.aliado_id, "abandono")
     
     if vencidos:
         db.commit()
@@ -243,7 +243,7 @@ def eliminar_lead_bolsa(id: int, db: Session = Depends(get_db),
 def ver_bolsa_aliado(codigo: str, pais: str = "", db: Session = Depends(get_db), _owner=Depends(verify_ownership_dep)):
     """Muestra los leads disponibles y los que este aliado ya reclamó."""
     a = _get_aliado(codigo, db)
-    if (getattr(a, "tipo_aliado", "canal1") or "canal1") == "canal2":
+    if not a.puede_canal1:
         raise HTTPException(403, "La bolsa de leads no está disponible para aliados Canal 2.")
     _aplicar_caducidad_bolsa(db) # Limpiamos antes de mostrar
     
@@ -269,6 +269,10 @@ def ver_bolsa_aliado(codigo: str, pais: str = "", db: Session = Depends(get_db),
             "telefono": l.telefono, "whatsapp": l.whatsapp, "email": l.email,
             "estado": l.estado, "horas_restantes": horas_restantes,
             "prospecto_id": l.prospecto_id,  # CRM bridge: != None si ya se convirtió
+            # Reparto setter→closer + reciclado (para botones del front).
+            "setter_id": l.setter_id,
+            "reciclados": l.reciclados or 0,
+            "intentos": l.intentos or 0,
             # v1.6 — presencia digital
             "web": l.web, "instagram": l.instagram,
             "tiene_web": bool(l.tiene_web), "tiene_redes": bool(l.tiene_redes),
@@ -283,6 +287,10 @@ def ver_bolsa_aliado(codigo: str, pais: str = "", db: Session = Depends(get_db),
                 "tier": l.tier,
                 "score_calidad": l.score_calidad,
                 "costo_creditos": l.costo_creditos,
+                # Reciclado: si el lead ya pasó por la bolsa, el que lo va a
+                # reclamar ve que viene trabajado y puede mirar su historial.
+                "reciclados": l.reciclados or 0,
+                "intentos": l.intentos or 0,
                 # Teasers — mismos que en /bolsa/marketplace para que el front
                 # use UN SOLO componente de tarjeta. Nunca exponer URLs/contacto.
                 "tiene_web":         bool(l.tiene_web),
@@ -311,7 +319,7 @@ def reclamar_lead(id: int,
     Siempre usa el aliado del JWT.
     """
     a = aliado  # del token, no del query
-    if (getattr(a, "tipo_aliado", "canal1") or "canal1") == "canal2":
+    if not a.puede_canal1:
         raise HTTPException(403, "Operación no disponible para aliados Canal 2.")
 
     # Verificar límite de reclamos activos simultáneos
@@ -352,7 +360,7 @@ def contactar_lead_bolsa(id: int,
     if body is not None:
         resultado = body.resultado
     a = aliado
-    if (getattr(a, "tipo_aliado", "canal1") or "canal1") == "canal2":
+    if not a.puede_canal1:
         raise HTTPException(403, "La bolsa de leads no está disponible para aliados Canal 2.")
     RESULTADOS_VALIDOS = {"exitoso", "no_interesado", "no_contesto"}
     if resultado not in RESULTADOS_VALIDOS:
@@ -364,6 +372,15 @@ def contactar_lead_bolsa(id: int,
 
     lead.estado    = "contactado"
     lead.resultado = resultado
+
+    # ── RECICLADO ─────────────────────────────────────────────────────────────
+    # Un lead no cerrado no vuelve crudo a la bolsa: registra el intento y lo
+    # manda a cooldown (o lo quema si ya se trabajó de más). El 'exitoso' no se
+    # toca (sigue al CRM, abajo).
+    if resultado in ("no_interesado", "no_contesto"):
+        import reciclado
+        reciclado.registrar_intento(db, lead, a.id, resultado,
+                                    nota=getattr(body, "nota", "") or "")
 
     # ── AUTO-CONVERSIÓN AL CRM ────────────────────────────────────────────────
     # Un contacto "exitoso" significa que hay una venta en marcha: el lead pasa
@@ -451,7 +468,7 @@ def convertir_lead_en_prospecto(id: int,
     - Deja una actividad de sistema en el timeline del prospecto con el origen.
     """
     a = aliado
-    if (getattr(a, "tipo_aliado", "canal1") or "canal1") == "canal2":
+    if not a.puede_canal1:
         raise HTTPException(403, "La bolsa de leads no está disponible para aliados Canal 2.")
 
     lead = db.query(LeadBolsa).filter(LeadBolsa.id == id).first()
@@ -494,7 +511,7 @@ def convertir_lead_en_prospecto(id: int,
 def historial_bolsa_aliado(codigo: str, db: Session = Depends(get_db), _owner=Depends(verify_ownership_dep)):
     """Historial completo de leads de un aliado con estadísticas."""
     a = _get_aliado(codigo, db)
-    if (getattr(a, "tipo_aliado", "canal1") or "canal1") == "canal2":
+    if not a.puede_canal1:
         raise HTTPException(403, "La bolsa de leads no está disponible para aliados Canal 2.")
     leads = db.query(LeadBolsa).filter(LeadBolsa.aliado_id == a.id).order_by(LeadBolsa.fecha_reclamo.desc()).all()
 
@@ -567,7 +584,7 @@ def ver_marketplace(codigo_aliado: str = "",
     SECURITY: usa el aliado del JWT, no acepta `codigo_aliado` para spoofing.
     """
     a = aliado  # del JWT
-    if (getattr(a, "tipo_aliado", "canal1") or "canal1") == "canal2":
+    if not a.puede_canal1:
         raise HTTPException(403, "El marketplace de leads no está disponible para aliados Canal 2.")
     _aplicar_caducidad_bolsa(db)
     q = db.query(LeadBolsa).filter(
@@ -625,7 +642,7 @@ def comprar_lead(id: int,
     contacto del lead.
     """
     a = aliado
-    if (getattr(a, "tipo_aliado", "canal1") or "canal1") == "canal2":
+    if not a.puede_canal1:
         raise HTTPException(403, "El marketplace de leads no está disponible para aliados Canal 2.")
     lead = db.query(LeadBolsa).filter(
         LeadBolsa.id == id, LeadBolsa.estado == "disponible"
