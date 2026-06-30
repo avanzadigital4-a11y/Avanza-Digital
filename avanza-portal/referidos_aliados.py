@@ -69,6 +69,27 @@ def _ref_str(sub_id: int) -> str:
     return f"sub:{sub_id}"
 
 
+# ─── ENDPOINT: TRACKING DE CLICS DEL LINK DE RECLUTAMIENTO ──────────────────
+
+@router.post("/track/clic-reclutamiento")
+def track_clic_reclutamiento(ref: str = "", db: Session = Depends(get_db)):
+    """Incrementa el contador de clics del link de reclutamiento de un aliado.
+
+    Público, SIN auth: lo llama directamente la página /alianzas (HTML estático)
+    al detectar el parámetro ?ref= en la URL — antes de que el visitante elija
+    canal o se registre. Best-effort: si el ref_code no existe o viene vacío,
+    no rompe nada (la página de destino no depende de esta respuesta).
+    """
+    if not ref:
+        return {"ok": False}
+    a = db.query(Aliado).filter(Aliado.ref_code == ref).first()
+    if not a:
+        return {"ok": False}
+    a.clics_reclutamiento = (a.clics_reclutamiento or 0) + 1
+    db.commit()
+    return {"ok": True}
+
+
 # ─── ENDPOINT: PANEL "MI RED" DEL ALIADO ─────────────────────────────────────
 
 @router.get("/aliados/{codigo}/invitacion")
@@ -101,11 +122,14 @@ def mi_invitacion(codigo: str, db: Session = Depends(get_db),
                                      (Aliado.cantidad_logins >= 1)))
                             .scalar() or 0)
 
-    # Override de red: comisiones del aliado al 5% (las de sponsor; las propias
-    # arrancan en 10%). Es una aproximación robusta sin tocar el modelo.
+    # Override de red: suma de comisiones marcadas como RED (override del
+    # sponsor por ventas de sus sub-aliados). Ya no es un % fijo (ver §6.2 en
+    # terminos-aliados.html y models.calcular_override_pct), por eso filtramos
+    # por el marcador en nombre_cliente y no por comision_pct == 0.05.
     override_usd = (db.query(func.coalesce(func.sum(Comision.comision_usd), 0.0))
                     .filter(Comision.aliado_id == a.id,
-                            Comision.comision_pct == 0.05)
+                            (Comision.nombre_cliente.like('%RED:%') |
+                             Comision.nombre_cliente.like('%RED EQUIPO:%')))
                     .scalar() or 0.0)
 
     creditos_ganados = (db.query(func.coalesce(func.sum(TransaccionCredito.delta), 0))
@@ -128,7 +152,8 @@ def mi_invitacion(codigo: str, db: Session = Depends(get_db),
         "invite_link": link,
         "mensaje_para_compartir": mensaje,
         "bono_por_activacion": BONUS_ACTIVACION,
-        "override_pct": 5,
+        "override_pct_min": 5,
+        "override_pct_max": 12,
         "stats": {
             "invitados": invitados,
             "activados": activados,
@@ -192,8 +217,8 @@ def job_referidos_activacion():
                     db, sponsor.id, "referido",
                     f"¡{nombre_ref} se activó! +{BONUS_ACTIVACION} créditos",
                     f"Tu referido {nombre_ref} entró por primera vez al portal. "
-                    f"Te acreditamos {BONUS_ACTIVACION} créditos y vas a cobrar 5% "
-                    f"de override sobre sus ventas.",
+                    f"Te acreditamos {BONUS_ACTIVACION} créditos y vas a cobrar override "
+                    f"sobre sus ventas (desde 5%, sube con cada venta que cierre).",
                     tab="red",
                 )
             except Exception:
@@ -220,7 +245,7 @@ def job_referidos_activacion():
                   <p style="color:#a1a1aa;line-height:1.6;">Tu referido acaba de activarse en el portal. Como gracias:</p>
                   <div style="background:rgba(168,85,247,0.08);border:1px solid rgba(168,85,247,0.25);border-radius:8px;padding:18px;margin:18px 0;">
                     <p style="margin:0 0 6px;color:#c084fc;font-weight:700;">+{BONUS_ACTIVACION} créditos acreditados</p>
-                    <p style="margin:0;color:#a1a1aa;font-size:.9rem;">Y vas a cobrar <strong style="color:#fff;">5% de override</strong> sobre cada venta que cierre.</p>
+                    <p style="margin:0;color:#a1a1aa;font-size:.9rem;">Y vas a cobrar <strong style="color:#fff;">override</strong> sobre cada venta que cierre — arranca en 5% y sube solo con cada venta.</p>
                   </div>
                   <a href="{PORTAL_URL}/portal.html" style="display:inline-block;padding:14px 28px;background:#22c55e;color:#000;border-radius:8px;text-decoration:none;font-weight:800;margin-top:6px;">Ver mi red →</a>
                   <p style="margin-top:26px;font-size:.75rem;color:#3f3f46;">Avanza Digital · Partner Network · Seguí invitando closers desde la solapa Mi Red.</p>

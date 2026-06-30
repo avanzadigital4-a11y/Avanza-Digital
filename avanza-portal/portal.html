@@ -2778,7 +2778,28 @@ html.avz-collapsed #avz-sidebar .avz-exit span{ display:none; }
     <div id="tab-red" class="tab-panel">
       <div class="bento-box" style="margin-bottom:24px; background:linear-gradient(135deg, rgba(250,204,21,0.05), transparent); border-color:rgba(250,204,21,0.2);">
         <h3 style="font-size:1.2rem;font-weight:900;margin-bottom:8px;color:var(--amber);"><i class="fa-solid fa-network-wired"></i> Construí tu Agencia Descentralizada</h3>
-        <p style="color:var(--text-muted);font-size:0.9rem;margin-bottom:20px;">Invitá a otros profesionales, agencias o vendedores a sumarse como aliados bajo tu red. <strong>Ganarás un 5% de comisión pasiva y automática por cada venta que ellos cierren.</strong> Para siempre.</p>
+        <p style="color:var(--text-muted);font-size:0.9rem;margin-bottom:14px;">Invitá a otros profesionales, agencias o vendedores a sumarse como aliados bajo tu red. <strong>Ganás comisión pasiva y automática por cada venta que ellos cierren, y tu % sube solo a medida que tu sub-aliado vende más.</strong> Para siempre.</p>
+
+        <!-- TABLA DE NIVELES DE OVERRIDE ─ tu % pasivo según ventas del sub-aliado -->
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:20px;">
+          <div style="background:rgba(0,0,0,0.35);border:1px solid var(--border);border-radius:10px;padding:12px;text-align:center;">
+            <div style="font-size:1.3rem;font-weight:900;color:var(--text);">5%</div>
+            <div style="font-size:.68rem;color:var(--text-dim);text-transform:uppercase;letter-spacing:.5px;">0 ventas</div>
+          </div>
+          <div style="background:rgba(0,0,0,0.35);border:1px solid var(--border);border-radius:10px;padding:12px;text-align:center;">
+            <div style="font-size:1.3rem;font-weight:900;color:var(--text);">7%</div>
+            <div style="font-size:.68rem;color:var(--text-dim);text-transform:uppercase;letter-spacing:.5px;">1+ venta</div>
+          </div>
+          <div style="background:rgba(0,0,0,0.35);border:1px solid var(--amber);border-radius:10px;padding:12px;text-align:center;">
+            <div style="font-size:1.3rem;font-weight:900;color:var(--amber);">10%</div>
+            <div style="font-size:.68rem;color:var(--text-dim);text-transform:uppercase;letter-spacing:.5px;">3+ ventas</div>
+          </div>
+          <div style="background:rgba(0,0,0,0.35);border:1px solid #c084fc;border-radius:10px;padding:12px;text-align:center;">
+            <div style="font-size:1.3rem;font-weight:900;color:#c084fc;">12%</div>
+            <div style="font-size:.68rem;color:var(--text-dim);text-transform:uppercase;letter-spacing:.5px;">5+ ventas</div>
+          </div>
+        </div>
+        <div style="font-size:.75rem;color:var(--text-dim);margin-top:-12px;margin-bottom:20px;">Tu % sube solo con cada venta de tu sub-aliado y no vuelve a bajar.</div>
 
         <!-- LINK DE RECLUTAMIENTO ─ visible siempre que el aliado esté logueado -->
         <div style="margin-bottom:20px;">
@@ -2800,7 +2821,7 @@ html.avz-collapsed #avz-sidebar .avz-exit span{ display:none; }
 
         <div id="red-bono-banner" style="display:flex;align-items:center;gap:10px;background:rgba(168,85,247,0.08);border:1px solid rgba(168,85,247,0.25);border-radius:10px;padding:12px 14px;margin-bottom:16px;">
           <i class="fa-solid fa-gift" style="color:#c084fc;font-size:1.1rem;"></i>
-          <div style="font-size:.85rem;color:var(--text);">Además del 5% pasivo: ganás <strong id="red-bono-activacion" style="color:#c084fc;">75</strong> créditos apenas un invitado se activa (su primer ingreso al portal).</div>
+          <div style="font-size:.85rem;color:var(--text);">Además del % pasivo: ganás <strong id="red-bono-activacion" style="color:#c084fc;">75</strong> créditos apenas un invitado se activa (su primer ingreso al portal).</div>
         </div>
         <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:16px;">
           <div style="background:rgba(0,0,0,0.4); padding:20px; border-radius:12px; border:1px solid var(--border);">
@@ -2815,9 +2836,67 @@ html.avz-collapsed #avz-sidebar .avz-exit span{ display:none; }
             <div style="font-size:0.75rem;font-weight:700;color:#c084fc;text-transform:uppercase;">Activados</div>
             <div style="font-size:2rem;font-weight:900;color:var(--text);" id="red-activados">0 / 0</div>
           </div>
+          <div style="background:rgba(0,0,0,0.4); padding:20px; border-radius:12px; border:1px solid var(--amber);">
+            <div style="font-size:0.75rem;font-weight:700;color:var(--amber);text-transform:uppercase;">Override promedio</div>
+            <div style="font-size:2rem;font-weight:900;color:var(--text);" id="red-override-promedio">—</div>
+          </div>
           <div style="background:rgba(0,0,0,0.4); padding:20px; border-radius:12px; border:1px solid var(--border);">
             <div style="font-size:0.75rem;font-weight:700;color:var(--text-dim);text-transform:uppercase;">Créditos por referidos</div>
             <div style="font-size:2rem;font-weight:900;color:var(--text);" id="red-creditos-ref">0</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- EMBUDO DE LA RED ─ dónde están parados tus sub-aliados -->
+      <div class="bento-box" style="margin-bottom:24px;">
+        <h3 style="font-size:1.05rem;font-weight:800;margin-bottom:14px;"><i class="fa-solid fa-filter" style="color:var(--text);"></i> &nbsp;Embudo de tu Red</h3>
+        <div id="red-embudo" style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;">
+          <div class="red-embudo-etapa" data-estado="sin_activar" style="background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.3);border-radius:10px;padding:14px;text-align:center;">
+            <div style="font-size:1.6rem;font-weight:900;color:#ef4444;" data-valor>0</div>
+            <div style="font-size:.7rem;color:var(--text-dim);text-transform:uppercase;letter-spacing:.5px;">Sin activar</div>
+          </div>
+          <div class="red-embudo-etapa" data-estado="activado_sin_vender" style="background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.3);border-radius:10px;padding:14px;text-align:center;">
+            <div style="font-size:1.6rem;font-weight:900;color:var(--amber);" data-valor>0</div>
+            <div style="font-size:.7rem;color:var(--text-dim);text-transform:uppercase;letter-spacing:.5px;">Activado, sin vender</div>
+          </div>
+          <div class="red-embudo-etapa" data-estado="inactivo" style="background:rgba(148,163,184,0.08);border:1px solid rgba(148,163,184,0.3);border-radius:10px;padding:14px;text-align:center;">
+            <div style="font-size:1.6rem;font-weight:900;color:#94a3b8;" data-valor>0</div>
+            <div style="font-size:.7rem;color:var(--text-dim);text-transform:uppercase;letter-spacing:.5px;">Inactivo</div>
+          </div>
+          <div class="red-embudo-etapa" data-estado="vendiendo" style="background:rgba(34,197,94,0.08);border:1px solid rgba(34,197,94,0.3);border-radius:10px;padding:14px;text-align:center;">
+            <div style="font-size:1.6rem;font-weight:900;color:var(--green);" data-valor>0</div>
+            <div style="font-size:.7rem;color:var(--text-dim);text-transform:uppercase;letter-spacing:.5px;">Vendiendo</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- HISTÓRICO MENSUAL ─ tendencia de ventas de tu red, últimos 6 meses -->
+      <div class="bento-box" style="margin-bottom:24px;">
+        <h3 style="font-size:1.05rem;font-weight:800;margin-bottom:14px;"><i class="fa-solid fa-chart-column" style="color:var(--text);"></i> &nbsp;Tendencia de ventas de tu Red</h3>
+        <div id="red-historico" style="display:flex;align-items:flex-end;gap:10px;height:140px;padding-top:10px;">
+          <div style="margin:auto;color:var(--text-dim);font-size:.8rem;">Cargando...</div>
+        </div>
+      </div>
+
+      <!-- RECLUTAMIENTO ─ rendimiento de tu link de reclutamiento -->
+      <div class="bento-box" style="margin-bottom:24px;">
+        <h3 style="font-size:1.05rem;font-weight:800;margin-bottom:14px;"><i class="fa-solid fa-bullseye" style="color:var(--text);"></i> &nbsp;Tu Reclutamiento</h3>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:14px;">
+          <div style="background:rgba(0,0,0,0.4);padding:16px;border-radius:12px;border:1px solid var(--border);">
+            <div style="font-size:0.72rem;font-weight:700;color:var(--text-dim);text-transform:uppercase;">Clics en tu link</div>
+            <div style="font-size:1.6rem;font-weight:900;color:var(--text);" id="red-clics">—</div>
+          </div>
+          <div style="background:rgba(0,0,0,0.4);padding:16px;border-radius:12px;border:1px solid var(--border);">
+            <div style="font-size:0.72rem;font-weight:700;color:var(--text-dim);text-transform:uppercase;">Registros</div>
+            <div style="font-size:1.6rem;font-weight:900;color:var(--text);" id="red-registros">—</div>
+          </div>
+          <div style="background:rgba(0,0,0,0.4);padding:16px;border-radius:12px;border:1px solid var(--border);">
+            <div style="font-size:0.72rem;font-weight:700;color:var(--text-dim);text-transform:uppercase;">Conversión a registro</div>
+            <div style="font-size:1.6rem;font-weight:900;color:var(--text);" id="red-conversion">—</div>
+          </div>
+          <div style="background:rgba(0,0,0,0.4);padding:16px;border-radius:12px;border:1px solid var(--border);">
+            <div style="font-size:0.72rem;font-weight:700;color:var(--text-dim);text-transform:uppercase;">Registro → Activación</div>
+            <div style="font-size:1.6rem;font-weight:900;color:var(--text);" id="red-activacion">—</div>
           </div>
         </div>
       </div>
@@ -2827,6 +2906,7 @@ html.avz-collapsed #avz-sidebar .avz-exit span{ display:none; }
         <div id="tabla-red"></div>
       </div>
     </div>
+
 
     <!-- TAB COMUNIDAD (v1.3) ────────────────────────────────────────── -->
     <div id="tab-comunidad" class="tab-panel">
@@ -2872,6 +2952,23 @@ html.avz-collapsed #avz-sidebar .avz-exit span{ display:none; }
       </style>
       <div id="comunidad-feed"></div>
     </div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════════════════════
+     MODAL — PROGRESO DE ACADEMIA DE UN SUB-ALIADO (vista del sponsor, Mi Red)
+     ════════════════════════════════════════════════════════════════════════ -->
+<div class="modal-overlay" id="modal-academia-sub">
+  <div class="onboarding-box" style="max-width:440px; max-height:88vh; overflow-y:auto; padding:24px;">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+      <h3 style="font-size:1.05rem; font-weight:800;">
+        <i class="fa-solid fa-graduation-cap" style="color:var(--amber);"></i>
+        <span>Progreso de Academia — <span id="academia-sub-nombre" style="color:var(--amber);">—</span></span>
+      </h3>
+      <button onclick="document.getElementById('modal-academia-sub').classList.remove('open')" style="background:transparent; border:none; color:var(--text-muted); font-size:1.4rem; cursor:pointer;">&times;</button>
+    </div>
+    <p style="color:var(--text-muted); font-size:0.82rem; margin-bottom:14px;">Así sabés a qué módulo empujarlo primero en vez de adivinar.</p>
+    <div id="academia-sub-lista" style="display:flex;flex-direction:column;gap:8px;"></div>
+  </div>
 </div>
 
 <a href="https://wa.me/5493424392759" target="_blank" class="float-support" id="float-support" style="display:none;">
@@ -3787,8 +3884,8 @@ html.avz-collapsed #avz-sidebar .avz-exit span{ display:none; }
          ╚═══════════════════════════════════════════════════════════════╝ -->
     <div id="bolsa-vista-selector" style="display:block;">
       <div style="text-align:center; margin-bottom:20px;">
-        <h3 style="font-size:1.25rem; font-weight:800; color:var(--text); margin-bottom:6px;">¿Qué tipo de leads querés ver?</h3>
-        <p style="font-size:.85rem; color:var(--text-muted);">Elegí una categoría para ver las empresas disponibles.</p>
+        <h3 style="font-size:1.25rem; font-weight:800; color:var(--text); margin-bottom:6px;">Reclamá, contactá, cerrá</h3>
+        <p style="font-size:.85rem; color:var(--text-muted);">Reclamás gratis, lo trabajás, y cuando cierra cobrás tu comisión. Elegí por dónde arrancar.</p>
         <div style="margin-top:10px; display:inline-flex; align-items:center; gap:8px; background:rgba(34,197,94,0.1); border:1px solid rgba(34,197,94,0.35); border-radius:10px; padding:8px 16px; font-size:.82rem;">
           <i class="fa-solid fa-unlock" style="color:var(--green);"></i>
           <strong style="color:var(--green);">Todos los leads son gratis</strong>
@@ -3806,7 +3903,7 @@ html.avz-collapsed #avz-sidebar .avz-exit span{ display:none; }
           <div style="position:absolute; top:12px; right:12px; background:var(--green); color:#000; font-size:.65rem; font-weight:900; padding:3px 8px; border-radius:4px; letter-spacing:.05em;">100% GRATIS</div>
           <div style="font-size:2.2rem; margin-bottom:10px;"><i class="fa-solid fa-unlock" style="color:var(--green);"></i></div>
           <h4 style="font-size:1.1rem; font-weight:800; color:var(--text); margin-bottom:6px;">Leads Básicos</h4>
-          <p style="font-size:.82rem; color:var(--text-muted); line-height:1.5; margin-bottom:14px;">Reclamalos sin gastar créditos. Ideales para arrancar y practicar tu pitch.</p>
+          <p style="font-size:.82rem; color:var(--text-muted); line-height:1.5; margin-bottom:14px;">Datos mínimos: empresa y teléfono. Para arrancar, agarrar ritmo y afilar el pitch.</p>
           <div style="display:flex; justify-content:space-between; align-items:center; padding-top:12px; border-top:1px solid rgba(255,255,255,0.06);">
             <span id="cnt-bolsa-basico" style="font-size:.85rem; color:var(--green); font-weight:700;">— disponibles</span>
             <span style="color:var(--green); font-size:.85rem; font-weight:700;">Ver gratis →</span>
@@ -3821,7 +3918,7 @@ html.avz-collapsed #avz-sidebar .avz-exit span{ display:none; }
           <div style="position:absolute; top:12px; right:12px; background:var(--green); color:#000; font-size:.65rem; font-weight:900; padding:3px 8px; border-radius:4px; letter-spacing:.05em;">GRATIS</div>
           <div style="font-size:2.2rem; margin-bottom:10px;"><i class="fa-solid fa-medal" style="color:#60a5fa;"></i></div>
           <h4 style="font-size:1.1rem; font-weight:800; color:var(--text); margin-bottom:6px;">Leads Calificados</h4>
-          <p style="font-size:.82rem; color:var(--text-muted); line-height:1.5; margin-bottom:14px;">Empresas con presencia digital verificada y contacto identificado.</p>
+          <p style="font-size:.82rem; color:var(--text-muted); line-height:1.5; margin-bottom:14px;">El volumen de la bolsa: empresas reales con teléfono y contexto para tu llamada. Score medio.</p>
           <div style="display:flex; justify-content:space-between; align-items:center; padding-top:12px; border-top:1px solid rgba(255,255,255,0.06);">
             <span id="cnt-bolsa-calificado" style="font-size:.85rem; color:#60a5fa; font-weight:700;">— disponibles</span>
             <span style="color:#60a5fa; font-size:.85rem; font-weight:700;">Ver leads →</span>
@@ -3836,7 +3933,7 @@ html.avz-collapsed #avz-sidebar .avz-exit span{ display:none; }
           <div style="position:absolute; top:12px; right:12px; background:var(--green); color:#000; font-size:.65rem; font-weight:900; padding:3px 8px; border-radius:4px; letter-spacing:.05em;">GRATIS</div>
           <div style="font-size:2.2rem; margin-bottom:10px;"><i class="fa-solid fa-gem" style="color:var(--amber);"></i></div>
           <h4 style="font-size:1.1rem; font-weight:800; color:var(--text); margin-bottom:6px;">Leads Premium</h4>
-          <p style="font-size:.82rem; color:var(--text-muted); line-height:1.5; margin-bottom:14px;">Lo más jugoso: pitch sugerido por IA, score de calidad alto, mayor tasa de cierre.</p>
+          <p style="font-size:.82rem; color:var(--text-muted); line-height:1.5; margin-bottom:14px;">Lo más completo: web, email y contexto rico, con pitch sugerido por IA. Score alto, más chances de cerrar.</p>
           <div style="display:flex; justify-content:space-between; align-items:center; padding-top:12px; border-top:1px solid rgba(255,255,255,0.06);">
             <span id="cnt-bolsa-premium" style="font-size:.85rem; color:var(--amber); font-weight:700;">— disponibles</span>
             <span style="color:var(--amber); font-size:.85rem; font-weight:700;">Ver premium →</span>
@@ -3859,7 +3956,7 @@ html.avz-collapsed #avz-sidebar .avz-exit span{ display:none; }
           <button onclick="cargarBolsa()" style="background:transparent;border:1px solid var(--border);color:var(--text-muted);border-radius:8px;padding:7px 14px;font-size:.8rem;cursor:pointer;"><i class="fa-solid fa-rotate-right"></i> Refrescar</button>
         </div>
         <div style="padding:14px 20px; font-size:.82rem; color:var(--text-muted); border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; gap:14px; flex-wrap:wrap;">
-          <span>Reclamalos <strong style="color:var(--green);">sin gastar créditos</strong>. Tenés 48hs para contactar a cada uno o vuelven a la bolsa.</span>
+          <span>Datos mínimos pero reales. Reclamalos <strong style="color:var(--green);">gratis</strong>. Tenés 48hs para contactar a cada uno o vuelven a la bolsa.</span>
           <div style="position:relative; min-width:230px; flex:0 1 280px;">
             <i class="fa-solid fa-magnifying-glass" style="position:absolute; left:11px; top:50%; transform:translateY(-50%); font-size:.75rem; color:var(--text-dim);"></i>
             <input type="text" id="bolsa-buscar-basico" placeholder="Buscar empresa, rubro o ciudad…" oninput="window._repintarBolsa && window._repintarBolsa['basico'] && window._repintarBolsa['basico']()"
@@ -3885,7 +3982,7 @@ html.avz-collapsed #avz-sidebar .avz-exit span{ display:none; }
           <span style="font-size:.72rem; font-weight:800; color:#000; background:var(--green); padding:4px 10px; border-radius:6px;">GRATIS</span>
         </div>
         <div style="padding:14px 20px; font-size:.82rem; color:var(--text-muted); border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; gap:14px; flex-wrap:wrap;">
-          <span>Empresas con presencia digital y contacto verificado. Reclamalos gratis, igual que los básicos.</span>
+          <span>Empresas con teléfono confiable y contexto para tu pitch. Reclamalos gratis, igual que los básicos.</span>
           <div style="position:relative; min-width:230px; flex:0 1 280px;">
             <i class="fa-solid fa-magnifying-glass" style="position:absolute; left:11px; top:50%; transform:translateY(-50%); font-size:.75rem; color:var(--text-dim);"></i>
             <input type="text" id="bolsa-buscar-calificado" placeholder="Buscar empresa, rubro o ciudad…" oninput="window._repintarBolsa && window._repintarBolsa['calificado'] && window._repintarBolsa['calificado']()"

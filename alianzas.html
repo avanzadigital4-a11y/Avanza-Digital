@@ -372,9 +372,21 @@
       // Captura ?ref= de la URL y lo guarda en localStorage
       (function() {
         const params = new URLSearchParams(window.location.search);
-        const ref = params.get('ref') || localStorage.getItem('avanza_ref');
+        const refUrl = params.get('ref');
+        const ref = refUrl || localStorage.getItem('avanza_ref');
         if (ref) {
           localStorage.setItem('avanza_ref', ref);
+
+          // Tracking de clic: solo cuando el ?ref= viene FRESCO en la URL de esta
+          // visita (no desde el localStorage de una visita anterior), para no
+          // contar el mismo clic de nuevo en cada página que recorra el visitante.
+          // Fire-and-forget: si falla, no afecta la navegación del visitante.
+          if (refUrl) {
+            try {
+              fetch('https://avanza-digital.onrender.com/track/clic-reclutamiento?ref=' + encodeURIComponent(refUrl), { method: 'POST', keepalive: true }).catch(function(){});
+            } catch(e) {}
+          }
+
           // Propaga ?ref= a los links internos (canales + portal) para no perder
           // la atribución en la URL al avanzar por el embudo. El localStorage ya
           // es el respaldo; esto hace que el identificador viaje también visible.

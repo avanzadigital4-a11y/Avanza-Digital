@@ -89,6 +89,8 @@ RECIENTES = [
      "aliados", "onboarding_email_d3_en"),
     ("ALTER TABLE aliados ADD COLUMN onboarding_email_d7_en TIMESTAMP",
      "aliados", "onboarding_email_d7_en"),
+    ("ALTER TABLE aliados ADD COLUMN clics_reclutamiento INTEGER DEFAULT 0",
+     "aliados", "clics_reclutamiento"),
 ]
 
 # ─── TABLA jarvis_api_keys (para la API pública de JARVIS) ───────────────────

@@ -45,7 +45,7 @@ from auth import (
 )
 from database import get_db
 from models import (
-    AliadoModuloCompletado, EmailEnviado, Equipo, PasswordResetToken,
+    AcademiaModulo, AliadoModuloCompletado, EmailEnviado, Equipo, PasswordResetToken,
     PushSubscription, ReporteMalContacto, SolicitudCompraCreditos,
     ActividadProspecto, Aliado, AuditoriaLog, AutomationLog,
     ComentarioComunidad, Comision, ContactoProspecto, LeadBolsa, LinkPago,
@@ -746,24 +746,73 @@ def cambiar_nivel(codigo: str,
     return {"mensaje": f"{a.nombre}: {anterior} → {nivel}", "comision": f"{NIVELES[nivel]['comision']*100:.0f}%"}
 
 
+_MESES_ABBR = ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"]
+
+
+def _claves_ultimos_n_meses(n: int, hoy: datetime) -> list[str]:
+    """Devuelve las últimas `n` claves 'YYYY-MM' en orden cronológico (más vieja
+    primero), terminando en el mes de `hoy`. Sirve para que el histórico siempre
+    muestre `n` barras aunque algunos meses no tengan ventas."""
+    claves = []
+    y, m = hoy.year, hoy.month
+    for _ in range(n):
+        claves.append(f"{y:04d}-{m:02d}")
+        m -= 1
+        if m == 0:
+            m = 12
+            y -= 1
+    return list(reversed(claves))
+
+
 @router.get("/aliados/{codigo}/red")
 def mi_red_comercial(codigo: str, db: Session = Depends(get_db), _owner=Depends(verify_ownership_dep)):
     a = _get_aliado(codigo, db)
-    if (getattr(a, "tipo_aliado", "canal1") or "canal1") == "canal2":
-        raise HTTPException(403, "Mi Red no está disponible para aliados Canal 2.")
+    # Nota: Mi Red está disponible para Canal 1 y Canal 2 por igual. El override
+    # pasivo del sponsor (checkout.py / main.py / comisiones.py) nunca distinguió
+    # canal al generarse — un aliado Canal 2 que recluta sub-aliados ya cobraba
+    # ese override aunque antes no pudiera verlo acá (era solo una restricción de
+    # visibilidad en este endpoint, no del cálculo de comisiones).
     red = []
     total_pasivo = 0
+    suma_override_pct = 0.0
 
     # Ventana móvil: un sub cuenta como "activado" si ingresó en los últimos N días.
     DIAS_VENTANA_ACTIVO = int(os.environ.get("DIAS_VENTANA_ACTIVO", "7"))
     corte_activo = datetime.now() - timedelta(days=DIAS_VENTANA_ACTIVO)
 
+    # Total de módulos activos de la Academia, para el progreso por sub-aliado
+    # (una sola query fuera del loop, no por cada sub-aliado). También se manda
+    # el listado completo (id/orden/título) para que el sponsor pueda ver el
+    # detalle módulo por módulo de cada sub-aliado sin pegarle al backend de nuevo.
+    modulos_academia = (
+        db.query(AcademiaModulo)
+        .filter(AcademiaModulo.activo == True)
+        .order_by(AcademiaModulo.orden.asc())
+        .all()
+    )
+    total_modulos_academia = len(modulos_academia)
+
+    # Histórico mensual (últimos 6 meses) de ventas de la red, para el mini
+    # gráfico de tendencia. Se arma en base a las mismas comisiones "RED:" que
+    # ya se usan para calcular la ganancia pasiva de cada sub-aliado — no es
+    # una query nueva, solo se le suma fecha_venta a lo que ya se recorre.
+    HOY = datetime.now()
+    claves_historico = _claves_ultimos_n_meses(6, HOY)
+    historico = {k: {"ventas": 0, "ganancia": 0.0} for k in claves_historico}
+
     sub_aliados = getattr(a, "sub_aliados", [])
     for sub in sub_aliados:
-        # Calcular cuánta plata generó este sub-aliado
-        ventas_red = [v.comision_usd for v in a.ventas if f"RED: {sub.nombre}" in v.nombre_cliente]
-        ganancia = sum(ventas_red)
+        # Calcular cuánta plata generó este sub-aliado (y de paso, alimentar el histórico mensual)
+        ventas_red_obj = [v for v in a.ventas if f"RED: {sub.nombre}" in v.nombre_cliente]
+        ganancia = sum(v.comision_usd for v in ventas_red_obj)
         total_pasivo += ganancia
+
+        for v in ventas_red_obj:
+            if v.fecha_venta:
+                clave = v.fecha_venta.strftime("%Y-%m")
+                if clave in historico:
+                    historico[clave]["ventas"] += 1
+                    historico[clave]["ganancia"] += v.comision_usd
 
         fecha_ing = "Reciente"
         if getattr(sub, "creado_en", None):
@@ -795,6 +844,26 @@ def mi_red_comercial(codigo: str, db: Session = Depends(get_db), _owner=Depends(
 
         ultimo_login_fmt = ult.strftime("%d/%m/%Y") if ult else "Nunca"
 
+        # Ventas propias (de por vida, no ventana de 6m) y % de override que
+        # ESTE aliado (sponsor) cobra por ellas — ver Aliado.override_pct_para_sponsor.
+        ventas_propias = sub.ventas_propias_count
+        override_pct = round(sub.override_pct_para_sponsor * 100, 1)
+        override_pct = int(override_pct) if override_pct == int(override_pct) else override_pct
+
+        # Progreso de Academia del sub-aliado (módulos completados / total activos).
+        # Además del conteo, mandamos los IDs puntuales completados para que el
+        # sponsor pueda ver el detalle módulo por módulo (qué le falta) y sepa
+        # a cuál empujar primero en vez de adivinar.
+        modulos_completados_ids = [
+            row.modulo_id for row in
+            db.query(AliadoModuloCompletado.modulo_id).filter(
+                AliadoModuloCompletado.aliado_id == sub.id
+            ).all()
+        ]
+        academia_completados = len(modulos_completados_ids)
+
+        suma_override_pct += override_pct
+
         red.append({
             "nombre": sub.nombre,
             "ciudad": sub.ciudad or "Sin especificar",
@@ -805,6 +874,11 @@ def mi_red_comercial(codigo: str, db: Session = Depends(get_db), _owner=Depends(
             "activado": activo_reciente,
             "entro_alguna_vez": entro_alguna_vez,
             "ventas_6m": ventas_6m,
+            "ventas_count": ventas_propias,
+            "override_pct": override_pct,
+            "academia_completados": academia_completados,
+            "academia_total": total_modulos_academia,
+            "academia_modulos_completados": modulos_completados_ids,
             "estado": estado,
             "whatsapp": (getattr(sub, "whatsapp", "") or ""),
             "ganancia_pasiva": round(ganancia, 2)
@@ -818,6 +892,22 @@ def mi_red_comercial(codigo: str, db: Session = Depends(get_db), _owner=Depends(
     nunca_entro = sum(1 for s in red if s["estado"] == "sin_activar")
     vendiendo = sum(1 for s in red if s["estado"] == "vendiendo")
 
+    # Override promedio: da una foto rápida de en qué tier está parada la red
+    # en general (calculado en backend, no en frontend, mismo criterio que
+    # override_pct por sub-aliado — para evitar inconsistencias).
+    override_promedio = round(suma_override_pct / total, 1) if total else 0
+    override_promedio = int(override_promedio) if override_promedio == int(override_promedio) else override_promedio
+
+    historico_mensual = [
+        {
+            "mes": clave,
+            "label": _MESES_ABBR[int(clave.split("-")[1]) - 1],
+            "ventas": historico[clave]["ventas"],
+            "ganancia": round(historico[clave]["ganancia"], 2),
+        }
+        for clave in claves_historico
+    ]
+
     return {
         "sponsor": getattr(a, "sponsor").nombre if getattr(a, "sponsor", None) else None,
         "total_sub_aliados": total,
@@ -827,6 +917,18 @@ def mi_red_comercial(codigo: str, db: Session = Depends(get_db), _owner=Depends(
         "vendiendo": vendiendo,
         "ventana_dias": DIAS_VENTANA_ACTIVO,
         "total_ganancia_pasiva": round(total_pasivo, 2),
+        "override_promedio": override_promedio,
+        "historico_mensual": historico_mensual,
+        "academia_modulos": [
+            {"id": m.id, "orden": m.orden, "titulo": m.titulo} for m in modulos_academia
+        ],
+        "reclutamiento": {
+            "clics": int(getattr(a, "clics_reclutamiento", 0) or 0),
+            "registros": total,
+            # Conversión registro → activación (no clic → registro): de los que
+            # se registraron en tu red, qué % llegó a activarse (entrar al portal).
+            "tasa_activacion": round((activados / total) * 100) if total else None,
+        },
         "detalle": red
     }
 

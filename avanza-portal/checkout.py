@@ -739,19 +739,20 @@ def _procesar_pago_confirmado(db: Session,
         tab="comisiones",
     )
 
-    # --- Comisión de red (5% para sponsor) ---
+    # --- Comisión de red (override variable según ventas del sub-aliado, §6.2) ---
     if getattr(a, "sponsor", None):
-        comision_sponsor = round(valor_usd * 0.05, 2)
+        _ovr_pct = a.override_pct_para_sponsor
+        comision_sponsor = round(valor_usd * _ovr_pct, 2)
         v_red = Venta(
             aliado_id=a.sponsor.id, nombre_cliente=f"♻️ RED: {a.nombre} ({modalidad}:{nombre_cliente})",
-            plan=plan, valor_usd=valor_usd, comision_pct=0.05, comision_usd=comision_sponsor,
+            plan=plan, valor_usd=valor_usd, comision_pct=_ovr_pct, comision_usd=comision_sponsor,
             confirmada=True, pagada=False, fecha_venta=fecha_venta,
             modalidad_pago=modalidad, notas=f"Ingreso pasivo {modalidad} {pid_token}"
         )
         db.add(v_red)
         c_red = Comision(
             aliado_id=a.sponsor.id, plan=plan,
-            monto_plan_usd=valor_usd, comision_pct=0.05, comision_usd=comision_sponsor,
+            monto_plan_usd=valor_usd, comision_pct=_ovr_pct, comision_usd=comision_sponsor,
             nombre_cliente=f"RED: {a.nombre} ({nombre_cliente})",
             estado="pendiente", processor=processor, fecha_pago=fecha_venta,
         )
@@ -783,13 +784,15 @@ def _procesar_pago_confirmado(db: Session,
                     "Comision de equipo: USD %s" % format(_parte, ",.0f"),
                     "Tu closer cerro %s (%s). Te toca tu parte como setter." % (nombre_cliente, plan),
                     tab="comisiones")
-                # Modelo B: el sponsor del setter tambien cobra su 5% del deal.
+                # Modelo B: el sponsor del setter tambien cobra su override (según
+                # las ventas propias del setter, §6.2).
                 _setter = db.query(Aliado).filter(Aliado.id == _setter_id).first()
                 _sp = getattr(_setter, "sponsor", None) if _setter else None
                 if _sp:
+                    _ovr_pct_eq = _setter.override_pct_para_sponsor
                     db.add(Comision(
                         aliado_id=_sp.id, plan=plan, monto_plan_usd=valor_usd,
-                        comision_pct=0.05, comision_usd=round(valor_usd * 0.05, 2),
+                        comision_pct=_ovr_pct_eq, comision_usd=round(valor_usd * _ovr_pct_eq, 2),
                         nombre_cliente="RED EQUIPO: " + str(nombre_cliente),
                         estado="pendiente", processor=processor, fecha_pago=fecha_venta))
     except Exception as _e:

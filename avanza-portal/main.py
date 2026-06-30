@@ -1829,16 +1829,18 @@ def registrar_venta(body: schemas.RegistrarVentaIn | None = Body(default=None),
     db.add(v)
     db.flush()  # asignar v.id para usarlo en la referencia del bonus
 
-    # 2. EFECTO RED: Si tiene Sponsor, le damos un 5% pasivo al Sponsor
+    # 2. EFECTO RED: Si tiene Sponsor, override variable según ventas propias
+    # del aliado que cerró (§6.2 — antes era 5% fijo).
     if getattr(a, "sponsor", None):
-        comision_sponsor = round(valor * 0.05, 2) # Fijo 5% de Regalía
+        _ovr_pct = a.override_pct_para_sponsor
+        comision_sponsor = round(valor * _ovr_pct, 2)
         v_red = Venta(
             aliado_id=a.sponsor.id, 
             referido_id=None,
             nombre_cliente=f"♻️ RED: {a.nombre} (Venta: {nombre_cliente})",
             plan=plan, 
             valor_usd=valor, 
-            comision_pct=0.05,
+            comision_pct=_ovr_pct,
             comision_usd=comision_sponsor, 
             confirmada=True, pagada=False,
             fecha_venta=datetime.now(), modalidad_pago=modalidad_pago, 

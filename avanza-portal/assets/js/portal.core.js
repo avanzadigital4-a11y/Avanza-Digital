@@ -3362,6 +3362,9 @@ async function cargarHistorialBolsa() {
 // Funciones de MI RED
 // Lista de invitados de la red (para el botón de seguimiento por fila).
 let _redInvitados = [];
+// Lista global de módulos activos de la Academia (id/orden/título), para
+// renderizar el checklist por sub-aliado sin tener que volver a pedirla.
+let _redAcademiaModulos = [];
 
 // Abre WhatsApp con un mensaje pre-armado según el estado del invitado.
 // Si no hay WhatsApp en su ficha, copia el mensaje al portapapeles.
@@ -3390,7 +3393,57 @@ function seguirInvitadoRed(i) {
   }
 }
 
-// ── Auto-refresh de Mi Red ───────────────────────────────────────────────────
+// Pinta el mini gráfico de barras con la tendencia de ventas de la red
+// (últimos 6 meses, viene del backend ya armado mes por mes).
+function pintarHistoricoRed(historico) {
+  const cont = document.getElementById('red-historico');
+  if (!cont) return;
+  if (!historico || !historico.length) {
+    cont.innerHTML = `<div style="margin:auto;color:var(--text-dim);font-size:.8rem;">Sin datos todavía.</div>`;
+    return;
+  }
+  const max = Math.max(1, ...historico.map(m => m.ventas || 0));
+  cont.innerHTML = historico.map(m => {
+    const alturaPct = Math.round(((m.ventas || 0) / max) * 100);
+    const alturaPx = Math.max(4, Math.round(alturaPct * 0.9)); // mínimo visible aunque sea 0
+    const activo = (m.ventas || 0) > 0;
+    return `
+      <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%;gap:6px;" title="${m.ventas} venta(s) · USD ${(m.ganancia||0).toLocaleString()}">
+        <div style="font-size:.7rem;font-weight:800;color:${activo ? 'var(--green)' : 'var(--text-dim)'};">${m.ventas || 0}</div>
+        <div style="width:60%;min-width:18px;height:${alturaPx}px;border-radius:6px 6px 2px 2px;background:${activo ? 'var(--green)' : 'rgba(255,255,255,0.08)'};"></div>
+        <div style="font-size:.68rem;color:var(--text-dim);text-transform:uppercase;">${m.label}</div>
+      </div>`;
+  }).join('');
+}
+
+// Abre el modal con el checklist módulo por módulo (01 a 07) de Academia para
+// un sub-aliado puntual, leído de _redInvitados[i].academia — así el sponsor
+// ve exactamente qué le falta en vez de adivinar a partir de un conteo.
+function abrirModalAcademiaSub(i) {
+  const inv = (_redInvitados && _redInvitados[i]) ? _redInvitados[i] : null;
+  if (!inv) return;
+  document.getElementById('academia-sub-nombre').textContent = inv.nombre;
+  const completados = new Set(inv.academiaCompletados || []);
+  const lista = document.getElementById('academia-sub-lista');
+  if (!_redAcademiaModulos.length) {
+    lista.innerHTML = `<div style="color:var(--text-dim);font-size:.85rem;">Todavía no hay módulos cargados en la Academia.</div>`;
+  } else {
+    lista.innerHTML = _redAcademiaModulos.map(mod => {
+      const hecho = completados.has(mod.id);
+      return `
+        <div style="display:flex;align-items:center;gap:10px;background:rgba(0,0,0,0.3);border:1px solid ${hecho ? 'rgba(74,222,128,0.3)' : 'var(--border)'};border-radius:8px;padding:10px 12px;">
+          <i class="fa-solid ${hecho ? 'fa-circle-check' : 'fa-circle'}" style="color:${hecho ? 'var(--green)' : 'var(--text-dim)'};font-size:1rem;"></i>
+          <div style="flex:1;">
+            <div style="font-size:.82rem;font-weight:700;color:${hecho ? 'var(--text)' : 'var(--text-muted)'};">Módulo ${String(mod.orden).padStart(2,'0')} — ${mod.titulo}</div>
+          </div>
+          <span style="font-size:.68rem;font-weight:800;color:${hecho ? 'var(--green)' : 'var(--text-dim)'};text-transform:uppercase;">${hecho ? 'Hecho' : 'Pendiente'}</span>
+        </div>`;
+    }).join('');
+  }
+  document.getElementById('modal-academia-sub').classList.add('open');
+}
+
+
 // Mientras el aliado está parado en la solapa Mi Red, repedimos los datos solos
 // cada AUTO_REFRESH_RED_MS para que vea la activación de un invitado (ej. cuando
 // un referido entra por primera vez y su contador pasa de 0 a 1) SIN apretar F5.
@@ -3422,6 +3475,22 @@ function detenerAutoRefreshRed() {
   }
 }
 
+// Tabla de niveles de override pasivo según ventas del sub-aliado.
+// Sube solo, nunca baja (mismo criterio que las comisiones directas BASIC→ELITE).
+// Si el backend ya manda `sub.override_pct` calculado, se respeta ese valor;
+// esto es el fallback para no romper si todavía no se actualizó la API.
+const RED_OVERRIDE_TIERS = [
+  { min: 5, pct: 12 },
+  { min: 3, pct: 10 },
+  { min: 1, pct: 7 },
+  { min: 0, pct: 5 }
+];
+function calcularOverridePct(ventasCount) {
+  const v = ventasCount || 0;
+  const tier = RED_OVERRIDE_TIERS.find(t => v >= t.min);
+  return tier ? tier.pct : 5;
+}
+
 async function cargarRed() {
   if(!aliado) return;
   cargarInvitacionRed();
@@ -3434,11 +3503,59 @@ async function cargarRed() {
 
   try {
     const res = await apiFetch(`${API}/aliados/${aliado.codigo}/red`);
+    if (res.status === 403) {
+      // Defensa: Mi Red es exclusivo de Canal 1. La pestaña ya está oculta para
+      // Canal 2 (ver configurarCanal), pero si se llega igual (deep link, caché
+      // vieja), mostramos un mensaje en vez de dejar todo en blanco.
+      const tbodyForbidden = document.getElementById('tabla-red');
+      if (tbodyForbidden) {
+        tbodyForbidden.innerHTML = `<div class="empty-state"><i class="fa-solid fa-lock"></i><p>Mi Red no está disponible para tu canal.</p></div>`;
+      }
+      return;
+    }
     if(!res.ok) return;
     const data = await res.json();
     
     document.getElementById('red-equipo-count').textContent = data.total_sub_aliados;
     document.getElementById('red-ingresos-total').textContent = `USD ${data.total_ganancia_pasiva.toLocaleString()}`;
+
+    // Override promedio: en qué tier está parada la red en general, de un vistazo.
+    const overrideProm = document.getElementById('red-override-promedio');
+    if (overrideProm) {
+      overrideProm.textContent = (data.total_sub_aliados > 0 && data.override_promedio != null)
+        ? `${data.override_promedio}%`
+        : '—';
+    }
+
+    // Embudo: contamos estados directamente del detalle (no requiere backend nuevo).
+    const conteoEstados = { sin_activar: 0, activado_sin_vender: 0, inactivo: 0, vendiendo: 0 };
+    (data.detalle || []).forEach(sub => {
+      if (conteoEstados.hasOwnProperty(sub.estado)) conteoEstados[sub.estado]++;
+    });
+    document.querySelectorAll('#red-embudo .red-embudo-etapa').forEach(el => {
+      const estado = el.getAttribute('data-estado');
+      const valorEl = el.querySelector('[data-valor]');
+      if (valorEl) valorEl.textContent = conteoEstados[estado] || 0;
+    });
+
+    // Histórico mensual ─ mini gráfico de barras con la tendencia de ventas de la red.
+    pintarHistoricoRed(data.historico_mensual || []);
+
+    // Reclutamiento: usa data.reclutamiento si el backend ya lo manda; si no, deja "—"
+    // en vez de mostrar un cero falso (evita que el aliado piense que el link no funciona).
+    const rec = data.reclutamiento || null;
+    document.getElementById('red-clics').textContent = rec ? (rec.clics ?? 0).toLocaleString() : '—';
+    document.getElementById('red-registros').textContent = rec ? (rec.registros ?? 0).toLocaleString() : '—';
+    document.getElementById('red-conversion').textContent = (rec && rec.clics)
+      ? `${Math.round((rec.registros / rec.clics) * 100)}%`
+      : '—';
+    const activacionEl = document.getElementById('red-activacion');
+    if (activacionEl) {
+      activacionEl.textContent = (rec && rec.tasa_activacion != null) ? `${rec.tasa_activacion}%` : '—';
+    }
+
+    // Módulos de Academia (lista global ordenada), para el checklist por sub-aliado.
+    _redAcademiaModulos = data.academia_modulos || [];
 
     const tbody = document.getElementById('tabla-red');
     if(data.total_sub_aliados === 0) {
@@ -3469,7 +3586,7 @@ async function cargarRed() {
       },
       vendiendo: {
         label: 'Vendiendo', bg: 'rgba(34,197,94,0.14)', fg: 'var(--green)',
-        hint: 'Activo y generando ventas. Tu 5% pasivo corre.',
+        hint: 'Activo y generando ventas. Tu % pasivo corre y sube con cada venta que cierre.',
         cta: 'Saludar',
         msg: n => `Hola ${n}! Vengo siguiendo tus ventas en Avanza, vas muy bien. ¿Necesitás algo para seguir cerrando? Acá estoy.`
       }
@@ -3487,7 +3604,15 @@ async function cargarRed() {
       const ultimo = (sub.ultimo_login && sub.ultimo_login !== 'Nunca')
         ? sub.ultimo_login
         : `<span style="color:#ef4444;">Nunca</span>`;
-      _redInvitados.push({ nombre: sub.nombre, whatsapp: sub.whatsapp || '', msg: e.msg(sub.nombre) });
+      _redInvitados.push({ nombre: sub.nombre, whatsapp: sub.whatsapp || '', msg: e.msg(sub.nombre), academiaCompletados: sub.academia_modulos_completados || [] });
+      const ventasCount = sub.ventas_count || 0;
+      const overridePct = (sub.override_pct != null) ? sub.override_pct : calcularOverridePct(ventasCount);
+      const academiaTxt = (sub.academia_completados != null && sub.academia_total)
+        ? `${sub.academia_completados}/${sub.academia_total}`
+        : '<span style="color:var(--text-dim);">—</span>';
+      const academiaCelda = (sub.academia_total)
+        ? `<button onclick="abrirModalAcademiaSub(${i})" style="background:transparent;border:1px solid var(--border);border-radius:20px;padding:3px 10px;font-size:.78rem;font-weight:700;color:var(--text);cursor:pointer;">${academiaTxt} <i class="fa-solid fa-chevron-right" style="font-size:.6rem;color:var(--text-dim);"></i></button>`
+        : academiaTxt;
       return `
         <tr title="${e.hint}">
           <td style="font-weight:700;">${sub.nombre}<div style="font-size:.72rem;font-weight:400;color:var(--text-muted);">${sub.ciudad}</div></td>
@@ -3495,6 +3620,9 @@ async function cargarRed() {
           <td style="font-size:.8rem;color:var(--text-dim);">${sub.fecha_ingreso}</td>
           <td style="font-weight:700;color:var(--text);">${loginsTxt}</td>
           <td style="font-size:.8rem;color:var(--text-dim);">${ultimo}</td>
+          <td style="font-weight:700;color:var(--text);text-align:center;">${ventasCount}</td>
+          <td style="font-weight:800;color:#c084fc;text-align:center;">${overridePct}%</td>
+          <td style="font-size:.78rem;color:var(--text-dim);text-align:center;">${academiaCelda}</td>
           <td style="color:var(--green);font-weight:800;">USD ${(sub.ganancia_pasiva || 0).toLocaleString()}</td>
           <td><button onclick="seguirInvitadoRed(${i})" style="display:inline-flex;align-items:center;gap:6px;background:rgba(37,211,102,0.12);color:#25D366;border:1px solid rgba(37,211,102,0.4);border-radius:8px;padding:6px 12px;font-size:.76rem;font-weight:700;cursor:pointer;white-space:nowrap;"><i class="fa-brands fa-whatsapp"></i> ${e.cta}</button></td>
         </tr>`;
@@ -3508,7 +3636,7 @@ async function cargarRed() {
         <span style="display:inline-flex;align-items:center;gap:5px;"><span style="width:9px;height:9px;border-radius:50%;background:#f59e0b;display:inline-block;"></span>Activado = entró, no vendió</span>
         <span style="display:inline-flex;align-items:center;gap:5px;"><span style="width:9px;height:9px;border-radius:50%;background:#22c55e;display:inline-block;"></span>Vendiendo</span>
       </div>
-      <table><thead><tr><th>Nombre</th><th>Estado</th><th>Se sumó</th><th>Ingresos</th><th>Último ingreso</th><th>Ganancia (5%)</th><th>Seguimiento</th></tr></thead><tbody>${filas}</tbody></table>`;
+      <table><thead><tr><th>Nombre</th><th>Estado</th><th>Se sumó</th><th>Ingresos</th><th>Último ingreso</th><th>Ventas</th><th>Tu %</th><th>Academia</th><th>Ganancia</th><th>Seguimiento</th></tr></thead><tbody>${filas}</tbody></table>`;
   } catch(e) { console.error('Error cargando red', e); }
 }
 

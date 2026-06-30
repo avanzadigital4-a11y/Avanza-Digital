@@ -5,6 +5,36 @@ from database import Base
 from datetime import datetime, timedelta
 
 
+# ─── RED DE SUB-ALIADOS — OVERRIDE PASIVO DEL SPONSOR ────────────────────────
+# Marcadores de nombre_cliente que identifican comisiones de RED (pasivas/override,
+# acreditadas al SPONSOR por ventas de su sub-aliado). Se usan para excluirlas al
+# contar "ventas propias" de un aliado — si no, un aliado que también recluta
+# inflaría su propio conteo con el override que recibe de sus sub-aliados.
+_MARCADORES_RED = ("RED:", "RED EQUIPO:")
+
+# Niveles de override pasivo del sponsor según ventas PROPIAS (confirmadas, de
+# por vida) del sub-aliado. Ordenado de mayor a menor mínimo: se toma el primer
+# tier que el sub-aliado alcanza o supera. Sube solo, nunca baja — mismo criterio
+# que BASIC→ELITE. Ver §6.2 de terminos-aliados.html (cualquier cambio acá debe
+# reflejarse también ahí, con el preaviso de 15 días que prevé esa cláusula).
+OVERRIDE_TIERS = [
+    (5, 0.12),
+    (3, 0.10),
+    (1, 0.07),
+    (0, 0.05),
+]
+
+
+def calcular_override_pct(ventas_count: int) -> float:
+    """Devuelve el % de override (como fracción, ej. 0.07) que corresponde a un
+    sub-aliado con `ventas_count` ventas propias confirmadas."""
+    v = ventas_count or 0
+    for minimo, pct in OVERRIDE_TIERS:
+        if v >= minimo:
+            return pct
+    return 0.05
+
+
 # ─── ALIADO ──────────────────────────────────────────────────────────────────
 class Aliado(Base):
     __tablename__ = "aliados"
@@ -27,6 +57,9 @@ class Aliado(Base):
     # --- SISTEMA DE RED (SUB-ALIADOS) ---
     sponsor_id = Column(Integer, ForeignKey("aliados.id"), nullable=True)
     sponsor = relationship("Aliado", remote_side=[id], backref="sub_aliados")
+    # Clics recibidos en /alianzas?ref={ref_code} (lo incrementa POST /track/clic-reclutamiento,
+    # llamado desde alianzas.html al detectar el parámetro ?ref= en la URL).
+    clics_reclutamiento = Column(Integer, default=0)
 
     # --- TRACKING DE LOGIN ---
     ultimo_login = Column(DateTime, nullable=True)
@@ -138,6 +171,25 @@ class Aliado(Base):
     @property
     def total_pendiente(self):
         return sum(v.comision_usd for v in self.ventas if v.confirmada and not v.pagada)
+
+    @property
+    def ventas_propias_count(self):
+        """Cantidad de ventas CONFIRMADAS y propias del aliado (excluye las
+        comisiones de RED/override que también se guardan como Venta, pero a
+        nombre de su sponsor — ver _MARCADORES_RED). Es la base para calcular
+        qué % de override cobra SU sponsor por sus ventas (ver §6.2 de
+        terminos-aliados.html)."""
+        return sum(
+            1 for v in self.ventas
+            if v.confirmada and not any(m in (v.nombre_cliente or "") for m in _MARCADORES_RED)
+        )
+
+    @property
+    def override_pct_para_sponsor(self):
+        """% (como fracción, ej. 0.07) que cobra MI sponsor por mis ventas,
+        según MI propia cantidad de ventas. Sube solo, nunca baja. No confundir
+        con `comision_pct`, que es lo que cobro YO por mis propias ventas."""
+        return calcular_override_pct(self.ventas_propias_count)
 
 
 # ─── REFERIDO ────────────────────────────────────────────────────────────────

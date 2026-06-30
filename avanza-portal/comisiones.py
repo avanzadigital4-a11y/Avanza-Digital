@@ -562,7 +562,8 @@ def _repartir_comision_titular_equipo(db, p, c_closer, plan_label, mes, anio, fe
         tab="comisiones",
     )
 
-    # Modelo B: el sponsor del SETTER tambien cobra su override (5% del deal completo).
+    # Modelo B: el sponsor del SETTER tambien cobra su override (según las
+    # ventas propias del setter, §6.2 — antes era 5% fijo del deal completo).
     from models import Aliado as _Aliado
     _setter = db.query(_Aliado).filter(_Aliado.id == setter_id).first()
     _sp = getattr(_setter, "sponsor", None) if _setter else None
@@ -576,10 +577,11 @@ def _repartir_comision_titular_equipo(db, p, c_closer, plan_label, mes, anio, fe
             extract('year',  Comision.fecha_pago) == anio,
         ).first()
         if not ya_sp:
-            _ovr = round(float(p.precio_mensual_usd) * 0.05, 2)
+            _ovr_pct = _setter.override_pct_para_sponsor
+            _ovr = round(float(p.precio_mensual_usd) * _ovr_pct, 2)
             db.add(Comision(
                 aliado_id=_sp.id, plan=plan_label,
-                monto_plan_usd=float(p.precio_mensual_usd), comision_pct=0.05,
+                monto_plan_usd=float(p.precio_mensual_usd), comision_pct=_ovr_pct,
                 comision_usd=_ovr, nombre_cliente=cliente_red,
                 estado="pendiente", fecha_pago=fecha_pago))
 
@@ -610,7 +612,8 @@ def _crear_comisiones_recurrentes_para_plan(db: Session,
                                             anio: int,
                                             fecha_pago: datetime) -> dict:
     """Crea (si no existen) la comisión recurrente del aliado titular y la del
-    sponsor (5%) para el plan de continuidad `p` en el mes/año dados.
+    sponsor (override variable según ventas propias del titular, §6.2 — antes
+    era 5% fijo) para el plan de continuidad `p` en el mes/año dados.
 
     Idempotente por (aliado_id, nombre_cliente, plan_label, mes, anio).
 
@@ -650,7 +653,8 @@ def _crear_comisiones_recurrentes_para_plan(db: Session,
             tab="comisiones",
         )
 
-    # 2. Comisión pasiva 5% al sponsor (RED) — paralelo al one-shot.
+    # 2. Comisión pasiva al sponsor (RED) — override variable según ventas
+    # propias del aliado titular del plan (§6.2). Paralela al one-shot.
     # nombre_cliente lleva prefijo "RED:" para distinguirlo, igual que en las
     # ventas one-shot (ver registrar_venta y _procesar_pago_confirmado).
     aliado = p.aliado
@@ -665,12 +669,13 @@ def _crear_comisiones_recurrentes_para_plan(db: Session,
             extract('year',  Comision.fecha_pago) == anio,
         ).first()
         if not ya_sponsor:
-            comision_sponsor_usd = round(float(p.precio_mensual_usd) * 0.05, 2)
+            _ovr_pct = aliado.override_pct_para_sponsor
+            comision_sponsor_usd = round(float(p.precio_mensual_usd) * _ovr_pct, 2)
             c_red = Comision(
                 aliado_id=sponsor.id,
                 plan=plan_label,
                 monto_plan_usd=float(p.precio_mensual_usd),
-                comision_pct=0.05,
+                comision_pct=_ovr_pct,
                 comision_usd=comision_sponsor_usd,
                 nombre_cliente=cliente_red,
                 estado="pendiente",
@@ -718,7 +723,7 @@ def _generar_comisiones_recurrentes_del_mes(db: Session, mes: int, anio: int) ->
             "cliente": p.nombre_cliente,
             "plan": p.plan_continuidad,
             "comision_titular_usd": p.comision_mensual_usd,
-            "comision_sponsor_usd": (round(float(p.precio_mensual_usd) * 0.05, 2)
+            "comision_sponsor_usd": (round(float(p.precio_mensual_usd) * p.aliado.override_pct_para_sponsor, 2)
                                      if (p.aliado and getattr(p.aliado, "sponsor", None))
                                      else 0.0),
             "creado_titular": creado["titular"],
