@@ -100,6 +100,7 @@ _aplicar_migracion("ALTER TABLE prospectos ADD COLUMN setter_split_pct FLOAT")
 _aplicar_migracion("ALTER TABLE planes_continuidad_activos ADD COLUMN setter_id INTEGER")
 _aplicar_migracion("ALTER TABLE planes_continuidad_activos ADD COLUMN setter_split_pct FLOAT")
 _aplicar_migracion("ALTER TABLE aliados ADD COLUMN notif_inact_55d_en TIMESTAMP")
+_aplicar_migracion("ALTER TABLE aliados ADD COLUMN clics_reclutamiento INTEGER DEFAULT 0")
 
 # Migraciones para columnas nuevas de LeadBolsa y Red de Aliados
 for col_sql in [
