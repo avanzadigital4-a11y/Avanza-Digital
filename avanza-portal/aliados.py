@@ -281,7 +281,15 @@ def _aliado_detalle(a, incluir_token: bool = False):
 @router.get("/aliados/suspendidos")
 def listar_suspendidos(db: Session = Depends(get_db),
                        _admin=Depends(current_admin_required)):
-    return [_aliado_row(a) for a in db.query(Aliado).filter(Aliado.activo == False).all()]
+    ahora = datetime.now()
+    result = []
+    for a in db.query(Aliado).filter(Aliado.activo == False).all():
+        row = _aliado_row(a)
+        fecha_elim = getattr(a, "fecha_eliminacion_programada", None)
+        row["fecha_eliminacion_programada"] = fecha_elim.isoformat() if fecha_elim else None
+        row["dias_restantes_para_eliminar"] = (fecha_elim - ahora).days if fecha_elim else None
+        result.append(row)
+    return result
 
 
 @router.get("/admin/bajas-voluntarias")
@@ -543,15 +551,31 @@ def ver_aliado(codigo: str, db: Session = Depends(get_db), _owner=Depends(verify
 def suspender_aliado(codigo: str, db: Session = Depends(get_db),
                      _admin=Depends(current_admin_required)):
     a = _get_aliado(codigo, db)
-    a.activo = False; db.commit()
-    return {"mensaje": f"{a.nombre} suspendido."}
+    a.activo = False
+    # Igual que la suspensión automática por inactividad: si nadie la
+    # reactiva antes de 60 días, el job_eliminacion_definitiva la borra
+    # en cascada (mismo campo que ya usa ese job para decidir qué borrar).
+    try:
+        a.fecha_suspension_auto        = datetime.now()
+        a.fecha_eliminacion_programada = datetime.now() + timedelta(days=60)
+    except Exception:
+        pass
+    db.commit()
+    return {"mensaje": f"{a.nombre} suspendido. Se eliminará automáticamente en 60 días si no se reactiva."}
 
 
 @router.post("/aliados/{codigo}/activar")
 def activar_aliado(codigo: str, db: Session = Depends(get_db),
                    _admin=Depends(current_admin_required)):
     a = _get_aliado(codigo, db)
-    a.activo = True; db.commit()
+    a.activo = True
+    # Cancelar cualquier eliminación programada (por inactividad o suspensión manual)
+    try:
+        a.fecha_eliminacion_programada = None
+        a.fecha_suspension_auto        = None
+    except Exception:
+        pass
+    db.commit()
     return {"mensaje": f"{a.nombre} reactivado."}
 
 

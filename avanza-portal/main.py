@@ -241,6 +241,8 @@ for col_sql in [
     "ALTER TABLE comunidad_posts ADD COLUMN resuelto BOOLEAN DEFAULT FALSE",
     "ALTER TABLE comunidad_posts ADD COLUMN estado_mejora VARCHAR",
     "ALTER TABLE comunidad_comentarios ADD COLUMN aceptada BOOLEAN DEFAULT FALSE",
+    # v3.3 — Canal 1: alerta de "muchos contactos, cero ventas" (campanita + WA)
+    "ALTER TABLE aliados ADD COLUMN canal1_alerta_sin_venta_en TIMESTAMP",
 ]:
     _aplicar_migracion(col_sql)
 
@@ -1286,6 +1288,11 @@ if ENABLE_CANAL1_WA: scheduler.add_job(job_lock.con_lock(jarvis_canal1.job_onboa
 if ENABLE_CANAL1_WA: scheduler.add_job(job_lock.con_lock(jarvis_canal1.job_semanal_wa, "canal1_semanal_wa", 604800),     "cron", day_of_week="mon", hour=12, minute=0)
 # Ranking mensual: día 1 de cada mes, 10hs Argentina (13hs UTC)
 if ENABLE_CANAL1_WA: scheduler.add_job(job_lock.con_lock(jarvis_canal1.job_mensual_wa, "canal1_mensual_wa", 86400),     "cron", day=1, hour=13, minute=0)
+# Alerta "muchos contactos, cero ventas": campanita del portal SIEMPRE activa
+# (no depende de ENABLE_CANAL1_WA — el WA de esta alerta puntual lo gatea la
+# propia función jarvis_canal1.notificar_contactos_sin_venta). Corre una vez
+# por día, 14hs Argentina (17hs UTC).
+scheduler.add_job(job_lock.con_lock(jarvis_canal1.job_alerta_contactos_sin_venta, "canal1_alerta_sin_venta", 86400), "cron", hour=17, minute=0)
 # ─── SETTER — Secuencia de seguimiento a prospectos inbound ──────────────────
 # Reactiva prospectos en 'calificando' sin respuesta (máx 3 toques). Cada 2hs.
 scheduler.add_job(job_lock.con_lock(jarvis_setter.job_seguimientos, "setter_seguimientos", 7200),   "interval", hours=2)

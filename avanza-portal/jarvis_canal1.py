@@ -74,6 +74,20 @@ GRUPO_WHATSAPP_URL = os.environ.get("CANAL1_GRUPO_WA_URL", "https://chat.whatsap
 WA_BATCH_DELAY = float(os.environ.get("CANAL1_WA_BATCH_DELAY", "1.5"))
 WA_BATCH_MAX   = int(os.environ.get("CANAL1_WA_BATCH_MAX", "500"))
 
+# ─── ALERTA "MUCHOS CONTACTOS, CERO VENTAS" ──────────────────────────────────
+# Cuántas empresas contactadas (estado != 'sin_contactar' en el CRM) disparan
+# la alerta si el aliado todavía no cerró ninguna venta confirmada.
+CANAL1_UMBRAL_CONTACTOS_SIN_VENTA = int(os.environ.get("CANAL1_UMBRAL_CONTACTOS_SIN_VENTA", "8"))
+# Es un aviso ÚNICO por aliado (no un recordatorio recurrente): si ya lo
+# contactamos y no cerró, insistir cada X días no ayuda — el flag de
+# idempotencia (canal1_alerta_sin_venta_en) alcanza para no repetirlo nunca
+# más, sin importar cuánto tiempo pase ni cuántas empresas más contacte.
+# Número de WhatsApp de Avanza Digital (soporte/contacto) al que redirige la
+# alerta. Mismo número que ya se usa públicamente en el sitio como contacto
+# oficial (ver DATOS_BANCARIOS['whatsapp_link'] en main.py), configurable
+# aparte por si algún día conviene separar el número de soporte a aliados.
+SOPORTE_WA_NUMERO = os.environ.get("AVANZA_SOPORTE_WA_NUMERO", "5493424392759")
+
 # ─── SQL DE MIGRACIONES ───────────────────────────────────────────────────────
 
 MIGRATION_SQL = [
@@ -85,6 +99,7 @@ MIGRATION_SQL = [
     "ALTER TABLE aliados ADD COLUMN IF NOT EXISTS canal1_wa_inact30_en TIMESTAMP",
     "ALTER TABLE aliados ADD COLUMN IF NOT EXISTS canal1_wa_semanal_en TIMESTAMP",
     "ALTER TABLE aliados ADD COLUMN IF NOT EXISTS canal1_wa_mensual_en TIMESTAMP",
+    "ALTER TABLE aliados ADD COLUMN IF NOT EXISTS canal1_alerta_sin_venta_en TIMESTAMP",
 ]
 
 # ─── HELPER: ENVIAR Y LOGUEAR ─────────────────────────────────────────────────
@@ -227,6 +242,24 @@ def _msg_subida_elite(aliado) -> str:
         f"Sos de los mejores aliados del network. "
         f"Si querés escalar más, hablemos de sub-aliados y estructura de red. 🏆"
     )
+
+
+def _msg_alerta_contactos_sin_venta(aliado, n_contactados: int) -> str:
+    nombre = aliado.nombre.split()[0] if aliado.nombre else ""
+    return (
+        f"Hola {nombre} 👀\n\n"
+        f"Notamos que ya contactaste *{n_contactados} empresas* pero todavía no "
+        f"lograste tu primera venta.\n\n"
+        f"A veces el problema no es el esfuerzo, es el enfoque del pitch o el "
+        f"tipo de empresa que estás eligiendo. Te ayudamos a destrabarlo.\n\n"
+        f"👉 Escribinos y lo vemos juntos: https://wa.me/{SOPORTE_WA_NUMERO}"
+        f"?text={_urlquote_wa('Hola, soy aliado Canal 1 (código ' + (aliado.ref_code or aliado.codigo or '') + ') y quiero ayuda para cerrar mi primera venta.')}"
+    )
+
+
+def _urlquote_wa(texto: str) -> str:
+    from urllib.parse import quote as _quote  # noqa: PLC0415
+    return _quote(texto, safe="")
 
 
 def _msg_inactividad_7d(aliado) -> str:
@@ -395,6 +428,65 @@ def notificar_venta_y_nivel(aliado, nivel_anterior: str, db) -> bool:
     # Venta confirmada sin cambio de nivel (ya es ELITE o venta adicional)
     # No enviamos nada extra para no saturar — la información está en el portal.
     return False
+
+
+def notificar_contactos_sin_venta(aliado, n_contactados: int, db) -> bool:
+    """
+    Dispara la alerta de "muchas empresas contactadas, cero ventas": crea la
+    novedad in-app (campanita del portal) SIEMPRE que el aliado sea Canal 1,
+    y además manda WhatsApp si el canal WA está habilitado (ENABLE_CANAL1_WA)
+    y el aliado tiene número cargado.
+
+    No hace commit propio de la novedad (mismo patrón que notificar_aliado:
+    la maneja el caller), pero SÍ commitea el timestamp de idempotencia acá
+    porque el caller (job_alerta_contactos_sin_venta) es quien la dispara.
+    """
+    if not _es_canal1(aliado):
+        return False
+
+    try:
+        from notificaciones import notificar_aliado  # noqa: PLC0415
+
+        wa_link = (
+            f"https://wa.me/{SOPORTE_WA_NUMERO}?text="
+            + _urlquote_wa(
+                "Hola, soy aliado Canal 1 (código "
+                + (aliado.ref_code or aliado.codigo or "") + ") y quiero ayuda "
+                "para cerrar mi primera venta."
+            )
+        )
+        notificar_aliado(
+            db, aliado.id, "alerta_sin_venta",
+            f"Contactaste {n_contactados} empresas, vamos por tu primera venta 🎯",
+            f"A veces el problema no es el esfuerzo, es el enfoque. "
+            f"<a href=\"{wa_link}\" target=\"_blank\" rel=\"noopener\" "
+            f"style=\"color:#f97316;font-weight:700;\">Escribinos por WhatsApp</a> "
+            f"y lo destrabamos juntos.",
+            tab="pipeline",
+        )
+    except Exception as exc:
+        print(f"[CANAL1] Error creando novedad alerta_sin_venta aliado={aliado.id}: {exc}", file=sys.stderr)
+
+    # WhatsApp directo al aliado: solo si el canal está habilitado (ver
+    # ENABLE_CANAL1_WA en main.py) — el mismo criterio que el resto de la
+    # secuencia de Canal 1, para no mandar por un canal que está apagado.
+    numero = _numero(aliado)
+    enviado_wa = False
+    if os.environ.get("ENABLE_CANAL1_WA", "0") == "1" and numero:
+        enviado_wa = _enviar(
+            numero, _msg_alerta_contactos_sin_venta(aliado, n_contactados),
+            f"alerta_sin_venta aliado={aliado.id}",
+        )
+
+    try:
+        aliado.canal1_alerta_sin_venta_en = datetime.utcnow()
+        db.commit()
+    except Exception as exc:
+        db.rollback()
+        print(f"[CANAL1] Error guardando canal1_alerta_sin_venta_en: {exc}", file=sys.stderr)
+
+    print(f"[CANAL1] alerta_sin_venta aliado={aliado.id} campanita=ok wa={'enviado' if enviado_wa else 'no'}", flush=True)
+    return True
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -667,6 +759,71 @@ def job_mensual_wa() -> None:
 
     except Exception as exc:
         print(f"[CANAL1] Error en job_mensual_wa: {exc}", file=sys.stderr)
+        try:
+            db.rollback()
+        except Exception:
+            pass
+    finally:
+        try:
+            db.close()
+        except Exception:
+            pass
+
+
+def job_alerta_contactos_sin_venta() -> None:
+    """
+    Job diario. Detecta aliados Canal 1 activos que contactaron muchas
+    empresas (>= CANAL1_UMBRAL_CONTACTOS_SIN_VENTA prospectos con estado
+    distinto de 'sin_contactar') pero todavía no tienen ninguna venta
+    confirmada, y les dispara la alerta (campanita + WA opcional) con un
+    link directo al WhatsApp de Avanza Digital.
+
+    Es un aviso ÚNICO por aliado (no un recordatorio recurrente): una vez
+    que canal1_alerta_sin_venta_en queda seteado, no se vuelve a mandar
+    nunca más, sin importar cuánto tiempo pase — si ya lo contactamos y
+    no cerró, insistir cada tantos días no ayuda. La única forma de que
+    vuelva a estar "elegible" es que ese campo se resetee a mano.
+
+    Agregar en main.py:
+        scheduler.add_job(jarvis_canal1.job_alerta_contactos_sin_venta, "cron", hour=11)
+    """
+    try:
+        from database import SessionLocal  # noqa: PLC0415
+        from models import Aliado, Prospecto  # noqa: PLC0415
+        db = SessionLocal()
+
+        aliados = (
+            db.query(Aliado)
+            .filter(Aliado.activo == True, Aliado.tipo_aliado == "canal1")  # noqa: E712
+            .all()
+        )
+
+        avisados = 0
+        for a in aliados:
+            # Ya vendió al menos una vez: no aplica la alerta.
+            if a.ventas_propias_count > 0:
+                continue
+
+            # Ya se avisó una vez: no se repite, nunca más (a diferencia de
+            # inactividad/onboarding, este es un aviso de una sola vez).
+            if getattr(a, "canal1_alerta_sin_venta_en", None):
+                continue
+
+            n_contactados = (
+                db.query(Prospecto)
+                .filter(Prospecto.aliado_id == a.id, Prospecto.estado != "sin_contactar")
+                .count()
+            )
+            if n_contactados < CANAL1_UMBRAL_CONTACTOS_SIN_VENTA:
+                continue
+
+            if notificar_contactos_sin_venta(a, n_contactados, db):
+                avisados += 1
+
+        print(f"[CANAL1] job_alerta_contactos_sin_venta: {avisados} aliado(s) avisados.", flush=True)
+
+    except Exception as exc:
+        print(f"[CANAL1] Error en job_alerta_contactos_sin_venta: {exc}", file=sys.stderr)
         try:
             db.rollback()
         except Exception:

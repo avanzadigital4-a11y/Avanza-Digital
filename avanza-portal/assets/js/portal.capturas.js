@@ -126,7 +126,7 @@ function iniciarNovedades() {
   });
 }
 
-const _NOVEDAD_ICONOS = { captura: '🔥', comision: '💰', tarea: '⏰', sistema: '🔔' };
+const _NOVEDAD_ICONOS = { captura: '🔥', comision: '💰', tarea: '⏰', sistema: '🔔', alerta_sin_venta: '🎯' };
 
 async function cargarNovedades() {
   if (!aliado) return;

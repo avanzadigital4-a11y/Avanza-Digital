@@ -142,6 +142,11 @@ class Aliado(Base):
     notif_inact_30d_en = Column(DateTime, nullable=True)
     notif_inact_55d_en = Column(DateTime, nullable=True)
 
+    # --- CANAL 1: ALERTA "MUCHOS CONTACTOS, CERO VENTAS" ---
+    # Último aviso (campanita + WA opcional) por contactar muchas empresas sin
+    # haber cerrado la primera venta. Ver jarvis_canal1.job_alerta_contactos_sin_venta.
+    canal1_alerta_sin_venta_en = Column(DateTime, nullable=True)
+
     # --- SUSPENSIÓN Y ELIMINACIÓN AUTOMÁTICA POR INACTIVIDAD ---
     # Día 30 sin login → cuenta suspendida (activo=False) + este campo se setea.
     # Día 60 sin login  (= fecha_suspension_auto + 30d) → eliminación definitiva.
