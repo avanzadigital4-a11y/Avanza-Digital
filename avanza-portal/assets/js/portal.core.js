@@ -23,6 +23,9 @@ const PAISES_INFO = {
   NI: { bandera: "🇳🇮", nombre: "Nicaragua" },
   DO: { bandera: "🇩🇴", nombre: "Rep. Dominicana" },
   CU: { bandera: "🇨🇺", nombre: "Cuba" },
+  BZ: { bandera: "🇧🇿", nombre: "Belice" },
+  GY: { bandera: "🇬🇾", nombre: "Guyana" },
+  SR: { bandera: "🇸🇷", nombre: "Surinam" },
 };
 function paisInfo(codigo) {
   return PAISES_INFO[codigo] || { bandera: "🌎", nombre: codigo || "AR" };
@@ -1311,7 +1314,9 @@ async function renderComisiones() {
   const cbuEstado = document.getElementById('perfil-cbu-estado');
   if(cbuInput) cbuInput.value = aliado.cbu_alias || '';
   if(cbuEstado) {
-    if(aliado.payment_method && aliado.payment_info) {
+    const tieneMetodo = (aliado.payment_method === 'transferencia' && aliado.cobro_numero_cuenta)
+      || (aliado.payment_method && aliado.payment_method !== 'transferencia' && aliado.payment_info);
+    if(tieneMetodo) {
       cbuEstado.innerHTML = `<span style="color:var(--green);"><i class="fa-solid fa-circle-check"></i> Método de cobro configurado.</span>`;
     } else if(aliado.cbu_alias) {
       cbuEstado.innerHTML = `<span style="color:var(--green);"><i class="fa-solid fa-circle-check"></i> Método de cobro cargado.</span>`;
@@ -1593,6 +1598,8 @@ async function confirmarBajaVoluntaria() {
 
 // v2.1: seleccionar método de pago en Mi Cuenta
 let _metodoPagoActual = null;
+// v2.6: qué identificador de Wise eligió el aliado (email/telefono/wisetag)
+let _wiseTipoActual = null;
 
 const _PM_META = {
   usdt_trc20:    { label: 'USDT · TRC20',           icono: '₮', color: '#2ec99e', bg: 'rgba(38,161,123,0.16)' },
@@ -1601,6 +1608,90 @@ const _PM_META = {
   wise:          { label: 'Wise',                    icono: 'W', color: '#9fe870', bg: 'rgba(159,232,112,0.13)' },
   payoneer:      { label: 'Payoneer',                icono: 'P', color: '#ff7a45', bg: 'rgba(255,106,51,0.13)' },
 };
+
+// v2.6 — espejo (solo para labels/placeholders en el front) del diccionario
+// autoritativo que vive en el backend (aliados.py → FORMATOS_CUENTA_POR_PAIS).
+// La validación real y definitiva siempre la hace el backend; esto es nomás
+// para mostrarle al aliado el nombre correcto de su dato ("CLABE", "CCI", etc.)
+// sin tener que ir a buscarlo al servidor.
+const PM_FORMATOS_PAIS = {
+  AR: { label: 'CBU o alias',    ejemplo: 'Ej: 0070003000000000000001 o juan.perez.mp' },
+  BO: { label: 'N° de cuenta',   ejemplo: 'Ej: número de cuenta bancaria' },
+  BR: { label: 'Chave PIX',      ejemplo: 'Ej: CPF, email, teléfono o clave aleatoria' },
+  CL: { label: 'N° de cuenta',   ejemplo: 'Ej: número de cuenta bancaria' },
+  CO: { label: 'N° de cuenta',   ejemplo: 'Ej: número de cuenta bancaria' },
+  CR: { label: 'Cuenta IBAN',    ejemplo: 'Ej: CR05015201010026283666 (22 caracteres)' },
+  CU: { label: 'N° de cuenta',   ejemplo: 'Ej: número de cuenta bancaria' },
+  DO: { label: 'N° de cuenta',   ejemplo: 'Ej: número de cuenta bancaria' },
+  EC: { label: 'N° de cuenta',   ejemplo: 'Ej: número de cuenta bancaria' },
+  SV: { label: 'N° de cuenta',   ejemplo: 'Ej: número de cuenta bancaria' },
+  GT: { label: 'N° de cuenta',   ejemplo: 'Ej: número de cuenta bancaria' },
+  HN: { label: 'N° de cuenta',   ejemplo: 'Ej: número de cuenta bancaria' },
+  MX: { label: 'CLABE',          ejemplo: 'Ej: 18 dígitos' },
+  NI: { label: 'N° de cuenta',   ejemplo: 'Ej: número de cuenta bancaria' },
+  PA: { label: 'N° de cuenta',   ejemplo: 'Ej: número de cuenta bancaria' },
+  PY: { label: 'N° de cuenta',   ejemplo: 'Ej: número de cuenta bancaria' },
+  PE: { label: 'CCI',            ejemplo: 'Ej: 20 dígitos' },
+  UY: { label: 'N° de cuenta',   ejemplo: 'Ej: número de cuenta bancaria' },
+  VE: { label: 'N° de cuenta',   ejemplo: 'Ej: 20 dígitos' },
+  BZ: { label: 'N° de cuenta',   ejemplo: 'Ej: número de cuenta bancaria' },
+  GY: { label: 'N° de cuenta',   ejemplo: 'Ej: número de cuenta bancaria' },
+  SR: { label: 'N° de cuenta',   ejemplo: 'Ej: número de cuenta bancaria' },
+  _default: { label: 'N° de cuenta bancaria', ejemplo: 'Ej: número de cuenta bancaria' },
+};
+
+// Ajusta el nombre de la opción, el label del campo y el hint de "transferencia"
+// según el país del aliado. En Argentina aclara que Mercado Pago/Ualá/Prex ya
+// funcionan acá mismo (CVU es interoperable con CBU/alias vía COELSA), así que
+// no hace falta una opción aparte para eso.
+function _actualizarCamposTransferencia() {
+  if(!aliado) return;
+  const pais = (aliado.pais || 'AR').toUpperCase();
+  const fmt = PM_FORMATOS_PAIS[pais] || PM_FORMATOS_PAIS._default;
+
+  const nameEl = document.getElementById('pm-name-transferencia');
+  const tagEl  = document.getElementById('pm-tag-transferencia');
+  const labelEl = document.getElementById('pm-label-cobro_numero_cuenta');
+  const inputEl = document.getElementById('pm-input-cobro_numero_cuenta');
+  const hintEl = document.getElementById('pm-hint-transferencia');
+
+  if(pais === 'AR') {
+    if(nameEl) nameEl.textContent = 'Transferencia / Mercado Pago';
+    if(tagEl) tagEl.textContent = 'CBU, CVU o alias';
+    if(hintEl) hintEl.innerHTML = '<i class="fa-solid fa-circle-info" style="color:#60a5fa;"></i> Cubre banco, Mercado Pago, Ualá y Prex: todos usan CBU/CVU/alias, interoperables entre sí (sistema COELSA). No hace falta una opción aparte para Mercado Pago.';
+  } else {
+    if(nameEl) nameEl.textContent = 'Transferencia bancaria';
+    if(tagEl) tagEl.textContent = fmt.label;
+    if(hintEl) hintEl.innerHTML = `<i class="fa-solid fa-circle-info" style="color:#60a5fa;"></i> Te depositamos a esta cuenta local (${fmt.label}).`;
+  }
+  if(labelEl) labelEl.textContent = fmt.label;
+  if(inputEl) inputEl.placeholder = fmt.ejemplo;
+}
+
+// v2.6 — selector de identificador de Wise (email / teléfono / wisetag)
+function seleccionarTipoWise(tipo) {
+  _wiseTipoActual = tipo;
+  ['email','telefono','wisetag'].forEach(t => {
+    const btn = document.getElementById('wise-tipo-' + t);
+    if(btn) btn.classList.toggle('selected', t === tipo);
+  });
+  const input = document.getElementById('pm-input-wise');
+  const hint = document.getElementById('pm-hint-wise');
+  if(!input) return;
+  if(tipo === 'email') {
+    input.type = 'text';
+    input.placeholder = 'Ej: tu@email.com';
+    if(hint) hint.innerHTML = '<i class="fa-solid fa-circle-info" style="color:#9fe870;"></i> Recibís en tu balance Wise y convertís a tu moneda local con comisión mínima.';
+  } else if(tipo === 'telefono') {
+    input.type = 'text';
+    input.placeholder = 'Ej: +5491122334455';
+    if(hint) hint.innerHTML = '<i class="fa-solid fa-circle-info" style="color:#9fe870;"></i> Formato internacional, con el código de país incluido (+54, +52, +57...).';
+  } else if(tipo === 'wisetag') {
+    input.type = 'text';
+    input.placeholder = 'Ej: @tuusuario';
+    if(hint) hint.innerHTML = '<i class="fa-solid fa-circle-info" style="color:#9fe870;"></i> Tu Wisetag empieza con @ y no lleva espacios.';
+  }
+}
 
 function seleccionarMetodoPago(metodo) {
   _metodoPagoActual = metodo;
@@ -1611,6 +1702,8 @@ function seleccionarMetodoPago(metodo) {
     const fields = document.getElementById('pm-fields-' + m);
     if(fields) fields.style.display = m === metodo ? 'block' : 'none';
   });
+  if(metodo === 'transferencia') _actualizarCamposTransferencia();
+  if(metodo === 'wise' && !_wiseTipoActual) seleccionarTipoWise('email');
 }
 
 // Enmascara el dato de cobro para mostrarlo sin exponerlo entero en pantalla
@@ -1628,7 +1721,7 @@ function _pintarEstadoMetodoPago() {
 
   const metodo = aliado.payment_method;
   const info = aliado.payment_info;
-  const tieneAlgo = (metodo && info) || aliado.cbu_alias;
+  const tieneAlgo = (metodo === 'transferencia' && aliado.cobro_numero_cuenta) || (metodo && metodo !== 'transferencia' && info) || aliado.cbu_alias;
 
   if (tieneAlgo) {
     chip.style.background = 'rgba(74,222,128,0.12)';
@@ -1642,7 +1735,10 @@ function _pintarEstadoMetodoPago() {
     const met = document.getElementById('pm-resumen-metodo');
     if (met) met.textContent = meta.label;
     const det = document.getElementById('pm-resumen-detalle');
-    if (det) det.textContent = _maskPagoInfo(info || aliado.cbu_alias || '');
+    const detalleRaw = metodo === 'transferencia'
+      ? (aliado.cobro_numero_cuenta || aliado.cbu_alias || '')
+      : (info || aliado.cbu_alias || '');
+    if (det) det.textContent = _maskPagoInfo(detalleRaw);
     resumen.style.display = 'flex';
   } else {
     chip.style.background = 'rgba(250,204,21,0.12)';
@@ -1655,6 +1751,13 @@ function _pintarEstadoMetodoPago() {
 
 function _getInputMetodoPago() {
   if(!_metodoPagoActual) return null;
+  if(_metodoPagoActual === 'transferencia') {
+    const banco = (document.getElementById('pm-input-cobro_banco')?.value || '').trim();
+    const titular = (document.getElementById('pm-input-cobro_titular')?.value || '').trim();
+    const numero = (document.getElementById('pm-input-cobro_numero_cuenta')?.value || '').trim();
+    if(!banco || !titular || !numero) return null;
+    return { banco, titular, numero }; // objeto, no string — se procesa aparte en guardarMetodoPago
+  }
   const el = document.getElementById('pm-input-' + _metodoPagoActual);
   return el ? (el.value || '').trim() : null;
 }
@@ -1669,31 +1772,50 @@ async function guardarMetodoPago() {
     estado.innerHTML = `<span style="color:var(--amber);"><i class="fa-solid fa-triangle-exclamation"></i> Seleccioná un método de cobro primero.</span>`;
     return;
   }
+  if(_metodoPagoActual === 'wise' && !_wiseTipoActual) {
+    estado.innerHTML = `<span style="color:var(--amber);"><i class="fa-solid fa-triangle-exclamation"></i> Elegí cómo te identificamos en Wise (email, teléfono o wisetag).</span>`;
+    return;
+  }
   const detail = _getInputMetodoPago();
   if(!detail) {
     estado.innerHTML = `<span style="color:var(--amber);"><i class="fa-solid fa-triangle-exclamation"></i> Completá los datos del método elegido.</span>`;
     return;
   }
 
-  // Armar cbu_alias para compat con admin (legible)
-  const metodosLabel = { usdt_trc20:'USDT TRC20', wise:'Wise', transferencia:'Transferencia bancaria', payoneer:'Payoneer', airtm:'Airtm' };
-  const cbuAlias = `[${metodosLabel[_metodoPagoActual]}] ${detail}`;
+  // Payload: cada método manda el campo que realmente lo identifica (ver
+  // mejoras-metodos-cobro.md §3). El cbu_alias legible para el admin lo arma
+  // el backend a partir de estos datos — el front ya no lo construye.
+  const body = { payment_method: _metodoPagoActual };
+  if(_metodoPagoActual === 'transferencia') {
+    body.cobro_banco = detail.banco;
+    body.cobro_titular = detail.titular;
+    body.cobro_numero_cuenta = detail.numero;
+    body.cobro_tipo_cuenta = document.getElementById('pm-input-cobro_tipo_cuenta')?.value || 'otra';
+  } else {
+    body.payment_info = detail;
+    if(_metodoPagoActual === 'wise') body.payment_info_tipo = _wiseTipoActual;
+  }
 
   btn.innerHTML = '<span class="spinner"></span> Guardando...';
   btn.disabled  = true;
 
   try {
-    const res = await apiFetch(`${API}/aliado/perfil?codigo=${encodeURIComponent(aliado.codigo)}`, {
+    const res = await apiFetch(`${API}/aliado/perfil`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ cbu_alias: cbuAlias, payment_method: _metodoPagoActual, payment_info: detail }),
+      body: JSON.stringify(body),
     });
     const data = await res.json();
     if(!res.ok) throw new Error(data.detail || 'Error');
 
     aliado.cbu_alias = data.cbu_alias;
     aliado.payment_method = data.payment_method || _metodoPagoActual;
-    aliado.payment_info   = data.payment_info   || detail;
+    aliado.payment_info   = data.payment_info;
+    aliado.payment_info_tipo = data.payment_info_tipo;
+    aliado.cobro_banco = data.cobro_banco;
+    aliado.cobro_titular = data.cobro_titular;
+    aliado.cobro_numero_cuenta = data.cobro_numero_cuenta;
+    aliado.cobro_tipo_cuenta = data.cobro_tipo_cuenta;
 
     estado.innerHTML = `<span style="color:var(--green);"><i class="fa-solid fa-circle-check"></i> Método de cobro guardado. Ya podés cobrar comisiones.</span>`;
     mostrarToast('Método de cobro guardado correctamente.', 'green');
@@ -1730,19 +1852,35 @@ function poblarMiCuenta() {
   // Restaurar método de pago guardado
   const metodo = aliado.payment_method;
   const info   = aliado.payment_info;
-  if(metodo) {
+  if(metodo === 'transferencia') {
+    seleccionarMetodoPago('transferencia');
+    const setVal = (id, val) => { const el = document.getElementById(id); if(el) el.value = val || ''; };
+    setVal('pm-input-cobro_banco', aliado.cobro_banco);
+    setVal('pm-input-cobro_titular', aliado.cobro_titular);
+    setVal('pm-input-cobro_numero_cuenta', aliado.cobro_numero_cuenta);
+    setVal('pm-input-cobro_tipo_cuenta', aliado.cobro_tipo_cuenta || 'ahorro');
+  } else if(metodo === 'wise') {
+    seleccionarMetodoPago('wise');
+    seleccionarTipoWise(aliado.payment_info_tipo || 'email');
+    const inputEl = document.getElementById('pm-input-wise');
+    if(inputEl) inputEl.value = info || '';
+  } else if(metodo) {
     seleccionarMetodoPago(metodo);
     const inputEl = document.getElementById('pm-input-' + metodo);
     if(inputEl) inputEl.value = info || '';
   } else if(aliado.cbu_alias) {
     // Legacy: tenía cbu_alias pero sin payment_method → mostrar como transferencia
     seleccionarMetodoPago('transferencia');
-    const inputEl = document.getElementById('pm-input-transferencia');
-    if(inputEl) inputEl.value = aliado.cbu_alias;
+    setTimeout(() => { const numEl = document.getElementById('pm-input-cobro_numero_cuenta'); if(numEl) numEl.value = aliado.cbu_alias; }, 0);
+  } else {
+    // Sin nada cargado todavía: igual reflejar el país para el label correcto
+    _actualizarCamposTransferencia();
   }
 
   if(cbuEstado) {
-    if(metodo && info) {
+    const tieneMetodo = (metodo === 'transferencia' && aliado.cobro_numero_cuenta)
+      || (metodo && metodo !== 'transferencia' && info);
+    if(tieneMetodo) {
       cbuEstado.innerHTML = `<span style="color:var(--green);"><i class="fa-solid fa-circle-check"></i> Método de cobro configurado.</span>`;
     } else if(aliado.cbu_alias) {
       cbuEstado.innerHTML = `<span style="color:var(--green);"><i class="fa-solid fa-circle-check"></i> Método de cobro cargado.</span>`;

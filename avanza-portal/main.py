@@ -198,6 +198,14 @@ for col_sql in [
     "ALTER TABLE aliados ADD COLUMN canal1_wa_d1_en TIMESTAMP",
     "ALTER TABLE aliados ADD COLUMN canal1_wa_d3_en TIMESTAMP",
     "ALTER TABLE aliados ADD COLUMN canal1_wa_d7_en TIMESTAMP",
+    # v2.6 — Cobro de comisiones: datos estructurados de transferencia
+    # (banco/titular/tipo/número, formato según país) + qué tipo de dato
+    # es payment_info cuando el método es wise (email/teléfono/wisetag).
+    "ALTER TABLE aliados ADD COLUMN cobro_banco VARCHAR",
+    "ALTER TABLE aliados ADD COLUMN cobro_titular VARCHAR",
+    "ALTER TABLE aliados ADD COLUMN cobro_numero_cuenta VARCHAR",
+    "ALTER TABLE aliados ADD COLUMN cobro_tipo_cuenta VARCHAR",
+    "ALTER TABLE aliados ADD COLUMN payment_info_tipo VARCHAR",
     "ALTER TABLE aliados ADD COLUMN canal1_wa_inact7_en TIMESTAMP",
     "ALTER TABLE aliados ADD COLUMN canal1_wa_inact30_en TIMESTAMP",
     "ALTER TABLE aliados ADD COLUMN canal1_wa_semanal_en TIMESTAMP",

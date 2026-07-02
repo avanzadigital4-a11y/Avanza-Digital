@@ -4125,8 +4125,14 @@ html.avz-collapsed #avz-sidebar .avz-exit span{ display:none; }
         .pm-badge{position:absolute;top:-9px;left:12px;font-size:.58rem;font-weight:800;letter-spacing:.04em;text-transform:uppercase;padding:2px 9px;border-radius:99px;}
         .pm-fields{background:rgba(0,0,0,0.32);border:1px solid var(--border);border-radius:12px;padding:16px;}
         .pm-fields label{font-size:.72rem;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;display:block;margin-bottom:8px;}
-        .pm-fields input,.pm-fields textarea{width:100%;background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:9px;padding:12px 14px;color:var(--text);font-size:.88rem;outline:none;box-sizing:border-box;transition:border-color .15s;font-family:'Inter',sans-serif;}
-        .pm-fields input:focus,.pm-fields textarea:focus{border-color:var(--primary);}
+        .pm-fields input,.pm-fields textarea,.pm-fields select{width:100%;background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:9px;padding:12px 14px;color:var(--text);font-size:.88rem;outline:none;box-sizing:border-box;transition:border-color .15s;font-family:'Inter',sans-serif;}
+        .pm-fields input:focus,.pm-fields textarea:focus,.pm-fields select:focus{border-color:var(--primary);}
+        .pm-fields select{appearance:auto;cursor:pointer;}
+        .pm-fields .pm-field-row{margin-bottom:12px;}
+        .pm-fields .pm-field-row:last-child{margin-bottom:0;}
+        .pm-wise-tipo{display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;}
+        .pm-wise-tipo button{flex:1;min-width:100px;background:rgba(255,255,255,0.03);border:1.5px solid var(--border);color:var(--text-muted);border-radius:8px;padding:9px 10px;font-size:.78rem;font-weight:700;cursor:pointer;transition:all .15s;font-family:'Inter',sans-serif;}
+        .pm-wise-tipo button.selected{border-color:var(--primary);color:var(--text);background:rgba(59,130,246,0.12);}
         .pm-hint{font-size:.72rem;color:var(--text-dim);margin-top:8px;line-height:1.5;}
       </style>
       <div class="bento-box" style="margin-bottom:20px;background:linear-gradient(150deg,rgba(74,222,128,0.04),transparent);border-color:rgba(74,222,128,0.18);">
@@ -4175,8 +4181,8 @@ html.avz-collapsed #avz-sidebar .avz-exit span{ display:none; }
           <button type="button" onclick="seleccionarMetodoPago('transferencia')" id="pm-btn-transferencia" class="pm-card">
             <span class="pm-check"><i class="fa-solid fa-check"></i></span>
             <span class="pm-logo" style="background:rgba(59,130,246,0.14);color:#60a5fa;"><i class="fa-solid fa-building-columns"></i></span>
-            <span class="pm-name">Transferencia</span>
-            <span class="pm-tag">Banco · CBU / IBAN</span>
+            <span class="pm-name" id="pm-name-transferencia">Transferencia bancaria</span>
+            <span class="pm-tag" id="pm-tag-transferencia">Banco · cuenta local</span>
           </button>
 
           <button type="button" onclick="seleccionarMetodoPago('wise')" id="pm-btn-wise" class="pm-card">
@@ -4208,15 +4214,42 @@ html.avz-collapsed #avz-sidebar .avz-exit span{ display:none; }
         </div>
 
         <div id="pm-fields-transferencia" class="pm-fields" style="display:none; margin-bottom:14px;">
-          <label>Datos bancarios (banco, cuenta, CBU/CLABE/IBAN)</label>
-          <textarea id="pm-input-transferencia" rows="3" placeholder="Ej: Banco Galicia · CBU 0070003000000000000001 · Titular: Juan Pérez" style="resize:vertical;"></textarea>
-          <div class="pm-hint"><i class="fa-solid fa-circle-info" style="color:#60a5fa;"></i> Incluí banco, número de cuenta y titular. Para cuentas fuera de Argentina agregá <strong>SWIFT/BIC</strong>.</div>
+          <div class="pm-field-row">
+            <label>Banco</label>
+            <input type="text" id="pm-input-cobro_banco" placeholder="Ej: Banco Galicia">
+          </div>
+          <div class="pm-field-row">
+            <label>Titular de la cuenta</label>
+            <input type="text" id="pm-input-cobro_titular" placeholder="Ej: Juan Pérez">
+          </div>
+          <div class="pm-field-row">
+            <label>Tipo de cuenta</label>
+            <select id="pm-input-cobro_tipo_cuenta">
+              <option value="ahorro">Caja de ahorro</option>
+              <option value="corriente">Cuenta corriente</option>
+              <option value="vista">Cuenta vista</option>
+              <option value="nomina">Cuenta nómina</option>
+              <option value="otra">Otra</option>
+            </select>
+          </div>
+          <div class="pm-field-row">
+            <label id="pm-label-cobro_numero_cuenta">N° de cuenta bancaria</label>
+            <input type="text" id="pm-input-cobro_numero_cuenta" placeholder="" style="font-family:'Courier New',monospace;">
+          </div>
+          <!-- Input legacy (deprecado, se mantiene solo por compat con guardarMetodoPago) -->
+          <input type="hidden" id="pm-input-transferencia" value="">
+          <div class="pm-hint" id="pm-hint-transferencia"><i class="fa-solid fa-circle-info" style="color:#60a5fa;"></i> Te depositamos a esta cuenta local.</div>
         </div>
 
         <div id="pm-fields-wise" class="pm-fields" style="display:none; margin-bottom:14px;">
-          <label>Email o @ de tu cuenta Wise</label>
-          <input type="text" id="pm-input-wise" placeholder="Ej: tu@email.com  o  @usuario">
-          <div class="pm-hint"><i class="fa-solid fa-circle-info" style="color:#9fe870;"></i> Recibís en tu balance Wise y convertís a tu moneda local con comisión mínima.</div>
+          <label>¿Cómo te identificamos en Wise?</label>
+          <div class="pm-wise-tipo">
+            <button type="button" onclick="seleccionarTipoWise('email')" id="wise-tipo-email">Email</button>
+            <button type="button" onclick="seleccionarTipoWise('telefono')" id="wise-tipo-telefono">Teléfono</button>
+            <button type="button" onclick="seleccionarTipoWise('wisetag')" id="wise-tipo-wisetag">Wisetag</button>
+          </div>
+          <input type="text" id="pm-input-wise" placeholder="Ej: tu@email.com">
+          <div class="pm-hint" id="pm-hint-wise"><i class="fa-solid fa-circle-info" style="color:#9fe870;"></i> Recibís en tu balance Wise y convertís a tu moneda local con comisión mínima.</div>
         </div>
 
         <div id="pm-fields-payoneer" class="pm-fields" style="display:none; margin-bottom:14px;">

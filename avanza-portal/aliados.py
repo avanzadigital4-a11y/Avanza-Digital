@@ -205,6 +205,12 @@ def _aliado_row(a):
         "cbu_alias": getattr(a, "cbu_alias", None),
         "payment_method": getattr(a, "payment_method", None),
         "payment_info": getattr(a, "payment_info", None),
+        "payment_info_tipo": getattr(a, "payment_info_tipo", None),
+        "cobro_banco": getattr(a, "cobro_banco", None),
+        "cobro_titular": getattr(a, "cobro_titular", None),
+        "cobro_numero_cuenta": getattr(a, "cobro_numero_cuenta", None),
+        "cobro_tipo_cuenta": getattr(a, "cobro_tipo_cuenta", None),
+        "pais": getattr(a, "pais", None) or "AR",
         "terminos_aceptados": bool(getattr(a, "terminos_aceptados", False)),
         "terminos_aceptados_en": a.terminos_aceptados_en.strftime("%d/%m/%Y %H:%M") if getattr(a, "terminos_aceptados_en", None) else None,
         "tipo_aliado": getattr(a, "tipo_aliado", "canal1") or "canal1",
@@ -248,6 +254,12 @@ def _aliado_detalle(a, incluir_token: bool = False):
         "cbu_alias": getattr(a, "cbu_alias", None),
         "payment_method": getattr(a, "payment_method", None),
         "payment_info": getattr(a, "payment_info", None),
+        "payment_info_tipo": getattr(a, "payment_info_tipo", None),
+        "cobro_banco": getattr(a, "cobro_banco", None),
+        "cobro_titular": getattr(a, "cobro_titular", None),
+        "cobro_numero_cuenta": getattr(a, "cobro_numero_cuenta", None),
+        "cobro_tipo_cuenta": getattr(a, "cobro_tipo_cuenta", None),
+        "pais": getattr(a, "pais", None) or "AR",
         "terminos_aceptados": bool(getattr(a, "terminos_aceptados", False)),
         "terminos_aceptados_en": a.terminos_aceptados_en.strftime("%d/%m/%Y %H:%M") if getattr(a, "terminos_aceptados_en", None) else None,
         "referidos": [{"cliente": r.nombre_cliente, "plan": r.plan_elegido,
@@ -935,11 +947,109 @@ def mi_red_comercial(codigo: str, db: Session = Depends(get_db), _owner=Depends(
 
 
 # ─── CBU / ALIAS DEL ALIADO (spec §11) ───────────────────────────────────────
+#
+# v2.6 — Mejoras a métodos de cobro (LatAm). Los 5 métodos existentes se
+# mantienen (`usdt_trc20`, `airtm`, `wise`, `transferencia`, `payoneer`), pero
+# cada uno ahora pide y valida el dato que realmente lo identifica:
+#   - transferencia: banco + titular + tipo de cuenta + número, en las
+#     columnas `cobro_*`, validado según el formato del país del aliado
+#     (`FORMATOS_CUENTA_POR_PAIS`).
+#   - usdt_trc20: dirección de wallet en `payment_info` (regex TRC20).
+#   - wise: `payment_info` + `payment_info_tipo` ("email"/"telefono"/"wisetag"),
+#     porque Wise identifica destinatarios por cualquiera de los tres.
+#   - payoneer / airtm: email en `payment_info` (ambos solo documentan email
+#     como identificador de cuenta, a diferencia de Wise).
+# Se sigue pagando 100% manual (un admin transfiere leyendo estos datos); no
+# hay integración real con Wise/Payoneer/Airtm/Mercado Pago (ver
+# mejoras-metodos-cobro.md, sección "Por qué NO automatizamos").
+
+FORMATOS_CUENTA_POR_PAIS = {
+    "AR": {"label": "CBU o alias",         "min_len": 6,  "max_len": 22, "solo_numeros": False},
+    "MX": {"label": "CLABE",               "min_len": 18, "max_len": 18, "solo_numeros": True},
+    "CO": {"label": "N° de cuenta",        "min_len": 8,  "max_len": 20, "solo_numeros": True},
+    "PE": {"label": "CCI",                 "min_len": 20, "max_len": 20, "solo_numeros": True},
+    "CL": {"label": "N° de cuenta",        "min_len": 6,  "max_len": 20, "solo_numeros": True},
+    # completar según prioridad real (ver consultas en mejoras-metodos-cobro.md,
+    # sección "Próximo paso antes de programar"): países sin entrada acá caen
+    # en "_default", un campo de texto libre con validación mínima de largo.
+    "_default": {"label": "N° de cuenta bancaria", "min_len": 4, "max_len": 30, "solo_numeros": False},
+}
+
+TIPOS_CUENTA_VALIDOS = {"ahorro", "corriente", "vista", "nomina", "otra"}
+
+_RE_EMAIL = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
+_RE_TELEFONO_INTL = re.compile(r"^\+[1-9]\d{7,14}$")   # formato internacional: +código país + número
+_RE_WISETAG = re.compile(r"^@\S+$")
+
+# Alfabeto base58 (Bitcoin/Tron): sin 0, O, I, l para evitar confusión visual.
+_BASE58_ALPHABET = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz"
+_RE_USDT_TRC20_FORMATO = re.compile(rf"^T[{_BASE58_ALPHABET}]{{33}}$")
+
+
+def _validar_usdt_trc20(direccion: str) -> None:
+    """Valida formato TRC20: empieza con T, 34 caracteres, alfabeto base58.
+
+    No hace validación de checksum criptográfico completa (requeriría
+    replicar el algoritmo de decodificación base58check de Tron); valida
+    longitud y alfabeto, que cubre el error más común (typos, pegar una
+    dirección de otra red, caracteres inválidos)."""
+    if not _RE_USDT_TRC20_FORMATO.match(direccion):
+        raise HTTPException(
+            400,
+            "Dirección USDT TRC20 inválida. Debe empezar con 'T' y tener 34 "
+            "caracteres (verificá que sea red TRC20, no ERC20 ni BEP20).",
+        )
+
+
+def _validar_email(valor: str, contexto: str) -> None:
+    if not _RE_EMAIL.match(valor):
+        raise HTTPException(400, f"Email inválido para {contexto}.")
+
+
+def _validar_wise_info(valor: str, tipo: str | None) -> None:
+    tipo = (tipo or "").strip().lower()
+    if tipo == "email":
+        _validar_email(valor, "Wise")
+    elif tipo == "telefono":
+        if not _RE_TELEFONO_INTL.match(valor):
+            raise HTTPException(400, "Teléfono de Wise inválido. Formato internacional, ej: +5491122334455.")
+    elif tipo == "wisetag":
+        if not _RE_WISETAG.match(valor):
+            raise HTTPException(400, "Wisetag inválido. Debe empezar con '@' y no tener espacios.")
+    else:
+        raise HTTPException(400, "Para Wise indicá payment_info_tipo: 'email', 'telefono' o 'wisetag'.")
+
+
+def _validar_transferencia(pais: str, banco: str | None, titular: str | None,
+                            tipo_cuenta: str | None, numero: str | None) -> None:
+    if not (banco and titular and numero):
+        raise HTTPException(400, "Para transferencia bancaria completá banco, titular y número de cuenta.")
+    if tipo_cuenta and tipo_cuenta.strip().lower() not in TIPOS_CUENTA_VALIDOS:
+        raise HTTPException(400, f"Tipo de cuenta no válido. Opciones: {', '.join(sorted(TIPOS_CUENTA_VALIDOS))}")
+
+    fmt = FORMATOS_CUENTA_POR_PAIS.get((pais or "").strip().upper(), FORMATOS_CUENTA_POR_PAIS["_default"])
+    numero_limpio = numero.strip()
+    if fmt["solo_numeros"] and not numero_limpio.isdigit():
+        raise HTTPException(400, f"{fmt['label']} debe contener solo números.")
+    if not (fmt["min_len"] <= len(numero_limpio) <= fmt["max_len"]):
+        raise HTTPException(
+            400,
+            f"{fmt['label']} debe tener entre {fmt['min_len']} y {fmt['max_len']} caracteres "
+            f"(tiene {len(numero_limpio)}).",
+        )
+
 
 class PerfilAliadoUpdate(BaseModel):
     cbu_alias: str | None = None
     payment_method: str | None = None
     payment_info: str | None = None
+    # "email" | "telefono" | "wisetag" — solo aplica cuando payment_method == "wise"
+    payment_info_tipo: str | None = None
+    # Solo aplican cuando payment_method == "transferencia"
+    cobro_banco: str | None = None
+    cobro_titular: str | None = None
+    cobro_numero_cuenta: str | None = None
+    cobro_tipo_cuenta: str | None = None
 
 @router.patch("/aliado/perfil")
 def actualizar_perfil_aliado(payload: PerfilAliadoUpdate,
@@ -950,21 +1060,84 @@ def actualizar_perfil_aliado(payload: PerfilAliadoUpdate,
     Acepta payment_method + payment_info (nuevo, internacional) o cbu_alias (legacy).
     SECURITY: Toma el aliado del JWT, ya NO acepta `?codigo=` como parámetro
     (era una via de hijack del CBU para redirigir comisiones).
+
+    Cada método pide y valida el dato correcto (ver sección 3 de
+    mejoras-metodos-cobro.md) en vez de un único campo de texto libre:
+      - transferencia → cobro_banco/cobro_titular/cobro_tipo_cuenta/cobro_numero_cuenta,
+        validados según el formato del país del aliado.
+      - usdt_trc20 → payment_info = dirección de wallet (regex TRC20).
+      - wise → payment_info + payment_info_tipo (email/telefono/wisetag).
+      - payoneer / airtm → payment_info = email.
     """
     VALID_METHODS = {"usdt_trc20", "airtm", "wise", "transferencia", "payoneer"}
 
+    method = None
     if payload.payment_method is not None:
         method = (payload.payment_method or "").strip().lower()
         if method and method not in VALID_METHODS:
             raise HTTPException(400, f"Método no válido. Opciones: {', '.join(VALID_METHODS)}")
+    else:
+        method = (getattr(aliado, "payment_method", None) or "").strip().lower() or None
+
+    # ── Validaciones específicas por método ──────────────────────────────
+    if method == "usdt_trc20" and payload.payment_info is not None:
+        info = (payload.payment_info or "").strip()
+        if info:
+            _validar_usdt_trc20(info)
+
+    elif method == "wise" and payload.payment_info is not None:
+        info = (payload.payment_info or "").strip()
+        if info:
+            _validar_wise_info(info, payload.payment_info_tipo)
+
+    elif method in ("payoneer", "airtm") and payload.payment_info is not None:
+        info = (payload.payment_info or "").strip()
+        if info:
+            _validar_email(info, "payoneer" if method == "payoneer" else "Airtm")
+
+    elif method == "transferencia":
+        # Toma valores nuevos si vienen en el payload, si no los ya guardados,
+        # para poder validar el conjunto completo aunque el request solo
+        # actualice un subconjunto de campos.
+        banco = payload.cobro_banco if payload.cobro_banco is not None else getattr(aliado, "cobro_banco", None)
+        titular = payload.cobro_titular if payload.cobro_titular is not None else getattr(aliado, "cobro_titular", None)
+        tipo_cuenta = payload.cobro_tipo_cuenta if payload.cobro_tipo_cuenta is not None else getattr(aliado, "cobro_tipo_cuenta", None)
+        numero = payload.cobro_numero_cuenta if payload.cobro_numero_cuenta is not None else getattr(aliado, "cobro_numero_cuenta", None)
+        if any([payload.cobro_banco, payload.cobro_titular, payload.cobro_numero_cuenta, payload.cobro_tipo_cuenta]):
+            _validar_transferencia(getattr(aliado, "pais", None) or "AR", banco, titular, tipo_cuenta, numero)
+
+    # ── Persistir campos ──────────────────────────────────────────────────
+    if payload.payment_method is not None:
         setattr(aliado, "payment_method", method or None)
 
     if payload.payment_info is not None:
         setattr(aliado, "payment_info", (payload.payment_info or "").strip()[:300] or None)
 
+    if payload.payment_info_tipo is not None:
+        tipo = (payload.payment_info_tipo or "").strip().lower()
+        setattr(aliado, "payment_info_tipo", tipo or None)
+
+    if payload.cobro_banco is not None:
+        setattr(aliado, "cobro_banco", payload.cobro_banco.strip()[:120] or None)
+    if payload.cobro_titular is not None:
+        setattr(aliado, "cobro_titular", payload.cobro_titular.strip()[:120] or None)
+    if payload.cobro_numero_cuenta is not None:
+        setattr(aliado, "cobro_numero_cuenta", payload.cobro_numero_cuenta.strip()[:60] or None)
+    if payload.cobro_tipo_cuenta is not None:
+        setattr(aliado, "cobro_tipo_cuenta", (payload.cobro_tipo_cuenta or "").strip().lower()[:20] or None)
+
     # cbu_alias: mantener por compatibilidad con admin y endpoints legacy
     if payload.cbu_alias is not None:
         aliado.cbu_alias = payload.cbu_alias.strip()[:300] or None
+    elif method == "transferencia" and any([payload.cobro_banco, payload.cobro_titular, payload.cobro_numero_cuenta]):
+        # Auto-generar cbu_alias legible para el admin a partir de los campos estructurados
+        partes = [p for p in [
+            getattr(aliado, "cobro_banco", None),
+            getattr(aliado, "cobro_titular", None) and f"Titular: {getattr(aliado, 'cobro_titular', None)}",
+            getattr(aliado, "cobro_tipo_cuenta", None),
+            getattr(aliado, "cobro_numero_cuenta", None),
+        ] if p]
+        aliado.cbu_alias = f"[Transf. bancaria] {' · '.join(partes)}"[:300] or None
     elif payload.payment_method and payload.payment_info:
         # Auto-generar cbu_alias legible para el admin
         labels = {"usdt_trc20":"USDT TRC20","airtm":"Airtm","wise":"Wise","transferencia":"Transf. bancaria","payoneer":"Payoneer"}
@@ -977,6 +1150,11 @@ def actualizar_perfil_aliado(payload: PerfilAliadoUpdate,
         "cbu_alias": aliado.cbu_alias,
         "payment_method": getattr(aliado, "payment_method", None),
         "payment_info": getattr(aliado, "payment_info", None),
+        "payment_info_tipo": getattr(aliado, "payment_info_tipo", None),
+        "cobro_banco": getattr(aliado, "cobro_banco", None),
+        "cobro_titular": getattr(aliado, "cobro_titular", None),
+        "cobro_numero_cuenta": getattr(aliado, "cobro_numero_cuenta", None),
+        "cobro_tipo_cuenta": getattr(aliado, "cobro_tipo_cuenta", None),
     }
 
 

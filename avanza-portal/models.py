@@ -116,6 +116,22 @@ class Aliado(Base):
 
     # --- COBRO DE COMISIONES (NUEVO) ---
     cbu_alias = Column(String, nullable=True)
+    # v2.1 — Métodos de cobro internacionales. OJO: estas dos columnas ya
+    # existían en la tabla (ver ALTER TABLE en main.py) pero no estaban
+    # mapeadas acá — sin el Column, setattr()/db.commit() en aliados.py no
+    # las persistía de verdad (quedaban solo en el objeto en memoria durante
+    # el request). Mapearlas es lo que hace que se guarden en Postgres.
+    payment_method = Column(String, nullable=True)
+    payment_info = Column(String, nullable=True)
+    # v2.6 — Cobro de comisiones internacional (mejoras-metodos-cobro):
+    # datos estructurados para `transferencia` (banco/titular/tipo/número,
+    # formato según `pais`) y aclaración de qué es `payment_info` para wise
+    # (email / teléfono / wisetag).
+    cobro_banco = Column(String, nullable=True)
+    cobro_titular = Column(String, nullable=True)
+    cobro_numero_cuenta = Column(String, nullable=True)
+    cobro_tipo_cuenta = Column(String, nullable=True)
+    payment_info_tipo = Column(String, nullable=True)
 
     # --- CONTRATO DIGITAL (NUEVO) ---
     terminos_aceptados = Column(Boolean, default=False)
