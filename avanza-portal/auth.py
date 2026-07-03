@@ -230,10 +230,22 @@ def verify_ownership(codigo_path: str):
 
 def verify_ownership_dep(
     request: Request,
-    payload: dict = Depends(current_payload_required),
 ) -> dict:
     """Lee `codigo` del path-param y valida que el token corresponda
-    a ese aliado, o que sea un admin."""
+    a ese aliado, o que sea un admin.
+
+    Acepta JWT (aliado o admin) O X-API-Key admin legacy (igual que
+    `current_admin_required`), para que el panel admin.html logueado
+    con solo API Key no reciba 401 en las rutas /aliados/{codigo}.
+    """
+    # Fallback legacy primero: si viene X-API-Key admin válida, es admin
+    # y entra a cualquier {codigo} sin necesidad de JWT.
+    if ADMIN_API_KEY:
+        provided = request.headers.get("X-API-Key", "") or request.headers.get("x-api-key", "")
+        if provided and secrets.compare_digest(provided, ADMIN_API_KEY):
+            return {"tipo": "admin", "sub": "legacy-admin", "via": "api_key"}
+
+    payload = current_payload_required(request)
     codigo_path = request.path_params.get("codigo")
     if not codigo_path:
         # Si la ruta no tiene {codigo}, no aplica este dependency.
