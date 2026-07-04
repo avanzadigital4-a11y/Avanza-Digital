@@ -1824,6 +1824,11 @@ def confirmar_referido(id: int, body: dict = Body(default={}), db: Session = Dep
     if nota:
         r.nota_admin = nota
         r.nota_admin_en = datetime.utcnow()
+        notificar_aliado(
+            db, r.aliado_id, tipo="referido_revisado",
+            titulo=f"✅ Referido confirmado: {r.nombre_cliente}",
+            cuerpo=nota, tab="pipeline",
+        )
     db.commit()
     return {"mensaje": f"Referido de '{r.nombre_cliente}' confirmado."}
 
@@ -1842,6 +1847,11 @@ def rechazar_referido(id: int, body: dict = Body(...), db: Session = Depends(get
     r.acuse_recibo = True  # queda revisado, ya no aparece en "pendientes"
     r.nota_admin = nota
     r.nota_admin_en = datetime.utcnow()
+    notificar_aliado(
+        db, r.aliado_id, tipo="referido_revisado",
+        titulo=f"❌ Referido no confirmado: {r.nombre_cliente}",
+        cuerpo=nota, tab="pipeline",
+    )
     db.commit()
     return {"mensaje": f"Referido de '{r.nombre_cliente}' marcado como no confirmado. El aliado verá tu nota."}
 

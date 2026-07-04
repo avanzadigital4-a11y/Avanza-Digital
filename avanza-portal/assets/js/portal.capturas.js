@@ -1,4 +1,3 @@
-
 // ═══════════════════════════════════════════════════════════════════════════
 // MIS CAPTURAS — bandeja de leads de magnets (auditoría / calculadora / recursos)
 // ═══════════════════════════════════════════════════════════════════════════
@@ -126,7 +125,7 @@ function iniciarNovedades() {
   });
 }
 
-const _NOVEDAD_ICONOS = { captura: '🔥', comision: '💰', tarea: '⏰', sistema: '🔔', alerta_sin_venta: '🎯' };
+const _NOVEDAD_ICONOS = { captura: '🔥', comision: '💰', tarea: '⏰', sistema: '🔔', alerta_sin_venta: '🎯', referido_revisado: '📋' };
 
 async function cargarNovedades() {
   if (!aliado) return;
