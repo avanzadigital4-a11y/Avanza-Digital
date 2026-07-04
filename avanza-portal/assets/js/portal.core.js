@@ -832,8 +832,17 @@ async function intentarAutoLogin() {
   } catch { _clearToken(); return false; }
 }
 
+let _heartbeatTimer = null;
+function iniciarHeartbeat() {
+  if (_heartbeatTimer) return; // ya está corriendo, cargarTodo() se llama varias veces por sesión
+  const ping = () => { if (!document.hidden) apiFetch(`${API}/aliados/ping`).catch(()=>{}); };
+  ping(); // primer ping inmediato para que figure "activo" apenas entra
+  _heartbeatTimer = setInterval(ping, 60000);
+}
+
 async function cargarTodo() {
   try { _initPush(); } catch (e) {}
+  iniciarHeartbeat();
   try { const res = await apiFetch(`${API}/aliados/${aliado.codigo}`); if(res.ok) aliado = await res.json(); } catch {}
   
   // Configurar visibilidad de tabs y bloques según canal del aliado
@@ -1258,14 +1267,18 @@ function renderReferidos() {
   el.innerHTML=`<table><thead><tr><th>Cliente / Empresa</th><th>Plan</th><th>Comisión est.</th><th>Fecha</th><th>Confirmado</th><th>Estado</th></tr></thead><tbody>${refs.map(r=>{
     const nivel = aliado.nivel_calculado || aliado.nivel_actual || 'BASIC';
     const comEst = Math.round((PLANES[r.plan]||0)*pct(nivel));
+    const confCol = r.rechazado
+      ? '<span class="badge badge-red"><i class="fa-solid fa-circle-xmark"></i> No confirmado</span>'
+      : (r.confirmado ? '<span class="badge badge-green"><i class="fa-solid fa-check"></i> Confirmado</span>' : '<span class="badge badge-gray"><i class="fa-solid fa-clock"></i> Pendiente</span>');
+    const notaFila = r.nota_admin ? `<tr><td colspan="6" style="padding:4px 24px 16px;font-size:.8rem;color:var(--text-dim);background:rgba(255,255,255,0.015);"><i class="fa-solid fa-message" style="color:var(--amber);"></i> Nota de Avanza: <span style="color:var(--text);">${r.nota_admin}</span></td></tr>` : '';
     return `<tr>
       <td style="color:var(--text);font-weight:600;">${r.cliente}</td>
       <td><span class="badge badge-blue">${r.plan}</span></td>
       <td style="color:var(--green);font-weight:700;">${comEst>0?'USD '+comEst.toLocaleString():'—'}</td>
       <td style="font-size:.82rem;color:var(--text-dim);">${r.fecha}</td>
-      <td>${r.confirmado?'<span class="badge badge-green"><i class="fa-solid fa-check"></i> Confirmado</span>':'<span class="badge badge-gray"><i class="fa-solid fa-clock"></i> Pendiente</span>'}</td>
+      <td>${confCol}</td>
       <td>${r.convertido?'<span class="badge badge-green"><i class="fa-solid fa-handshake"></i> Venta cerrada</span>':'<span class="badge badge-blue"><i class="fa-solid fa-clock"></i> En proceso</span>'}</td>
-    </tr>`;
+    </tr>${notaFila}`;
   }).join('')}</tbody></table>`;
 }
 
@@ -2988,14 +3001,18 @@ function plRenderReferidos() {
   el.innerHTML=`<table><thead><tr><th>Cliente / Empresa</th><th>Plan</th><th>Comisión est.</th><th>Fecha</th><th>Confirmado</th><th>Estado</th></tr></thead><tbody>${refs.map(r=>{
     const nivel = aliado.nivel_calculado || aliado.nivel_actual || 'BASIC';
     const comEst = Math.round((PLANES[r.plan]||0)*pct(nivel));
+    const confCol = r.rechazado
+      ? '<span class="badge badge-red"><i class="fa-solid fa-circle-xmark"></i> No confirmado</span>'
+      : (r.confirmado ? '<span class="badge badge-green"><i class="fa-solid fa-check"></i> Confirmado</span>' : '<span class="badge badge-gray"><i class="fa-solid fa-clock"></i> Pendiente</span>');
+    const notaFila = r.nota_admin ? `<tr><td colspan="6" style="padding:4px 24px 16px;font-size:.8rem;color:var(--text-dim);background:rgba(255,255,255,0.015);"><i class="fa-solid fa-message" style="color:var(--amber);"></i> Nota de Avanza: <span style="color:var(--text);">${r.nota_admin}</span></td></tr>` : '';
     return `<tr>
       <td style="color:var(--text);font-weight:600;">${r.cliente}</td>
       <td><span class="badge badge-blue">${r.plan}</span></td>
       <td style="color:var(--green);font-weight:700;">${comEst>0?'USD '+comEst.toLocaleString():'—'}</td>
       <td style="font-size:.82rem;color:var(--text-dim);">${r.fecha}</td>
-      <td>${r.confirmado?'<span class="badge badge-green"><i class="fa-solid fa-check"></i> Confirmado</span>':'<span class="badge badge-gray"><i class="fa-solid fa-clock"></i> Pendiente</span>'}</td>
+      <td>${confCol}</td>
       <td>${r.convertido?'<span class="badge badge-green"><i class="fa-solid fa-handshake"></i> Venta cerrada</span>':'<span class="badge badge-blue"><i class="fa-solid fa-clock"></i> En proceso</span>'}</td>
-    </tr>`;
+    </tr>${notaFila}`;
   }).join('')}</tbody></table>`;
 }
 

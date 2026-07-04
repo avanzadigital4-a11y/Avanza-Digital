@@ -262,9 +262,11 @@ def _aliado_detalle(a, incluir_token: bool = False):
         "pais": getattr(a, "pais", None) or "AR",
         "terminos_aceptados": bool(getattr(a, "terminos_aceptados", False)),
         "terminos_aceptados_en": a.terminos_aceptados_en.strftime("%d/%m/%Y %H:%M") if getattr(a, "terminos_aceptados_en", None) else None,
-        "referidos": [{"cliente": r.nombre_cliente, "plan": r.plan_elegido,
+        "referidos": [{"id": r.id, "cliente": r.nombre_cliente, "plan": r.plan_elegido,
                        "fecha": r.registrado_en.strftime("%d/%m/%Y"),
-                       "confirmado": r.acuse_recibo, "convertido": r.convertido}
+                       "confirmado": r.acuse_recibo, "convertido": r.convertido,
+                       "rechazado": bool(getattr(r, "rechazado", False)),
+                       "nota_admin": getattr(r, "nota_admin", None)}
                       for r in a.referidos],
         "ventas": [{"cliente": v.nombre_cliente, "plan": v.plan,
                     "valor": v.valor_usd, "comision": v.comision_usd,
@@ -290,6 +292,37 @@ def listar_suspendidos(db: Session = Depends(get_db),
         row["dias_restantes_para_eliminar"] = (fecha_elim - ahora).days if fecha_elim else None
         result.append(row)
     return result
+
+
+@router.get("/aliados/activos-ahora")
+def aliados_activos_ahora(db: Session = Depends(get_db),
+                          _admin=Depends(current_admin_required)):
+    """Aliados con actividad en el portal en los últimos minutos ('en línea
+    ahora'). Se apoya en `ultimo_login`, que se refresca en cada request
+    autenticado del aliado (ver `registrar_actividad` en auth.py) y además
+    recibe un heartbeat cada 60s desde el portal (GET /aliados/ping) mientras
+    la pestaña está abierta. Ventana de 5 min = margen sobre ese heartbeat."""
+    VENTANA_MIN = 5
+    corte = datetime.now() - timedelta(minutes=VENTANA_MIN)
+    activos = (
+        db.query(Aliado)
+        .filter(Aliado.activo == True, Aliado.ultimo_login != None, Aliado.ultimo_login >= corte)
+        .order_by(Aliado.ultimo_login.desc())
+        .all()
+    )
+    return {
+        "cantidad": len(activos),
+        "ventana_minutos": VENTANA_MIN,
+        "aliados": [
+            {
+                "codigo": a.codigo,
+                "nombre": a.nombre,
+                "nivel": a.nivel,
+                "hace_segundos": int((datetime.now() - a.ultimo_login).total_seconds()),
+            }
+            for a in activos
+        ],
+    }
 
 
 @router.get("/admin/bajas-voluntarias")
@@ -445,6 +478,15 @@ def crear_aliado(background_tasks: BackgroundTasks,
 def aliado_me(aliado: Aliado = Depends(current_aliado_required), db: Session = Depends(get_db)):
     """Devuelve los datos del aliado autenticado via JWT. Usado para auto-login."""
     return _aliado_detalle(aliado)
+
+
+@router.get("/aliados/ping")
+def aliado_ping(aliado: Aliado = Depends(current_aliado_required)):
+    """Heartbeat liviano: no hace nada más que 'tocar' la actividad del aliado
+    (current_aliado_required ya refresca ultimo_login con su debounce interno).
+    Lo llama portal.core.js cada 60s mientras la pestaña está abierta, para que
+    el admin pueda ver quién está en el portal ahora mismo."""
+    return {"ok": True}
 
 
 @router.post("/aliados/me/solicitar-baja")

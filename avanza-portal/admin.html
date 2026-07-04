@@ -336,6 +336,12 @@ tr:hover td { background:rgba(255,255,255,0.02); }
     <span class="nav-logo"><i class="fa-solid fa-layer-group"></i> Avanza Admin</span>
     <div class="nav-divider"></div>
     <span class="nav-badge"><i class="fa-solid fa-circle" style="font-size:.5rem;"></i> &nbsp;Panel activo</span>
+    <div style="position:relative;">
+      <span class="nav-badge" id="badge-activos-ahora" onclick="toggleDropdownActivos()" style="cursor:pointer;background:rgba(74,222,128,0.1);border-color:rgba(74,222,128,0.25);color:var(--green);">
+        <i class="fa-solid fa-circle" style="font-size:.5rem;color:var(--green);"></i> &nbsp;— activos ahora
+      </span>
+      <div id="dropdown-activos-ahora" style="display:none;position:absolute;top:calc(100% + 8px);left:0;background:#0d0d0d;border:1px solid var(--border);border-radius:10px;padding:10px;min-width:220px;max-height:280px;overflow-y:auto;z-index:9998;box-shadow:0 8px 24px rgba(0,0,0,0.4);"></div>
+    </div>
     <button class="btn-nav" onclick="window.open('portal.html','_blank')"><i class="fa-solid fa-arrow-up-right-from-square"></i> Ver portal</button>
     <button class="btn-nav" onclick="confirmarAccion('¿Querés cerrar sesión?','Vas a salir del panel de administración.','fa-right-from-bracket','amber',logoutAdmin)"><i class="fa-solid fa-right-from-bracket"></i> Salir</button>
   </nav>
@@ -1300,6 +1306,32 @@ tr:hover td { background:rgba(255,255,255,0.02); }
           </div>
         </div>
       </div>
+
+      <!-- Modal: revisar un Referido (Confirmar / No confirmar + nota al aliado) -->
+      <div class="modal-overlay" id="modal-revisar-referido" style="position:fixed; inset:0; background:rgba(0,0,0,0.85); z-index:9999; display:none; align-items:center; justify-content:center; padding:20px;">
+        <div style="background:#0d0d0d; border:1px solid var(--border); border-radius:12px; padding:24px; max-width:480px; width:100%;">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+            <h3 style="font-size:1.05rem; font-weight:800;">
+              <i class="fa-solid fa-bell" style="color:var(--amber);"></i>
+              Revisar referido
+            </h3>
+            <button onclick="cerrarModalRevisarReferido()" style="background:transparent; border:none; color:var(--text-muted); font-size:1.4rem; cursor:pointer;">&times;</button>
+          </div>
+          <p style="color:var(--text-muted); font-size:.85rem; margin-bottom:14px;">
+            <strong id="rev-cliente" style="color:var(--text);">—</strong> · plan <strong id="rev-plan" style="color:var(--text);">—</strong> · referido por <strong id="rev-aliado" style="color:var(--text);">—</strong>
+          </p>
+          <label id="rev-nota-label" style="display:block; font-size:.78rem; font-weight:700; margin-bottom:6px; color:var(--text-muted);">Nota para el aliado (opcional)</label>
+          <textarea id="rev-nota" rows="3" placeholder="Ej: 'El paso 2 es para cuando el cliente ya dijo que sí al plan, todavía no vi que transfiera' / 'No encuentro este cliente en la bolsa, ¿de dónde salió?'" style="width:100%; background:#111; border:1px solid var(--border); color:white; padding:10px; border-radius:8px; font-family:inherit; resize:vertical; margin-bottom:14px;"></textarea>
+          <div style="display:flex; gap:10px;">
+            <button onclick="confirmarReferidoDesdeModal()" id="btn-rev-confirmar" style="flex:1; background:var(--green); color:white; border:none; padding:11px; border-radius:8px; font-weight:800; cursor:pointer;">
+              <i class="fa-solid fa-check"></i> Confirmar
+            </button>
+            <button onclick="rechazarReferidoDesdeModal()" id="btn-rev-rechazar" style="flex:1; background:var(--red); color:white; border:none; padding:11px; border-radius:8px; font-weight:800; cursor:pointer;">
+              <i class="fa-solid fa-circle-xmark"></i> No confirmar
+            </button>
+          </div>
+        </div>
+      </div>
     </div>
 
     <!-- TAB EMAIL — Analítica de correos (Hueco 1) ─────────────────────────── -->
@@ -1739,12 +1771,57 @@ function apiFetch(url, opts = {}) {
   return fetch(url, opts);
 }
 
+// ── ALIADOS ACTIVOS AHORA (en línea en el portal en este momento) ───────────
+let _activosAhoraPollTimer = null;
+
+async function cargarActivosAhora() {
+  const badge = document.getElementById('badge-activos-ahora');
+  try {
+    const r = await apiFetch(`${API}/aliados/activos-ahora`);
+    if (!r.ok) return;
+    const data = await r.json();
+    badge.innerHTML = `<i class="fa-solid fa-circle" style="font-size:.5rem;color:var(--green);"></i> &nbsp;${data.cantidad} activo${data.cantidad===1?'':'s'} ahora`;
+    const drop = document.getElementById('dropdown-activos-ahora');
+    if (!data.aliados.length) {
+      drop.innerHTML = `<div style="padding:8px;font-size:.8rem;color:var(--text-dim);">Nadie está en el portal en este momento.</div>`;
+    } else {
+      drop.innerHTML = data.aliados.map(a => {
+        const min = Math.floor(a.hace_segundos / 60);
+        const hace = min < 1 ? 'justo ahora' : `hace ${min} min`;
+        return `<div style="display:flex;justify-content:space-between;gap:12px;padding:7px 4px;font-size:.82rem;border-bottom:1px solid var(--border);">
+          <span style="color:var(--text);font-weight:600;">${a.nombre}</span>
+          <span style="color:var(--text-dim);white-space:nowrap;">${hace}</span>
+        </div>`;
+      }).join('');
+    }
+  } catch {}
+}
+
+function toggleDropdownActivos() {
+  const drop = document.getElementById('dropdown-activos-ahora');
+  drop.style.display = drop.style.display === 'none' ? 'block' : 'none';
+}
+document.addEventListener('click', (e) => {
+  const drop = document.getElementById('dropdown-activos-ahora');
+  const badge = document.getElementById('badge-activos-ahora');
+  if (drop && drop.style.display === 'block' && !drop.contains(e.target) && e.target !== badge && !badge.contains(e.target)) {
+    drop.style.display = 'none';
+  }
+});
+
+function iniciarPollActivosAhora() {
+  if (_activosAhoraPollTimer) return; // no duplicar si cargarTodo() se llama de nuevo
+  cargarActivosAhora();
+  _activosAhoraPollTimer = setInterval(() => { if (!document.hidden) cargarActivosAhora(); }, 30000);
+}
+
 async function cargarTodo() {
   // 1. PRIMERO cargamos los aliados y esperamos a que termine
   await cargarAliados(); 
   
   // 2. LUEGO cargamos el resto (que ahora sí pueden usar la lista de 'todosAliados')
   await Promise.all([cargarReferidos(), cargarVentas(), cargarSuspendidos(), cargarSaludPrograma(), cargarContadorSolicitudes()]);
+  iniciarPollActivosAhora();
   
   // 3. Finalmente renderizamos la interfaz
   renderDashboard();
@@ -1942,7 +2019,7 @@ function renderDashboard() {
     el.innerHTML=`<table><thead><tr><th>Aliado</th><th>Cliente</th><th>Plan</th><th>Acción</th></tr></thead><tbody>${pending.map(r=>`<tr>
       <td style="color:var(--text);font-weight:600;">${r.aliado_nombre}</td>
       <td>${r.cliente}</td><td>${r.plan}</td>
-      <td><button class="btn-green" onclick="confirmarReferidoByNombre('${r.aliado_nombre}','${r.cliente}')"><i class="fa-solid fa-check"></i> Confirmar</button></td>
+      <td><button class="btn-green" onclick="abrirModalRevisarReferido(${r.id},'${(r.aliado_nombre||'').replace(/'/g,"\\'")}','${(r.cliente||'').replace(/'/g,"\\'")}','${(r.plan||'').replace(/'/g,"\\'")}')"><i class="fa-solid fa-magnifying-glass"></i> Revisar</button></td>
     </tr>`).join('')}</tbody></table>`;
   }
 
@@ -2327,49 +2404,95 @@ function renderReferidos(tipo) {
   const data = tipo==='pendientes' ? todosReferidos.filter(r=>!r.confirmado) : todosReferidos;
   const el = document.getElementById('tabla-ref-body');
   if (!data.length) { el.innerHTML=`<tr><td colspan="8"><div class="empty-state"><i class="fa-solid fa-bell"></i><p>${tipo==='pendientes'?'¡Todo confirmado!':'No hay referidos registrados.'}</p></div></td></tr>`; return; }
-  el.innerHTML = data.map((r,i)=>`<tr>
+  el.innerHTML = data.map((r)=>{
+    let estadoCol;
+    if (r.rechazado) {
+      estadoCol = `<span class="badge badge-red" title="${(r.nota_admin||'').replace(/"/g,'&quot;')}"><i class="fa-solid fa-circle-xmark"></i> No confirmado</span>`;
+    } else if (r.confirmado) {
+      estadoCol = `<span class="badge badge-green"><i class="fa-solid fa-check"></i> Sí</span>`;
+    } else {
+      estadoCol = `<span class="badge badge-amber"><i class="fa-solid fa-clock"></i> Pendiente</span>`;
+    }
+    const accionCol = (!r.confirmado && !r.rechazado)
+      ? `<button class="btn-green" onclick="abrirModalRevisarReferido(${r.id},'${(r.aliado_nombre||'').replace(/'/g,"\\'")}','${(r.cliente||'').replace(/'/g,"\\'")}','${(r.plan||'').replace(/'/g,"\\'")}')"><i class="fa-solid fa-magnifying-glass"></i> Revisar</button>`
+      : `<button class="btn-outline" style="font-size:.75rem;padding:6px 10px;" onclick="abrirModalRevisarReferido(${r.id},'${(r.aliado_nombre||'').replace(/'/g,"\\'")}','${(r.cliente||'').replace(/'/g,"\\'")}','${(r.plan||'').replace(/'/g,"\\'")}')">Revisar de nuevo</button>`;
+    return `<tr>
     <td style="color:var(--text);font-weight:600;">${r.aliado_nombre}</td>
     <td>${r.cliente}</td>
     <td><span class="badge badge-blue">${r.plan}</span></td>
     <td style="color:var(--green);font-weight:700;">USD ${(r.comision_est||0).toLocaleString()}</td>
     <td style="font-size:.8rem;color:var(--text-dim);">${r.fecha}</td>
-    <td>${r.confirmado?'<span class="badge badge-green"><i class="fa-solid fa-check"></i> Sí</span>':'<span class="badge badge-amber"><i class="fa-solid fa-clock"></i> Pendiente</span>'}</td>
+    <td>${estadoCol}</td>
     <td>${r.convertido?'<span class="badge badge-green">Venta cerrada</span>':'<span class="badge badge-gray">En proceso</span>'}</td>
-    <td>${!r.confirmado?`<button class="btn-green" onclick="confirmarReferidoByIndex(${i})"><i class="fa-solid fa-check"></i> Confirmar</button>`:'<span style="font-size:.8rem;color:var(--text-dim);">—</span>'}</td>
-  </tr>`).join('');
+    <td>${accionCol}</td>
+  </tr>`;
+  }).join('');
 }
 
-async function confirmarReferidoByIndex(idx) {
-  const ref = todosReferidos[idx];
-  try {
-    const r = await apiFetch(`${API}/referidos/pendientes`);
-    const pendientes = await r.json();
-    const match = pendientes.find(p => p.aliado === ref.aliado_nombre && p.cliente === ref.cliente);
-    if (match) {
-      await apiFetch(`${API}/referidos/${match.id}/confirmar`, {method:'POST'});
-      mostrarToast('Referido confirmado correctamente', 'green');
-      await cargarReferidos();
-      renderReferidos(filtroActual);
-      renderDashboard();
-    } else {
-      mostrarToast('Referido ya fue confirmado previamente', 'green');
-    }
-  } catch { mostrarToast('Error al confirmar', 'red'); }
+let _revisarReferidoId = null;
+
+function abrirModalRevisarReferido(id, aliado, cliente, plan) {
+  _revisarReferidoId = id;
+  document.getElementById('rev-cliente').textContent = cliente;
+  document.getElementById('rev-plan').textContent = plan;
+  document.getElementById('rev-aliado').textContent = aliado;
+  document.getElementById('rev-nota').value = '';
+  document.getElementById('rev-nota-label').textContent = 'Nota para el aliado (opcional)';
+  document.getElementById('modal-revisar-referido').style.display = 'flex';
 }
 
-async function confirmarReferidoByNombre(aliado, cliente) {
+function cerrarModalRevisarReferido() {
+  document.getElementById('modal-revisar-referido').style.display = 'none';
+  _revisarReferidoId = null;
+}
+
+async function _refrescarTrasRevision() {
+  await cargarReferidos();
+  renderReferidos(typeof filtroActual !== 'undefined' ? filtroActual : 'todos');
+  renderDashboard();
+}
+
+async function confirmarReferidoDesdeModal() {
+  if (!_revisarReferidoId) return;
+  const nota = document.getElementById('rev-nota').value.trim();
+  const btn = document.getElementById('btn-rev-confirmar');
+  btn.disabled = true;
   try {
-    const r = await apiFetch(`${API}/referidos/pendientes`);
-    const pendientes = await r.json();
-    const match = pendientes.find(p => p.aliado === aliado && p.cliente === cliente);
-    if (match) {
-      await apiFetch(`${API}/referidos/${match.id}/confirmar`, {method:'POST'});
-      mostrarToast('Referido confirmado', 'green');
-      await cargarReferidos();
-      renderDashboard();
-      renderReferidos(filtroActual);
-    }
-  } catch {}
+    const r = await apiFetch(`${API}/referidos/${_revisarReferidoId}/confirmar`, {
+      method: 'POST',
+      body: nota ? {nota} : undefined,
+    });
+    if (!r.ok) { mostrarToast('Error al confirmar', 'red'); return; }
+    mostrarToast('Referido confirmado', 'green');
+    cerrarModalRevisarReferido();
+    await _refrescarTrasRevision();
+  } catch { mostrarToast('Error de conexión', 'red'); }
+  finally { btn.disabled = false; }
+}
+
+async function rechazarReferidoDesdeModal() {
+  if (!_revisarReferidoId) return;
+  const nota = document.getElementById('rev-nota').value.trim();
+  if (nota.length < 3) {
+    document.getElementById('rev-nota-label').textContent = 'Nota para el aliado (obligatoria para no confirmar)';
+    document.getElementById('rev-nota-label').style.color = 'var(--red)';
+    mostrarToast('Escribí una nota explicando por qué no se confirma', 'red');
+    return;
+  }
+  const btn = document.getElementById('btn-rev-rechazar');
+  btn.disabled = true;
+  try {
+    const r = await apiFetch(`${API}/referidos/${_revisarReferidoId}/rechazar`, {
+      method: 'POST',
+      body: {nota},
+    });
+    const data = await r.json();
+    if (!r.ok) { mostrarToast(data.detail || 'Error al rechazar', 'red'); return; }
+    mostrarToast('Referido marcado como no confirmado. El aliado verá tu nota.', 'green');
+    cerrarModalRevisarReferido();
+    await _refrescarTrasRevision();
+  } catch { mostrarToast('Error de conexión', 'red'); }
+  finally { btn.disabled = false; }
 }
 
 // ── VENTAS ──────────────────────────────────────────────────────────────────

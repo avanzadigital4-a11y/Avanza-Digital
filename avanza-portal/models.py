@@ -225,6 +225,13 @@ class Referido(Base):
     registrado_en = Column(DateTime, default=func.now())
     acuse_recibo = Column(Boolean, default=False)
     convertido = Column(Boolean, default=False)
+    # --- REVISIÓN ADMIN (no confirmar + nota visible al aliado) ---
+    # rechazado=True cuando el admin marca "No confirmar" (ej: el referido
+    # se registró antes de que el cliente dijera que sí al plan). El aliado
+    # ve nota_admin en su panel para saber por qué no se confirmó.
+    rechazado = Column(Boolean, default=False)
+    nota_admin = Column(Text, nullable=True)
+    nota_admin_en = Column(DateTime, nullable=True)
     # Puente CRM → Referido: si el referido se creó desde la ficha de un
     # prospecto del CRM, acá queda el vínculo (idempotencia + badge en ficha).
     prospecto_id = Column(Integer, ForeignKey("prospectos.id"), nullable=True)

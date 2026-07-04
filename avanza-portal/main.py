@@ -1,3 +1,4 @@
+import sys
 from fastapi import FastAPI, Depends, HTTPException, Request, status, BackgroundTasks, Body
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
@@ -1407,6 +1408,17 @@ jarvis_api_publica.register(app, get_db, current_aliado_required, engine=engine)
 jarvis_integraciones.register_integration_routes(app, get_db, current_aliado_required)  # Fix: integraciones/estado
 jarvis_setter.register(app, get_db, current_aliado_required)   # Setter: /l/{slug}, /jarvis/setter/*
 jarvis_setter.run_migrations(engine)                           # Crea setter_sesiones / setter_enlaces si no existen
+
+# ─── MIGRACIÓN: columnas de revisión admin en Referido (rechazado + nota) ────
+# Idempotente vía IF NOT EXISTS, corre sola al boot (mismo patrón que arriba).
+try:
+    with engine.begin() as _conn:
+        _conn.execute(text("ALTER TABLE referidos ADD COLUMN IF NOT EXISTS rechazado BOOLEAN DEFAULT FALSE"))
+        _conn.execute(text("ALTER TABLE referidos ADD COLUMN IF NOT EXISTS nota_admin TEXT"))
+        _conn.execute(text("ALTER TABLE referidos ADD COLUMN IF NOT EXISTS nota_admin_en TIMESTAMP"))
+    print("[REFERIDOS] Migración OK (rechazado, nota_admin, nota_admin_en)", flush=True)
+except Exception as _e:
+    print(f"[REFERIDOS] Error en migración de columnas admin: {_e}", file=sys.stderr)
 jarvis_contratos_routes.register(app, get_db, current_aliado_required)  # POST /ventas/{id}/contrato y /contratos/preview → PDF del contrato
 
 # ─── RUTAS ADMIN ─────────────────────────────────────────────────────────────
@@ -1419,6 +1431,7 @@ RUTAS_ADMIN = {
     ("POST",   "/admin/login"),
     ("GET",    "/aliados"),
     ("GET",    "/aliados/suspendidos"),
+    ("GET",    "/aliados/activos-ahora"),
     ("GET",    "/aliados/inactivos"),
     ("PATCH",  "/aliados/{codigo}/nivel"),
     ("POST",   "/aliados/{codigo}/suspender"),
@@ -1442,6 +1455,7 @@ RUTAS_ADMIN = {
     ("POST",   "/admin/comunidad/{id}/fijar"),
     ("POST",   "/admin/comunidad/{id}/ocultar"),
     ("POST",   "/referidos/{id}/confirmar"),
+    ("POST",   "/referidos/{id}/rechazar"),
     ("GET",    "/admin/comisiones"),
     ("POST",   "/admin/comisiones/{id}/abonar"),
     ("GET",    "/admin/pagos"),
@@ -1794,17 +1808,42 @@ def referidos_pendientes(db: Session = Depends(get_db)):
         {"id": r.id, "aliado": r.aliado.nombre, "aliado_codigo": r.aliado.codigo,
          "cliente": r.nombre_cliente, "plan": r.plan_elegido,
          "registrado_en": r.registrado_en.strftime("%d/%m/%Y %H:%M")}
-        for r in db.query(Referido).filter(Referido.acuse_recibo == False).all()
+        for r in db.query(Referido).filter(Referido.acuse_recibo == False, Referido.rechazado == False).all()
     ]
 
 
 @app.post("/referidos/{id}/confirmar")
-def confirmar_referido(id: int, db: Session = Depends(get_db)):
-    """Admin confirma manualmente un referido. (Protegido por middleware admin.)"""
+def confirmar_referido(id: int, body: dict = Body(default={}), db: Session = Depends(get_db)):
+    """Admin confirma manualmente un referido, con nota opcional visible
+    para el aliado. (Protegido por middleware admin.)"""
+    nota = (body.get("nota") or "").strip() if body else ""
     r = db.query(Referido).filter(Referido.id == id).first()
     if not r: raise HTTPException(404, "Referido no encontrado.")
-    r.acuse_recibo = True; db.commit()
+    r.acuse_recibo = True
+    r.rechazado = False  # por si se había rechazado antes por error y se revierte
+    if nota:
+        r.nota_admin = nota
+        r.nota_admin_en = datetime.utcnow()
+    db.commit()
     return {"mensaje": f"Referido de '{r.nombre_cliente}' confirmado."}
+
+
+@app.post("/referidos/{id}/rechazar")
+def rechazar_referido(id: int, body: dict = Body(...), db: Session = Depends(get_db)):
+    """Admin marca 'No confirmar' un referido y deja una nota visible para
+    el aliado (ej: 'Esto es un prospecto, registralo cuando el cliente ya
+    dijo que sí al plan'). (Protegido por middleware admin.)"""
+    nota = (body.get("nota") or "").strip()
+    if len(nota) < 3:
+        raise HTTPException(400, "La nota es obligatoria (mínimo 3 caracteres) para que el aliado entienda por qué no se confirmó.")
+    r = db.query(Referido).filter(Referido.id == id).first()
+    if not r: raise HTTPException(404, "Referido no encontrado.")
+    r.rechazado = True
+    r.acuse_recibo = True  # queda revisado, ya no aparece en "pendientes"
+    r.nota_admin = nota
+    r.nota_admin_en = datetime.utcnow()
+    db.commit()
+    return {"mensaje": f"Referido de '{r.nombre_cliente}' marcado como no confirmado. El aliado verá tu nota."}
 
 
 # ─── VENTAS CON COMISIONES RED ───────────────────────────────────────────────
@@ -1936,7 +1975,7 @@ def dashboard(db: Session = Depends(get_db)):
         "total_comisiones_usd": round(sum(v.comision_usd for v in ventas), 2),
         "pendiente_pagar_usd": round(sum(v.comision_usd for v in ventas if not v.pagada), 2),
         "distribucion_niveles": niveles,
-        "referidos_sin_confirmar": db.query(Referido).filter(Referido.acuse_recibo == False).count(),
+        "referidos_sin_confirmar": db.query(Referido).filter(Referido.acuse_recibo == False, Referido.rechazado == False).count(),
         "leaderboard": leaderboard,
     }
 
