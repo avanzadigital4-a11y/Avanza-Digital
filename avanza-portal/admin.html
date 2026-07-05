@@ -1307,29 +1307,35 @@ tr:hover td { background:rgba(255,255,255,0.02); }
         </div>
       </div>
 
-      <!-- Modal: revisar un Referido (Confirmar / No confirmar + nota al aliado) -->
-      <div class="modal-overlay" id="modal-revisar-referido" style="position:fixed; inset:0; background:rgba(0,0,0,0.85); z-index:9999; display:none; align-items:center; justify-content:center; padding:20px;">
-        <div style="background:#0d0d0d; border:1px solid var(--border); border-radius:12px; padding:24px; max-width:480px; width:100%;">
-          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
-            <h3 style="font-size:1.05rem; font-weight:800;">
-              <i class="fa-solid fa-bell" style="color:var(--amber);"></i>
-              Revisar referido
-            </h3>
-            <button onclick="cerrarModalRevisarReferido()" style="background:transparent; border:none; color:var(--text-muted); font-size:1.4rem; cursor:pointer;">&times;</button>
-          </div>
-          <p style="color:var(--text-muted); font-size:.85rem; margin-bottom:14px;">
-            <strong id="rev-cliente" style="color:var(--text);">—</strong> · plan <strong id="rev-plan" style="color:var(--text);">—</strong> · referido por <strong id="rev-aliado" style="color:var(--text);">—</strong>
-          </p>
-          <label id="rev-nota-label" style="display:block; font-size:.78rem; font-weight:700; margin-bottom:6px; color:var(--text-muted);">Nota para el aliado (opcional)</label>
-          <textarea id="rev-nota" rows="3" placeholder="Ej: 'El paso 2 es para cuando el cliente ya dijo que sí al plan, todavía no vi que transfiera' / 'No encuentro este cliente en la bolsa, ¿de dónde salió?'" style="width:100%; background:#111; border:1px solid var(--border); color:white; padding:10px; border-radius:8px; font-family:inherit; resize:vertical; margin-bottom:14px;"></textarea>
-          <div style="display:flex; gap:10px;">
-            <button onclick="confirmarReferidoDesdeModal()" id="btn-rev-confirmar" style="flex:1; background:var(--green); color:white; border:none; padding:11px; border-radius:8px; font-weight:800; cursor:pointer;">
-              <i class="fa-solid fa-check"></i> Confirmar
-            </button>
-            <button onclick="rechazarReferidoDesdeModal()" id="btn-rev-rechazar" style="flex:1; background:var(--red); color:white; border:none; padding:11px; border-radius:8px; font-weight:800; cursor:pointer;">
-              <i class="fa-solid fa-circle-xmark"></i> No confirmar
-            </button>
-          </div>
+    </div>
+
+    <!-- Modal: revisar un Referido (Confirmar / No confirmar + nota al aliado)
+         Vive FUERA de cualquier .tab-panel a propósito: se abre desde el Dashboard
+         y desde la pestaña Referidos. Si quedara anidado dentro de un tab-panel
+         (p.ej. tab-solicitudes), un padre con display:none oculta al modal aunque
+         el JS le ponga style.display:'flex', porque display:none en un ancestro
+         siempre gana sobre el display inline de sus hijos. -->
+    <div class="modal-overlay" id="modal-revisar-referido" style="position:fixed; inset:0; background:rgba(0,0,0,0.85); z-index:9999; display:none; align-items:center; justify-content:center; padding:20px;">
+      <div style="background:#0d0d0d; border:1px solid var(--border); border-radius:12px; padding:24px; max-width:480px; width:100%;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+          <h3 style="font-size:1.05rem; font-weight:800;">
+            <i class="fa-solid fa-bell" style="color:var(--amber);"></i>
+            Revisar referido
+          </h3>
+          <button onclick="cerrarModalRevisarReferido()" style="background:transparent; border:none; color:var(--text-muted); font-size:1.4rem; cursor:pointer;">&times;</button>
+        </div>
+        <p style="color:var(--text-muted); font-size:.85rem; margin-bottom:14px;">
+          <strong id="rev-cliente" style="color:var(--text);">—</strong> · plan <strong id="rev-plan" style="color:var(--text);">—</strong> · referido por <strong id="rev-aliado" style="color:var(--text);">—</strong>
+        </p>
+        <label id="rev-nota-label" style="display:block; font-size:.78rem; font-weight:700; margin-bottom:6px; color:var(--text-muted);">Nota para el aliado (opcional)</label>
+        <textarea id="rev-nota" rows="3" placeholder="Ej: 'El paso 2 es para cuando el cliente ya dijo que sí al plan, todavía no vi que transfiera' / 'No encuentro este cliente en la bolsa, ¿de dónde salió?'" style="width:100%; background:#111; border:1px solid var(--border); color:white; padding:10px; border-radius:8px; font-family:inherit; resize:vertical; margin-bottom:14px;"></textarea>
+        <div style="display:flex; gap:10px;">
+          <button onclick="confirmarReferidoDesdeModal()" id="btn-rev-confirmar" style="flex:1; background:var(--green); color:white; border:none; padding:11px; border-radius:8px; font-weight:800; cursor:pointer;">
+            <i class="fa-solid fa-check"></i> Confirmar
+          </button>
+          <button onclick="rechazarReferidoDesdeModal()" id="btn-rev-rechazar" style="flex:1; background:var(--red); color:white; border:none; padding:11px; border-radius:8px; font-weight:800; cursor:pointer;">
+            <i class="fa-solid fa-circle-xmark"></i> No confirmar
+          </button>
         </div>
       </div>
     </div>

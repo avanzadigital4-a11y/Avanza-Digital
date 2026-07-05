@@ -1233,9 +1233,36 @@ html.avz-collapsed #avz-sidebar .avz-exit span{ display:none; }
           <input type="text" id="reg-ciudad" placeholder="Santa Fe">
         </div>
         <div class="field">
-          <label><i class="fa-solid fa-id-card"></i> &nbsp;DNI (opcional)</label>
-          <input type="text" id="reg-dni" placeholder="30.000.000">
+          <label><i class="fa-solid fa-earth-americas"></i> &nbsp;País *</label>
+          <select id="reg-pais" style="width:100%;background:#111827;border:1px solid var(--border);border-radius:var(--radius-sm);padding:13px 16px;color:var(--text);font-size:.95rem;font-family:'Inter',sans-serif;cursor:pointer;">
+            <option value="" disabled selected style="background:#111827;color:#888;">Elegí tu país</option>
+            <option value="AR">Argentina</option>
+            <option value="MX">México</option>
+            <option value="CO">Colombia</option>
+            <option value="CL">Chile</option>
+            <option value="PE">Perú</option>
+            <option value="UY">Uruguay</option>
+            <option value="VE">Venezuela</option>
+            <option value="EC">Ecuador</option>
+            <option value="BO">Bolivia</option>
+            <option value="PY">Paraguay</option>
+            <option value="GT">Guatemala</option>
+            <option value="CR">Costa Rica</option>
+            <option value="PA">Panamá</option>
+            <option value="SV">El Salvador</option>
+            <option value="HN">Honduras</option>
+            <option value="NI">Nicaragua</option>
+            <option value="DO">Rep. Dominicana</option>
+            <option value="CU">Cuba</option>
+            <option value="ES">España</option>
+            <option value="US">Estados Unidos</option>
+            <option value="OT">Otro</option>
+          </select>
         </div>
+      </div>
+      <div class="field">
+        <label><i class="fa-solid fa-id-card"></i> &nbsp;DNI (opcional)</label>
+        <input type="text" id="reg-dni" placeholder="30.000.000">
       </div>
       <div class="field">
         <label><i class="fa-solid fa-briefcase"></i> &nbsp;¿A qué te dedicás? *</label>

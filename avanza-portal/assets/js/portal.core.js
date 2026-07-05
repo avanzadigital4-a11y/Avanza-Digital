@@ -483,6 +483,7 @@ async function registrarse() {
   const whatsapp = document.getElementById('reg-whatsapp').value.trim();
   const username = _normalizarUsername(document.getElementById('reg-username').value || '');
   const ciudad   = document.getElementById('reg-ciudad').value.trim();
+  const pais     = document.getElementById('reg-pais').value;
   const dni      = document.getElementById('reg-dni').value.trim();
   const perfil   = document.getElementById('reg-perfil').value;
   const pass     = document.getElementById('reg-pass').value;
@@ -500,6 +501,7 @@ async function registrarse() {
   };
 
   if (!nombre || !email || !whatsapp || !perfil) return mostrarError('Completá todos los campos obligatorios.');
+  if (!pais) return mostrarError('Elegí tu país.');
   if (pass.length < 6) return mostrarError('La contraseña debe tener al menos 6 caracteres.');
   if (pass !== pass2) return mostrarError('Las contraseñas no coinciden.');
   if (!tyc) return mostrarError('Tenés que aceptar el Acuerdo de Aliado para continuar.');
@@ -521,7 +523,7 @@ async function registrarse() {
     const res = await apiFetch(`${API}/registrarse`, {
       method: 'POST',
       signal: controller.signal,
-      body: { nombre, email, whatsapp, ciudad, dni, perfil, password: pass,
+      body: { nombre, email, whatsapp, ciudad, pais, dni, perfil, password: pass,
               ref_sponsor: refSponsor, tipo_aliado: tipoAliado, acepto_terminos: true,
               username: username || null }
     });
@@ -833,9 +835,20 @@ async function intentarAutoLogin() {
 }
 
 let _heartbeatTimer = null;
+let _heartbeatVisibilityBound = false;
 function iniciarHeartbeat() {
-  if (_heartbeatTimer) return; // ya está corriendo, cargarTodo() se llama varias veces por sesión
   const ping = () => { if (!document.hidden) apiFetch(`${API}/aliados/ping`).catch(()=>{}); };
+  if (!_heartbeatVisibilityBound) {
+    // Los navegadores móviles pausan/throttlean los setInterval de pestañas en
+    // segundo plano (al cambiar de app, bloquear el teléfono, etc.), así que el
+    // heartbeat de 60s deja de llegar. Sin esto, el aliado puede tardar hasta
+    // 5 min en volver a figurar "activo ahora" en el admin después de volver
+    // a la pestaña. Con este listener, pingueamos apenas la pestaña vuelve a
+    // primer plano, además del intervalo normal.
+    document.addEventListener('visibilitychange', () => { if (!document.hidden) ping(); });
+    _heartbeatVisibilityBound = true;
+  }
+  if (_heartbeatTimer) return; // ya está corriendo, cargarTodo() se llama varias veces por sesión
   ping(); // primer ping inmediato para que figure "activo" apenas entra
   _heartbeatTimer = setInterval(ping, 60000);
 }

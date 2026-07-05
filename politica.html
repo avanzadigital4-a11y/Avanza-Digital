@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Términos y Privacidad | Avanza Digital</title>
-    
+    <title>Política de Privacidad y Cookies | Avanza Digital</title>
+
     <link rel="canonical" href="https://avanzadigital.digital/politica.html">
     <link rel="preload" href="fonts/inter-400.woff2" as="font" type="font/woff2" crossorigin>
     <link rel="preload" href="fonts/inter-600.woff2" as="font" type="font/woff2" crossorigin>
@@ -21,25 +21,74 @@
         }
         .legal-header h1 { font-size: 3rem; margin-bottom: 20px; letter-spacing: -1px; }
         .legal-header p { color: var(--accent-dim); max-width: 600px; margin: 0 auto; }
+        .legal-header .update-date {
+            display: inline-block;
+            margin-top: 18px;
+            font-size: .85rem;
+            color: var(--accent-dim);
+            border: 1px solid rgba(255,255,255,0.12);
+            border-radius: 30px;
+            padding: 6px 16px;
+        }
 
         .legal-content {
             max-width: 800px;
             margin: 0 auto 100px;
         }
 
-        .legal-section {
+        /* Índice de contenidos */
+        .legal-toc {
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 14px;
+            padding: 22px 26px;
             margin-bottom: 40px;
         }
-        
-        .legal-section h2 { 
-            font-size: 1.5rem; 
-            color: white; 
-            margin-bottom: 15px; 
+        .legal-toc h2 {
+            font-size: 1rem;
+            color: white;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 14px;
+            border: none;
+            padding: 0;
+        }
+        .legal-toc ol {
+            columns: 2;
+            column-gap: 30px;
+            margin: 0;
+            padding-left: 20px;
+            list-style: decimal;
+        }
+        .legal-toc li { margin-bottom: 8px; break-inside: avoid; }
+        .legal-toc a {
+            color: var(--accent-dim);
+            text-decoration: none;
+            font-size: .88rem;
+        }
+        .legal-toc a:hover { color: var(--primary-color); }
+        @media (max-width: 640px) { .legal-toc ol { columns: 1; } }
+
+        .legal-section {
+            margin-bottom: 40px;
+            scroll-margin-top: 100px;
+        }
+
+        .legal-section h2 {
+            font-size: 1.5rem;
+            color: white;
+            margin-bottom: 15px;
             border-left: 4px solid var(--primary-color);
             padding-left: 15px;
         }
 
-        .legal-section p, .legal-section ul li {
+        .legal-section h3 {
+            font-size: 1.1rem;
+            color: white;
+            margin: 20px 0 10px;
+        }
+
+        .legal-section p, .legal-section ul li, .legal-section table {
             color: var(--accent-dim);
             font-size: 1rem;
             line-height: 1.8;
@@ -47,8 +96,8 @@
         }
 
         .legal-section ul { list-style: disc; margin-left: 20px; }
-        
-        /* Caja destacada para la propiedad intelectual */
+
+        /* Caja destacada para la propiedad intelectual, cookies, etc. */
         .highlight-box {
             background: rgba(59, 130, 246, 0.1); /* Azul muy suave */
             border: 1px solid var(--primary-color);
@@ -57,6 +106,43 @@
             margin: 20px 0;
         }
         .highlight-box strong { color: white; }
+        .highlight-box p:last-child { margin-bottom: 0; }
+
+        /* Tabla de proveedores / terceros */
+        .legal-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 10px 0 25px;
+            font-size: .92rem;
+        }
+        .legal-table th, .legal-table td {
+            border: 1px solid rgba(255,255,255,0.1);
+            padding: 10px 12px;
+            text-align: left;
+            color: var(--accent-dim);
+            vertical-align: top;
+        }
+        .legal-table th {
+            color: white;
+            background: rgba(255,255,255,0.04);
+            font-size: .85rem;
+            text-transform: uppercase;
+            letter-spacing: .5px;
+        }
+
+        .cookie-btn {
+            display: inline-block;
+            background: var(--primary-color);
+            color: #000;
+            font-weight: 700;
+            padding: 10px 20px;
+            border-radius: 30px;
+            text-decoration: none;
+            font-size: .9rem;
+            margin-top: 6px;
+            cursor: pointer;
+            border: none;
+        }
     </style>
 </head>
 <body>
@@ -69,60 +155,235 @@
     </nav>
 
     <header class="legal-header">
-        <h1>Política de Privacidad <span class="highlight">& Términos</span></h1>
-        <p>Transparencia total sobre cómo trabajamos, cómo protegemos tus datos y quién es dueño de qué.</p>
+        <h1>Política de Privacidad <span class="highlight">& Cookies</span></h1>
+        <p>Transparencia total sobre qué datos recopilamos, para qué los usamos, con quién los compartimos y qué derechos tenés sobre ellos.</p>
+        <span class="update-date">Última actualización: Julio 2026 · Versión 2.0</span>
     </header>
 
     <div class="container legal-content">
-        
+
+        <div class="legal-toc">
+            <h2><i class="fa-solid fa-list-ul"></i> Índice</h2>
+            <ol>
+                <li><a href="#responsable">Responsable del tratamiento</a></li>
+                <li><a href="#alcance">A quiénes aplica este documento</a></li>
+                <li><a href="#cookies">Cookies y Consent Mode</a></li>
+                <li><a href="#datos">Qué información recopilamos</a></li>
+                <li><a href="#finalidades">Para qué usamos tus datos</a></li>
+                <li><a href="#base-legal">Base legal del tratamiento</a></li>
+                <li><a href="#terceros">Con quién compartimos datos</a></li>
+                <li><a href="#transferencias">Transferencias internacionales</a></li>
+                <li><a href="#conservacion">Cuánto tiempo conservamos los datos</a></li>
+                <li><a href="#seguridad">Seguridad de la información</a></li>
+                <li><a href="#derechos">Tus derechos (acceso, rectificación, baja)</a></li>
+                <li><a href="#menores">Menores de edad</a></li>
+                <li><a href="#propiedad">Propiedad intelectual y licencias</a></li>
+                <li><a href="#pagos">Pagos y cancelaciones (clientes)</a></li>
+                <li><a href="#aliados">Programa de Aliados</a></li>
+                <li><a href="#responsabilidad">Limitación de responsabilidad</a></li>
+                <li><a href="#cambios">Cambios a esta política</a></li>
+                <li><a href="#jurisdiccion">Ley aplicable y jurisdicción</a></li>
+                <li><a href="#contacto">Contacto legal</a></li>
+            </ol>
+        </div>
+
         <div class="bento-box" style="width: 100%;">
-            
-            <div class="legal-section">
-                <h2>1. Responsable de los Datos</h2>
-                <p><strong>Avanza Digital</strong> (en adelante, "la Agencia") se compromete a proteger la privacidad de los usuarios. Estos términos rigen el uso de nuestros servicios de diseño web y marketing digital.</p>
+
+            <div class="legal-section" id="responsable">
+                <h2>1. Responsable del Tratamiento</h2>
+                <p><strong>Avanza Digital</strong> (en adelante, "la Agencia"), con sede operativa en Santa Fe, Argentina, es responsable del tratamiento de los datos personales recopilados a través de <strong>avanzadigital.digital</strong>, sus subdominios, landing pages regionales, el portal de aliados y los canales de comunicación asociados (WhatsApp, email).</p>
+                <p>Podés contactarnos por cualquier consulta sobre privacidad en <a href="mailto:contacto@avanzadigital.digital" style="color:var(--primary-color);">contacto@avanzadigital.digital</a>.</p>
             </div>
 
-            <div class="legal-section">
-                <h2>2. Propiedad Intelectual y Licencias</h2>
-                <p>Esta es la parte más importante de nuestro acuerdo de servicio. La propiedad del sitio web depende estrictamente de la modalidad de contratación elegida:</p>
-                
+            <div class="legal-section" id="alcance">
+                <h2>2. A Quiénes Aplica Este Documento</h2>
+                <p>Avanza Digital opera distintos servicios bajo una misma marca, y esta política cubre a todos los que interactúan con ellos:</p>
+                <ul>
+                    <li><strong>Visitantes del sitio web:</strong> cualquier persona que navegue avanzadigital.digital o sus landing pages.</li>
+                    <li><strong>Clientes del servicio de diseño web y marketing digital.</strong></li>
+                    <li><strong>Aliados / Partners</strong> registrados en el programa Avanza Partner Network (Canal 1 y Canal 2).</li>
+                    <li><strong>Prospectos y empresas</strong> incluidos en la Bolsa de Leads como potenciales clientes.</li>
+                    <li><strong>Usuarios del portal de aliados</strong> y de JARVIS, nuestro asistente comercial con inteligencia artificial.</li>
+                </ul>
                 <div class="highlight-box">
-                    <p><strong>A. Modalidad Suscripción (Alquiler):</strong><br>
-                    Si contratas un plan mensual (ej. Plan Presencia o Negocio), la Agencia retiene la <strong>totalidad de los derechos de propiedad intelectual</strong> sobre el código fuente, diseño y estructura. El cliente adquiere una licencia de uso temporal mientras mantenga la suscripción activa. Si el cliente deja de pagar, se suspende el servicio y no tiene derecho a reclamar el código.</p>
-                    
-                    <p style="margin-bottom: 0;"><strong>B. Modalidad Pago Único (Dueño):</strong><br>
-                    Si realizas el pago único ("Compra Final"), la Agencia cede los derechos patrimoniales sobre el producto final. El cliente es dueño del 100% del código y puede alojarlo donde desee.</p>
+                    <p><strong>¿Sos Aliado del programa?</strong> Esta política de privacidad se aplica en conjunto con los <a href="terminos-aliados.html" style="color:var(--primary-color);">Términos y Condiciones del Programa de Aliados</a>, que regulan específicamente comisiones, niveles, la Bolsa de Leads, la red de sub-aliados y las causales de baja. Ante cualquier diferencia sobre el tratamiento de datos del programa, prevalece lo indicado en esa sección de los Términos del Aliado.</p>
                 </div>
             </div>
 
-            <div class="legal-section">
-                <h2>3. Recopilación de Información</h2>
-                <p>Recopilamos la información mínima necesaria para brindar el servicio:</p>
+            <div class="legal-section" id="cookies">
+                <h2>3. Cookies y Consent Mode</h2>
+                <p>Usamos cookies propias y de terceros para que el sitio funcione correctamente, medir el tráfico y entender cómo se usan nuestras páginas. Antes de que se active cualquier cookie no esencial, te mostramos un banner de consentimiento donde podés <strong>Aceptar</strong> o <strong>Rechazar</strong>.</p>
+
+                <h3>3.1 Tipos de cookies que usamos</h3>
+                <table class="legal-table">
+                    <tr><th>Tipo</th><th>Finalidad</th><th>¿Requiere consentimiento?</th></tr>
+                    <tr><td>Necesarias / técnicas</td><td>Mantener tu sesión iniciada en el portal de aliados, recordar tu elección de cookies, seguridad del sitio.</td><td>No — son indispensables para el funcionamiento.</td></tr>
+                    <tr><td>Analíticas</td><td>Medir visitas, páginas más vistas y origen del tráfico (Google Analytics vía Google Tag Manager).</td><td>Sí</td></tr>
+                    <tr><td>Publicidad / remarketing</td><td>Medir conversiones de campañas y mostrar anuncios relevantes (Google Ads).</td><td>Sí</td></tr>
+                </table>
+
+                <h3>3.2 Google Consent Mode v2</h3>
+                <p>Implementamos <strong>Google Consent Mode v2</strong> junto con Google Tag Manager (GTM). Esto significa que, hasta que elegís "Aceptar", las etiquetas de analítica y publicidad de Google funcionan en modo restringido (sin cookies de identificación), y solo se activan por completo si das tu consentimiento. Podés leer más sobre cómo Google trata estos datos en su <a href="https://policies.google.com/privacy" target="_blank" rel="noopener" style="color:var(--primary-color);">Política de Privacidad</a>.</p>
+
+                <h3>3.3 Cómo cambiar tu decisión</h3>
+                <p>Tu elección se guarda en el almacenamiento local de tu navegador (localStorage). Si querés cambiarla, podés borrar los datos de navegación de este sitio desde la configuración de tu navegador y volverás a ver el banner de cookies, o podés bloquear cookies de terceros directamente desde la configuración de privacidad de tu navegador.</p>
+            </div>
+
+            <div class="legal-section" id="datos">
+                <h2>4. Qué Información Recopilamos</h2>
+                <p>La información que recopilamos depende de cómo interactuás con nosotros:</p>
+
+                <h3>4.1 Visitantes del sitio</h3>
                 <ul>
-                    <li>Datos de contacto (Nombre, Email, WhatsApp) para comunicación comercial.</li>
-                    <li>Material gráfico (Logos, Fotos) provisto por el cliente para el diseño.</li>
-                    <li>Datos técnicos de acceso si el cliente provee su propio hosting.</li>
+                    <li>Datos de navegación: páginas visitadas, dispositivo, ubicación aproximada (IP), origen del tráfico.</li>
+                    <li>Datos que completás voluntariamente en formularios de contacto o cotización.</li>
+                </ul>
+
+                <h3>4.2 Clientes de diseño web y marketing</h3>
+                <ul>
+                    <li>Datos de contacto: nombre, email, WhatsApp, empresa.</li>
+                    <li>Material gráfico (logos, fotos, textos) provisto para el diseño de su sitio.</li>
+                    <li>Datos técnicos de acceso, si el cliente provee su propio hosting o dominio.</li>
+                </ul>
+
+                <h3>4.3 Aliados del programa de partners</h3>
+                <ul>
+                    <li>Datos de identidad y contacto: nombre, DNI/documento, email, WhatsApp, ciudad y país.</li>
+                    <li>Credenciales de acceso al portal (la contraseña se almacena siempre con hash, nunca en texto plano).</li>
+                    <li>Perfil comercial: rubro, canal elegido (Canal 1 o Canal 2), y si fue referido por otro aliado (sponsor / red de sub-aliados).</li>
+                    <li>Datos de cobro necesarios para liquidar comisiones: según el método elegido, alias/CBU, cuenta de Mercado Pago, o cuenta de Wise, Payoneer, Airtm o USDT, con el formato específico que exige cada país y plataforma.</li>
+                    <li>Actividad en el portal: leads reclamados, ventas registradas, uso de créditos, historial de interacciones con JARVIS.</li>
+                </ul>
+
+                <h3>4.4 Prospectos y empresas en la Bolsa de Leads</h3>
+                <p>Para armar la Bolsa de Leads, recopilamos y verificamos información pública o provista por fuentes comerciales sobre empresas potencialmente interesadas en nuestros servicios: razón social, rubro, ciudad, sitio web, redes sociales y datos de contacto comercial (no se incluyen datos sensibles). Esta información se comparte únicamente con los aliados que reclaman ese lead, para fines de prospección comercial legítima.</p>
+
+                <h3>4.5 Interacción con JARVIS (asistente con IA)</h3>
+                <p>Cuando un aliado usa JARVIS dentro del portal (para redactar propuestas, preparar reuniones o resolver dudas comerciales), las conversaciones se registran y se envían a nuestro proveedor de inteligencia artificial para generar la respuesta. Estas conversaciones se guardan para mejorar el servicio, dar soporte y detectar problemas, y no se usan para identificar públicamente al aliado ni se venden a terceros.</p>
+            </div>
+
+            <div class="legal-section" id="finalidades">
+                <h2>5. Para Qué Usamos Tus Datos</h2>
+                <ul>
+                    <li>Brindar y administrar nuestros servicios de diseño web, marketing y el programa de aliados.</li>
+                    <li>Procesar y liquidar comisiones y pagos a aliados.</li>
+                    <li>Enviar comunicaciones operativas: confirmaciones de registro, alertas del portal, novedades del programa, avisos de inactividad.</li>
+                    <li>Mejorar nuestros productos, el portal y las respuestas de JARVIS.</li>
+                    <li>Medir el rendimiento del sitio y de las campañas de marketing (solo con tu consentimiento de cookies).</li>
+                    <li>Cumplir obligaciones legales, fiscales y contractuales.</li>
+                    <li>Prevenir fraude y proteger la seguridad de la plataforma.</li>
                 </ul>
             </div>
 
-            <div class="legal-section">
-                <h2>4. Pagos y Cancelaciones</h2>
+            <div class="legal-section" id="base-legal">
+                <h2>6. Base Legal del Tratamiento</h2>
+                <p>Tratamos tus datos sobre la base de: (i) tu <strong>consentimiento</strong> expreso, otorgado al aceptar cookies, registrarte como aliado o completar un formulario; (ii) la <strong>ejecución de un contrato</strong>, ya sea el servicio de diseño web o los Términos del Programa de Aliados; y (iii) el <strong>cumplimiento de obligaciones legales</strong> (por ejemplo, fiscales). Cuando el tratamiento se base únicamente en tu consentimiento, podés retirarlo en cualquier momento sin que eso afecte tratamientos previos ya realizados.</p>
+            </div>
+
+            <div class="legal-section" id="terceros">
+                <h2>7. Con Quién Compartimos Datos</h2>
+                <p>No vendemos datos personales. Compartimos información únicamente con proveedores que nos ayudan a operar el servicio ("encargados de tratamiento"), bajo obligación de confidencialidad, y en la medida necesaria para su función:</p>
+                <table class="legal-table">
+                    <tr><th>Proveedor</th><th>Función</th></tr>
+                    <tr><td>Google (Tag Manager, Analytics, Ads)</td><td>Medición de tráfico y campañas, sujeto a Consent Mode.</td></tr>
+                    <tr><td>HubSpot</td><td>Gestión comercial (CRM) y seguimiento de contactos.</td></tr>
+                    <tr><td>Render</td><td>Hosting de la aplicación del portal de aliados.</td></tr>
+                    <tr><td>Supabase (Postgres)</td><td>Base de datos donde se almacena la información de aliados, leads y actividad del portal.</td></tr>
+                    <tr><td>Anthropic (API de Claude)</td><td>Motor de inteligencia artificial detrás de JARVIS.</td></tr>
+                    <tr><td>Meta / WhatsApp Business</td><td>Envío de mensajes de bienvenida y notificaciones por WhatsApp.</td></tr>
+                    <tr><td>Mercado Pago, Wise, Payoneer, Airtm</td><td>Procesamiento de pagos y liquidación de comisiones a aliados.</td></tr>
+                    <tr><td>Redes de billeteras USDT (blockchain)</td><td>Liquidación de comisiones para aliados que eligen esta modalidad de cobro.</td></tr>
+                </table>
+                <p>Solo compartimos datos con terceros ajenos a esta lista si existe una obligación legal expresa (por ejemplo, un requerimiento judicial) o tu autorización específica.</p>
+            </div>
+
+            <div class="legal-section" id="transferencias">
+                <h2>8. Transferencias Internacionales de Datos</h2>
+                <p>Algunos de nuestros proveedores (por ejemplo, Google, Anthropic, Render o Supabase) procesan datos en servidores ubicados fuera de Argentina, incluyendo Estados Unidos. En esos casos, exigimos que el proveedor cuente con mecanismos adecuados de protección de datos (como cláusulas contractuales estándar o certificaciones equivalentes) antes de compartir información.</p>
+            </div>
+
+            <div class="legal-section" id="conservacion">
+                <h2>9. Cuánto Tiempo Conservamos los Datos</h2>
+                <ul>
+                    <li><strong>Datos de aliados activos:</strong> mientras la cuenta permanezca activa en el programa.</li>
+                    <li><strong>Datos de aliados dados de baja:</strong> se conservan por el plazo mínimo que exige la normativa fiscal y contable aplicable, y luego se eliminan o anonimizan.</li>
+                    <li><strong>Datos de contacto de leads/prospectos:</strong> mientras sean comercialmente relevantes o hasta que la empresa solicite su eliminación.</li>
+                    <li><strong>Cookies analíticas:</strong> según la configuración estándar de Google Analytics (hasta 14 meses), salvo que revoques el consentimiento antes.</li>
+                    <li><strong>Conversaciones con JARVIS:</strong> se conservan mientras sean útiles para brindar soporte y mejorar el servicio.</li>
+                </ul>
+            </div>
+
+            <div class="legal-section" id="seguridad">
+                <h2>10. Seguridad de la Información</h2>
+                <p>Aplicamos medidas técnicas razonables para proteger tus datos: las contraseñas se almacenan con hash (nunca en texto plano), el acceso al portal usa tokens de sesión con expiración, y el acceso a la base de datos está restringido al personal y sistemas que lo necesitan para operar el servicio. Ningún sistema es 100% infalible; si detectamos un incidente de seguridad que afecte tus datos, te lo notificaremos conforme a la normativa vigente.</p>
+            </div>
+
+            <div class="legal-section" id="derechos">
+                <h2>11. Tus Derechos</h2>
+                <p>Conforme a la <strong>Ley N.º 25.326 de Protección de Datos Personales</strong> de Argentina y normativas equivalentes de otros países donde operamos, tenés derecho a:</p>
+                <ul>
+                    <li><strong>Acceder</strong> a los datos personales que tenemos sobre vos.</li>
+                    <li><strong>Rectificar</strong> datos inexactos o desactualizados.</li>
+                    <li><strong>Suprimir</strong> tus datos cuando ya no sean necesarios para la finalidad que los originó.</li>
+                    <li><strong>Oponerte</strong> u objetar determinados usos, como el envío de comunicaciones comerciales.</li>
+                    <li><strong>Retirar tu consentimiento</strong> en cualquier momento, incluido el de cookies.</li>
+                </ul>
+                <p>Para ejercer cualquiera de estos derechos, escribinos a <a href="mailto:contacto@avanzadigital.digital" style="color:var(--primary-color);">contacto@avanzadigital.digital</a>. Vas a recibir respuesta dentro de los plazos que establece la ley aplicable. La <strong>Agencia de Acceso a la Información Pública</strong> de Argentina es el órgano de control ante el cual podés presentar un reclamo si considerás que tus derechos no fueron respetados.</p>
+            </div>
+
+            <div class="legal-section" id="menores">
+                <h2>12. Menores de Edad</h2>
+                <p>Nuestros servicios y el programa de aliados están dirigidos a personas mayores de 18 años. No recopilamos intencionalmente datos de menores de edad. Si tomamos conocimiento de que se registraron datos de un menor sin la autorización correspondiente, los eliminaremos.</p>
+            </div>
+
+            <div class="legal-section" id="propiedad">
+                <h2>13. Propiedad Intelectual y Licencias</h2>
+                <p>Esta es la parte más importante de nuestro acuerdo de servicio con clientes de diseño web. La propiedad del sitio depende estrictamente de la modalidad de contratación elegida:</p>
+
+                <div class="highlight-box">
+                    <p><strong>A. Modalidad Suscripción (Alquiler):</strong><br>
+                    Si contratás un plan mensual (ej. Plan Presencia o Negocio), la Agencia retiene la <strong>totalidad de los derechos de propiedad intelectual</strong> sobre el código fuente, diseño y estructura. El cliente adquiere una licencia de uso temporal mientras mantenga la suscripción activa. Si el cliente deja de pagar, se suspende el servicio y no tiene derecho a reclamar el código.</p>
+
+                    <p><strong>B. Modalidad Pago Único (Dueño):</strong><br>
+                    Si realizás el pago único ("Compra Final"), la Agencia cede los derechos patrimoniales sobre el producto final. El cliente es dueño del 100% del código y puede alojarlo donde desee.</p>
+                </div>
+            </div>
+
+            <div class="legal-section" id="pagos">
+                <h2>14. Pagos y Cancelaciones (Clientes de Diseño Web)</h2>
                 <p>Para los planes de suscripción, el ciclo de facturación es mensual (del 1 al 10 de cada mes). El cliente puede cancelar su suscripción en cualquier momento sin penalización, notificando con 15 días de antelación. No se realizan reembolsos por meses ya iniciados.</p>
             </div>
 
-            <div class="legal-section">
-                <h2>5. Limitación de Responsabilidad</h2>
-                <p>Avanza Digital garantiza un "Uptime" (tiempo en línea) del 99% en sus servidores. Sin embargo, no nos hacemos responsables por pérdidas de ventas o lucro cesante derivadas de caídas eventuales de servicios de terceros (como Google, proveedores de internet o pasarelas de pago).</p>
+            <div class="legal-section" id="aliados">
+                <h2>15. Programa de Aliados</h2>
+                <p>Si te registrás como Aliado del Avanza Partner Network, además de esta política aceptás los <a href="terminos-aliados.html" style="color:var(--primary-color);">Términos y Condiciones del Programa de Aliados</a>, que detallan comisiones, niveles, el sistema de créditos y Bolsa de Leads, la red de sub-aliados, badges de reputación, y las causales de baja o suspensión. Para el tratamiento específico de tus datos como aliado (incluyendo datos bancarios/de cobro), aplica también la sección "Protección de Datos Personales" de esos Términos.</p>
             </div>
 
-            <div class="legal-section">
-                <h2>6. Contacto Legal</h2>
-                <p>Para ejercer sus derechos de acceso, rectificación o supresión de datos, o para consultas sobre facturación, puede escribirnos a:</p>
+            <div class="legal-section" id="responsabilidad">
+                <h2>16. Limitación de Responsabilidad</h2>
+                <p>Avanza Digital garantiza un "Uptime" (tiempo en línea) del 99% en sus servidores. Sin embargo, no nos hacemos responsables por pérdidas de ventas o lucro cesante derivadas de caídas eventuales de servicios de terceros (como Google, Anthropic, proveedores de internet, hosting o pasarelas de pago), ni por respuestas generadas por JARVIS que el aliado utilice sin la revisión razonable esperable de un profesional independiente.</p>
+            </div>
+
+            <div class="legal-section" id="cambios">
+                <h2>17. Cambios a Esta Política</h2>
+                <p>Podemos actualizar esta política para reflejar cambios en nuestros servicios, proveedores o la normativa aplicable. Cuando el cambio sea significativo, lo vamos a comunicar de forma visible en el sitio o por email a los aliados registrados. La fecha de "Última actualización" al inicio de este documento indica la versión vigente.</p>
+            </div>
+
+            <div class="legal-section" id="jurisdiccion">
+                <h2>18. Ley Aplicable y Jurisdicción</h2>
+                <p>Este documento se rige por las leyes de la <strong>República Argentina</strong>. Ante cualquier controversia que no pueda resolverse de forma amigable, las partes se someten a la jurisdicción de los <strong>Tribunales Ordinarios de la ciudad de Santa Fe, provincia de Santa Fe</strong>, con renuncia expresa a cualquier otro fuero que pudiera corresponder.</p>
+            </div>
+
+            <div class="legal-section" id="contacto">
+                <h2>19. Contacto Legal</h2>
+                <p>Para ejercer tus derechos de acceso, rectificación o supresión de datos, revocar tu consentimiento de cookies, o para consultas sobre facturación, escribinos a:</p>
                 <p style="color: var(--primary-color); font-weight: bold; font-size: 1.2rem;">contacto@avanzadigital.digital</p>
+                <p><i class="fa-brands fa-whatsapp" style="color:#25D366;"></i> WhatsApp: <a href="https://wa.me/5493424392759" target="_blank" style="color:var(--primary-color);">+54 9 342 439 2759</a></p>
             </div>
 
             <div style="text-align: center; margin-top: 40px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 20px;">
-                <p style="font-size: 0.8rem;">Última actualización: Enero 2026</p>
+                <p style="font-size: 0.8rem;">© 2026 Avanza Digital · <a href="politica.html" style="color:var(--accent-dim);">Política de Privacidad</a> · <a href="terminos-aliados.html" style="color:var(--accent-dim);">Términos del Aliado</a></p>
+                <p style="font-size: 0.8rem;">Última actualización: Julio 2026 · Versión 2.0</p>
             </div>
 
         </div>
@@ -130,7 +391,7 @@
 
     <footer>
         <div class="container footer-content" style="justify-content: center;">
-            <p>&copy; 2025 Avanza Digital. Todos los derechos reservados.</p>
+            <p>&copy; 2026 Avanza Digital. Todos los derechos reservados.</p>
         </div>
     </footer>
 <!-- Start of HubSpot Embed Code -->

@@ -48,6 +48,25 @@ from rate_limit import limiter
 
 router = APIRouter(tags=["cuenta"])
 
+# Nombres legibles de país para el email de notificación al admin. Cubre los
+# mercados oficiales de Avanza más los países de LatAm desde donde suelen
+# auto-registrarse aliados (aunque todavía no tengan página propia). Si llega
+# un código que no está acá, se muestra el código tal cual (fallback).
+PAISES_NOMBRE = {
+    "AR": "Argentina", "MX": "México", "CO": "Colombia", "CL": "Chile",
+    "PE": "Perú", "UY": "Uruguay", "VE": "Venezuela", "GT": "Guatemala",
+    "EC": "Ecuador", "BO": "Bolivia", "PY": "Paraguay", "CR": "Costa Rica",
+    "PA": "Panamá", "SV": "El Salvador", "HN": "Honduras", "NI": "Nicaragua",
+    "DO": "Rep. Dominicana", "CU": "Cuba", "ES": "España", "US": "Estados Unidos",
+}
+
+# Etiquetas del selector "¿Cómo vas a operar?" del formulario de registro,
+# para que el email interno diga lo mismo que ve el aliado, no solo el código.
+CANAL_NOMBRE = {
+    "canal1": "Canal 1 — Busca clientes",
+    "canal2": "Canal 2 — Tiene sus propios clientes",
+}
+
 
 # ── Puentes diferidos a helpers de main (evitan import circular) ─────────────
 
@@ -141,7 +160,7 @@ def auto_registro(request: Request,
     # El frontend viejo manda todo por query string. Se mantiene por una
     # versión para no romper el portal mientras se actualiza.
     nombre: str = "", email: str = "", whatsapp: str = "",
-    ciudad: str = "", perfil: str = "", password: str = "", dni: str = "",
+    ciudad: str = "", pais: str = "", perfil: str = "", password: str = "", dni: str = "",
     ref_sponsor: str = "",
     tipo_aliado: str = "canal1",
     acepto_terminos: bool = False,
@@ -160,6 +179,7 @@ def auto_registro(request: Request,
         nombre, email, whatsapp = body.nombre, body.email, body.whatsapp
         password, dni = body.password, body.dni
         ciudad, perfil = body.ciudad, body.perfil
+        pais = body.pais
         ref_sponsor = body.ref_sponsor
         tipo_aliado = body.tipo_aliado
         acepto_terminos = body.acepto_terminos
@@ -205,6 +225,7 @@ def auto_registro(request: Request,
         dni          = dni,
         whatsapp     = whatsapp,
         ciudad       = ciudad,
+        pais         = (pais or "AR").strip().upper(),
         perfil       = perfil,
         fecha_firma  = datetime.now().strftime("%d/%m/%Y"),
         ref_code     = ref_code_final,
@@ -275,11 +296,30 @@ def auto_registro(request: Request,
     )
 
     # Notificar al admin — EN SEGUNDO PLANO
+    # Incluye país (no solo ciudad), si vino referido por un aliado de la red
+    # (sponsor) y el canal elegido (canal1 = busca clientes / canal2 = tiene
+    # sus propios clientes), para que se pueda evaluar el aliado de un vistazo
+    # sin tener que entrar al portal.
+    _pais_nombre = PAISES_NOMBRE.get(a.pais, a.pais or "—")
+    _canal_nombre = CANAL_NOMBRE.get(a.tipo_aliado, a.tipo_aliado or "—")
+    if sponsor_id_db:
+        sp_ref = db.query(Aliado).get(sponsor_id_db)
+        _referido_html = (
+            f"Sí — por <strong>{sp_ref.nombre}</strong> ({sp_ref.codigo})"
+            if sp_ref else f"Sí — sponsor id {sponsor_id_db}"
+        )
+    else:
+        _referido_html = "No (registro directo)"
     background_tasks.add_task(
         enviar_email,
         ADMIN_EMAIL,
         f"[NUEVO ALIADO] {a.nombre} — {a.codigo}",
-        f"<p>Nuevo aliado auto-registrado:<br><strong>{a.nombre}</strong> — {a.email} — {a.whatsapp}<br>Perfil: {a.perfil or '—'} | Ciudad: {a.ciudad or '—'}<br>Código: {a.codigo} | Ref: {a.ref_code}</p>"
+        f"""<p>Nuevo aliado auto-registrado:<br>
+        <strong>{a.nombre}</strong> — {a.email} — {a.whatsapp}<br>
+        Perfil: {a.perfil or '—'} | Ciudad: {a.ciudad or '—'} | País: {_pais_nombre}<br>
+        Canal: {_canal_nombre}<br>
+        Referido por su red: {_referido_html}<br>
+        Código: {a.codigo} | Ref: {a.ref_code}</p>"""
     )
 
     # ── ACTIVACIÓN INMEDIATA ─────────────────────────────────────────────

@@ -23,6 +23,7 @@ class RegistroAliadoIn(_Base):
     whatsapp: str = Field(..., min_length=4, max_length=40)
     password: str = Field(..., min_length=6, max_length=200)
     ciudad: str = ""
+    pais: str = ""
     perfil: str = ""
     dni: str = ""
     ref_sponsor: str = ""
