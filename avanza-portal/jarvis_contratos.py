@@ -528,9 +528,13 @@ def _derivados(d) -> dict:
     pais_norm = _strip_accents(d.cliente_pais or "Argentina").strip().lower()
     if pais_norm in ("argentina", "", "ar"):
         comprobante = f"la factura tipo **{d.factura_tipo}**"
+        dp_extra = ""
     else:
         comprobante = "el comprobante fiscal que corresponda según la normativa vigente"
-    return {"iva": iva, "cambio": cambio, "sla": sla, "cap": cap_txt, "anticipo": anticipo, "link": link, "comprobante": comprobante}
+        dp_extra = (f", así como la normativa de protección de datos personales vigente en {d.cliente_pais} en su "
+                    "carácter de país de EL CLIENTE, en lo que resulte aplicable")
+    return {"iva": iva, "cambio": cambio, "sla": sla, "cap": cap_txt, "anticipo": anticipo, "link": link,
+            "comprobante": comprobante, "dp_extra": dp_extra}
 
 
 def _clausulas(d) -> list:
@@ -602,12 +606,12 @@ def _clausulas(d) -> list:
             "contratarse mediante bolsas de horas o planes de mantenimiento mensual, a la tarifa horaria vigente de "
             "AVANZA."]),
         ("CLÁUSULA DUODÉCIMA — PROTECCIÓN DE DATOS PERSONALES", [
-            "Las Partes se obligan a tratar los datos personales conforme a la Ley Nacional N.º 25.326 de Protección de "
-            "Datos Personales y normativa concordante. Respecto de los datos de los contactos y clientes finales "
-            "captados a través del sistema, EL CLIENTE reviste el carácter de responsable de la base de datos, y AVANZA "
-            "actúa como encargada del tratamiento únicamente durante la implementación y en la medida necesaria para "
-            "prestar el servicio, sin utilizarlos para fines propios. Finalizado el Contrato, AVANZA pondrá tales datos "
-            "a disposición de EL CLIENTE y procederá a su eliminación de sus entornos de trabajo, salvo obligación "
+            f"Las Partes se obligan a tratar los datos personales conforme a la Ley Nacional N.º 25.326 de Protección de "
+            f"Datos Personales y normativa concordante{x['dp_extra']}. Respecto de los datos de los contactos y clientes "
+            "finales captados a través del sistema, EL CLIENTE reviste el carácter de responsable de la base de datos, y "
+            "AVANZA actúa como encargada del tratamiento únicamente durante la implementación y en la medida necesaria "
+            "para prestar el servicio, sin utilizarlos para fines propios. Finalizado el Contrato, AVANZA pondrá tales "
+            "datos a disposición de EL CLIENTE y procederá a su eliminación de sus entornos de trabajo, salvo obligación "
             "legal de conservación."]),
         ("CLÁUSULA DECIMOTERCERA — CONFIDENCIALIDAD", [
             "Las Partes se obligan a mantener la confidencialidad de toda información a la que accedan con motivo de "
