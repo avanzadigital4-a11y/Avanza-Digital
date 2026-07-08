@@ -366,6 +366,7 @@ tr:hover td { background:rgba(255,255,255,0.02); }
       <button class="tab-btn" onclick="cambiarTab('pagos',this)"><i class="fa-solid fa-credit-card"></i> Pagos</button>
       <button class="tab-btn" onclick="cambiarTab('solicitudes',this)"><i class="fa-solid fa-coins"></i> Compra de créditos <span id="badge-sol" style="display:none;background:var(--amber);color:#000;font-size:.65rem;font-weight:800;padding:2px 7px;border-radius:50px;margin-left:2px;">0</span></button>
       <button class="tab-btn" onclick="cambiarTab('academia',this)"><i class="fa-solid fa-graduation-cap"></i> Academia</button>
+      <button class="tab-btn" onclick="cambiarTab('uso-portal',this)"><i class="fa-solid fa-chart-column"></i> Uso del Portal</button>
       <button class="tab-btn" onclick="cambiarTab('nuevo-aliado',this)"><i class="fa-solid fa-user-plus"></i> Nuevo aliado</button>
     </div>
 
@@ -783,7 +784,39 @@ tr:hover td { background:rgba(255,255,255,0.02); }
         </div>
       </div>
     </div>
-    
+
+    <div id="tab-uso-portal" class="tab-panel">
+      <div class="metrics-grid" id="uso-portal-kpis"></div>
+
+      <div class="table-wrap">
+        <div class="section-header" style="padding:20px 24px 0;">
+          <div>
+            <div class="section-title"><i class="fa-solid fa-chart-column" style="color:var(--primary);"></i> &nbsp;Uso de Tabs y Botones del Portal</div>
+            <div class="section-sub">Qué usan los aliados y qué no toca nadie — base para decidir qué simplificar</div>
+          </div>
+          <div style="display:flex;gap:8px;align-items:center;">
+            <select id="uso-portal-dias" onchange="cargarUsoPortal()" style="background:#0d0d0d;border:1px solid var(--border);color:var(--text-muted);border-radius:8px;padding:7px 10px;font-size:.8rem;">
+              <option value="30">Últimos 30 días</option>
+              <option value="90" selected>Últimos 90 días</option>
+              <option value="365">Último año</option>
+              <option value="36500">Todo el historial</option>
+            </select>
+            <button onclick="cargarUsoPortal()" style="background:transparent;border:1px solid var(--border);color:var(--text-muted);border-radius:8px;padding:7px 14px;font-size:.8rem;cursor:pointer;"><i class="fa-solid fa-rotate-right"></i> Actualizar</button>
+          </div>
+        </div>
+        <div style="overflow-x:auto;">
+          <table>
+            <thead><tr>
+              <th>Tipo</th><th>Tab / Botón</th><th>Eventos</th><th>Aliados únicos</th><th>Canal 1</th><th>Canal 2</th><th>% de aliados activos</th><th>Último uso</th>
+            </tr></thead>
+            <tbody id="tabla-uso-portal-body">
+              <tr><td colspan="8" style="padding:32px;text-align:center;color:var(--text-muted);">Cargando...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
     <div id="tab-bolsa" class="tab-panel">
       
       <div class="metrics-grid" id="bolsa-kpis"></div>
@@ -2691,6 +2724,7 @@ function cambiarTab(tab, btn) {
   if(tab==='prospectos')  cargarAdminProspectos();
   if(tab==='embudo')      cargarEmbudo();
   if(tab==='auditorias')  cargarAuditoriasAdmin();
+  if(tab==='uso-portal')  cargarUsoPortal();
   if(tab==='bolsa')       cargarAdminBolsa();
   if(tab==='comisiones')  cargarAdminComisiones();
   if(tab==='continuidad') cargarContinuidadAdmin();
@@ -3343,6 +3377,63 @@ async function cargarAuditoriasAdmin() {
         </td>
       </tr>
     `).join('');
+  } catch(e) { console.error(e); }
+}
+
+// ── USO DEL PORTAL ADMIN ─────────────────────────────────────────────────────
+
+async function cargarUsoPortal() {
+  const dias = document.getElementById('uso-portal-dias')?.value || 90;
+  try {
+    const res = await apiFetch(`${API}/admin/eventos-uso?dias=${dias}`);
+    if(!res.ok) return;
+    const data = await res.json();
+
+    const tabsVistos = data.detalle.filter(d => d.evento === 'tab_view').length;
+    const totalActivos = data.total_aliados_activos || 0;
+
+    document.getElementById('uso-portal-kpis').innerHTML = `
+      <div class="metric-card">
+        <div class="metric-label">Eventos Registrados</div>
+        <div class="metric-value mv-blue">${data.total_eventos}</div>
+      </div>
+      <div class="metric-card highlight">
+        <div class="metric-label">Tabs/Botones Distintos con Uso</div>
+        <div class="metric-value mv-green">${data.detalle.length}</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-label">Aliados Activos (referencia)</div>
+        <div class="metric-value">${totalActivos}</div>
+      </div>
+    `;
+
+    const tbody = document.getElementById('tabla-uso-portal-body');
+    if(!data.detalle.length) {
+      tbody.innerHTML = '<tr><td colspan="8"><div class="empty-state">No hay datos todavía en este período.</div></td></tr>';
+      return;
+    }
+
+    tbody.innerHTML = data.detalle.map(d => {
+      const pct = totalActivos > 0 ? Math.round((d.aliados_unicos / totalActivos) * 100) : 0;
+      const colorPct = pct >= 40 ? 'var(--green)' : (pct >= 10 ? 'var(--amber)' : 'var(--red)');
+      const c1 = d.por_canal?.canal1;
+      const c2 = d.por_canal?.canal2;
+      const sinCanal = d.por_canal?.sin_canal;
+      const celdaCanal = (c) => c
+        ? `<strong>${c.eventos}</strong><br><span style="font-size:.7rem;color:var(--text-dim);">${c.aliados_unicos} aliado${c.aliados_unicos===1?'':'s'}</span>`
+        : '<span style="color:var(--text-dim);">—</span>';
+      return `
+      <tr style="border-bottom:1px solid var(--border); transition:background .15s;" onmouseover="this.style.background='rgba(255,255,255,0.03)'" onmouseout="this.style.background='transparent'">
+        <td style="padding:14px 20px;"><span style="font-size:.72rem;text-transform:uppercase;letter-spacing:.03em;color:var(--text-dim);">${d.evento === 'tab_view' ? 'Tab' : 'Botón'}</span></td>
+        <td style="padding:14px 20px;"><strong style="font-size:0.9rem;">${d.detalle}</strong>${sinCanal ? `<br><span style="font-size:.7rem;color:var(--text-dim);">+${sinCanal.eventos} sin sesión (no logueado)</span>` : ''}</td>
+        <td style="padding:14px 20px; text-align:center; font-weight:700;">${d.eventos}</td>
+        <td style="padding:14px 20px; text-align:center; font-weight:700;">${d.aliados_unicos}</td>
+        <td style="padding:14px 20px; text-align:center; color:#fb923c;">${celdaCanal(c1)}</td>
+        <td style="padding:14px 20px; text-align:center; color:#4ade80;">${celdaCanal(c2)}</td>
+        <td style="padding:14px 20px; text-align:center; font-weight:700; color:${colorPct};">${pct}%</td>
+        <td style="padding:14px 20px; color:var(--text-muted); text-align:center; font-size:.8rem;">${d.ultimo_uso || '—'}</td>
+      </tr>`;
+    }).join('');
   } catch(e) { console.error(e); }
 }
 

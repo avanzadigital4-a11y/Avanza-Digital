@@ -982,3 +982,20 @@ class OnboardingArchivo(Base):
     subido_en    = Column(DateTime, default=func.now())
 
     respuesta = relationship("OnboardingRespuesta", back_populates="archivos")
+
+
+class EventoUso(Base):
+    """Tracking de uso del portal: qué tabs abren los aliados y en qué
+    botones/herramientas clave clickean. Alimenta el panel admin "Uso del
+    Portal" para ver qué se usa mucho y qué no se usa nunca (candidato a
+    sacar). Best-effort: nunca debe romper la experiencia del aliado si
+    falla el insert (ver eventos_uso.py)."""
+
+    __tablename__ = "eventos_uso"
+
+    id         = Column(Integer, primary_key=True, index=True)
+    aliado_id  = Column(Integer, ForeignKey("aliados.id"), nullable=True, index=True)
+    evento     = Column(String, nullable=False)   # "tab_view" | "click"
+    detalle    = Column(String, nullable=False)   # nombre del tab o id del botón/feature
+    canal      = Column(String, nullable=True)    # tipo_aliado del aliado al momento del evento
+    creado_en  = Column(DateTime, default=func.now(), index=True)

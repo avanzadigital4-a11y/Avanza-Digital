@@ -3414,6 +3414,7 @@ import email_tracking      # Hueco 1: analítica de email
 import equipos             # Feature Mi Equipo (setter+closer)
 import referidos_aliados   # Hueco 2: loop de reclutamiento aliado→aliado
 import onboarding          # Onboarding de clientes post-venta (reemplazo de Tally)
+import eventos_uso         # Tracking de uso del portal (tabs/botones) → /admin/eventos-uso
 
 app.include_router(academia.router)
 app.include_router(bolsa.router)
@@ -3435,6 +3436,7 @@ app.include_router(email_tracking.router)       # /e/o, /e/c, /admin/email/metri
 app.include_router(referidos_aliados.router)     # /aliados/{codigo}/red
 app.include_router(equipos.router)               # /aliados/{codigo}/equipo
 app.include_router(onboarding.router)             # /onboarding + /admin/onboarding
+app.include_router(eventos_uso.router)            # /eventos/log + /admin/eventos-uso
 
 # ─── MEJORAS CANAL 1 / CANAL 2 ───────────────────────────────────────────────
 import reciclado, delivery, reparto_visibilidad  # noqa: E402

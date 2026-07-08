@@ -470,8 +470,15 @@ def _inline_html(text: str) -> str:
     return "".join(out)
 
 
+def _fmt_usd(n) -> str:
+    """Formatea un monto en USD con separador de miles LATAM (punto), p.ej. USD 7.500.
+    Única fuente de verdad para que el precio se vea igual en todo el contrato
+    (cuerpo, Anexo I y Anexo II — antes el Anexo usaba formato con coma y no coincidía)."""
+    return f"USD {n:,.0f}".replace(",", ".")
+
+
 def _precio_str(d) -> str:
-    usd = f"USD {d.precio_usd:,.0f}".replace(",", ".")
+    usd = _fmt_usd(d.precio_usd)
     letras = numero_a_letras(d.precio_usd)
     base = f"{usd} (dólares estadounidenses {letras})"
     if d.moneda == "ARS" and d.precio_ars:
@@ -721,7 +728,7 @@ def render_html(d) -> str:
         anexo2_html = (
             '<div class="anexo"><h1>ANEXO II — PLAN DE MANTENIMIENTO (OPCIONAL)</h1>'
             f'<div class="anexo-meta"><strong>Plan:</strong> {_esc(d.plan_mantenimiento)} &nbsp;·&nbsp;'
-            f'<strong>Abono mensual:</strong> USD {_pm:,.0f} / mes &nbsp;·&nbsp;'
+            f'<strong>Abono mensual:</strong> {_fmt_usd(_pm)} / mes &nbsp;·&nbsp;'
             '<strong>Permanencia:</strong> sin permanencia mínima</div>'
             '<p>El presente plan de mantenimiento es <strong>opcional</strong> y se contrata por separado del '
             'servicio de la Cláusula Cuarta. No es requisito para el funcionamiento del sistema entregado. '
@@ -772,7 +779,7 @@ lugar y fecha indicados.</p>
 <div class="anexo">
   <h1>ANEXO I — DETALLE DEL PLAN CONTRATADO</h1>
   <div class="anexo-meta"><strong>Plan:</strong> {_esc(d.plan)} &nbsp;·&nbsp;
-    <strong>Precio:</strong> USD {d.precio_usd:,.0f} &nbsp;·&nbsp;
+    <strong>Precio:</strong> {_fmt_usd(d.precio_usd)} &nbsp;·&nbsp;
     <strong>Plazo:</strong> {d.plazo_dias} días hábiles &nbsp;·&nbsp;
     <strong>Garantía:</strong> {_esc(d.garantia)}</div>
   <p><strong>Entregables incluidos:</strong></p>
@@ -922,7 +929,7 @@ def render_contrato_docx(d) -> bytes:
     axr.bold = True; axr.font.size = Pt(12); axr.font.color.rgb = NAVY
     meta = doc.add_paragraph()
     meta.add_run("Plan: ").bold = True; meta.add_run(f"{d.plan}    ·    ")
-    meta.add_run("Precio: ").bold = True; meta.add_run(f"USD {d.precio_usd:,.0f}    ·    ")
+    meta.add_run("Precio: ").bold = True; meta.add_run(f"{_fmt_usd(d.precio_usd)}    ·    ")
     meta.add_run("Plazo: ").bold = True; meta.add_run(f"{d.plazo_dias} días hábiles    ·    ")
     meta.add_run("Garantía: ").bold = True; meta.add_run(d.garantia)
     doc.add_paragraph().add_run("Entregables incluidos:").bold = True
@@ -940,7 +947,7 @@ def render_contrato_docx(d) -> bytes:
         a2r.bold = True; a2r.font.size = Pt(12); a2r.font.color.rgb = NAVY
         m2 = doc.add_paragraph()
         m2.add_run("Plan: ").bold = True; m2.add_run(f"{d.plan_mantenimiento}    ·    ")
-        m2.add_run("Abono mensual: ").bold = True; m2.add_run(f"USD {_pm:,.0f} / mes    ·    ")
+        m2.add_run("Abono mensual: ").bold = True; m2.add_run(f"{_fmt_usd(_pm)} / mes    ·    ")
         m2.add_run("Permanencia: ").bold = True; m2.add_run("sin permanencia mínima")
         doc.add_paragraph("Este plan de mantenimiento es opcional y se contrata por separado del servicio de la "
                           "Cláusula Cuarta; no es requisito para el funcionamiento del sistema. Incluye:")

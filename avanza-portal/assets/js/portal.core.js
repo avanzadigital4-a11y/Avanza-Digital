@@ -71,6 +71,54 @@ async function apiFetch(url, opts = {}) {
   return fetch(url, opts);
 }
 
+// ── TRACKING DE USO DEL PORTAL ───────────────────────────────────────────────
+// Fire-and-forget: nunca debe frenar ni romper la UI. Alimenta el panel
+// admin "Uso del Portal" (/admin/eventos-uso) para ver qué tabs/funciones
+// se usan de verdad y cuáles no toca nadie.
+function logEventoUso(evento, detalle) {
+  try {
+    apiFetch(`${API}/eventos/log`, {
+      method: 'POST',
+      body: { evento, detalle },
+    }).catch(() => {});
+  } catch (e) { /* nunca romper por esto */ }
+}
+
+// Identificador legible de un elemento clickeado, en orden de preferencia:
+// id > data-tab > nombre de función del onclick > texto visible > tag.
+function _identificarElementoUso(el) {
+  if (el.id) return el.id;
+  var dt = el.getAttribute('data-tab');
+  if (dt) return 'tab:' + dt;
+  var oc = el.getAttribute('onclick');
+  if (oc) {
+    var m = oc.match(/^\s*([a-zA-Z0-9_$.]+)\s*\(/);
+    if (m) return m[1];
+  }
+  var txt = (el.textContent || '').trim().replace(/\s+/g, ' ').slice(0, 40);
+  return txt || el.tagName.toLowerCase();
+}
+
+// Tracking GENÉRICO de clicks: cualquier botón, link, elemento con onclick
+// o role="button" en todo el portal queda registrado — no hace falta ir
+// agregando ids a mano cada vez que se suma una función nueva.
+// Los .tab-btn se excluyen acá para no duplicar: ya quedan como "tab_view"
+// dentro de cambiarTab().
+document.addEventListener('click', function (e) {
+  var el = e.target && e.target.closest
+    ? e.target.closest('button, a, input[type="submit"], input[type="button"], [onclick], [role="button"]')
+    : null;
+  if (!el || el.classList.contains('tab-btn')) return;
+  logEventoUso('click', _identificarElementoUso(el));
+}, true);
+
+// Tracking de envío de formularios (cotizador, mi cuenta, comunidad, etc.)
+document.addEventListener('submit', function (e) {
+  var f = e.target;
+  if (!f || f.tagName !== 'FORM') return;
+  logEventoUso('form_submit', f.id || f.getAttribute('name') || 'form');
+}, true);
+
 async function apiJSON(url, method = 'GET', body = null) {
   const opts = { method };
   if (body) opts.body = body; // apiFetch lo serializa
@@ -604,6 +652,8 @@ function cambiarTab(tab, btn) {
   const panel = document.getElementById(`tab-${tab}`);
   if (panel) panel.classList.add('active');
   if (btn) btn.classList.add('active');
+
+  logEventoUso('tab_view', tab);
 
   // Gestionar estado del botón "Herramientas" y visibilidad de fila secundaria
   // Nota: 'academia' se quitó de TABS_SEC — es tab primario para Canal 1
