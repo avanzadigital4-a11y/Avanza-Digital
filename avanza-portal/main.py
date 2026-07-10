@@ -102,6 +102,8 @@ _aplicar_migracion("ALTER TABLE planes_continuidad_activos ADD COLUMN setter_id 
 _aplicar_migracion("ALTER TABLE planes_continuidad_activos ADD COLUMN setter_split_pct FLOAT")
 _aplicar_migracion("ALTER TABLE aliados ADD COLUMN notif_inact_55d_en TIMESTAMP")
 _aplicar_migracion("ALTER TABLE aliados ADD COLUMN clics_reclutamiento INTEGER DEFAULT 0")
+_aplicar_migracion("ALTER TABLE aliados ADD COLUMN pwa_instalada BOOLEAN DEFAULT FALSE")
+_aplicar_migracion("ALTER TABLE aliados ADD COLUMN pwa_detectado_en TIMESTAMP")
 
 # Migraciones para columnas nuevas de LeadBolsa y Red de Aliados
 for col_sql in [
@@ -1754,8 +1756,8 @@ def descargar_guion():
 
 @app.get("/contrato")
 def ver_contrato():
-    """Redirige al contrato de aliado."""
-    url = os.environ.get("URL_CONTRATO", "https://avanzadigital.digital/alianzas#contrato")
+    """Redirige a los términos del programa de aliados."""
+    url = os.environ.get("URL_CONTRATO", "https://avanzadigital.digital/terminos-aliados.html")
     return RedirectResponse(url=url)
 
 

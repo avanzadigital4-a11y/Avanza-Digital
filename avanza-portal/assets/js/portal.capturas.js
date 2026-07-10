@@ -369,6 +369,16 @@ if ('serviceWorker' in navigator) {
   });
 }
 
+// Reporta al backend si esta carga está corriendo en modo standalone (PWA
+// instalada) o no. Best-effort: si falla (sin sesión, sin red, etc.) no
+// rompe nada, es solo tracking para medir adopción de la instalación.
+window.addEventListener('load', () => {
+  if (typeof aliado !== 'undefined' && aliado && aliado.codigo) {
+    fetch(`/aliados/${aliado.codigo}/pwa-status?standalone=${_esStandalone()}`, { method: 'POST' })
+      .catch(() => {});
+  }
+});
+
 window.addEventListener('beforeinstallprompt', (e) => {
   e.preventDefault();
   _pwaPrompt = e;

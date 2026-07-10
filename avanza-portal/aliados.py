@@ -589,6 +589,25 @@ def ver_aliado(codigo: str, db: Session = Depends(get_db), _owner=Depends(verify
     return _aliado_detalle(a)
 
 
+@router.post("/aliados/{codigo}/pwa-status")
+def registrar_pwa_status(codigo: str, standalone: bool,
+                          db: Session = Depends(get_db),
+                          _owner=Depends(verify_ownership_dep)):
+    """Best-effort: registra si el aliado está corriendo el portal en modo
+    standalone (PWA instalada). Lo llama el frontend en cada carga de página
+    (ver _esStandalone() en portal.capturas.js). No rompe nada si falla —
+    es solo tracking, no bloquea el uso del portal.
+    """
+    a = db.query(Aliado).filter(Aliado.codigo == codigo).first()
+    if not a:
+        return {"ok": False}
+    if standalone:
+        a.pwa_instalada = True
+    a.pwa_detectado_en = datetime.now()
+    db.commit()
+    return {"ok": True}
+
+
 @router.post("/aliados/{codigo}/suspender")
 def suspender_aliado(codigo: str, db: Session = Depends(get_db),
                      _admin=Depends(current_admin_required)):

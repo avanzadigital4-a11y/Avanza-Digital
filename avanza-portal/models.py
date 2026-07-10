@@ -65,6 +65,14 @@ class Aliado(Base):
     ultimo_login = Column(DateTime, nullable=True)
     cantidad_logins = Column(Integer, default=0)
 
+    # --- TRACKING DE INSTALACIÓN PWA ---
+    # pwa_instalada es un flag "ratchet": una vez True, no se vuelve a poner
+    # False (si desinstala, no nos enteramos — solo sabemos si ALGUNA VEZ
+    # corrió standalone). pwa_detectado_en es la última vez que el frontend
+    # reportó su estado, instalado o no (sirve para saber si el dato es viejo).
+    pwa_instalada = Column(Boolean, default=False)
+    pwa_detectado_en = Column(DateTime, nullable=True)
+
     # --- ONBOARDING ---
     onboarding_completado = Column(Boolean, default=False)
     # Flags para la secuencia de emails de onboarding (día 1 / 3 / 7).

@@ -552,7 +552,7 @@ async function registrarse() {
   if (!pais) return mostrarError('Elegí tu país.');
   if (pass.length < 6) return mostrarError('La contraseña debe tener al menos 6 caracteres.');
   if (pass !== pass2) return mostrarError('Las contraseñas no coinciden.');
-  if (!tyc) return mostrarError('Tenés que aceptar el Acuerdo de Aliado para continuar.');
+  if (!tyc) return mostrarError('Tenés que aceptar los Términos del Programa para continuar.');
 
   const tipoAliado = document.getElementById('reg-tipo-aliado').value;
   if (!tipoAliado) return mostrarError('Elegí cómo vas a operar: "Tengo mis clientes" o "Busco clientes".');
@@ -7448,3 +7448,101 @@ function compartirRed() {
   // no resuelve y deja la pestaña en blanco).
   window.open('https://api.whatsapp.com/send?text=' + encodeURIComponent(msg), '_blank');
 }
+
+
+// ============================================================
+//  Aviso de navegador in-app (LinkedIn, Instagram, Facebook, TikTok,
+//  WebView genérico de Android)
+//
+//  Problema que resuelve: dentro de estos navegadores embebidos las
+//  descargas de PDF y los links hacia otras apps (wa.me, etc.) fallan
+//  SIN mostrar ningún error — el aliado hace click y no pasa nada.
+//  Este bloque detecta esos casos por user-agent y muestra un banner
+//  fijo arriba de la página avisando y ofreciendo copiar el link para
+//  pegarlo en Safari/Chrome.
+//
+//  Es detección por user-agent (heurística), no 100% infalible — las
+//  apps cambian sus firmas de UA de tanto en tanto. Si en el futuro
+//  algún caso similar no se detecta, agregar su firma acá abajo.
+// ============================================================
+(function () {
+  const ua = navigator.userAgent || '';
+
+  const FIRMAS_WEBVIEW = [
+    { nombre: 'LinkedIn',  test: /LinkedInApp/i },
+    { nombre: 'Instagram', test: /Instagram/i },
+    { nombre: 'Facebook',  test: /FBAN|FBAV|FB_IAB|MessengerLite/i },
+    { nombre: 'TikTok',    test: /BytedanceWebview|musical_ly|TikTok/i },
+    // WebView genérico de Android: Chrome mobile normal NO tiene "wv)"
+    // en el user-agent, los WebView embebidos sí.
+    { nombre: 'esta app',  test: /Android.*\swv\)/i },
+  ];
+
+  const match = FIRMAS_WEBVIEW.find(f => f.test.test(ua));
+  if (!match) return; // navegador normal → no hacer nada
+
+  const AVZ_WEBVIEW_KEY = 'avz_webview_banner_oculto';
+  if (sessionStorage.getItem(AVZ_WEBVIEW_KEY)) return; // ya lo cerró en esta sesión
+
+  function avzCopiarLinkWebview() {
+    const url = location.href;
+    const avisar = () => {
+      if (typeof mostrarToast === 'function') {
+        mostrarToast('Link copiado — pegalo en Safari o Chrome ✓', 'green');
+      } else {
+        alert('Link copiado. Pegalo en Safari o Chrome.');
+      }
+    };
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(url).then(avisar).catch(() => avzPromptFallbackWebview(url));
+    } else {
+      avzPromptFallbackWebview(url);
+    }
+  }
+
+  function avzPromptFallbackWebview(url) {
+    window.prompt('Copiá este link y abrilo en Safari o Chrome:', url);
+  }
+
+  function avzCerrarBannerWebview() {
+    const b = document.getElementById('avz-webview-banner');
+    if (b) b.remove();
+    document.body.style.paddingTop = '';
+    sessionStorage.setItem(AVZ_WEBVIEW_KEY, '1');
+  }
+
+  function avzRenderBannerWebview() {
+    const b = document.createElement('div');
+    b.id = 'avz-webview-banner';
+    b.style.cssText = `
+      position:fixed; top:0; left:0; right:0; z-index:100000;
+      background:#1a1400; border-bottom:1px solid rgba(250,204,21,0.35);
+      color:#facc15; padding:10px 14px; font-size:.8rem; line-height:1.4;
+      display:flex; align-items:center; gap:10px; flex-wrap:wrap;
+      font-family:inherit;
+    `;
+    b.innerHTML = `
+      <i class="fa-solid fa-triangle-exclamation" style="flex-shrink:0;"></i>
+      <span style="flex:1;min-width:220px;">
+        Estás viendo esto desde <strong>${match.nombre}</strong> — las descargas de PDF y los links a WhatsApp no funcionan bien acá adentro.
+        Copiá el link y abrilo en tu navegador (Safari/Chrome).
+      </span>
+      <button id="avz-webview-copiar" style="flex-shrink:0;background:#facc15;color:#000;border:none;border-radius:6px;padding:6px 12px;font-weight:700;font-size:.78rem;cursor:pointer;">Copiar link</button>
+      <button id="avz-webview-cerrar" aria-label="Cerrar aviso" style="flex-shrink:0;background:transparent;border:none;color:#facc15;font-size:1rem;cursor:pointer;padding:0 4px;">✕</button>
+    `;
+    document.body.prepend(b);
+    document.getElementById('avz-webview-copiar').onclick = avzCopiarLinkWebview;
+    document.getElementById('avz-webview-cerrar').onclick = avzCerrarBannerWebview;
+
+    // Empujar el contenido para que el banner no tape el header del portal
+    requestAnimationFrame(() => {
+      document.body.style.paddingTop = b.offsetHeight + 'px';
+    });
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', avzRenderBannerWebview);
+  } else {
+    avzRenderBannerWebview();
+  }
+})();
