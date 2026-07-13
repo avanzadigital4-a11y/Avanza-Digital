@@ -48,7 +48,7 @@ from models import (
     AcademiaModulo, AliadoModuloCompletado, EmailEnviado, Equipo, PasswordResetToken,
     PushSubscription, ReporteMalContacto, SolicitudCompraCreditos,
     ActividadProspecto, Aliado, AuditoriaLog, AutomationLog,
-    ComentarioComunidad, Comision, ContactoProspecto, LeadBolsa, LinkPago,
+    ComentarioComunidad, Comision, ContactoProspecto, EventoUso, LeadBolsa, LinkPago,
     NIVELES, Novedad, PlanContinuidadActivo, PostComunidad,
     Prospecto, Referido, TransaccionCredito, Venta,
 )
@@ -812,6 +812,11 @@ def eliminar_aliado(codigo: str, db: Session = Depends(get_db),
         _sp(lambda: db.query(PushSubscription)
             .filter(PushSubscription.aliado_id == aid)
             .delete(synchronize_session=False))
+        # eventos_uso: tracking de uso del portal (col nullable) → solo desvincular,
+        # preserva las estadísticas agregadas de qué se usa en el portal.
+        _sp(lambda: db.query(EventoUso)
+            .filter(EventoUso.aliado_id == aid)
+            .update({EventoUso.aliado_id: None}, synchronize_session=False))
 
         # 14) Por fin: el aliado mismo
         db.delete(a)

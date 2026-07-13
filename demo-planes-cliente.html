@@ -1,0 +1,1333 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Vista previa por plan · Avanza Digital</title>
+<style>
+  :root{
+    /* control de presentador (Avanza) */
+    --av-ink:#16181d; --av-ink2:#565b64; --av-ink3:#8e949d; --av-line:#e7e9ec;
+    --av-brand:#df5a0e; --av-brand-t:#fdefe4;
+    --av-base:#1c8a4e; --av-pro:#2f54d4; --av-ind:#a16207; --av-360:#6741d9;
+    --sans:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;
+    /* sitio del cliente (paleta industrial, editable) */
+    --c-primary:#0044cc; --c-dark:#12151c; --c-accent:#ffae00; --c-surface:#f7f8fa; --c-border:#e3e6ea; --c-text:#4a4f58;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{font-family:var(--sans);background:#e9ebee;-webkit-font-smoothing:antialiased}
+
+  /* ============ CONTROL DE PRESENTADOR (solo para el aliado) ============ */
+  .presenter{position:sticky;top:0;z-index:200;background:var(--av-ink);color:#fff;padding:10px 18px;
+    display:flex;align-items:center;gap:16px;flex-wrap:wrap;box-shadow:0 2px 10px rgba(0,0,0,.18)}
+  .presenter .lbl{font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#aab0bb;white-space:nowrap}
+  .planbar{display:flex;gap:4px;background:rgba(255,255,255,.08);border-radius:9px;padding:3px}
+  .planbar button{font:inherit;cursor:pointer;border:none;background:none;color:#c7cbd3;font-weight:650;font-size:12.5px;
+    padding:7px 13px;border-radius:7px;transition:.12s;white-space:nowrap}
+  .planbar button:hover{color:#fff}
+  .planbar button.on{color:#fff}
+  .planbar button[data-p="0"].on{background:var(--av-base)}
+  .planbar button[data-p="1"].on{background:var(--av-pro)}
+  .planbar button[data-p="2"].on{background:var(--av-ind)}
+  .planbar button[data-p="3"].on{background:var(--av-360)}
+  .presenter .price{margin-left:auto;display:flex;align-items:center;gap:10px;font-size:12.5px;color:#c7cbd3;white-space:nowrap}
+  .presenter .price b{color:#fff;font-weight:700;font-size:14px}
+  .presenter .hint{width:100%;font-size:11px;color:#8b91a0;line-height:1.4}
+  @media(max-width:760px){.presenter{padding:9px 14px}.presenter .price{margin-left:0}}
+
+  .editbtn{font:inherit;cursor:pointer;border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.06);color:#e7e9ee;
+    font-weight:650;font-size:12px;padding:7px 13px;border-radius:7px;white-space:nowrap;transition:.12s}
+  .editbtn:hover{background:rgba(255,255,255,.14)}
+  .editbtn.on{background:var(--av-brand);border-color:var(--av-brand);color:#fff}
+  .editpanel{display:none;width:100%;margin-top:10px;padding-top:12px;border-top:1px solid rgba(255,255,255,.12);
+    gap:12px;grid-template-columns:repeat(5,1fr)}
+  .editpanel.on{display:grid}
+  .editpanel .ef label{display:block;font-size:10.5px;font-weight:700;letter-spacing:.03em;text-transform:uppercase;color:#8b91a0;margin-bottom:5px}
+  .editpanel .ef input,.editpanel .ef select{width:100%;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.15);color:#fff;
+    border-radius:6px;padding:8px 10px;font:inherit;font-size:12.5px}
+  .editpanel .ef input:focus,.editpanel .ef select:focus{outline:none;border-color:var(--av-brand)}
+  .editpanel .ef-note{grid-column:1/-1;font-size:11px;color:#8b91a0;line-height:1.4}
+  @media(max-width:760px){.editpanel{grid-template-columns:1fr 1fr}}
+
+  .devtoggle{display:flex;gap:3px;background:rgba(255,255,255,.08);border-radius:9px;padding:3px}
+  .devtoggle button{font:inherit;cursor:pointer;border:none;background:none;color:#c7cbd3;font-weight:650;font-size:12px;
+    padding:6px 11px;border-radius:6px;transition:.12s;white-space:nowrap}
+  .devtoggle button:hover{color:#fff}
+  .devtoggle button.on{color:#fff;background:var(--av-brand)}
+
+  /* quién está mirando: el visitante del sitio o el dueño logueado en su panel */
+  .viewtoggle{display:flex;gap:3px;background:rgba(255,255,255,.08);border-radius:9px;padding:3px}
+  .viewtoggle button{font:inherit;cursor:pointer;border:none;background:none;color:#c7cbd3;font-weight:650;font-size:12.5px;
+    padding:7px 12px;border-radius:7px;transition:.12s;white-space:nowrap;display:flex;align-items:center;gap:5px}
+  .viewtoggle button:hover{color:#fff}
+  .viewtoggle button.on{color:#fff;background:#3a3f4b}
+  .viewtoggle button[data-v="panel"].on{background:#6741d9}
+
+  /* ============ MARCO NAVEGADOR ============ */
+  .browser-wrap{max-width:1300px;margin:22px auto 60px;padding:0 16px}
+  .browser{background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 20px 60px rgba(20,22,30,.18),0 2px 8px rgba(20,22,30,.08)}
+  .brbar{display:flex;align-items:center;gap:9px;padding:11px 16px;background:#eceef1;border-bottom:1px solid #dfe2e6}
+  .brbar .d{width:10px;height:10px;border-radius:50%;background:#d3d7dc}
+  .brbar .url{flex:1;margin-left:6px;background:#fff;border:1px solid #d8dbe0;border-radius:7px;padding:6px 12px;
+    font-size:12px;color:#7a808a;font-family:ui-monospace,Menlo,monospace;display:flex;align-items:center;gap:7px}
+  .brbar .url svg{width:12px;height:12px;color:#1c8a4e;flex:none}
+  .ribbon{background:linear-gradient(90deg,#eef2ff,#fff);border-bottom:1px solid #dfe2e6;padding:9px 22px;
+    font-size:12px;color:#3a3f4b;display:flex;align-items:center;gap:8px}
+  .ribbon b{color:#12151c}
+  .ribbon .tag{margin-left:auto;font-size:10.5px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;
+    padding:3px 9px;border-radius:5px;color:#fff}
+  .ribbon2{background:#fff;border-bottom:1px solid #dfe2e6;padding:7px 22px;font-size:11.5px;color:#565b64}
+  .ribbon2 b{color:#12151c}
+
+  /* ============ SITIO DEL CLIENTE ============ */
+  .site,.panelview{background:#fff;color:var(--c-text);font-family:'Segoe UI',Arial,sans-serif;line-height:1.6}
+  .site h1,.site h2,.site h3,.panelview h1,.panelview h2,.panelview h3{color:var(--c-dark);font-family:Arial,sans-serif;letter-spacing:-.01em}
+  .container{max-width:1140px;margin:0 auto;padding:0 26px}
+
+  /* alterna entre "sitio público" y "panel interno" dentro del mismo marco de navegador */
+  .view{display:none}
+  .view.on{display:block}
+
+  .s-top{background:var(--c-dark);color:#9aa0ac;font-size:12px;padding:7px 0}
+  .s-top .container{display:flex;justify-content:space-between;align-items:center}
+  .s-top .dot{width:7px;height:7px;background:#22c55e;border-radius:50%;display:inline-block;margin-right:6px;box-shadow:0 0 5px #22c55e}
+
+  header.s-head{background:#fff;border-bottom:2px solid var(--c-primary);padding:14px 0;position:sticky;top:0;z-index:5}
+  .s-head .container{display:flex;align-items:center;justify-content:space-between;gap:20px}
+  .s-logo{font-size:1.35rem;font-weight:800;color:var(--c-dark)}
+  .s-logo span{color:var(--c-primary)}
+  .s-nav{display:flex;gap:22px;flex-wrap:wrap}
+  .s-nav a{color:var(--c-dark);text-decoration:none;font-weight:600;font-size:.92rem;cursor:pointer;padding-bottom:3px;border-bottom:2px solid transparent}
+  .s-nav a:hover,.s-nav a.on{color:var(--c-primary);border-color:var(--c-primary)}
+  .s-nav a.locked{color:#b6bac2;cursor:not-allowed}
+  .s-nav a.locked:hover{color:#b6bac2;border-color:transparent}
+  .s-nav a.locked .lk{font-size:10px;margin-left:3px}
+  .btn-out.locked{opacity:.45;cursor:not-allowed}
+  .s-cta{background:var(--c-primary);color:#fff;font-weight:700;font-size:.86rem;padding:10px 18px;border-radius:6px;text-decoration:none;white-space:nowrap}
+
+  .page{display:none}
+  .page.on{display:block}
+
+  .hero{background:linear-gradient(rgba(10,15,30,.82),rgba(10,15,30,.68)),url('https://images.unsplash.com/photo-1565043589221-1a6fd49cb727?auto=format&fit=crop&w=1600&q=70') center/cover;
+    color:#fff;padding:90px 0;text-align:left}
+  .hero h1{color:#fff;font-size:2.5rem;max-width:640px;line-height:1.15}
+  .hero p{color:#dfe3ea;max-width:520px;margin-top:16px;font-size:1.05rem}
+  .hero .cta-row{margin-top:28px;display:flex;gap:12px;flex-wrap:wrap}
+  .btn{display:inline-block;padding:12px 22px;border-radius:6px;font-weight:700;font-size:.92rem;text-decoration:none}
+  .btn-acc{background:var(--c-accent);color:#1a1300}
+  .btn-out{border:2px solid #fff;color:#fff}
+
+  .sec{padding:60px 0}
+  .sec.alt{background:var(--c-surface)}
+  .eyebrow{color:var(--c-primary);font-weight:800;font-size:.78rem;letter-spacing:.08em;text-transform:uppercase}
+  .sec h2{font-size:1.9rem;margin-top:6px;max-width:600px}
+  .sec .lead{color:var(--c-text);max-width:600px;margin-top:10px}
+
+  .grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:22px;margin-top:34px}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:22px;margin-top:34px}
+  .card{background:#fff;border:1px solid var(--c-border);border-radius:10px;padding:24px}
+  .card h3{font-size:1.05rem;margin-bottom:8px}
+  .card p{font-size:.92rem;color:var(--c-text)}
+  .card .ic{width:42px;height:42px;border-radius:9px;background:#eaf0ff;color:var(--c-primary);display:flex;align-items:center;justify-content:center;margin-bottom:14px;font-weight:800}
+
+  .badge-row{display:flex;gap:10px;flex-wrap:wrap;margin-top:20px}
+  .badge{font-size:.78rem;font-weight:700;color:var(--c-primary);background:#eaf0ff;border:1px solid #cfe0ff;padding:6px 12px;border-radius:20px}
+
+  /* formulario simple (base) */
+  .form-simple{background:#fff;border:1px solid var(--c-border);border-radius:12px;padding:28px;max-width:480px;box-shadow:0 8px 24px rgba(20,22,30,.06)}
+  .form-simple h3{margin-bottom:4px}
+  .form-simple .s{color:var(--c-text);font-size:.88rem;margin-bottom:16px}
+  .form-simple label{font-size:.78rem;font-weight:700;color:#6b7180;display:block;margin:0 0 5px}
+  .form-simple input,.form-simple textarea{width:100%;border:1px solid var(--c-border);border-radius:7px;padding:10px 12px;font:inherit;font-size:.88rem;margin-bottom:13px}
+  .form-simple button{width:100%;background:var(--c-primary);color:#fff;font-weight:700;padding:12px;border:none;border-radius:7px;font-size:.92rem;cursor:pointer}
+
+  /* form segmentado (industrial+) */
+  .steps{display:flex;gap:6px;margin-bottom:20px}
+  .steps i{flex:1;height:4px;border-radius:3px;background:#e3e6ea}
+  .steps i.on{background:var(--c-primary)}
+  .seg-opts{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px}
+  .seg-opts button{border:1.5px solid var(--c-border);background:#fff;border-radius:8px;padding:12px;font:inherit;font-size:.86rem;font-weight:650;color:var(--c-dark);cursor:pointer;text-align:left}
+  .seg-opts button.sel{border-color:var(--c-primary);background:#eaf0ff;color:var(--c-primary)}
+  .form-simple .segrow{display:flex;gap:10px}
+  .form-simple .segrow button{width:auto;flex:1}
+  .form-simple button.btn-back{background:#fff;color:var(--c-dark);border:1.5px solid var(--c-border)}
+
+  /* panel de metricas (industrial+) */
+  .metrics-card{background:var(--c-dark);color:#e7e9ee;border-radius:14px;padding:26px 28px}
+  .metrics-card .mh{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px}
+  .metrics-card .mh h3{color:#fff;font-size:1.05rem}
+  .metrics-card .live{font-size:11px;color:#4ade80;font-weight:700;display:flex;align-items:center;gap:6px}
+  .metrics-card .live::before{content:"";width:7px;height:7px;border-radius:50%;background:#4ade80;box-shadow:0 0 6px #4ade80}
+  .mgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+  .mgrid .mv{font-size:1.7rem;font-weight:800;color:#fff;transition:color .25s ease}
+  .mgrid .mv.bump{color:#4ade80}
+  .mgrid .mk{font-size:.75rem;color:#9aa0ac;margin-top:2px}
+  .mfeed{margin-top:18px;padding-top:16px;border-top:1px solid rgba(255,255,255,.1);display:flex;flex-direction:column;gap:8px;min-height:4px}
+  .mfeed .mfline{font-size:.78rem;color:#c7cbd3;opacity:0;transform:translateY(4px);animation:mfeed-in .35s ease forwards}
+  @keyframes mfeed-in{to{opacity:1;transform:translateY(0)}}
+
+  /* cotizador (360) */
+  .quoter{background:#fff;border:1px solid var(--c-border);border-radius:14px;padding:28px;box-shadow:0 10px 30px rgba(20,22,30,.06)}
+  .qgrid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  .qgrid label{font-size:.78rem;font-weight:700;color:#6b7180;display:block;margin:0 0 5px}
+  .qgrid select,.qgrid input{width:100%;border:1px solid var(--c-border);border-radius:7px;padding:10px 12px;font:inherit;font-size:.88rem}
+  .qresult{margin-top:18px;background:var(--c-surface);border:1px dashed #c7ceda;border-radius:10px;padding:18px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px}
+  .qresult .qv{font-size:1.5rem;font-weight:800;color:var(--c-primary)}
+  .qresult .score{font-size:11px;font-weight:800;padding:5px 10px;border-radius:6px}
+  .score.hot{background:#fee2e2;color:#b91c1c}
+  .score.warm{background:#fef3c7;color:#92400e}
+
+  /* portal/erp teaser (360) */
+  .portal{background:linear-gradient(160deg,#151a29,#0c0f18);color:#fff;border-radius:14px;padding:28px;position:relative;overflow:hidden}
+  .portal::after{content:"";position:absolute;inset:0;background:radial-gradient(circle at 80% 0%,rgba(107,65,217,.25),transparent 55%)}
+  .portal .lockrow{display:flex;align-items:center;gap:10px;margin-bottom:12px;position:relative}
+  .portal .lockrow span{font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:#c4b5fd}
+  .portal h3{color:#fff;position:relative}
+  .portal p{color:#b7bcc9;font-size:.9rem;margin-top:8px;max-width:480px;position:relative}
+  .erpchips{display:flex;gap:8px;margin-top:16px;flex-wrap:wrap;position:relative}
+  .erpchips span{font-size:.76rem;font-weight:700;background:rgba(255,255,255,.08);padding:5px 10px;border-radius:6px;color:#e5e7eb}
+
+  /* embudo de ventas (industrial+) */
+  .funnel{display:flex;align-items:stretch;gap:0;margin-top:30px;flex-wrap:wrap}
+  .funnel .fstep{flex:1;min-width:150px;background:#fff;border:1px solid var(--c-border);border-radius:10px;padding:18px 16px;position:relative}
+  .funnel .fstep .fn{width:26px;height:26px;border-radius:50%;background:var(--c-primary);color:#fff;font-size:.78rem;font-weight:800;display:flex;align-items:center;justify-content:center;margin-bottom:10px}
+  .funnel .fstep h4{font-size:.88rem;margin-bottom:4px}
+  .funnel .fstep p{font-size:.78rem;color:var(--c-text)}
+  .funnel .farrow{display:flex;align-items:center;justify-content:center;color:#c7ceda;font-size:1.3rem;padding:0 6px}
+
+  /* ============ PANEL INTERNO (dueño/equipo del cliente, con login) ============ */
+  .panelview{min-height:520px}
+  .panel-top{background:var(--c-dark);border-bottom:1px solid #2a2f3a}
+  .panel-toprow{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:16px 26px;flex-wrap:wrap}
+  .panel-brand{color:#fff;font-weight:800;font-size:1rem;display:flex;align-items:center;gap:8px}
+  .panel-brand .lockic{color:#c4b5fd}
+  .panel-session{font-size:.82rem;color:#9aa0ac}
+  .panel-session b{color:#e7e9ee}
+  .panel-session a{color:#c4b5fd;text-decoration:none;margin-left:6px}
+  .panel-locked{max-width:520px;padding:60px 0}
+  .panel-locked .lockbadge{width:52px;height:52px;border-radius:12px;background:#eef2ff;color:var(--c-primary);
+    display:flex;align-items:center;justify-content:center;margin-bottom:18px;font-size:1.4rem}
+  .panel-locked h2{font-size:1.5rem;margin-bottom:10px}
+  .panel-note{background:var(--c-surface);border:1px dashed #c7ceda;border-radius:10px;padding:14px 16px;font-size:.86rem;color:var(--c-text);margin-top:22px;max-width:560px}
+  @media(max-width:760px){.panel-toprow{padding:13px 18px}}
+
+  /* cierre / CTA hacia Avanza (siempre visible) */
+  .closecta{background:var(--c-dark);color:#fff;padding:44px 0;text-align:center}
+  .closecta h2{color:#fff;font-size:1.5rem}
+  .closecta p{color:#b7bcc9;margin-top:8px;max-width:520px;margin-left:auto;margin-right:auto}
+  .closecta .btn{margin-top:20px}
+
+  .reviews{display:flex;gap:16px;flex-wrap:wrap;margin-top:20px}
+  .rev{flex:1;min-width:220px;background:#fff;border:1px solid var(--c-border);border-radius:10px;padding:18px}
+  .stars{color:#f59e0b;font-size:.85rem;margin-bottom:8px}
+  .rev p{font-size:.86rem;color:var(--c-text)}
+  .rev .who{margin-top:10px;font-size:.8rem;font-weight:700;color:var(--c-dark)}
+
+  footer.s-foot{background:var(--c-dark);color:#9aa0ac;padding:34px 0;font-size:.86rem}
+  footer.s-foot .container{display:flex;justify-content:space-between;flex-wrap:wrap;gap:10px}
+  .wa-float{position:fixed;bottom:22px;right:22px;width:54px;height:54px;border-radius:50%;background:#22c55e;color:#fff;
+    display:flex;align-items:center;justify-content:center;box-shadow:0 8px 20px rgba(34,197,94,.4);font-size:26px;z-index:20;text-decoration:none}
+
+  /* ============ TOASTS DE AUTOMATIZACIÓN (simulación) ============ */
+  .toast-stack{position:fixed;bottom:22px;left:22px;z-index:220;display:flex;flex-direction:column;gap:10px;max-width:340px}
+  .toast{background:#12151c;color:#fff;border-radius:10px;padding:13px 16px;font-size:.86rem;font-weight:600;
+    box-shadow:0 10px 30px rgba(0,0,0,.28);display:flex;align-items:flex-start;gap:10px;opacity:0;
+    transform:translateY(10px);animation:toast-in .35s ease forwards, toast-out .35s ease forwards 3.2s}
+  .toast .tico{font-size:1.05rem;line-height:1;flex:none}
+  .toast .tsub{display:block;font-weight:500;color:#aab0bb;font-size:.78rem;margin-top:2px}
+  @keyframes toast-in{to{opacity:1;transform:translateY(0)}}
+  @keyframes toast-out{to{opacity:0;transform:translateY(-6px)}}
+  @media(max-width:760px){.toast-stack{left:14px;right:14px;max-width:none}}
+
+  /* ============ RESPONSIVE REAL DEL SITIO DEL CLIENTE ============ */
+  @media(max-width:760px){
+    .site .s-head .container{flex-direction:column;align-items:flex-start;gap:12px}
+    .site .s-nav{gap:14px;width:100%}
+    .site .hero{padding:52px 0}
+    .site .hero h1{font-size:1.7rem}
+    .site .hero p{font-size:.95rem}
+    .site .grid3,.site .grid2,.site .qgrid,.site .seg-opts,
+    .panelview .grid3,.panelview .grid2,.panelview .mgrid{grid-template-columns:1fr}
+    .site .funnel,.panelview .funnel{flex-direction:column}
+    .site .funnel .farrow,.panelview .funnel .farrow{transform:rotate(90deg);padding:2px 0}
+    .site footer.s-foot .container{flex-direction:column;align-items:flex-start}
+    .site .reviews{flex-direction:column}
+    .site .quoter,.site .form-simple{padding:20px}
+  }
+
+  /* ============ SIMULADOR DE VISTA MOBILE (para presentar sin resizear la ventana) ============ */
+  .browser-wrap.mobile .browser{max-width:390px;margin:0 auto}
+  .browser-wrap.mobile .site .s-head .container{flex-direction:column;align-items:flex-start;gap:12px}
+  .browser-wrap.mobile .site .s-nav{gap:14px;flex-wrap:wrap}
+  .browser-wrap.mobile .site .hero{padding:46px 0}
+  .browser-wrap.mobile .site .hero h1{font-size:1.5rem}
+  .browser-wrap.mobile .site .hero p{font-size:.9rem}
+  .browser-wrap.mobile .site .container,.browser-wrap.mobile .panelview .container{padding:0 18px}
+  .browser-wrap.mobile .site .grid3,.browser-wrap.mobile .site .grid2,
+  .browser-wrap.mobile .site .qgrid,.browser-wrap.mobile .site .seg-opts,
+  .browser-wrap.mobile .panelview .grid3,.browser-wrap.mobile .panelview .grid2{grid-template-columns:1fr}
+  .browser-wrap.mobile .site .funnel,.browser-wrap.mobile .panelview .funnel{flex-direction:column}
+  .browser-wrap.mobile .site .funnel .farrow,.browser-wrap.mobile .panelview .funnel .farrow{transform:rotate(90deg);padding:2px 0}
+  .browser-wrap.mobile .site footer.s-foot .container{flex-direction:column;align-items:flex-start}
+  .browser-wrap.mobile .site .reviews{flex-direction:column}
+  .browser-wrap.mobile .site .quoter,.browser-wrap.mobile .site .form-simple{padding:18px}
+  .browser-wrap.mobile .site .mgrid,.browser-wrap.mobile .panelview .mgrid{grid-template-columns:1fr 1fr}
+  .browser-wrap.mobile .panel-toprow{padding:12px 18px}
+</style>
+</head>
+<body>
+
+  <!-- ============ CONTROL DE PRESENTADOR ============ -->
+  <div class="presenter">
+    <span class="lbl">Mostrar plan</span>
+    <div class="planbar" id="planbar">
+      <button data-p="0" class="on">Base</button>
+      <button data-p="1">Pro</button>
+      <button data-p="2">Industrial</button>
+      <button data-p="3">360</button>
+    </div>
+    <div class="viewtoggle" id="viewtoggle">
+      <button type="button" data-v="site" class="on">🌐 Sitio público</button>
+      <button type="button" data-v="panel">🔒 Panel interno</button>
+    </div>
+    <div class="devtoggle" id="devtoggle">
+      <button type="button" data-v="desktop" class="on">🖥️ Desktop</button>
+      <button type="button" data-v="mobile">📱 Mobile</button>
+    </div>
+    <div class="price"><span id="pName">Plan Base</span> · <b id="pPrice">USD 1.050</b></div>
+    <button type="button" id="btnEdit" class="editbtn">✎ Personalizar</button>
+    <div class="hint">Este panel es solo para vos: andá cambiando el plan mientras compartís pantalla para que el cliente vea cómo crece su sistema en cada nivel. Usá 🔒 Panel interno para mostrar lo que ve <b>el dueño</b> logueado — nunca lo ve un visitante del sitio. Usá 📱 Mobile para mostrar que ambas vistas se adaptan al celular.</div>
+
+    <div class="editpanel" id="editPanel">
+      <div class="ef"><label>Nombre de la empresa</label><input id="inNombre" type="text" value="MetalPro" placeholder="Ej: Metalúrgica Rossi"></div>
+      <div class="ef"><label>Rubro / actividad</label>
+        <select id="inRubro">
+          <option value="metalurgica">Metalúrgica</option>
+          <option value="agro">Agro</option>
+          <option value="logistica">Logística</option>
+          <option value="construccion">Construcción</option>
+          <option value="servicios">Servicios técnicos</option>
+        </select>
+      </div>
+      <div class="ef"><label>Ciudad, país</label><input id="inCiudad" type="text" value="Rosario, Santa Fe, Argentina" placeholder="Ciudad, país"></div>
+      <div class="ef"><label>Teléfono / WhatsApp</label><input id="inTelefono" type="text" value="+54 9 342 000-0000" placeholder="Teléfono"></div>
+      <div class="ef"><label>Email</label><input id="inEmail" type="text" value="contacto@tuempresa.com" placeholder="Email"></div>
+      <div class="ef ef-note">Estos datos solo cambian lo que ve el cliente en esta vista previa — no publican ni modifican nada real.</div>
+    </div>
+  </div>
+
+  <div class="browser-wrap">
+    <div class="browser">
+      <div class="brbar">
+        <div class="d" style="background:#ff5f57"></div><div class="d" style="background:#febc2e"></div><div class="d" style="background:#28c840"></div>
+        <div class="url"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg><span id="urlbar">www.tuempresa.com</span></div>
+      </div>
+      <div class="ribbon">
+        Vista previa personalizada preparada para <b id="ribbonClient">tu empresa</b> — así se ve tu sistema con
+        <span class="tag" id="ribbonTag" style="background:#1c8a4e">Plan Base</span>
+      </div>
+      <div class="ribbon2">🎯 Objetivo de este plan: <b id="ribbonResult">Empiezan a recibir consultas</b> · ✅ Hosting + Dominio + SSL incluidos el primer año</div>
+
+      <div class="site view on" id="viewSite">
+        <div class="s-top"><div class="container"><span><span class="dot"></span>Atención Lun–Vie 8 a 18h</span><span id="topContact">+54 9 342 000-0000 · contacto@tuempresa.com</span></div></div>
+
+        <header class="s-head">
+          <div class="container">
+            <div class="s-logo" id="siteLogo">METAL<span>PRO</span></div>
+            <nav class="s-nav" id="siteNav">
+              <a data-pg="inicio" data-label="Inicio" class="on">Inicio</a>
+              <a data-pg="servicios" data-min="1" data-label="Servicios">Servicios</a>
+              <a data-pg="industrias" data-min="1" data-label="Industrias">Industrias</a>
+              <a data-pg="casos" data-min="1" data-label="Casos de éxito">Casos de éxito</a>
+              <a data-pg="cotizador" data-min="3" data-label="Cotizador">Cotizador</a>
+              <a data-pg="contacto" data-label="Contacto">Contacto</a>
+            </nav>
+            <a class="s-cta" data-pg-link="contacto">Pedir presupuesto</a>
+          </div>
+        </header>
+
+        <!-- ============ PÁGINA: INICIO ============ -->
+        <div class="page on" id="pg-inicio">
+          <div class="hero" id="heroBlock">
+            <div class="container">
+              <h1 id="heroH1">Fabricación industrial de precisión, lista cuando la necesitás</h1>
+              <p id="heroP">Mecanizado CNC, estructuras metálicas y piezas a medida para plantas que no pueden parar.</p>
+              <div class="cta-row">
+                <a href="#" class="btn btn-acc" data-pg-link="contacto">Solicitar cotización</a>
+                <a href="#" class="btn btn-out" data-pg-link="servicios" data-min="1">Ver servicios</a>
+              </div>
+            </div>
+          </div>
+
+          <div class="sec">
+            <div class="container">
+              <div class="eyebrow" id="heroEyebrow">Qué hacemos</div>
+              <h2 id="heroH2">Soluciones para tu línea de producción</h2>
+              <div class="grid3" id="homeCardsRow">
+                <div class="card"><div class="ic">01</div><h3>Mecanizado CNC</h3><p>Piezas de precisión bajo plano, tolerancias ajustadas.</p></div>
+                <div class="card"><div class="ic">02</div><h3>Estructuras metálicas</h3><p>Fabricación y montaje para obra e industria.</p></div>
+                <div class="card"><div class="ic">03</div><h3>Mantenimiento</h3><p>Reparación y puesta a punto de equipos productivos.</p></div>
+              </div>
+              <div class="badge-row" id="homeBadges">
+                <span class="badge" id="badgeRubro">Certificación ISO 9001</span>
+                <span class="badge">Cotización en 24hs</span>
+                <span class="badge">📍 Ficha de Google Maps optimizada</span>
+                <span class="badge">✅ Hosting + Dominio + SSL incluidos</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- canal comercial: desde Pro -->
+          <div class="sec alt" data-min="1">
+            <div class="container">
+              <div class="eyebrow">Tu canal comercial</div>
+              <h2>Convertimos visitas en consultas calificadas</h2>
+              <div class="grid2">
+                <div class="card"><div class="ic">✉</div><h3>Lead magnet descargable</h3><p>Ficha técnica o guía a cambio de datos de contacto, para captar leads antes de que se vayan de la web.</p></div>
+                <div class="card"><div class="ic">⇄</div><h3>Seguimiento automático de cada consulta</h3><p>Ninguna consulta se pierde ni queda en una planilla: cada una queda registrada y lista para que tu equipo la trabaje.</p></div>
+                <div class="card"><div class="ic">⚡</div><h3>Automatización de respuesta</h3><p>El cliente recibe una respuesta automática apenas envía el formulario, mientras vos lo llamás.</p></div>
+                <div class="card"><div class="ic">📍</div><h3>Google Maps y búsquedas locales</h3><p>Optimizamos tu ficha para aparecer primero cuando alguien busca tu rubro en tu zona.</p></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- reseñas: desde Industrial -->
+          <div class="sec alt" data-min="2">
+            <div class="container">
+              <div class="eyebrow">Lo que dicen nuestros clientes</div>
+              <h2>Reseñas verificadas de Google</h2>
+              <div class="reviews" id="reviewsRow">
+                <div class="rev"><div class="stars">★★★★★</div><p>Cumplieron el plazo y la pieza encajó perfecto al primer intento.</p><div class="who">Planta Industrial del Litoral</div></div>
+                <div class="rev"><div class="stars">★★★★★</div><p>Buena comunicación durante todo el proceso de fabricación.</p><div class="who">Taller Mecánico Rossi</div></div>
+                <div class="rev"><div class="stars">★★★★☆</div><p>Precio justo para la calidad que entregan.</p><div class="who">Agroindustria Zenón</div></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- comercial reforzado + Google Maps: desde Industrial -->
+          <div class="sec" data-min="2">
+            <div class="container">
+              <div class="eyebrow">Comercial conectado</div>
+              <h2>Tu equipo de ventas, siempre al día</h2>
+              <div class="grid2">
+                <div class="card"><div class="ic">⇄</div><h3>Sincronización en ambos sentidos</h3><p>Cada movimiento de un cliente se refleja al instante en las herramientas que ya usa tu equipo comercial.</p></div>
+                <div class="card"><div class="ic">📍</div><h3>Gestión avanzada de Google Maps</h3><p>Respondemos reseñas, actualizamos horarios y fotos, y monitoreamos tu posición frente a la competencia.</p></div>
+              </div>
+              <div class="badge-row">
+                <span class="badge">Capacitación básica al equipo incluida</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- auditoría comercial B2B + garantía: solo 360, sin detalle técnico de integraciones -->
+          <div class="sec alt" data-min="3">
+            <div class="container">
+              <div class="grid2">
+                <div class="card" style="display:flex;flex-direction:column;justify-content:center">
+                  <h3>Auditoría comercial B2B</h3>
+                  <p>Analizamos tu proceso de ventas completo y armamos un plan estratégico a 90 días, con seguimiento quincenal.</p>
+                  <div class="badge-row"><span class="badge">Garantía extendida 12 meses</span><span class="badge">SLA prioritario 4hs</span></div>
+                </div>
+                <div class="card" style="display:flex;flex-direction:column;justify-content:center">
+                  <h3>Ecosistema conectado por dentro</h3>
+                  <p>Pedidos, stock y equipo comercial trabajando desde un mismo lugar — el detalle técnico vive en tu panel interno, con login.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- lead magnet / SEO multizona: solo 360, sin exponer la lógica de priorización -->
+          <div class="sec" data-min="3">
+            <div class="container">
+              <div class="eyebrow">Automatización total</div>
+              <h2>Tu sistema prioriza solo a los mejores leads</h2>
+              <div class="grid3">
+                <div class="card"><div class="ic">🎯</div><h3>Prioridad automática para tu equipo</h3><p>Las consultas con más potencial llegan primero a ventas, sin que nadie tenga que revisarlas una por una.</p></div>
+                <div class="card"><div class="ic">✉</div><h3>Lead magnet y contenidos a medida</h3><p>Diseñamos y redactamos el material de descarga que capta y califica a tus mejores clientes.</p></div>
+                <div class="card"><div class="ic">🌎</div><h3>SEO local multizona</h3><p>Posicionamos tu ficha y tu web en cada ciudad o región donde operás, no solo en tu casa central.</p></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ============ PÁGINA: SERVICIOS (Pro+) ============ -->
+        <div class="page" id="pg-servicios">
+          <div class="sec">
+            <div class="container">
+              <div class="eyebrow" id="serviciosEyebrow">Servicios</div>
+              <h2 id="serviciosH2">Todo lo que tu planta necesita, en un solo proveedor</h2>
+              <div class="grid3" id="serviciosCardsRow">
+                <div class="card"><div class="ic">A</div><h3>Corte y plegado</h3><p>Chapa hasta 12mm, plegado de precisión.</p></div>
+                <div class="card"><div class="ic">B</div><h3>Soldadura certificada</h3><p>MIG/TIG con soldadores calificados.</p></div>
+                <div class="card"><div class="ic">C</div><h3>Diseño técnico</h3><p>Ingeniería inversa y planos 3D.</p></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ============ PÁGINA: INDUSTRIAS (Pro+) ============ -->
+        <div class="page" id="pg-industrias">
+          <div class="sec">
+            <div class="container">
+              <div class="eyebrow">Industrias</div>
+              <h2 id="industriasH2">Trabajamos con sectores exigentes</h2>
+              <div class="grid3" id="industriasCardsRow">
+                <div class="card"><h3>Agroindustria</h3><p>Repuestos y estructuras para plantas de procesamiento.</p></div>
+                <div class="card"><h3>Logística</h3><p>Racks, estructuras de depósito y mantenimiento de flota.</p></div>
+                <div class="card"><h3>Energía</h3><p>Piezas críticas con trazabilidad completa.</p></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ============ PÁGINA: CASOS (Pro+) ============ -->
+        <div class="page" id="pg-casos">
+          <div class="sec">
+            <div class="container">
+              <div class="eyebrow">Casos de éxito</div>
+              <h2>Resultados con clientes reales</h2>
+              <div class="grid2" id="casosCardsRow">
+                <div class="card"><h3>Reducción de 40% en tiempo de entrega</h3><p>Rediseñamos el flujo de cotización para una metalúrgica de Rosario.</p></div>
+                <div class="card"><h3>+120 consultas calificadas en 3 meses</h3><p>Landing + formulario segmentado para una agroindustria de Santa Fe.</p></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ============ PÁGINA: COTIZADOR (360) ============ -->
+        <div class="page" id="pg-cotizador">
+          <div class="sec">
+            <div class="container">
+              <div class="eyebrow">Cotizador a medida</div>
+              <h2>Presupuesto estimado al instante</h2>
+              <p class="lead">Desarrollado especialmente para tu proceso: el cliente carga datos y recibe un número real, no un "te contactamos".</p>
+              <div style="max-width:640px;margin-top:24px" class="quoter">
+                <div class="qgrid">
+                  <div><label id="qTipoLabel">Tipo de pieza</label><select id="qTipo"><option value="60">Mecanizado CNC</option><option value="45">Estructura metálica</option><option value="35">Corte y plegado</option></select></div>
+                  <div><label id="qMaterialLabel">Material</label><select id="qMaterial"><option value="1">Acero al carbono</option><option value="1.4">Acero inoxidable</option><option value="1.2">Aluminio</option></select></div>
+                  <div><label>Cantidad</label><input id="qCantidad" type="number" value="50" min="1"></div>
+                  <div><label>Urgencia</label><select id="qUrgencia"><option value="1">Estándar (7 días)</option><option value="1.35">Urgente (48hs)</option></select></div>
+                </div>
+                <div class="qresult">
+                  <div><div style="font-size:.78rem;color:#6b7180;font-weight:700">Estimado</div><div class="qv" id="qPrice">USD 3.420</div></div>
+                  <div style="font-size:.8rem;color:var(--c-text)">Precio de referencia · te confirmamos el definitivo al coordinar</div>
+                </div>
+                <button type="button" id="btnQuoteSend" style="margin-top:16px;width:100%;background:var(--c-primary);color:#fff;font-weight:700;padding:12px;border:none;border-radius:7px;font-size:.92rem;cursor:pointer">Solicitar este presupuesto</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ============ PÁGINA: CONTACTO (todos) ============ -->
+        <div class="page" id="pg-contacto">
+          <div class="sec">
+            <div class="container">
+              <div class="eyebrow">Contacto</div>
+              <h2 style="margin-bottom:24px">Contános qué necesitás</h2>
+
+              <!-- form simple: Base y Pro -->
+              <div id="formSimple" class="form-simple">
+                <h3>Pedí tu presupuesto</h3>
+                <div class="s">Te respondemos en menos de 24hs.</div>
+                <label>Nombre</label><input placeholder="Tu nombre">
+                <label>Email o WhatsApp</label><input placeholder="¿Cómo te contactamos?">
+                <label>Contanos qué necesitás</label><textarea rows="3" placeholder="Tipo de trabajo, cantidad, plazos..."></textarea>
+                <button type="button" id="btnEnviarSimple">Enviar consulta</button>
+              </div>
+
+              <!-- form segmentado: Industrial y 360 -->
+              <div id="formSeg" class="form-simple" style="display:none;max-width:560px">
+                <h3>Contanos sobre tu proyecto</h3>
+                <div class="s">Paso <span id="stepN">1</span> de 3 — así segmentamos automáticamente cada consulta.</div>
+                <div class="steps"><i class="on"></i><i></i><i></i></div>
+
+                <div class="segstep on" id="segstep-1">
+                  <label id="segOptsLabel">¿Qué tipo de trabajo necesitás?</label>
+                  <div class="seg-opts" id="segOptsRow">
+                    <button class="sel" data-v="0">Mecanizado CNC</button>
+                    <button data-v="1">Estructura metálica</button>
+                    <button data-v="2">Mantenimiento</button>
+                    <button data-v="3">Otro / a definir</button>
+                  </div>
+                  <label>Volumen estimado</label><input id="segVolumen" placeholder="Ej: 50 unidades / mes">
+                  <button type="button" data-next="2">Continuar</button>
+                </div>
+
+                <div class="segstep" id="segstep-2" style="display:none">
+                  <label>Nombre</label><input id="segNombre" placeholder="Tu nombre">
+                  <label>Email o WhatsApp</label><input id="segContacto" placeholder="¿Cómo te contactamos?">
+                  <label>Ciudad / planta</label><input id="segCiudad" placeholder="Dónde está tu operación">
+                  <div class="segrow">
+                    <button type="button" class="btn-back" data-back="1">Atrás</button>
+                    <button type="button" data-next="3">Continuar</button>
+                  </div>
+                </div>
+
+                <div class="segstep" id="segstep-3" style="display:none">
+                  <div class="s" style="margin-bottom:14px">Revisá los datos antes de enviar:</div>
+                  <div id="segResumen" style="background:var(--c-surface);border:1px solid var(--c-border);border-radius:8px;padding:14px;font-size:.86rem;margin-bottom:16px"></div>
+                  <div class="segrow">
+                    <button type="button" class="btn-back" data-back="2">Atrás</button>
+                    <button type="button" id="btnEnviarSeg">Enviar consulta</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="closecta">
+          <div class="container">
+            <h2>¿Querés un sistema así para tu empresa?</h2>
+            <p>Esto que estás viendo es exactamente lo que recibís: nada de plantillas genéricas. Hablemos de tu caso.</p>
+            <a href="https://wa.me/5493424392759" target="_blank" class="btn btn-acc">💬 Hablar con Avanza Digital</a>
+          </div>
+        </div>
+
+        <footer class="s-foot">
+          <div class="container">
+            <span id="footName">© 2026 MetalPro Industrial — Todos los derechos reservados</span>
+            <span id="footCiudad">Rosario, Santa Fe, Argentina</span>
+          </div>
+        </footer>
+      </div>
+
+      <!-- ============ PANEL INTERNO (dueño/equipo del cliente, con login — nunca lo ve un visitante) ============ -->
+      <div class="panelview view" id="viewPanel">
+        <div class="panel-top">
+          <div class="container panel-toprow">
+            <div class="panel-brand"><span class="lockic">🔒</span> <span id="panelBrand">MetalPro</span> · Panel interno</div>
+            <div class="panel-session">Conectado como <b id="panelUser">dueño@metalpro.com</b><a href="#" onclick="return false">Cerrar sesión</a></div>
+          </div>
+        </div>
+
+        <div class="container" style="padding-top:36px;padding-bottom:64px">
+
+          <!-- Base y Pro: todavía no existe panel, los leads llegan por email/WhatsApp -->
+          <div class="panel-locked" id="panelLocked">
+            <div class="lockbadge">🔒</div>
+            <h2>Tu panel interno todavía no está activo</h2>
+            <p class="lead">El panel con métricas en vivo, estado del CRM y clasificación de leads se activa a partir del <b>Plan Industrial</b>. Con tu plan actual, cada consulta te llega directo por email y WhatsApp — sin que falte ninguna.</p>
+            <div class="panel-note">💡 Así es como se ve este mismo panel para un cliente Industrial o 360 — cambiá el plan arriba para mostrárselo.</div>
+          </div>
+
+          <!-- Industrial y 360: dashboard real -->
+          <div id="panelDash" style="display:none">
+            <div class="eyebrow">Tu sistema, trabajando</div>
+            <h2>Actividad de tu negocio</h2>
+            <p class="lead">Esto lo ves solo vos, logueado. Tus clientes nunca llegan a esta pantalla.</p>
+
+            <div style="max-width:640px;margin-top:24px">
+              <div class="metrics-card">
+                <div class="mh"><h3>Actividad de hoy</h3><span class="live">EN VIVO</span></div>
+                <div class="mgrid">
+                  <div><div class="mv" id="mvConsultas">14</div><div class="mk">Consultas nuevas</div></div>
+                  <div><div class="mv" id="mvCotizaciones">6</div><div class="mk">Cotizaciones enviadas</div></div>
+                  <div><div class="mv" id="mvTasa">38%</div><div class="mk">Tasa de respuesta</div></div>
+                </div>
+                <div class="mfeed" id="mfeed"></div>
+              </div>
+            </div>
+
+            <h3 style="margin-top:44px;font-size:1.15rem">Así se clasifica cada consulta, sola</h3>
+            <p class="lead" style="margin-top:6px">Tu web dejó de ser una vidriera: cada visita pasa por un proceso definido antes de llegar a ventas.</p>
+            <div class="funnel">
+              <div class="fstep"><div class="fn">1</div><h4>Visita al sitio</h4><p>Llega desde Google, Maps o una recomendación.</p></div>
+              <div class="farrow">→</div>
+              <div class="fstep"><div class="fn">2</div><h4>Formulario segmentado</h4><p>Responde 2-3 preguntas clave sobre su necesidad.</p></div>
+              <div class="farrow">→</div>
+              <div class="fstep"><div class="fn">3</div><h4>Clasificación automática</h4><p>El sistema define si es un lead frío, tibio o caliente.</p></div>
+              <div class="farrow">→</div>
+              <div class="fstep"><div class="fn">4</div><h4>Alerta a ventas</h4><p>Tu equipo recibe el aviso con los datos ya cargados.</p></div>
+            </div>
+
+            <div class="grid2" style="margin-top:44px">
+              <div class="card"><h3>Estado del CRM</h3><p id="panelCrmStatus">🟢 Conectado y sincronizando en tiempo real. Cada consulta nueva se carga sola, sin planillas.</p></div>
+              <div class="card"><h3>Google Maps y reseñas</h3><p>🟢 Ficha optimizada esta semana · 3 reseñas nuevas respondidas.</p></div>
+            </div>
+
+            <!-- Solo 360: intranet/ERP + cotizaciones con clasificación -->
+            <div id="panel360" style="display:none;margin-top:44px">
+              <div class="grid2">
+                <div class="portal">
+                  <div class="lockrow">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#c4b5fd" stroke-width="2"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>
+                    <span>Intranet — acceso exclusivo del equipo</span>
+                  </div>
+                  <h3>Conectado a tu ERP</h3>
+                  <p>Pedidos, stock y clientes sincronizados en ambos sentidos. Tu equipo trabaja en un solo lugar.</p>
+                  <div class="erpchips"><span>Tango</span><span>SAP Business One</span><span>API bidireccional</span></div>
+                </div>
+                <div class="card" style="display:flex;flex-direction:column;justify-content:center">
+                  <h3>Lead scoring ponderado</h3>
+                  <p>Cada consulta se pondera según volumen, urgencia y tipo de pieza para decidir a quién llama primero tu equipo.</p>
+                </div>
+              </div>
+
+              <h3 style="margin-top:36px;font-size:1.05rem">Cotizaciones recientes</h3>
+              <div id="quotesList" style="margin-top:14px;display:flex;flex-direction:column;gap:10px"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast-stack" id="toastStack"></div>
+
+  <a href="#" class="wa-float" id="waFloat" target="_blank" rel="noopener">🟢</a>
+
+<script>
+const PLANS = [
+  {name:"Plan Base", price:"USD 1.050 final", color:"#1c8a4e", result:"Empiezan a recibir consultas"},
+  {name:"Plan Pro", price:"USD 2.900 final", color:"#2f54d4", result:"Leads calificados y con seguimiento automático"},
+  {name:"Plan Industrial", price:"USD 4.900 final", color:"#a16207", result:"La web queda integrada al área comercial"},
+  {name:"Plan Estratégico 360", price:"USD 7.500 final", color:"#6741d9", result:"Ecosistema corporativo autónomo"},
+];
+let level = 0;
+let currentPage = "inicio";
+let currentDevice = "desktop";
+let currentView = "site";
+let segStep = 1;
+let lastRubroKey = null;
+let lastQuoteHot = false;
+let recentQuotes = [];
+
+/* ============ CONTENIDO POR RUBRO ============ */
+const RUBROS = {
+  metalurgica: {
+    heroImg:"https://images.unsplash.com/photo-1565043589221-1a6fd49cb727?auto=format&fit=crop&w=1600&q=70",
+    heroH1:"Fabricación industrial de precisión, lista cuando la necesitás",
+    heroP:"Mecanizado CNC, estructuras metálicas y piezas a medida para plantas que no pueden parar.",
+    badge1:"Certificación ISO 9001",
+    defaultName:"MetalPro",
+    homeCards:[
+      {ic:"01",t:"Mecanizado CNC",d:"Piezas de precisión bajo plano, tolerancias ajustadas."},
+      {ic:"02",t:"Estructuras metálicas",d:"Fabricación y montaje para obra e industria."},
+      {ic:"03",t:"Mantenimiento",d:"Reparación y puesta a punto de equipos productivos."}
+    ],
+    reviews:[
+      {s:5,t:"Cumplieron el plazo y la pieza encajó perfecto al primer intento.",w:"Planta Industrial del Litoral"},
+      {s:5,t:"Buena comunicación durante todo el proceso de fabricación.",w:"Taller Mecánico Rossi"},
+      {s:4,t:"Precio justo para la calidad que entregan.",w:"Agroindustria Zenón"}
+    ],
+    serviciosH2:"Todo lo que tu planta necesita, en un solo proveedor",
+    serviciosCards:[
+      {ic:"A",t:"Corte y plegado",d:"Chapa hasta 12mm, plegado de precisión."},
+      {ic:"B",t:"Soldadura certificada",d:"MIG/TIG con soldadores calificados."},
+      {ic:"C",t:"Diseño técnico",d:"Ingeniería inversa y planos 3D."}
+    ],
+    industriasH2:"Trabajamos con sectores exigentes",
+    industriasCards:[
+      {t:"Agroindustria",d:"Repuestos y estructuras para plantas de procesamiento."},
+      {t:"Logística",d:"Racks, estructuras de depósito y mantenimiento de flota."},
+      {t:"Energía",d:"Piezas críticas con trazabilidad completa."}
+    ],
+    casosCards:[
+      {t:"Reducción de 40% en tiempo de entrega",d:"Rediseñamos el flujo de cotización para una metalúrgica de Rosario."},
+      {t:"+120 consultas calificadas en 3 meses",d:"Landing + formulario segmentado para una agroindustria de Santa Fe."}
+    ],
+    segOptsLabel:"¿Qué tipo de trabajo necesitás?",
+    segOpts:["Mecanizado CNC","Estructura metálica","Mantenimiento","Otro / a definir"],
+    qTipoLabel:"Tipo de pieza",
+    qTipo:[{l:"Mecanizado CNC",v:60},{l:"Estructura metálica",v:45},{l:"Corte y plegado",v:35}],
+    qMaterialLabel:"Material",
+    qMaterial:[{l:"Acero al carbono",v:1},{l:"Acero inoxidable",v:1.4},{l:"Aluminio",v:1.2}]
+  },
+  agro: {
+    heroImg:"https://images.unsplash.com/photo-1500937386664-56d1dfef3854?auto=format&fit=crop&w=1600&q=70",
+    heroH1:"Servicio técnico y repuestos agrícolas sin parar la cosecha",
+    heroP:"Mantenimiento de maquinaria, repuestos originales y atención en campo para que tu producción no se detenga.",
+    badge1:"Atención en campo 24hs",
+    defaultName:"AgroLitoral",
+    homeCards:[
+      {ic:"01",t:"Mantenimiento de maquinaria",d:"Diagnóstico y reparación de tractores, cosechadoras y sembradoras."},
+      {ic:"02",t:"Repuestos originales",d:"Stock permanente de las piezas que más rotan en campaña."},
+      {ic:"03",t:"Atención en campo",d:"Guardias durante cosecha y siembra, donde estés."}
+    ],
+    reviews:[
+      {s:5,t:"Vinieron a la estancia el mismo día y no perdimos ni una hora de cosecha.",w:"Estancia La Elena"},
+      {s:5,t:"Siempre tienen el repuesto que necesitamos, no como otros proveedores.",w:"Acopio San Justo"},
+      {s:4,t:"Buen seguimiento técnico durante toda la campaña.",w:"Agropecuaria del Sur"}
+    ],
+    serviciosH2:"Todo lo que tu campaña necesita, en un solo proveedor",
+    serviciosCards:[
+      {ic:"A",t:"Diagnóstico y reparación",d:"Service de maquinaria agrícola con técnicos propios."},
+      {ic:"B",t:"Repuestos y insumos",d:"Piezas originales y alternativas con entrega rápida."},
+      {ic:"C",t:"Service preventivo de flota",d:"Planes de mantenimiento antes de cada campaña."}
+    ],
+    industriasH2:"Trabajamos con el campo en todas sus etapas",
+    industriasCards:[
+      {t:"Agricultura extensiva",d:"Soja, maíz, trigo — maquinaria siempre operativa."},
+      {t:"Ganadería",d:"Mantenimiento de equipos para tambo y feedlot."},
+      {t:"Acopio y logística de granos",d:"Balanzas, cintas y equipos de planta."}
+    ],
+    casosCards:[
+      {t:"0 días de parada en plena cosecha",d:"Plan de mantenimiento preventivo para una estancia de 4.000 hectáreas."},
+      {t:"+80 consultas calificadas en una campaña",d:"Landing + formulario segmentado para un proveedor de repuestos agrícolas."}
+    ],
+    segOptsLabel:"¿Qué necesitás para tu campo?",
+    segOpts:["Reparación de maquinaria","Repuestos","Service preventivo","Otro / a definir"],
+    qTipoLabel:"Tipo de servicio",
+    qTipo:[{l:"Diagnóstico y reparación",v:70},{l:"Cambio de repuestos",v:40},{l:"Service preventivo",v:30}],
+    qMaterialLabel:"Equipo",
+    qMaterial:[{l:"Cosechadora",v:1.6},{l:"Tractor",v:1.2},{l:"Sembradora",v:1}]
+  },
+  logistica: {
+    heroImg:"https://images.unsplash.com/photo-1553413077-190dd305871c?auto=format&fit=crop&w=1600&q=70",
+    heroH1:"Tu flota y tu depósito, siempre operativos",
+    heroP:"Mantenimiento de flota, gestión de depósito y soluciones a medida para operaciones que no pueden frenar.",
+    badge1:"Cobertura regional",
+    defaultName:"TransLitoral",
+    homeCards:[
+      {ic:"01",t:"Mantenimiento de flota",d:"Service preventivo y correctivo para camiones y utilitarios."},
+      {ic:"02",t:"Racks y depósito",d:"Diseño e instalación de estanterías industriales."},
+      {ic:"03",t:"Trazabilidad de carga",d:"Seguimiento de cada envío de punta a punta."}
+    ],
+    reviews:[
+      {s:5,t:"Redujimos tiempos muertos de flota desde que trabajamos con ellos.",w:"TransLitoral SA"},
+      {s:5,t:"Instalaron los racks un fin de semana, sin frenar la operación.",w:"Depósito Central Rosario"},
+      {s:4,t:"Buena respuesta ante urgencias de flota.",w:"Distribuidora del Norte"}
+    ],
+    serviciosH2:"Todo lo que tu operación logística necesita",
+    serviciosCards:[
+      {ic:"A",t:"Mantenimiento de flota",d:"Service programado para no perder unidades en ruta."},
+      {ic:"B",t:"Racks y estanterías industriales",d:"Diseño a medida según tu volumen de depósito."},
+      {ic:"C",t:"Gestión de depósito",d:"Optimización de espacio y flujo de mercadería."}
+    ],
+    industriasH2:"Trabajamos con operaciones que no pueden parar",
+    industriasCards:[
+      {t:"Transporte de carga",d:"Flotas propias y de terceros."},
+      {t:"Distribución",d:"Centros de distribución y última milla."},
+      {t:"Comercio exterior",d:"Depósitos fiscales y de tránsito."}
+    ],
+    casosCards:[
+      {t:"-30% en tiempos de carga",d:"Rediseño de layout de depósito para una distribuidora regional."},
+      {t:"+95 consultas calificadas en 3 meses",d:"Landing + formulario segmentado para un taller de flota."}
+    ],
+    segOptsLabel:"¿Qué necesitás para tu operación?",
+    segOpts:["Mantenimiento de flota","Racks y depósito","Trazabilidad","Otro / a definir"],
+    qTipoLabel:"Tipo de servicio",
+    qTipo:[{l:"Mantenimiento de flota",v:55},{l:"Instalación de racks",v:65},{l:"Auditoría de depósito",v:40}],
+    qMaterialLabel:"Escala de la operación",
+    qMaterial:[{l:"Depósito chico",v:1},{l:"Depósito mediano",v:1.3},{l:"Depósito grande",v:1.7}]
+  },
+  construccion: {
+    heroImg:"https://images.unsplash.com/photo-1541888946425-d81bb19240f5?auto=format&fit=crop&w=1600&q=70",
+    heroH1:"Obra terminada en tiempo y forma, sin sorpresas",
+    heroP:"Estructuras, montaje y gestión de obra para constructoras y desarrolladores que no pueden perder plazos.",
+    badge1:"Obras entregadas en plazo",
+    defaultName:"ConstruNorte",
+    homeCards:[
+      {ic:"01",t:"Estructuras y montaje",d:"Estructuras metálicas y de hormigón para obra."},
+      {ic:"02",t:"Gestión de obra",d:"Seguimiento de avance, plazos y proveedores."},
+      {ic:"03",t:"Mantenimiento edilicio",d:"Service post-obra para edificios en uso."}
+    ],
+    reviews:[
+      {s:5,t:"Entregaron la obra en el plazo pactado, sin sobrecostos.",w:"Constructora del Litoral"},
+      {s:5,t:"Muy buena comunicación durante todo el seguimiento de obra.",w:"Desarrollos Rossi"},
+      {s:4,t:"Respuesta rápida ante cualquier imprevisto en el sitio.",w:"Grupo Edificar"}
+    ],
+    serviciosH2:"Todo lo que tu obra necesita, en un solo proveedor",
+    serviciosCards:[
+      {ic:"A",t:"Estructuras metálicas y hormigón",d:"Fabricación y montaje según proyecto ejecutivo."},
+      {ic:"B",t:"Montaje en obra",d:"Cuadrillas propias con supervisión técnica."},
+      {ic:"C",t:"Gestión y seguimiento de obra",d:"Reportes de avance para dirección y comitente."}
+    ],
+    industriasH2:"Trabajamos con distintos tipos de desarrollo",
+    industriasCards:[
+      {t:"Obra privada",d:"Edificios residenciales y comerciales."},
+      {t:"Obra pública",d:"Infraestructura y licitaciones."},
+      {t:"Desarrollos inmobiliarios",d:"Seguimiento multi-obra para desarrolladores."}
+    ],
+    casosCards:[
+      {t:"Obra entregada 3 semanas antes de plazo",d:"Reorganización de cronograma para un edificio de 12 pisos."},
+      {t:"+70 consultas calificadas en 3 meses",d:"Landing + formulario segmentado para una constructora regional."}
+    ],
+    segOptsLabel:"¿Qué necesitás para tu obra?",
+    segOpts:["Estructura","Montaje","Gestión de obra","Otro / a definir"],
+    qTipoLabel:"Tipo de trabajo",
+    qTipo:[{l:"Estructura metálica",v:65},{l:"Montaje en obra",v:50},{l:"Mantenimiento edilicio",v:35}],
+    qMaterialLabel:"Etapa de obra",
+    qMaterial:[{l:"Fundación",v:1.4},{l:"Estructura",v:1.2},{l:"Terminaciones",v:1}]
+  },
+  servicios: {
+    heroImg:"https://images.unsplash.com/photo-1530124566582-a618bc2615dc?auto=format&fit=crop&w=1600&q=70",
+    heroH1:"Servicio técnico especializado, cuando y donde lo necesitás",
+    heroP:"Diagnóstico, reparación y mantenimiento con técnicos certificados y respuesta rápida.",
+    badge1:"Técnicos certificados",
+    defaultName:"ServiTec",
+    homeCards:[
+      {ic:"01",t:"Diagnóstico técnico",d:"Relevamiento y detección de fallas antes de intervenir."},
+      {ic:"02",t:"Reparación especializada",d:"Técnicos certificados por marca y por rubro."},
+      {ic:"03",t:"Mantenimiento preventivo",d:"Planes programados para evitar paradas no planeadas."}
+    ],
+    reviews:[
+      {s:5,t:"Llegaron en el horario acordado y resolvieron todo en una visita.",w:"Comercial San Martín"},
+      {s:5,t:"Buen diagnóstico, no nos vendieron nada de más.",w:"Consorcio Belgrano 450"},
+      {s:4,t:"Respuesta rápida ante una urgencia fuera de horario.",w:"Planta Industrial Zenón"}
+    ],
+    serviciosH2:"Todo el service que tu equipo necesita",
+    serviciosCards:[
+      {ic:"A",t:"Diagnóstico y reparación",d:"Técnicos certificados con respuesta en 24-48hs."},
+      {ic:"B",t:"Mantenimiento preventivo",d:"Planes mensuales o trimestrales según tu equipo."},
+      {ic:"C",t:"Instalación y puesta en marcha",d:"Instalación de equipos nuevos con garantía."}
+    ],
+    industriasH2:"Trabajamos con distintos tipos de cliente",
+    industriasCards:[
+      {t:"Industria",d:"Mantenimiento de equipos productivos."},
+      {t:"Comercios",d:"Service para locales y cadenas."},
+      {t:"Hogares y consorcios",d:"Atención particular y edificios."}
+    ],
+    casosCards:[
+      {t:"-50% en tiempo de respuesta a reclamos",d:"Implementación de un sistema de tickets para un service técnico regional."},
+      {t:"+150 consultas calificadas en 3 meses",d:"Landing + formulario segmentado para una empresa de mantenimiento."}
+    ],
+    segOptsLabel:"¿Qué necesitás?",
+    segOpts:["Diagnóstico","Reparación","Mantenimiento","Otro / a definir"],
+    qTipoLabel:"Tipo de servicio",
+    qTipo:[{l:"Diagnóstico",v:30},{l:"Reparación",v:55},{l:"Mantenimiento preventivo",v:40}],
+    qMaterialLabel:"Complejidad",
+    qMaterial:[{l:"Baja",v:1},{l:"Media",v:1.3},{l:"Alta",v:1.6}]
+  }
+};
+
+/* ============ TOASTS DE AUTOMATIZACIÓN ============ */
+function showToast(icon, title, sub){
+  const stack = document.getElementById("toastStack");
+  const el = document.createElement("div");
+  el.className = "toast";
+  el.innerHTML = `<span class="tico">${icon}</span><span>${title}${sub ? `<span class="tsub">${sub}</span>` : ""}</span>`;
+  stack.appendChild(el);
+  setTimeout(()=>{ el.remove(); }, 3600);
+}
+
+/* ============ PANEL DE MÉTRICAS EN TIEMPO REAL (Industrial+) ============ */
+// Antes esto eran 3 números fijos en el HTML. Ahora es estado real que
+// cambia solo con el tiempo (acotado) y que además reacciona en el momento
+// a lo que hace el usuario (enviar formulario / pedir presupuesto).
+const metrics = { consultas: 14, cotizaciones: 6 };
+const METRICS_CAP = { consultas: 45, cotizaciones: 19 }; // techo del crecimiento automático por timer
+const FEED_CIUDADES = ["Rosario","Córdoba","Santa Fe","Buenos Aires","Mendoza","San Juan","Villa María","Rafaela","Neuquén","Bahía Blanca"];
+const FEED_MAX_LINES = 4;
+
+function renderMetrics(){
+  const elC = document.getElementById("mvConsultas");
+  const elQ = document.getElementById("mvCotizaciones");
+  const elT = document.getElementById("mvTasa");
+  if(!elC || !elQ || !elT) return;
+  elC.textContent = metrics.consultas;
+  elQ.textContent = metrics.cotizaciones;
+  const tasa = metrics.consultas > 0 ? Math.round((metrics.cotizaciones / metrics.consultas) * 100) : 0;
+  elT.textContent = tasa + "%";
+}
+
+function bumpMetricVisual(id){
+  const el = document.getElementById(id);
+  if(!el) return;
+  el.classList.remove("bump");
+  void el.offsetWidth; // reinicia la animación si ya estaba corriendo
+  el.classList.add("bump");
+  setTimeout(()=> el.classList.remove("bump"), 500);
+}
+
+function pushFeedLine(text){
+  const feed = document.getElementById("mfeed");
+  if(!feed) return;
+  const line = document.createElement("div");
+  line.className = "mfline";
+  line.textContent = text;
+  feed.prepend(line);
+  while(feed.children.length > FEED_MAX_LINES){
+    feed.removeChild(feed.lastChild);
+  }
+}
+
+// Se llama cuando el usuario efectivamente envía una consulta o pide un
+// presupuesto: la acción tiene que sentirse conectada al sistema, no separada.
+function registrarConsultaEnPanel(origenLabel){
+  metrics.consultas += 1;
+  renderMetrics();
+  bumpMetricVisual("mvConsultas");
+  pushFeedLine(`📥 Nueva consulta${origenLabel ? " desde " + origenLabel : ""}`);
+}
+
+// Crecimiento de fondo, acotado y de a poco (nunca de golpe, nunca sin límite).
+function metricsTick(){
+  let cambio = false;
+  if(Math.random() < 0.5 && metrics.consultas < METRICS_CAP.consultas){
+    metrics.consultas += 1;
+    bumpMetricVisual("mvConsultas");
+    pushFeedLine("📥 Nueva consulta desde " + FEED_CIUDADES[Math.floor(Math.random()*FEED_CIUDADES.length)]);
+    cambio = true;
+  }
+  if(Math.random() < 0.3 && metrics.cotizaciones < METRICS_CAP.cotizaciones && metrics.cotizaciones < metrics.consultas){
+    metrics.cotizaciones += 1;
+    bumpMetricVisual("mvCotizaciones");
+    pushFeedLine("📤 Cotización enviada al cliente");
+    cambio = true;
+  }
+  if(cambio) renderMetrics();
+}
+setInterval(metricsTick, 5000);
+
+// Misma idea que el score del cotizador (calcQuote): un umbral de volumen
+// decide si el lead es caliente o tibio. Acá el dato de entrada es el texto
+// libre que el usuario escribió en "Volumen estimado" (ej: "80 unidades / mes").
+// Este resultado NUNCA se muestra al visitante — solo alimenta el feed del panel interno.
+function classifyVolumen(volumenStr){
+  const match = (volumenStr || "").match(/\d+/);
+  const n = match ? parseInt(match[0], 10) : 0;
+  if(n >= 50){
+    return {title:"Lead clasificado: caliente 🔥", sub:"Volumen alto declarado · alerta enviada a ventas ahora"};
+  }
+  return {title:"Lead clasificado: tibio", sub:"Alerta enviada a ventas · seguimiento estándar"};
+}
+
+// Lo único que ve el visitante es una confirmación simple de que su consulta
+// se envió — igual que en un sitio real, nunca se le habla de CRM, paneles ni scoring.
+function clientConfirmToast(){
+  showToast("✅", "¡Consulta enviada!", "Te contactamos en menos de 24hs");
+}
+
+// Todo lo que pasa "puertas adentro" (CRM, autoresponder, panel, clasificación)
+// queda registrado en el feed del panel interno — nunca como toast sobre el sitio público.
+function runAutomation(volumenStr){
+  clientConfirmToast();
+
+  const lines = [];
+  if(level>=1){
+    lines.push("⇄ Cargado en tu CRM — sin planillas ni carga manual");
+    lines.push("🤖 Respuesta automática enviada al cliente");
+  }
+  if(level>=3){
+    const c = classifyVolumen(volumenStr);
+    lines.push("🎯 " + c.title + " · " + c.sub);
+  }
+  lines.forEach((l,i)=> setTimeout(()=> pushFeedLine(l), i*550 + 350));
+}
+
+/* ============ COTIZADOR (360) ============ */
+// El precio es lo único que ve el visitante. La clasificación (hot/warm) se calcula
+// igual, pero solo se usa para alimentar la vista de panel interno — nunca se muestra acá.
+function calcQuote(){
+  const tipo = +document.getElementById("qTipo").value || 0;
+  const material = +document.getElementById("qMaterial").value || 1;
+  const cantidad = +document.getElementById("qCantidad").value || 1;
+  const urgencia = +document.getElementById("qUrgencia").value || 1;
+  const total = Math.max(1, Math.round(tipo * material * cantidad * urgencia / 10) * 10);
+  document.getElementById("qPrice").textContent = "USD " + total.toLocaleString("es-AR");
+  lastQuoteHot = cantidad>=80 || urgencia>1;
+}
+["qTipo","qMaterial","qCantidad","qUrgencia"].forEach(id=>{
+  document.getElementById(id).addEventListener("input", calcQuote);
+});
+document.getElementById("btnQuoteSend").addEventListener("click", ()=>{
+  clientConfirmToast();
+  addRecentQuote(document.getElementById("qPrice").textContent, lastQuoteHot);
+  setTimeout(()=> pushFeedLine("🎯 Cotización clasificada · " + (lastQuoteHot ? "caliente 🔥" : "tibio")), 500);
+  registrarConsultaEnPanel(inCiudad.value.trim() || null);
+});
+
+/* ============ COTIZACIONES RECIENTES (panel interno, solo 360) ============ */
+function addRecentQuote(priceTxt, hot){
+  const time = new Date().toLocaleTimeString("es-AR", {hour:"2-digit", minute:"2-digit"});
+  recentQuotes.unshift({price:priceTxt, hot, time});
+  recentQuotes = recentQuotes.slice(0, 5);
+  renderQuotesList();
+}
+function renderQuotesList(){
+  const el = document.getElementById("quotesList");
+  if(!el) return;
+  if(recentQuotes.length === 0){
+    el.innerHTML = `<p class="lead" style="margin-top:0">Todavía no se generaron cotizaciones desde el sitio.</p>`;
+    return;
+  }
+  el.innerHTML = recentQuotes.map(q => `
+    <div class="card" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;padding:16px 20px">
+      <div><b>${q.price}</b><div style="font-size:.78rem;color:var(--c-text);margin-top:2px">Solicitada a las ${q.time}</div></div>
+      <span class="score ${q.hot ? "hot" : "warm"}">${q.hot ? "Lead caliente · prioridad alta" : "Lead tibio · seguimiento estándar"}</span>
+    </div>`).join("");
+}
+
+/* ============ FORMULARIO SEGMENTADO (3 pasos reales) ============ */
+document.getElementById("segOptsRow").addEventListener("click", e=>{
+  const b = e.target.closest("button"); if(!b) return;
+  document.querySelectorAll("#segOptsRow button").forEach(x=>x.classList.remove("sel"));
+  b.classList.add("sel");
+});
+
+function showSegStep(n){
+  segStep = n;
+  [1,2,3].forEach(i=>{
+    document.getElementById("segstep-"+i).style.display = (i===n) ? "block" : "none";
+  });
+  document.getElementById("stepN").textContent = n;
+  document.querySelectorAll(".steps i").forEach((el,i)=> el.classList.toggle("on", i < n));
+  if(n===3){ buildResumen(); }
+}
+
+function buildResumen(){
+  const sel = document.querySelector("#segOptsRow button.sel");
+  const tipo = sel ? sel.textContent : "-";
+  const volumen = document.getElementById("segVolumen").value || "-";
+  const nombre = document.getElementById("segNombre").value || "-";
+  const contacto = document.getElementById("segContacto").value || "-";
+  const ciudad = document.getElementById("segCiudad").value || "-";
+  document.getElementById("segResumen").innerHTML =
+    `<b>${nombre}</b><br>${contacto} · ${ciudad}<br>${tipo} · Volumen: ${volumen}`;
+}
+
+document.querySelectorAll("#formSeg [data-next]").forEach(b=>{
+  b.addEventListener("click", ()=> showSegStep(+b.dataset.next));
+});
+document.querySelectorAll("#formSeg [data-back]").forEach(b=>{
+  b.addEventListener("click", ()=> showSegStep(+b.dataset.back));
+});
+document.getElementById("btnEnviarSeg").addEventListener("click", ()=>{
+  const btn = document.getElementById("btnEnviarSeg");
+  const volumenIngresado = document.getElementById("segVolumen").value;
+  const ciudadIngresada = document.getElementById("segCiudad").value.trim();
+  btn.textContent = "¡Enviado! ✓";
+  btn.disabled = true;
+  runAutomation(volumenIngresado);
+  registrarConsultaEnPanel(ciudadIngresada || null);
+  setTimeout(()=>{
+    btn.textContent = "Enviar consulta"; btn.disabled = false;
+    document.getElementById("segNombre").value = "";
+    document.getElementById("segContacto").value = "";
+    document.getElementById("segCiudad").value = "";
+    document.getElementById("segVolumen").value = "";
+    showSegStep(1);
+  }, 3800);
+});
+
+/* ============ FORMULARIO SIMPLE (Base/Pro) ============ */
+document.getElementById("btnEnviarSimple").addEventListener("click", ()=>{
+  const btn = document.getElementById("btnEnviarSimple");
+  btn.textContent = "¡Enviado! ✓";
+  btn.disabled = true;
+  runAutomation();
+  registrarConsultaEnPanel(inCiudad.value.trim() || null);
+  setTimeout(()=>{ btn.textContent = "Enviar consulta"; btn.disabled = false; }, 3800);
+});
+
+function render(){
+  document.querySelectorAll("#planbar button").forEach(b=>b.classList.toggle("on", +b.dataset.p===level));
+  document.getElementById("pName").textContent = PLANS[level].name;
+  document.getElementById("pPrice").textContent = PLANS[level].price;
+  document.getElementById("ribbonTag").textContent = PLANS[level].name;
+  document.getElementById("ribbonTag").style.background = PLANS[level].color;
+  document.getElementById("ribbonResult").textContent = PLANS[level].result;
+
+  // nav: bloquear (grisado + candado), no ocultar, lo que todavía no está disponible en este plan
+  document.querySelectorAll("#siteNav a[data-min]").forEach(a=>{
+    const min = +a.dataset.min;
+    const locked = level < min;
+    a.classList.toggle("locked", locked);
+    a.innerHTML = a.dataset.label + (locked ? ` <span class="lk">🔒</span>` : "");
+  });
+
+  // el resto de bloques con data-min (secciones de contenido, CTA de hero) se revelan progresivamente
+  document.querySelectorAll("[data-min]").forEach(el=>{
+    if(el.matches("#siteNav a")) return;
+    const min = +el.dataset.min;
+    el.style.display = (level>=min) ? "" : "none";
+  });
+
+  // si la página activa quedó bloqueada al bajar de plan, volver a inicio
+  const activeLink = document.querySelector(`#siteNav a[data-pg="${currentPage}"]`);
+  const activeMin = activeLink ? +(activeLink.dataset.min || 0) : 0;
+  if(level < activeMin){ goPage("inicio"); }
+
+  // formulario simple vs segmentado
+  const seg = level>=2;
+  document.getElementById("formSimple").style.display = seg ? "none" : "block";
+  document.getElementById("formSeg").style.display = seg ? "block" : "none";
+  if(seg){ showSegStep(1); }
+
+  renderPanel();
+}
+
+// Panel interno: nace en Plan Industrial (ver DoD Industrial). Con Base/Pro
+// muestra el estado "todavía no activo" en vez del dashboard.
+function renderPanel(){
+  const locked = level < 2;
+  document.getElementById("panelLocked").style.display = locked ? "block" : "none";
+  document.getElementById("panelDash").style.display = locked ? "none" : "block";
+  const el360 = document.getElementById("panel360");
+  if(el360) el360.style.display = (level>=3) ? "block" : "none";
+}
+
+function updateUrlBar(){
+  const base = slug(inNombre.value.trim() || "MetalPro");
+  if(currentView === "panel"){
+    document.getElementById("urlbar").textContent = "panel." + base + ".com";
+    return;
+  }
+  document.getElementById("urlbar").textContent = currentPage==="inicio" ? "www." + base + ".com" : "www." + base + ".com/" + currentPage;
+}
+
+// Alterna entre lo que ve el visitante (sitio público) y lo que ve el dueño
+// logueado (panel interno) — nunca conviven en la misma pantalla.
+function setView(v){
+  currentView = v;
+  document.querySelectorAll("#viewtoggle button").forEach(b=> b.classList.toggle("on", b.dataset.v===v));
+  document.getElementById("viewSite").classList.toggle("on", v==="site");
+  document.getElementById("viewPanel").classList.toggle("on", v==="panel");
+  document.getElementById("waFloat").style.display = v==="site" ? "flex" : "none";
+  document.querySelector(".ribbon").style.display = v==="site" ? "flex" : "none";
+  document.querySelector(".ribbon2").style.display = v==="site" ? "block" : "none";
+  updateUrlBar();
+  window.scrollTo({top: document.querySelector(".browser-wrap").offsetTop - 8, behavior:"smooth"});
+}
+
+document.getElementById("viewtoggle").addEventListener("click", e=>{
+  const b = e.target.closest("button"); if(!b) return;
+  setView(b.dataset.v);
+});
+
+function goPage(pg){
+  currentPage = pg;
+  document.querySelectorAll(".page").forEach(p=>p.classList.remove("on"));
+  document.getElementById("pg-"+pg).classList.add("on");
+  document.querySelectorAll("#siteNav a").forEach(a=>a.classList.toggle("on", a.dataset.pg===pg));
+  updateUrlBar();
+  window.scrollTo({top: document.querySelector(".browser-wrap").offsetTop - 8, behavior:"smooth"});
+}
+
+document.getElementById("planbar").addEventListener("click", e=>{
+  const b = e.target.closest("button"); if(!b) return;
+  level = +b.dataset.p;
+  render();
+});
+
+document.getElementById("devtoggle").addEventListener("click", e=>{
+  const b = e.target.closest("button"); if(!b) return;
+  currentDevice = b.dataset.v;
+  document.querySelectorAll("#devtoggle button").forEach(x=>x.classList.toggle("on", x===b));
+  document.querySelector(".browser-wrap").classList.toggle("mobile", currentDevice==="mobile");
+});
+
+document.querySelectorAll("[data-pg],[data-pg-link]").forEach(el=>{
+  el.addEventListener("click", e=>{
+    e.preventDefault();
+    if(el.classList.contains("locked")){
+      const min = +el.dataset.min;
+      showToast("🔒", "Disponible desde " + PLANS[min].name, "Cambiá el plan arriba para verlo");
+      return;
+    }
+    goPage(el.dataset.pg || el.dataset.pgLink);
+  });
+});
+
+// ============ PERSONALIZACIÓN EN VIVO ============
+const inNombre = document.getElementById("inNombre");
+const inRubro = document.getElementById("inRubro");
+const inCiudad = document.getElementById("inCiudad");
+const inTelefono = document.getElementById("inTelefono");
+const inEmail = document.getElementById("inEmail");
+
+function slug(str){
+  return str.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"")
+    .replace(/[^a-z0-9]+/g,"").trim() || "tuempresa";
+}
+
+function splitLogo(nombre){
+  const parts = nombre.trim().split(/\s+/);
+  if(parts.length===1){
+    const w = parts[0];
+    const cut = Math.max(1, Math.ceil(w.length*0.55));
+    return [w.slice(0,cut).toUpperCase(), w.slice(cut).toUpperCase() || ""];
+  }
+  return [parts[0].toUpperCase(), parts.slice(1).join(" ").toUpperCase()];
+}
+
+function applyRubro(){
+  const key = inRubro.value || "metalurgica";
+  if(key === lastRubroKey) return; // evita resetear selecciones del form si no cambió el rubro
+  lastRubroKey = key;
+  const r = RUBROS[key] || RUBROS.metalurgica;
+
+  document.getElementById("heroBlock").style.backgroundImage =
+    `linear-gradient(rgba(10,15,30,.82),rgba(10,15,30,.68)), url('${r.heroImg}')`;
+  document.getElementById("heroH1").textContent = r.heroH1;
+  document.getElementById("heroP").textContent = r.heroP;
+  document.getElementById("badgeRubro").textContent = r.badge1;
+
+  document.getElementById("homeCardsRow").innerHTML = r.homeCards.map(c=>
+    `<div class="card"><div class="ic">${c.ic}</div><h3>${c.t}</h3><p>${c.d}</p></div>`).join("");
+
+  document.getElementById("reviewsRow").innerHTML = r.reviews.map(rv=>
+    `<div class="rev"><div class="stars">${"★".repeat(rv.s)}${"☆".repeat(5-rv.s)}</div><p>${rv.t}</p><div class="who">${rv.w}</div></div>`).join("");
+
+  document.getElementById("serviciosH2").textContent = r.serviciosH2;
+  document.getElementById("serviciosCardsRow").innerHTML = r.serviciosCards.map(c=>
+    `<div class="card"><div class="ic">${c.ic}</div><h3>${c.t}</h3><p>${c.d}</p></div>`).join("");
+
+  document.getElementById("industriasH2").textContent = r.industriasH2;
+  document.getElementById("industriasCardsRow").innerHTML = r.industriasCards.map(c=>
+    `<div class="card"><h3>${c.t}</h3><p>${c.d}</p></div>`).join("");
+
+  document.getElementById("casosCardsRow").innerHTML = r.casosCards.map(c=>
+    `<div class="card"><h3>${c.t}</h3><p>${c.d}</p></div>`).join("");
+
+  document.getElementById("segOptsLabel").textContent = r.segOptsLabel;
+  document.getElementById("segOptsRow").innerHTML = r.segOpts.map((t,i)=>
+    `<button class="${i===0?"sel":""}" data-v="${i}">${t}</button>`).join("");
+
+  document.getElementById("qTipoLabel").textContent = r.qTipoLabel;
+  document.getElementById("qTipo").innerHTML = r.qTipo.map(o=>`<option value="${o.v}">${o.l}</option>`).join("");
+  document.getElementById("qMaterialLabel").textContent = r.qMaterialLabel;
+  document.getElementById("qMaterial").innerHTML = r.qMaterial.map(o=>`<option value="${o.v}">${o.l}</option>`).join("");
+  calcQuote();
+
+  if(!inNombre.dataset.touched){
+    inNombre.value = r.defaultName;
+  }
+}
+
+inNombre.addEventListener("input", ()=>{ inNombre.dataset.touched = "1"; });
+
+function applyPersonalizacion(){
+  const nombre = inNombre.value.trim() || "MetalPro";
+  const rubroLabel = inRubro.options[inRubro.selectedIndex].textContent;
+  const ciudad = inCiudad.value.trim() || "Rosario, Santa Fe, Argentina";
+  const telefono = inTelefono.value.trim() || "+54 9 342 000-0000";
+  const email = inEmail.value.trim() || "contacto@tuempresa.com";
+
+  const [l1, l2] = splitLogo(nombre);
+  document.getElementById("siteLogo").innerHTML = l1 + (l2 ? `<span>${l2}</span>` : "");
+  document.getElementById("ribbonClient").textContent = nombre;
+  document.getElementById("topContact").textContent = `${telefono} · ${email}`;
+  document.getElementById("footName").textContent = `© 2026 ${nombre} ${rubroLabel} — Todos los derechos reservados`;
+  document.getElementById("footCiudad").textContent = ciudad;
+
+  const base = slug(nombre);
+  document.getElementById("panelBrand").textContent = nombre;
+  document.getElementById("panelUser").textContent = `dueño@${base}.com`;
+  updateUrlBar();
+
+  const waDigits = telefono.replace(/\D/g, "");
+  document.getElementById("waFloat").href = waDigits ? `https://wa.me/${waDigits}` : "#";
+
+  applyRubro();
+}
+
+[inNombre, inRubro, inCiudad, inTelefono, inEmail].forEach(inp=>{
+  inp.addEventListener("input", applyPersonalizacion);
+});
+
+document.getElementById("btnEdit").addEventListener("click", ()=>{
+  document.getElementById("editPanel").classList.toggle("on");
+  document.getElementById("btnEdit").classList.toggle("on");
+});
+
+render();
+applyPersonalizacion();
+renderMetrics();
+renderQuotesList();
+setView("site");
+</script>
+</body>
+</html>
