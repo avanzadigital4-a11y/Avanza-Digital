@@ -85,25 +85,25 @@
                             <p>Ya tenemos tus datos.</p>
                         </div>
                     </div>
-                    <div class="next-step pending">
-                        <div class="dot">2</div>
+                    <div class="next-step pending" id="step2">
+                        <div class="dot" id="step2Dot">2</div>
                         <div>
-                            <h4>Coordinamos el pago</h4>
-                            <p>Te contactamos por WhatsApp o email para definirlo.</p>
+                            <h4 id="step2Title">Coordinamos el pago</h4>
+                            <p id="step2Desc">Te contactamos por WhatsApp o email para definirlo.</p>
                         </div>
                     </div>
-                    <div class="next-step pending">
+                    <div class="next-step pending" id="step3">
                         <div class="dot">3</div>
                         <div>
                             <h4>Activamos el servicio</h4>
-                            <p>En cuanto acreditamos el pago (24–48hs hábiles).</p>
+                            <p id="step3Desc">En cuanto acreditamos el pago (24–48hs hábiles).</p>
                         </div>
                     </div>
                 </div>
 
                 <div class="cta-row">
                     <a id="btnWhatsapp" href="https://wa.me/5493424392759" target="_blank" class="btn-whatsapp">
-                        <i class="fa-brands fa-whatsapp"></i> Consultar por WhatsApp
+                        <i class="fa-brands fa-whatsapp"></i> <span id="btnWhatsappTexto">Consultar por WhatsApp</span>
                     </a>
                     <a href="index.html" class="btn-primary" style="display: inline-flex; align-items: center; text-decoration: none;">
                         Volver al inicio
@@ -133,6 +133,8 @@
         const orden = params.get('orden') || '—';
         const plan = params.get('plan') || '';
         const monto = params.get('monto') || '';
+        const metodo = params.get('metodo') || '';
+        const pagado = params.get('pagado') === '1';
 
         document.getElementById('ordenDisplay').innerText = orden;
 
@@ -142,7 +144,31 @@
             document.getElementById('planLine').innerText = linea;
         }
 
-        const msg = encodeURIComponent(`Hola! Acabo de enviar la solicitud de contratación (orden ${orden}, ${plan || 'plan a definir'}) y quería coordinar el pago.`);
+        const metodoLabel = metodo === 'usdt' ? 'USDT' : (metodo === 'payoneer' ? 'Payoneer' : '');
+
+        let msg;
+        if (pagado) {
+            // Ya reportó la transferencia (USDT/Payoneer) desde el paso de pago:
+            // el paso 2 pasa a "hecho" y el copy/CTA reflejan que ya avisamos,
+            // en vez de repetir el mensaje genérico de "coordinar el pago".
+            document.getElementById('step2').classList.remove('pending');
+            document.getElementById('step2').classList.add('done');
+            document.getElementById('step2Dot').innerHTML = '<i class="fa-solid fa-check"></i>';
+            document.getElementById('step2Title').innerText = 'Avisamos tu transferencia';
+            document.getElementById('step2Desc').innerText = metodoLabel
+                ? `Le avisamos a Avanza por WhatsApp que hiciste la transferencia por ${metodoLabel}.`
+                : 'Le avisamos a Avanza por WhatsApp que hiciste la transferencia.';
+            document.getElementById('step3Desc').innerText = 'En cuanto confirmemos tu comprobante (24–48hs hábiles).';
+            document.getElementById('btnWhatsappTexto').innerText = 'Escribir de nuevo por WhatsApp';
+
+            msg = encodeURIComponent(
+                `Hola! Con respecto a la orden ${orden} (${plan || 'plan a definir'}), ya hice la transferencia`
+                + (metodoLabel ? ` por ${metodoLabel}` : '') + ` y quería confirmar que la recibieron.`
+            );
+        } else {
+            msg = encodeURIComponent(`Hola! Acabo de enviar la solicitud de contratación (orden ${orden}, ${plan || 'plan a definir'}) y quería coordinar el pago.`);
+        }
+
         document.getElementById('btnWhatsapp').href = `https://wa.me/5493424392759?text=${msg}`;
     </script>
 </body>

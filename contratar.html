@@ -511,9 +511,16 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
             telefono: document.getElementById('fTelefono').value.trim(),
         };
 
+        const datos = new FormData(form);
+        const qs = new URLSearchParams(datos).toString();
+
         if (planBackend) {
-            // Plan con pago directo disponible: no hace falta pasar por el mail
-            // de "coordinar por WhatsApp" — vamos directo al selector de pago.
+            // Plan con pago directo disponible: igual avisamos por mail al equipo
+            // (mismo aviso que se manda al registrarse un aliado), pero sin
+            // bloquear al cliente — va directo al selector de pago aunque el
+            // mail tarde o falle.
+            fetch(`${ENDPOINT_URL}?${qs}`, { method: 'POST' })
+                .catch(function (err) { console.warn('No se pudo enviar el aviso por mail', err); });
             irAPasoPago();
             return;
         }
@@ -523,9 +530,6 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
         btnArrow.style.display = 'none';
         btnText.innerText = 'Enviando...';
         formError.classList.remove('show');
-
-        const datos = new FormData(form);
-        const qs = new URLSearchParams(datos).toString();
 
         fetch(`${ENDPOINT_URL}?${qs}`, { method: 'POST' })
             .then(function (res) {
@@ -641,9 +645,20 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
                     </div>`;
             } else {
                 const banco = config.banco || {};
+                const tieneBanco = !!(banco.cuenta || banco.aba || banco.swift || banco.beneficiario);
+                const bancoHtml = tieneBanco ? `
+                        <p class="pago-nota" style="margin:18px 0 8px;text-transform:uppercase;font-weight:700;letter-spacing:.5px;color:#ffa31a;">Opción 2 · Transferencia bancaria en USD (desde cualquier banco)</p>
+                        ${campoPago('valorBeneficiario', 'Beneficiario', banco.beneficiario, true)}
+                        ${campoPago('valorBanco', 'Banco', banco.banco, false)}
+                        ${campoPago('valorDireccionBanco', 'Dirección del banco', banco.direccion, false)}
+                        ${campoPago('valorCuenta', 'Número de cuenta', banco.cuenta, true)}
+                        ${campoPago('valorTipoCuenta', 'Tipo de cuenta', banco.tipo_cuenta, false)}
+                        ${campoPago('valorAba', 'ABA / Routing number', banco.aba, true)}
+                        ${campoPago('valorSwift', 'Código SWIFT / BIC', banco.swift, true)}` : '';
                 document.getElementById('panelPago').innerHTML = `
                     <div class="pago-panel">
                         <p class="pago-intro">Transferí <strong>USD ${Number(precio).toLocaleString('es-AR')}</strong> por Payoneer a:</p>
+                        <p class="pago-nota" style="margin-bottom:4px;text-transform:uppercase;font-weight:700;letter-spacing:.5px;color:#a1a1aa;">Opción 1 · Email de Payoneer</p>
                         <div class="pago-campo">
                             <label>Email Payoneer</label>
                             <div class="pago-valor-row">
@@ -651,7 +666,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
                                 <button type="button" class="pago-copy-btn" onclick="copiarValor('valorPayoneer', this)"><i class="fa-solid fa-copy"></i></button>
                             </div>
                         </div>
-                        ${banco.beneficiario ? `<p class="pago-nota">Beneficiario: ${banco.beneficiario}${banco.banco ? ' · ' + banco.banco : ''}</p>` : ''}
+                        ${bancoHtml}
                         <button type="button" class="btn-whatsapp-confirm" onclick="confirmarPagoManual('payoneer')">
                             <i class="fa-brands fa-whatsapp"></i> Ya transferí, avisar por WhatsApp
                         </button>
@@ -672,6 +687,20 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
             btnEl.innerHTML = '<i class="fa-solid fa-check"></i>';
             setTimeout(function () { btnEl.innerHTML = original; }, 1200);
         }).catch(function () { el.select(); document.execCommand('copy'); });
+    }
+
+    function campoPago(inputId, label, value, copiable) {
+        if (!value) return '';
+        const boton = copiable
+            ? `<button type="button" class="pago-copy-btn" onclick="copiarValor('${inputId}', this)"><i class="fa-solid fa-copy"></i></button>`
+            : '';
+        return `<div class="pago-campo">
+            <label>${label}</label>
+            <div class="pago-valor-row">
+                <input type="text" id="${inputId}" value="${value}" readonly>
+                ${boton}
+            </div>
+        </div>`;
     }
 
     async function pagarMercadoPago() {
@@ -714,7 +743,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
         );
         window.open(`https://wa.me/5493424392759?text=${texto}`, '_blank');
 
-        const destino = `gracias-contratacion.html?orden=${encodeURIComponent(orderCode)}&plan=${encodeURIComponent(planNombre)}&monto=${encodeURIComponent(precio)}`;
+        const destino = `gracias-contratacion.html?orden=${encodeURIComponent(orderCode)}&plan=${encodeURIComponent(planNombre)}&monto=${encodeURIComponent(precio)}&metodo=${encodeURIComponent(metodo)}&pagado=1`;
         window.location.href = destino;
     }
 </script>

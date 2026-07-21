@@ -1,4 +1,6 @@
 # ── Backend proxy → Render ────────────────────────────────────────────────────
+/checkout/*     https://avanza-digital.onrender.com/checkout/:splat     200
+/config/*       https://avanza-digital.onrender.com/config/:splat       200
 /contratos/*    https://avanza-digital.onrender.com/contratos/:splat    200
 /ventas/*       https://avanza-digital.onrender.com/ventas/:splat       200
 /aliados/*      https://avanza-digital.onrender.com/aliados/:splat      200

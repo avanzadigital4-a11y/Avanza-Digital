@@ -572,6 +572,36 @@ def reportar_pago_manual(link_id: int, db: Session = Depends(get_db)):
         )
     except Exception as _e:
         print(f"[PAGO MANUAL] No pude notificar al aliado: {_e}")
+
+    # Aviso al admin por mail — antes esto SOLO notificaba al aliado adentro
+    # del portal; si la venta era directa (sin aliado, ref_code=directo) o si
+    # nadie está mirando el portal en ese momento, el reporte de pago pasaba
+    # desapercibido. external_ref guarda "ref_code|plan|nombre|email|whatsapp"
+    # (mismo formato que /checkout/crear), de ahí sacamos los datos del cliente.
+    try:
+        partes = (lp.external_ref or "").split("|")
+        ref_code_g, plan_g, nombre_g, email_g, wa_g = (partes + [""] * 5)[:5]
+        wa_limpio = "".join(c for c in wa_g if c.isdigit())
+        asunto = f"💸 Pago reportado — {lp.processor.upper()} · {lp.plan} (link #{lp.id})"
+        cuerpo = f"""
+        <div style="font-family:Inter,sans-serif;background:#050505;color:#fff;padding:28px;max-width:640px;margin:auto;border-radius:12px;">
+          <p style="font-size:.72rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#22c55e;margin:0 0 6px;">Pago reportado · {lp.processor.upper()}</p>
+          <h1 style="font-size:1.4rem;font-weight:800;margin:0 0 4px;">{nombre_g or 'Cliente sin nombre'}</h1>
+          <p style="color:#a1a1aa;font-size:.88rem;margin:0 0 18px;">Link de pago #{lp.id}{' · referido ' + ref_code_g if ref_code_g and ref_code_g != 'directo' else ' · venta directa'}</p>
+          <table style="width:100%;border-collapse:collapse;background:#111;border-radius:8px;overflow:hidden;">
+            <tr><td style="padding:6px 10px;color:#a1a1aa;font-size:.82rem;border-bottom:1px solid #222;">Plan</td><td style="padding:6px 10px;color:#fff;font-size:.88rem;border-bottom:1px solid #222;">{lp.plan}</td></tr>
+            <tr><td style="padding:6px 10px;color:#a1a1aa;font-size:.82rem;border-bottom:1px solid #222;">Monto</td><td style="padding:6px 10px;color:#fff;font-size:.88rem;border-bottom:1px solid #222;">USD {lp.precio_usd}</td></tr>
+            <tr><td style="padding:6px 10px;color:#a1a1aa;font-size:.82rem;border-bottom:1px solid #222;">Método</td><td style="padding:6px 10px;color:#fff;font-size:.88rem;border-bottom:1px solid #222;">{lp.processor.upper()}</td></tr>
+            <tr><td style="padding:6px 10px;color:#a1a1aa;font-size:.82rem;border-bottom:1px solid #222;">Email cliente</td><td style="padding:6px 10px;color:#fff;font-size:.88rem;border-bottom:1px solid #222;">{email_g or '—'}</td></tr>
+            <tr><td style="padding:6px 10px;color:#a1a1aa;font-size:.82rem;">WhatsApp</td><td style="padding:6px 10px;color:#fff;font-size:.88rem;">{wa_g or '—'}</td></tr>
+          </table>
+          <p style="margin-top:18px;"><a href="https://wa.me/{wa_limpio}" style="color:#22c55e;">Escribirle por WhatsApp →</a></p>
+        </div>
+        """
+        enviar_email(ADMIN_EMAIL, asunto, cuerpo)
+    except Exception as _e:
+        print(f"[PAGO MANUAL] No pude enviar el aviso por mail: {_e}")
+
     return {"estado": "reportado", "mensaje": "Reportado. Avanza verificará la transferencia."}
 
 
