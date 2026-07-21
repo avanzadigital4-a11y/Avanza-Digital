@@ -186,6 +186,20 @@ function _clickNovedad(tab) {
   if (!tab) return;
   const panel = document.getElementById('novedades-panel');
   if (panel) panel.style.display = 'none';
+
+  // "chat" y "comunidad" viven en la misma pestaña top-level (Comunidad),
+  // como dos sub-vistas internas. Hay que aterrizar en la sub-vista correcta.
+  if (tab === 'chat' || tab === 'comunidad') {
+    const btnComunidad = document.querySelector('.tab-btn[data-tab="comunidad"]');
+    cambiarTab('comunidad', btnComunidad || null);
+    const subDestino = tab === 'chat' ? 'chat' : 'foro';
+    setTimeout(() => {
+      const subBtn = document.querySelector(`#comunidad-subtabs [data-sub="${subDestino}"]`);
+      if (typeof comunidadCambiarSubtab === 'function') comunidadCambiarSubtab(subDestino, subBtn || null);
+    }, 0);
+    return;
+  }
+
   const btn = document.querySelector(`.tab-btn[data-tab="${tab}"]`);
   cambiarTab(tab, btn || null);
 }
@@ -372,9 +386,14 @@ if ('serviceWorker' in navigator) {
 // Reporta al backend si esta carga está corriendo en modo standalone (PWA
 // instalada) o no. Best-effort: si falla (sin sesión, sin red, etc.) no
 // rompe nada, es solo tracking para medir adopción de la instalación.
+// OJO: tiene que ir con apiFetch (no fetch a secas) — el endpoint exige
+// Authorization: Bearer <token> vía verify_ownership_dep, y un fetch()
+// sin ese header vuelve 401 sin avisar (fetch no rechaza la promesa por
+// status code, así que el .catch() tampoco lo agarra). Con fetch() a
+// secas esto nunca había guardado un solo pwa_instalada=true.
 window.addEventListener('load', () => {
   if (typeof aliado !== 'undefined' && aliado && aliado.codigo) {
-    fetch(`/aliados/${aliado.codigo}/pwa-status?standalone=${_esStandalone()}`, { method: 'POST' })
+    apiFetch(`/aliados/${aliado.codigo}/pwa-status?standalone=${_esStandalone()}`, { method: 'POST' })
       .catch(() => {});
   }
 });

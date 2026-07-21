@@ -1,6 +1,20 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
+    <!-- Consent Mode v2 (default denied) — debe ir ANTES de GTM -->
+    <script>
+    window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}
+    gtag('consent','default',{ad_storage:'denied',analytics_storage:'denied',ad_user_data:'denied',ad_personalization:'denied',functionality_storage:'granted',security_storage:'granted',wait_for_update:500});
+    try{var _c=localStorage.getItem('avz_consent');if(_c==='granted'){gtag('consent','update',{ad_storage:'granted',analytics_storage:'granted',ad_user_data:'granted',ad_personalization:'granted'});}}catch(e){}
+    </script>
+    <script src="/consent.js" defer></script>
+    <script src="/events.js" defer></script>
+    
+    <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+})(window,document,'script','dataLayer','GTM-P499M76P');</script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Auditoría Digital Gratuita para tu Empresa o Ecommerce | Avanza Digital</title>
@@ -234,6 +248,7 @@
     </script>
 </head>
 <body>
+<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-P499M76P" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 
 <!-- Barra de aliado (se muestra solo si hay ?ref= en la URL) -->
 <div id="aliado-bar" style="display:none; background:rgba(59,130,246,0.08); border-bottom:1px solid rgba(59,130,246,0.2); padding:8px 20px; text-align:center; font-size:0.82rem; color:#94a3b8; font-family:'Inter',sans-serif;">
@@ -428,6 +443,7 @@ function startAudit(){
     if(!raw){document.getElementById('domain-input').focus();return;}
     let domain = raw.replace(/^https?:\/\//,'').replace(/^www\./,'').replace(/\/.*$/,'').trim();
     if(!domain||domain.length<3){alert('Ingresá un dominio válido.');return;}
+    try{ window.dataLayer = window.dataLayer || []; window.dataLayer.push({ event: 'tool_use', tool: 'auditoria_digital', page_path: location.pathname }); }catch(e){}
     currentDomain = domain;
     document.getElementById('audit-btn').disabled = true;
     document.querySelector('.hero').style.display = 'none';

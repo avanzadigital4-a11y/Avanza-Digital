@@ -473,6 +473,34 @@ if not ENABLE_SCHEDULER:
     scheduler.add_job = lambda *args, **kwargs: None  # type: ignore[assignment]
     scheduler.start   = lambda *args, **kwargs: None  # type: ignore[assignment]
 
+# ─── SCHEDULER: MONITOREO DE MEMORIA (diagnóstico OOM del 19/07) ────────────
+# Job de solo-lectura: no toca la BD, no abre conexiones, no interactúa con
+# ninguna ruta que usen los aliados. Objetivo: ver en Logs (gratis) cómo
+# evoluciona la memoria del proceso, ya que el gráfico de Memory en Metrics
+# es solo para planes pagos. Sacar este job una vez resuelto el diagnóstico.
+def _memoria_actual_mb():
+    """RSS actual del proceso en MB, leyendo /proc (Linux — Render corre en
+    contenedores Linux). Devuelve None si no se puede leer (p.ej. local en
+    Windows/Mac durante desarrollo)."""
+    try:
+        with open("/proc/self/status") as f:
+            for linea in f:
+                if linea.startswith("VmRSS:"):
+                    return int(linea.split()[1]) / 1024
+    except Exception:
+        return None
+    return None
+
+def job_log_memoria():
+    import resource
+    limite_mb = 512
+    actual_mb = _memoria_actual_mb()
+    pico_mb   = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss / 1024  # ru_maxrss: KB en Linux
+    actual_txt = f"{actual_mb:.1f} MB ({actual_mb / limite_mb * 100:.0f}%)" if actual_mb is not None else "n/d"
+    print(f"[MEMORIA] PID {os.getpid()} — actual: {actual_txt} | pico histórico: {pico_mb:.1f} MB / {limite_mb} MB")
+
+scheduler.add_job(job_log_memoria, "interval", minutes=10)
+
 scheduler.add_job(job_lock.con_lock(job_notificaciones_24h, "notificaciones_24h", 3600), "interval", hours=1)
 
 
@@ -3405,6 +3433,7 @@ import capturas
 import checkout
 import comisiones
 import comunidad
+import chat
 import cuenta
 import ia_comercial
 import portal_publico
@@ -3417,11 +3446,13 @@ import equipos             # Feature Mi Equipo (setter+closer)
 import referidos_aliados   # Hueco 2: loop de reclutamiento aliado→aliado
 import onboarding          # Onboarding de clientes post-venta (reemplazo de Tally)
 import eventos_uso         # Tracking de uso del portal (tabs/botones) → /admin/eventos-uso
+import contratacion        # Solicitudes de "Contratar" del sitio público → mail de aviso
 
 app.include_router(academia.router)
 app.include_router(bolsa.router)
 app.include_router(capturas.router)
 app.include_router(comunidad.router)
+app.include_router(chat.router)
 app.include_router(mal_contacto.router)
 app.include_router(solicitudes_creditos.router)
 app.include_router(prospectos.router)
@@ -3439,6 +3470,7 @@ app.include_router(referidos_aliados.router)     # /aliados/{codigo}/red
 app.include_router(equipos.router)               # /aliados/{codigo}/equipo
 app.include_router(onboarding.router)             # /onboarding + /admin/onboarding
 app.include_router(eventos_uso.router)            # /eventos/log + /admin/eventos-uso
+app.include_router(contratacion.router)           # /solicitudes/contratar
 
 # ─── MEJORAS CANAL 1 / CANAL 2 ───────────────────────────────────────────────
 import reciclado, delivery, reparto_visibilidad  # noqa: E402

@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>¡Solicitud Recibida! | Avanza Digital</title>
+
+    <meta name="robots" content="noindex, nofollow">
+
+    <link rel="preload" href="fonts/inter-400.woff2" as="font" type="font/woff2" crossorigin>
+    <link rel="preload" href="fonts/inter-600.woff2" as="font" type="font/woff2" crossorigin>
+    <link rel="stylesheet" href="fonts.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" media="print" onload="this.media='all'">
+    <noscript><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"></noscript>
+    <link rel="stylesheet" href="style.min.css">
+
+    <style>
+        .success-icon {
+            font-size: 4rem;
+            color: #4ade80;
+            margin-bottom: 20px;
+            animation: bounceIn 0.8s ease;
+        }
+        @keyframes bounceIn {
+            0% { transform: scale(0); opacity: 0; }
+            60% { transform: scale(1.1); }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        .order-chip {
+            display: inline-flex; align-items: center; gap: 10px;
+            background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.12);
+            border-radius: 30px; padding: 8px 18px; font-family: monospace;
+            font-size: 0.95rem; color: #ddd; margin: 6px 0 26px;
+        }
+        .order-chip span.label { color: #888; font-family: 'Inter', sans-serif; }
+
+        .next-steps { text-align: left; max-width: 420px; margin: 0 auto 30px; }
+        .next-step { display: flex; gap: 14px; margin-bottom: 18px; }
+        .next-step .dot {
+            flex-shrink: 0; width: 26px; height: 26px; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 0.75rem; font-weight: 700; margin-top: 2px;
+        }
+        .next-step.done .dot { background: #4ade80; color: #052e16; }
+        .next-step.pending .dot { background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15); color: #999; }
+        .next-step h4 { font-size: 0.95rem; margin-bottom: 3px; color: white; }
+        .next-step p { font-size: 0.85rem; color: #888; margin: 0; }
+
+        .cta-row { display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; }
+        .btn-whatsapp {
+            display: inline-flex; align-items: center; gap: 10px;
+            background: #25D366; color: #06210f; padding: 12px 26px;
+            border-radius: 8px; font-weight: 700; text-decoration: none; font-size: 0.95rem;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar-floating">
+        <div class="logo">
+            <a href="index.html" style="color:white; text-decoration:none;">
+                <i class="fa-solid fa-layer-group"></i> Avanza
+            </a>
+        </div>
+        <a href="index.html" class="btn-nav">Volver al inicio</a>
+    </nav>
+
+    <section class="hero-section" style="min-height: 80vh; display: flex; align-items: center; justify-content: center; padding-top: 100px;">
+        <div class="container" style="text-align: center;">
+            <div class="bento-box" style="max-width: 600px; margin: 0 auto; border-color: rgba(74, 222, 128, 0.5); padding: 50px;">
+                <i class="fa-solid fa-circle-check success-icon"></i>
+                <h1 style="color: white; font-size: 2.3rem; margin-bottom: 8px;">¡Solicitud recibida!</h1>
+                <p style="color: #a1a1aa; font-size: 1rem; margin-bottom: 4px;" id="planLine">Gracias por elegir Avanza Digital.</p>
+
+                <div class="order-chip">
+                    <span class="label">Orden:</span>
+                    <strong id="ordenDisplay">—</strong>
+                </div>
+
+                <div class="next-steps">
+                    <div class="next-step done">
+                        <div class="dot"><i class="fa-solid fa-check"></i></div>
+                        <div>
+                            <h4>Recibimos tu solicitud</h4>
+                            <p>Ya tenemos tus datos.</p>
+                        </div>
+                    </div>
+                    <div class="next-step pending">
+                        <div class="dot">2</div>
+                        <div>
+                            <h4>Coordinamos el pago</h4>
+                            <p>Te contactamos por WhatsApp o email para definirlo.</p>
+                        </div>
+                    </div>
+                    <div class="next-step pending">
+                        <div class="dot">3</div>
+                        <div>
+                            <h4>Activamos el servicio</h4>
+                            <p>En cuanto acreditamos el pago (24–48hs hábiles).</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="cta-row">
+                    <a id="btnWhatsapp" href="https://wa.me/5493424392759" target="_blank" class="btn-whatsapp">
+                        <i class="fa-brands fa-whatsapp"></i> Consultar por WhatsApp
+                    </a>
+                    <a href="index.html" class="btn-primary" style="display: inline-flex; align-items: center; text-decoration: none;">
+                        Volver al inicio
+                    </a>
+                </div>
+
+                <p style="margin-top: 24px; font-size: 0.85rem; color: #666;">Guardá tu código de orden por si necesitás hacer una consulta.</p>
+            </div>
+        </div>
+    </section>
+
+    <footer>
+        <div class="container footer-content" style="flex-direction: column; text-align: center; gap: 20px;">
+            <div class="socials">
+                <a href="https://www.linkedin.com/in/ivan-galarza-365064205/" aria-label="LinkedIn" target="_blank"><i class="fa-brands fa-linkedin"></i></a>
+                <a href="https://www.instagram.com/avanzadigital4/" aria-label="Instagram" target="_blank"><i class="fa-brands fa-instagram"></i></a>
+                <a href="https://wa.me/5493424392759" aria-label="WhatsApp" target="_blank"><i class="fa-brands fa-whatsapp"></i></a>
+            </div>
+            <div class="footer-seo-text">
+                <p>&copy; 2026 Avanza Digital.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        const params = new URLSearchParams(window.location.search);
+        const orden = params.get('orden') || '—';
+        const plan = params.get('plan') || '';
+        const monto = params.get('monto') || '';
+
+        document.getElementById('ordenDisplay').innerText = orden;
+
+        if (plan) {
+            let linea = `Solicitaste: ${plan}`;
+            if (monto && monto !== '0') linea += ` · USD ${Number(monto).toLocaleString('es-AR')}`;
+            document.getElementById('planLine').innerText = linea;
+        }
+
+        const msg = encodeURIComponent(`Hola! Acabo de enviar la solicitud de contratación (orden ${orden}, ${plan || 'plan a definir'}) y quería coordinar el pago.`);
+        document.getElementById('btnWhatsapp').href = `https://wa.me/5493424392759?text=${msg}`;
+    </script>
+</body>
+</html>

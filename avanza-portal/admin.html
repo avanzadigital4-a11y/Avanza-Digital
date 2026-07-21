@@ -3772,9 +3772,18 @@ async function cargarAdminBolsa() {
 
     tbody.innerHTML = data.leads.map(l => {
       let estadoBadge = '';
-      if(l.estado === 'disponible') estadoBadge = '<span class="badge badge-green"><i class="fa-solid fa-unlock"></i> Disponible</span>';
+      // 'disponible' con asignado_a = ya volvió a la bolsa general tras un
+      // reciclado, pero el aliado que lo trabajó antes conserva prioridad de
+      // reclamo (ver reciclado.py). Distinguirlo evita que se lea como un
+      // lead libre cualquiera cuando en realidad tiene dueño preferente.
+      if(l.estado === 'disponible' && l.asignado_a) estadoBadge = '<span class="badge badge-purple" title="Prioridad de reclamo: ' + l.asignado_a + '"><i class="fa-solid fa-rotate"></i> Disponible · prioridad</span>';
+      else if(l.estado === 'disponible') estadoBadge = '<span class="badge badge-green"><i class="fa-solid fa-unlock"></i> Disponible</span>';
       if(l.estado === 'reclamado') estadoBadge = '<span class="badge badge-amber"><i class="fa-solid fa-lock"></i> Reclamado</span>';
       if(l.estado === 'contactado') estadoBadge = '<span class="badge badge-blue"><i class="fa-solid fa-phone"></i> Contactado</span>';
+      // 'nurture' = en cooldown tras no_contesto/no_interesado, todavía no
+      // vuelve a la bolsa. 'quemado' = retirado tras demasiados reciclados.
+      if(l.estado === 'nurture') estadoBadge = '<span class="badge badge-gray" title="En cooldown — el aliado conserva prioridad mientras dure"><i class="fa-solid fa-moon"></i> En pausa</span>';
+      if(l.estado === 'quemado') estadoBadge = '<span class="badge badge-red" title="Retirado de la bolsa — demasiados intentos sin cerrar"><i class="fa-solid fa-fire"></i> Retirado</span>';
 
       return `<tr style="border-bottom:1px solid var(--border); transition:background .15s;" onmouseover="this.style.background='rgba(255,255,255,0.03)'" onmouseout="this.style.background='transparent'">
         <td style="text-align:center;padding:10px 12px;">
@@ -3789,7 +3798,7 @@ async function cargarAdminBolsa() {
         <td style="font-size:.8rem; color:var(--text-dim);">${l.tiempo_transcurrido || '—'}</td>
         <td>
           <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;">
-            ${l.estado === 'reclamado' ? `<button class="btn-outline" style="border-color:rgba(239,68,68,0.3);color:var(--red);padding:5px 10px;font-size:.75rem;" onclick="confirmarAccion('¿Revocar este lead?', 'Se le quitará al aliado y volverá a la bolsa para que otro lo tome.', 'fa-rotate-left', 'red', () => revocarLead(${l.id}))"><i class="fa-solid fa-rotate-left"></i> Revocar</button>` : ''}
+            ${(l.estado === 'reclamado' || l.estado === 'nurture' || (l.estado === 'disponible' && l.asignado_a)) ? `<button class="btn-outline" style="border-color:rgba(239,68,68,0.3);color:var(--red);padding:5px 10px;font-size:.75rem;" onclick="confirmarAccion('¿Revocar este lead?', 'Se le quitará la prioridad al aliado y quedará libre para que cualquiera lo tome. Usalo si dos aliados reclaman la misma venta.', 'fa-rotate-left', 'red', () => revocarLead(${l.id}))"><i class="fa-solid fa-rotate-left"></i> Revocar</button>` : ''}
             <button class="btn-outline" style="border-color:rgba(239,68,68,0.3);color:var(--red);padding:5px 10px;font-size:.75rem;" onclick="confirmarAccion('¿Eliminar este lead?', 'Se borrará permanentemente de la bolsa y de la lista de cualquier aliado que lo tuviera reclamado.', 'fa-trash', 'red', () => eliminarLead(${l.id}))"><i class="fa-solid fa-trash"></i></button>
           </div>
         </td>

@@ -219,6 +219,11 @@ class EstadoMejoraIn(_Base):
     estado: str  # recibido | evaluacion | planificado | hecho | descartado
 
 
+# ─── CHAT (mensajería) ────────────────────────────────────────────────────────
+class ChatMensajeIn(_Base):
+    cuerpo: str = Field(..., min_length=1, max_length=4000)
+
+
 # ─── CHECKOUT ────────────────────────────────────────────────────────────────
 class CrearCheckoutIn(_Base):
     plan: str

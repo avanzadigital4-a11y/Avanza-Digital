@@ -51,10 +51,20 @@ from models import (
     Aliado, Comision, LinkPago, PlanContinuidadActivo, Prospecto, Referido, Venta,
     COMISION_RECURRENTE_PCT, PLANES, PLANES_CONTINUIDAD,
 )
-from notificaciones import enviar_email, notificar_aliado
+from notificaciones import ADMIN_EMAIL, enviar_email, notificar_aliado
 from rate_limit import limiter
 
 router = APIRouter(tags=["checkout"])
+
+# ─── Venta directa (sin aliado) ──────────────────────────────────────────────
+# "directo" es un ref_code reservado (NO es un código de aliado real en la
+# tabla Aliado) que representa una venta que hace Avanza Digital directamente
+# desde contratar.html, sin ningún revendedor de por medio. No paga comisión.
+# Alcance actual: solo planes de pago único (PLANES). Los planes de
+# continuidad/mensuales (PLANES_CONTINUIDAD) tienen su propio motor de
+# comisiones recurrentes en comisiones.py y quedan FUERA de este alcance por
+# ahora — si se necesita, es un cambio aparte, no lo forzamos acá.
+REF_CODE_DIRECTO = "directo"
 
 
 # ── Puentes diferidos a helpers de main (evitan import circular) ─────────────
@@ -147,8 +157,9 @@ def _precio_de_plan(plan: str) -> float:
     raise KeyError(f"Plan desconocido: {plan}")
 
 
-async def _crear_link_mp(a: Aliado, plan: str, nombre_cliente: str, db: Session):
-    """Crea una preferencia en MP con precio en ARS usando dolarapi blue del momento."""
+async def _crear_link_mp(a, plan: str, nombre_cliente: str, db: Session):
+    """Crea una preferencia en MP con precio en ARS usando dolarapi blue del momento.
+    `a` puede ser None: significa venta directa de Avanza (sin aliado)."""
     from main import (BACKEND_PUBLIC_URL, FAILURE_URL, MP_ACCESS_TOKEN,
                       SUCCESS_URL, obtener_tipo_de_cambio)  # diferido: const/helper de main (evita import circular)
     if not MP_ACCESS_TOKEN:
@@ -157,7 +168,8 @@ async def _crear_link_mp(a: Aliado, plan: str, nombre_cliente: str, db: Session)
     valor_usd = _precio_de_plan(plan)
     tipo_cambio = await obtener_tipo_de_cambio()
     precio_ars = round(valor_usd * tipo_cambio, 2)
-    external_ref = f"{a.ref_code}|{plan}|{nombre_cliente}"
+    ref_code_ext = a.ref_code if a else REF_CODE_DIRECTO
+    external_ref = f"{ref_code_ext}|{plan}|{nombre_cliente}"
     expires_at = datetime.now() + timedelta(hours=LINK_EXPIRATION_HOURS)
 
     preference_data = {
@@ -200,7 +212,7 @@ async def _crear_link_mp(a: Aliado, plan: str, nombre_cliente: str, db: Session)
         raise HTTPException(502, f"No se pudo conectar con MercadoPago. Intentá de nuevo en unos segundos.")
 
     link = LinkPago(
-        aliado_id    = a.id,
+        aliado_id    = a.id if a else None,
         plan         = plan,
         moneda       = "ars",
         precio_usd   = valor_usd,
@@ -224,22 +236,24 @@ async def _crear_link_mp(a: Aliado, plan: str, nombre_cliente: str, db: Session)
         "tipo_cambio":  tipo_cambio,
         "processor":    "mercadopago",
         "expires_at":   expires_at.isoformat(),
-        "aliado":       a.nombre,
+        "aliado":       a.nombre if a else "Avanza Digital",
         "fallback":     False,
     }
 
 
 async def _crear_link_usdt(a, plan: str, nombre_cliente: str, db):
-    """Crea un LinkPago USDT con dirección HD única derivada del ID del registro."""
+    """Crea un LinkPago USDT con dirección HD única derivada del ID del registro.
+    `a` puede ser None: significa venta directa de Avanza (sin aliado)."""
     from main import TRON_MNEMONIC, TRON_XPUB, USDT_RED  # diferido: const/helper de main (evita import circular)
     from tronpy.keys import PrivateKey
     valor_usd    = _precio_de_plan(plan)
-    external_ref = f"{a.ref_code}|{plan}|{nombre_cliente}"
+    ref_code_ext = a.ref_code if a else REF_CODE_DIRECTO
+    external_ref = f"{ref_code_ext}|{plan}|{nombre_cliente}"
     expires_at   = datetime.now() + timedelta(hours=LINK_EXPIRATION_HOURS)
 
     # Crear registro primero para obtener el ID (índice HD único)
     lp = LinkPago(
-        aliado_id    = a.id,
+        aliado_id    = a.id if a else None,
         plan         = plan,
         moneda       = "usd",
         precio_usd   = valor_usd,
@@ -320,7 +334,7 @@ async def _crear_link_usdt(a, plan: str, nombre_cliente: str, db):
         "precio_usd":   valor_usd,
         "processor":    "usdt",
         "expires_at":   expires_at.isoformat(),
-        "aliado":       a.nombre,
+        "aliado":       a.nombre if a else "Avanza Digital",
         "fallback":     False,
     }
 
@@ -339,9 +353,17 @@ async def crear_checkout(request: Request, plan: str,
     """Crea un link de pago. `moneda` = 'ars' (MercadoPago) o 'usd' (USDT TRC20).
     Spec §5: ambos flujos generan registros en links_pago con expiración a 48hs."""
     from main import MP_ACCESS_TOKEN, TRON_MNEMONIC, TRON_XPUB  # diferido: const/helper de main (evita import circular)
-    a = db.query(Aliado).filter(Aliado.ref_code == ref_code).first()
-    if not a:
-        raise HTTPException(404, "Código de referido inválido.")
+    es_directo = (ref_code == REF_CODE_DIRECTO)
+    if es_directo:
+        a = None
+        if plan not in PLANES:
+            # Los planes de continuidad (mensuales) no están soportados para
+            # venta directa todavía — tienen su propio motor de comisiones.
+            raise HTTPException(400, "Este plan no está disponible para venta directa todavía.")
+    else:
+        a = db.query(Aliado).filter(Aliado.ref_code == ref_code).first()
+        if not a:
+            raise HTTPException(404, "Código de referido inválido.")
     if plan not in PLANES and plan not in PLANES_CONTINUIDAD:
         raise HTTPException(400, "Plan inválido.")
 
@@ -350,24 +372,26 @@ async def crear_checkout(request: Request, plan: str,
         raise HTTPException(400, "Moneda inválida. Usar 'ars' o 'usd'.")
 
     # Crear prospecto automáticamente si no existe uno con ese cliente reciente
-    try:
-        reciente = db.query(Prospecto).filter(
-            Prospecto.aliado_id == a.id,
-            Prospecto.nombre == nombre_cliente,
-            Prospecto.creado_en >= datetime.now() - timedelta(hours=48),
-        ).first()
-        if not reciente and nombre_cliente and nombre_cliente != "Cliente":
-            p = Prospecto(aliado_id=a.id, nombre=nombre_cliente,
-                          plan_interes=plan, estado="propuesta_enviada",
-                          nota=f"Auto-creado al generar link de pago ({moneda.upper()}). Email: {cliente_email or '—'} | WA: {cliente_whatsapp or '—'}")
-            db.add(p); db.commit()
-        elif reciente and (cliente_email or cliente_whatsapp):
-            # Actualizar el prospecto existente con datos de contacto si los tenemos
-            if not reciente.nota or "Email:" not in reciente.nota:
-                reciente.nota = (reciente.nota or "") + f" | Email: {cliente_email or '—'} | WA: {cliente_whatsapp or '—'}"
-                db.commit()
-    except Exception as e:
-        print(f"[CHECKOUT] No pude auto-crear prospecto: {e}")
+    # (no aplica a venta directa: los prospectos son un CRM por-aliado).
+    if not es_directo:
+        try:
+            reciente = db.query(Prospecto).filter(
+                Prospecto.aliado_id == a.id,
+                Prospecto.nombre == nombre_cliente,
+                Prospecto.creado_en >= datetime.now() - timedelta(hours=48),
+            ).first()
+            if not reciente and nombre_cliente and nombre_cliente != "Cliente":
+                p = Prospecto(aliado_id=a.id, nombre=nombre_cliente,
+                              plan_interes=plan, estado="propuesta_enviada",
+                              nota=f"Auto-creado al generar link de pago ({moneda.upper()}). Email: {cliente_email or '—'} | WA: {cliente_whatsapp or '—'}")
+                db.add(p); db.commit()
+            elif reciente and (cliente_email or cliente_whatsapp):
+                # Actualizar el prospecto existente con datos de contacto si los tenemos
+                if not reciente.nota or "Email:" not in reciente.nota:
+                    reciente.nota = (reciente.nota or "") + f" | Email: {cliente_email or '—'} | WA: {cliente_whatsapp or '—'}"
+                    db.commit()
+        except Exception as e:
+            print(f"[CHECKOUT] No pude auto-crear prospecto: {e}")
 
     # Fallback si no hay credenciales configuradas
     if moneda == "ars" and not MP_ACCESS_TOKEN:
@@ -480,9 +504,15 @@ def crear_pago_manual(plan: str,
     metodo = (metodo or "usdt").lower()
     if metodo not in _METODOS_MANUALES:
         raise HTTPException(400, "Método inválido. Debe ser 'usdt' o 'payoneer'.")
-    a = db.query(Aliado).filter(Aliado.ref_code == ref_code).first()
-    if not a:
-        raise HTTPException(404, "Código de referido inválido.")
+    es_directo = (ref_code == REF_CODE_DIRECTO)
+    if es_directo:
+        a = None
+        if plan not in PLANES:
+            raise HTTPException(400, "Este plan no está disponible para venta directa todavía.")
+    else:
+        a = db.query(Aliado).filter(Aliado.ref_code == ref_code).first()
+        if not a:
+            raise HTTPException(404, "Código de referido inválido.")
     if plan not in PLANES and plan not in PLANES_CONTINUIDAD:
         raise HTTPException(400, "Plan inválido.")
     valor_usd = _precio_de_plan(plan)
@@ -491,7 +521,7 @@ def crear_pago_manual(plan: str,
     ref_guardada = "|".join([ref_code, plan, nombre_cliente or "", cliente_email or "", cliente_whatsapp or ""])
 
     existente = (db.query(LinkPago)
-                 .filter(LinkPago.aliado_id == a.id,
+                 .filter(LinkPago.aliado_id == (a.id if a else None),
                          LinkPago.plan == plan,
                          LinkPago.processor == metodo,
                          LinkPago.external_ref == ref_guardada,
@@ -504,7 +534,7 @@ def crear_pago_manual(plan: str,
                 "estado": existente.estado, "reusado": True}
 
     lp = LinkPago(
-        aliado_id    = a.id,
+        aliado_id    = a.id if a else None,
         prospecto_id = prospecto_id,
         plan         = plan,
         moneda       = "usd",
@@ -658,6 +688,139 @@ def _procesar_pago_continuidad_confirmado(db: Session,
     }
 
 
+def _procesar_venta_directa_confirmada(db: Session, plan: str, nombre_cliente: str,
+                                        processor: str, payment_id: str,
+                                        link_pago_id: int = None) -> dict:
+    """Rama separada para ventas SIN aliado (ref_code == REF_CODE_DIRECTO).
+    A propósito NO toca nada de _procesar_pago_confirmado: no crea Comision
+    (no hay a quién pagarle), no calcula sponsor/red/equipo, no manda mail a
+    ningún aliado. Sí registra la Venta, marca el LinkPago pagado, avisa al
+    admin por mail, y le manda al cliente el mismo mail de onboarding
+    (formulario de inicio) que reciben las ventas con aliado."""
+    from main import PORTAL_URL  # diferido: evita import circular
+    if plan not in PLANES:
+        return {"status": "invalid_plan"}
+
+    pid_token = f"[PID:{payment_id}]"
+    existing = db.query(Venta).filter(
+        Venta.aliado_id.is_(None), Venta.notas.contains(pid_token)
+    ).first()
+    if existing:
+        return {"status": "already_processed", "venta_id": existing.id}
+
+    valor_usd = PLANES[plan]
+    fecha_venta = datetime.now()
+    if processor == "mercadopago":
+        modalidad = "MercadoPago"
+    elif processor == "usdt":
+        modalidad = "USDT (TRC20)"
+    elif processor == "payoneer":
+        modalidad = "Payoneer"
+    else:
+        modalidad = processor.capitalize()
+
+    v = Venta(aliado_id=None, nombre_cliente=nombre_cliente, plan=plan,
+              valor_usd=valor_usd, comision_pct=0, comision_usd=0,
+              confirmada=True, pagada=True, fecha_venta=fecha_venta,
+              modalidad_pago=modalidad,
+              notas=f"Venta directa (sin aliado) {modalidad} {pid_token}")
+    db.add(v)
+    db.flush()
+
+    if link_pago_id:
+        lp = db.query(LinkPago).filter(LinkPago.id == link_pago_id).first()
+        if lp:
+            lp.estado = "pagado"
+
+    db.commit()
+
+    # --- Avisar al admin por mail (acá no hay aliado al que notificar) ---
+    try:
+        enviar_email(
+            ADMIN_EMAIL,
+            f"💰 Venta directa confirmada — {plan} ({nombre_cliente})",
+            f"""<div style="font-family:sans-serif;background:#050505;color:#fff;padding:28px;max-width:520px;margin:auto;border-radius:12px;">
+              <h2 style="color:#4ade80;margin:0 0 12px;">Venta directa confirmada 🎉</h2>
+              <p style="margin:4px 0;"><strong>Plan:</strong> {plan}</p>
+              <p style="margin:4px 0;"><strong>Cliente:</strong> {nombre_cliente}</p>
+              <p style="margin:4px 0;"><strong>Monto:</strong> USD {valor_usd:,.0f}</p>
+              <p style="margin:4px 0;"><strong>Método:</strong> {modalidad}</p>
+              <p style="color:#71717a;font-size:.85rem;margin-top:12px;">Sin aliado — venta directa desde contratar.html.</p>
+            </div>""",
+        )
+    except Exception as e:
+        print(f"[VENTA DIRECTA] No pude avisar al admin: {e}")
+
+    # --- Mismo mail de onboarding al cliente que reciben las ventas con aliado ---
+    TALLY_POR_PLAN = {
+        "Plan Base":        f"{PORTAL_URL}/onboarding?plan=base",
+        "Plan Pro":         f"{PORTAL_URL}/onboarding?plan=pro",
+        "Plan Industrial":  f"{PORTAL_URL}/onboarding?plan=industrial",
+        "Estrategico 360":  f"{PORTAL_URL}/onboarding?plan=360",
+    }
+    tally_url = TALLY_POR_PLAN.get(plan, "")
+
+    cliente_email_onboarding = ""
+    cliente_whatsapp_onboarding = ""
+    if link_pago_id:
+        try:
+            lp_check = db.query(LinkPago).filter(LinkPago.id == link_pago_id).first()
+            if lp_check and lp_check.external_ref:
+                partes = lp_check.external_ref.split("|")
+                if len(partes) >= 4:
+                    cliente_email_onboarding = partes[3]
+                if len(partes) >= 5:
+                    cliente_whatsapp_onboarding = partes[4]
+        except Exception as e:
+            print(f"[VENTA DIRECTA] No pude recuperar email del LinkPago: {e}")
+
+    if cliente_email_onboarding and tally_url:
+        nombre_corto_cliente = nombre_cliente.split()[0] if nombre_cliente else "Hola"
+        html_cliente = f"""
+        <div style="font-family:Inter,sans-serif;background:#fff;color:#111;padding:40px;max-width:600px;margin:0 auto;border-radius:12px;">
+          <div style="text-align:center;margin-bottom:32px;">
+            <div style="font-size:2rem;">🎉</div>
+            <h1 style="font-size:1.6rem;font-weight:900;margin:12px 0 6px;">¡Pago confirmado, {nombre_corto_cliente}!</h1>
+            <p style="color:#555;font-size:.95rem;">Tu contratación del <strong>{plan}</strong> fue procesada exitosamente.</p>
+          </div>
+          <div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:10px;padding:24px;margin-bottom:24px;">
+            <h2 style="font-size:1.1rem;font-weight:800;margin:0 0 10px;color:#111;">El siguiente paso es tuyo 👇</h2>
+            <p style="color:#444;line-height:1.6;margin:0 0 16px;">Para que podamos empezar a trabajar en tu proyecto, necesitamos que completes este formulario. <strong>Te toma menos de 5 minutos</strong> y es la información que usaremos para construir todo tu ecosistema digital.</p>
+            <a href="{tally_url}" style="display:block;text-align:center;padding:16px 24px;background:#111;color:#fff;border-radius:8px;text-decoration:none;font-weight:800;font-size:1.05rem;">
+              📋 Completar formulario de inicio →
+            </a>
+          </div>
+          <div style="background:#fffbeb;border:1px solid #fde68a;border-radius:8px;padding:16px;margin-bottom:24px;">
+            <p style="margin:0;font-size:.88rem;color:#92400e;line-height:1.5;">
+              ⚡ <strong>Importante:</strong> sin este formulario no podemos arrancar. Cuanto antes lo completes, antes tenés tu proyecto funcionando.
+            </p>
+          </div>
+          <p style="color:#555;font-size:.88rem;line-height:1.6;">
+            Si tenés alguna pregunta antes de completarlo, respondé este email o escribinos por WhatsApp. Estaremos en contacto dentro de las próximas <strong>24hs hábiles</strong>.
+          </p>
+          <div style="border-top:1px solid #e5e7eb;margin-top:24px;padding-top:16px;text-align:center;">
+            <p style="font-size:.78rem;color:#9ca3af;margin:0;">Avanza Digital · {plan}</p>
+            {f'<p style="font-size:.78rem;color:#9ca3af;margin:4px 0;">WhatsApp de contacto: {cliente_whatsapp_onboarding}</p>' if cliente_whatsapp_onboarding else ''}
+          </div>
+        </div>
+        """
+        try:
+            enviar_email(
+                cliente_email_onboarding,
+                f"✅ Pago confirmado — completá el formulario de inicio ({plan})",
+                html_cliente
+            )
+            print(f"[VENTA DIRECTA] Onboarding enviado a {cliente_email_onboarding} ({plan})")
+        except Exception as e:
+            print(f"[VENTA DIRECTA] Error mandando onboarding: {e}")
+    elif not cliente_email_onboarding:
+        print(f"[VENTA DIRECTA SIN EMAIL] Venta {v.id} | Cliente: {nombre_cliente} | Plan: {plan} — no hay email del cliente")
+
+    return {"status": "ok", "venta_registrada": True, "comision_id": None,
+            "comision_usd": 0, "aliado": None, "primera_venta": False,
+            "bonus_creditos": None}
+
+
 def _procesar_pago_confirmado(db: Session,
                               ref_code: str,
                               plan: str,
@@ -674,6 +837,14 @@ def _procesar_pago_confirmado(db: Session,
     from main import PORTAL_URL, _aplicar_bonus_primera_venta  # diferido: const/helper de main (evita import circular)
     if plan not in PLANES and plan not in PLANES_CONTINUIDAD:
         return {"status": "invalid_plan"}
+
+    # Venta directa (sin aliado): rama totalmente separada, no toca nada de
+    # lo que sigue (sponsor, red, equipo, email a aliado).
+    if ref_code == REF_CODE_DIRECTO:
+        return _procesar_venta_directa_confirmada(
+            db, plan, nombre_cliente, processor, payment_id, link_pago_id,
+        )
+
     a = db.query(Aliado).filter(Aliado.ref_code == ref_code).first()
     if not a:
         return {"status": "aliado_not_found"}
@@ -710,6 +881,14 @@ def _procesar_pago_confirmado(db: Session,
         Venta.confirmada == True,
     ).count() == 0
 
+    # Idem para el % de override del sponsor (§6.2): tiene que quedar
+    # capturado ANTES de agregar/flushear la venta de abajo. Si no, al
+    # consultar a.ventas_propias_count más adelante esta misma venta ya
+    # cuenta como "propia" y el sub-aliado salta de tier antes de tiempo
+    # (ej: en su primera venta, el sponsor cobraría como si ya tuviera 1
+    # venta confirmada — 7% — en vez del 5% que corresponde con 0 previas).
+    _ovr_pct = a.override_pct_para_sponsor if getattr(a, "sponsor", None) else None
+
     # --- Registrar venta ---
     v = Venta(aliado_id=a.id, nombre_cliente=nombre_cliente, plan=plan,
               valor_usd=valor_usd, comision_pct=comision_pct, comision_usd=comision_usd,
@@ -740,8 +919,9 @@ def _procesar_pago_confirmado(db: Session,
     )
 
     # --- Comisión de red (override variable según ventas del sub-aliado, §6.2) ---
+    # _ovr_pct ya se capturó arriba, antes de crear la venta `v`, para que
+    # esta venta no se cuente a sí misma en el tier del sub-aliado.
     if getattr(a, "sponsor", None):
-        _ovr_pct = a.override_pct_para_sponsor
         comision_sponsor = round(valor_usd * _ovr_pct, 2)
         v_red = Venta(
             aliado_id=a.sponsor.id, nombre_cliente=f"♻️ RED: {a.nombre} ({modalidad}:{nombre_cliente})",
@@ -1225,13 +1405,19 @@ def admin_confirmar_pago_manual(link_id: int, db: Session = Depends(get_db),
     if lp.estado == "pagado":
         return {"status": "already_processed", "mensaje": "Ya estaba confirmado."}
     a = lp.aliado
-    if not a:
-        raise HTTPException(400, "El registro no tiene aliado asociado.")
     partes = (lp.external_ref or "").split("|")
+    if not a:
+        # Puede ser una venta directa (sin aliado) legítima, o un dato roto.
+        if partes and partes[0] == REF_CODE_DIRECTO:
+            ref_code_confirmar = REF_CODE_DIRECTO
+        else:
+            raise HTTPException(400, "El registro no tiene aliado asociado.")
+    else:
+        ref_code_confirmar = a.ref_code
     nombre_cli = partes[2] if len(partes) > 2 and partes[2] else "Cliente"
 
     res = _procesar_pago_confirmado(
-        db, ref_code=a.ref_code, plan=lp.plan, nombre_cliente=nombre_cli,
+        db, ref_code=ref_code_confirmar, plan=lp.plan, nombre_cliente=nombre_cli,
         processor=lp.processor, payment_id=f"manual-{lp.id}", link_pago_id=lp.id,
     )
     if res.get("status") in ("invalid_plan", "aliado_not_found"):

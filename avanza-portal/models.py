@@ -612,6 +612,36 @@ class ComentarioComunidad(Base):
     aliado = relationship("Aliado")
 
 
+# ─── CHAT (mensajería de Comunidad Avanza) ───────────────────────────────────
+class ChatMensaje(Base):
+    """Mensajería entre aliados: sala general (grupal, tipo canal abierto) y
+    directos 1 a 1 (DM). Misma tabla para las dos superficies:
+
+        - Mensaje de SALA: `sala` tiene el nombre del canal (ej. "general"),
+          `destinatario_id` es NULL. Lo ve cualquier aliado autenticado.
+        - Mensaje DIRECTO: `destinatario_id` tiene el id del otro aliado,
+          `sala` es NULL. Solo lo ven remitente y destinatario.
+
+    Nace para reemplazar los grupos que los aliados arman por fuera del portal
+    (ver hilo "Solo activos a la empresa" en Comunidad, donde terminan
+    pasándose el número de WhatsApp en un post público). `leido` solo aplica
+    a DMs — en la sala no hay "leído" individual.
+    """
+    __tablename__ = "chat_mensajes"
+
+    id = Column(Integer, primary_key=True, index=True)
+    sala = Column(String, nullable=True, index=True)
+    remitente_id = Column(Integer, ForeignKey("aliados.id"), index=True, nullable=False)
+    destinatario_id = Column(Integer, ForeignKey("aliados.id"), index=True, nullable=True)
+    cuerpo = Column(Text, nullable=False)
+    leido = Column(Boolean, default=False)
+    oculto = Column(Boolean, default=False)   # moderación admin, mismo criterio que comunidad
+    creado_en = Column(DateTime, default=func.now())
+
+    remitente = relationship("Aliado", foreign_keys=[remitente_id])
+    destinatario = relationship("Aliado", foreign_keys=[destinatario_id])
+
+
 # ─── AUTOMATION LOG ──────────────────────────────────────────────────────────
 class AutomationLog(Base):
     __tablename__ = "automation_log"

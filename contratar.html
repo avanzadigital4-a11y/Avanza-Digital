@@ -1,114 +1,723 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
+    <!-- Consent Mode v2 (default denied) — debe ir ANTES de GTM -->
+    <script>
+    window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}
+    gtag('consent','default',{ad_storage:'denied',analytics_storage:'denied',ad_user_data:'denied',ad_personalization:'denied',functionality_storage:'granted',security_storage:'granted',wait_for_update:500});
+    try{var _c=localStorage.getItem('avz_consent');if(_c==='granted'){gtag('consent','update',{ad_storage:'granted',analytics_storage:'granted',ad_user_data:'granted',ad_personalization:'granted'});}}catch(e){}
+    </script>
+    <script src="/consent.js" defer></script>
+    <script src="/events.js" defer></script>
+
+    <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+})(window,document,'script','dataLayer','GTM-P499M76P');</script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Solicitar Contratación | Avanza Digital</title>
+    <meta name="robots" content="noindex, follow">
     <link rel="canonical" href="https://avanzadigital.digital/contratar.html">
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><path d=%22M10 20 L40 50 L10 80 L30 80 L60 50 L30 20 Z%22 fill=%22%230044cc%22/><path d=%22M45 20 L75 50 L45 80 L65 80 L95 50 L65 20 Z%22 fill=%22%2300cccc%22/></svg>">
     <link rel="preload" href="fonts/inter-400.woff2" as="font" type="font/woff2" crossorigin>
     <link rel="preload" href="fonts/inter-600.woff2" as="font" type="font/woff2" crossorigin>
     <link rel="stylesheet" href="fonts.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" media="print" onload="this.media='all'">
+    <noscript><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"></noscript>
     <link rel="stylesheet" href="style.min.css">
     <style>
-        body { background: #000; color: white; min-height: 100vh; display: flex; align-items: center; justify-content: center; font-family: 'Inter', sans-serif; padding: 20px; }
-        .contract-container { max-width: 500px; width: 100%; }
-        .contract-box { background: #111; border: 1px solid rgba(255,255,255,0.1); border-radius: 16px; padding: 40px; }
-        .form-group { margin-bottom: 20px; }
-        .form-group label { display: block; margin-bottom: 8px; color: #ccc; font-size: 0.9rem; }
-        .form-control { width: 100%; padding: 12px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; color: white; font-size: 1rem; }
-        .form-control:focus { outline: none; border-color: #3b82f6; }
-        .plan-summary { background: rgba(59, 130, 246, 0.1); border-left: 4px solid #3b82f6; padding: 15px; margin-bottom: 25px; border-radius: 4px; }
-        .terms { font-size: 0.8rem; color: #666; display: flex; gap: 10px; align-items: flex-start; margin-bottom: 25px; }
-        .btn-submit { width: 100%; background: #3b82f6; color: white; border: none; padding: 15px; font-weight: 700; border-radius: 8px; cursor: pointer; font-size: 1rem; transition: 0.3s; }
-        .btn-submit:hover { background: #2563eb; }
+        body { background: var(--bg-page, #000); color: white; min-height: 100vh; font-family: 'Inter', sans-serif; }
+
+        /* Resplandor ambiente detrás del hero, mismo lenguaje que el resto del sitio */
+        .checkout-glow {
+            position: fixed; inset: 0; z-index: -1; pointer-events: none;
+            background: radial-gradient(60% 40% at 50% 0%, rgba(59,130,246,0.16), transparent 60%);
+        }
+
+        .checkout-wrap { max-width: 1020px; margin: 0 auto; padding: 130px 20px 60px; }
+
+        /* Entrada suave, mismo keyframe que usa el resto del sitio (avUp) */
+        @keyframes avUp { from { opacity: 0; transform: translateY(22px); } to { opacity: 1; transform: none; } }
+        .r { opacity: 0; animation: avUp .6s cubic-bezier(.2,.75,.2,1) both; }
+        .d1 { animation-delay: .05s; } .d2 { animation-delay: .15s; } .d3 { animation-delay: .25s; }
+
+        .checkout-head { text-align: center; margin-bottom: 34px; }
+        .eyebrow-mono {
+            font: 700 .72rem/1 ui-monospace, 'Courier New', monospace; letter-spacing: .22em;
+            text-transform: uppercase; color: #4ade80; margin-bottom: 14px; display: block;
+        }
+        .checkout-head h1 { font-size: clamp(1.9rem, 4vw, 2.6rem); letter-spacing: -1px; margin-bottom: 10px; font-weight: 800; }
+        .checkout-head p { color: var(--accent-dim, #a1a1aa); font-size: 1.02rem; }
+
+        .step-tracker { display: flex; justify-content: center; align-items: center; gap: 10px; margin: 26px 0 4px; }
+        .step { display: flex; align-items: center; gap: 8px; font-size: 0.85rem; color: #666; }
+        .step-dot { width: 26px; height: 26px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.72rem; font-weight: 700; border: 1px solid rgba(255,255,255,0.12); background: rgba(255,255,255,0.02); }
+        .step.active .step-dot { background: var(--primary-color, #3b82f6); border-color: var(--primary-color, #3b82f6); color: white; box-shadow: 0 0 0 4px rgba(59,130,246,0.15); }
+        .step.active span { color: white; font-weight: 600; }
+        .step-line { width: 36px; height: 1px; background: rgba(255,255,255,0.12); }
+
+        .checkout-grid { display: grid; grid-template-columns: 1fr 1.15fr; gap: 26px; align-items: start; }
+
+        /* ── FORMULARIO ─────────────────────────────────────────── */
+        .contract-box {
+            background: var(--bg-card, #121212);
+            border: var(--border-light, 1px solid rgba(255,255,255,0.08));
+            border-radius: var(--radius-lg, 24px);
+            padding: 38px;
+        }
+        .contract-box h3 { font-size: 1.05rem; font-weight: 700; margin-bottom: 22px; display: flex; align-items: center; gap: 8px; }
+        .contract-box h3 i { color: var(--primary-color, #3b82f6); font-size: 0.9rem; }
+
+        .form-group { margin-bottom: 18px; }
+        .form-group label { display: block; margin-bottom: 8px; color: #ccc; font-size: 0.83rem; font-weight: 500; }
+        .input-icon { position: relative; }
+        .input-icon i { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: #666; font-size: 0.88rem; transition: color .2s; }
+        .form-control {
+            width: 100%; padding: 13px 14px 13px 40px;
+            background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.09);
+            border-radius: var(--radius-sm, 12px); color: white; font-size: 0.95rem;
+            font-family: 'Inter', sans-serif; transition: border-color .2s, background .2s, box-shadow .2s;
+        }
+        .form-control::placeholder { color: #555; }
+        .form-control:focus { outline: none; border-color: var(--primary-color, #3b82f6); background: rgba(59,130,246,0.05); box-shadow: 0 0 0 4px rgba(59,130,246,0.1); }
+        .form-control:focus + i, .input-icon:has(.form-control:focus) i { color: var(--primary-color, #3b82f6); }
+        .form-control.error { border-color: #f87171; }
+        .field-error { color: #f87171; font-size: 0.78rem; margin-top: 6px; display: none; }
+        .field-error.show { display: block; }
+
+        .terms { font-size: 0.8rem; color: #888; display: flex; gap: 10px; align-items: flex-start; margin: 22px 0; }
+        .terms input { margin-top: 3px; accent-color: var(--primary-color, #3b82f6); }
+
+        .btn-submit {
+            width: 100%; background: var(--primary-color, #3b82f6); color: white; border: none;
+            padding: 15px; font-weight: 700; border-radius: var(--radius-sm, 12px); cursor: pointer;
+            font-size: 0.98rem; transition: .2s; display: flex; align-items: center; justify-content: center; gap: 10px;
+            box-shadow: 0 8px 20px -8px rgba(59,130,246,0.6);
+        }
+        .btn-submit:hover { background: #2563eb; transform: translateY(-1px); box-shadow: 0 10px 24px -8px rgba(59,130,246,0.75); }
+        .btn-submit:disabled { opacity: 0.65; cursor: not-allowed; transform: none; }
+        .spinner { width: 15px; height: 15px; border: 2px solid rgba(255,255,255,0.4); border-top-color: white; border-radius: 50%; animation: spin .7s linear infinite; display: none; }
+        .spinner.show { display: inline-block; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        .form-error-banner {
+            display: none; align-items: center; gap: 10px;
+            background: rgba(248,113,113,0.08); border: 1px solid rgba(248,113,113,0.3);
+            color: #fca5a5; border-radius: var(--radius-sm, 12px);
+            padding: 12px 14px; font-size: 0.83rem; margin-bottom: 16px;
+        }
+        .form-error-banner.show { display: flex; }
+        .form-error-banner a { color: #fca5a5; text-decoration: underline; }
+
+        .secure-note { text-align: center; font-size: 0.78rem; color: #666; margin-top: 16px; display: flex; align-items: center; justify-content: center; gap: 6px; }
+        .secure-note i { color: #4ade80; }
+
+        /* ── PASO 2: método de pago ─────────────────────────────── */
+        .metodos-pago { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin: 18px 0 22px; }
+        .metodo-card {
+            position: relative;
+            background: linear-gradient(180deg, rgba(255,255,255,0.045), rgba(255,255,255,0.015));
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: var(--radius-sm, 12px); padding: 18px 8px 16px; text-align: center;
+            cursor: pointer; color: #ccc; font-family: 'Inter', sans-serif;
+            transition: border-color .2s, transform .2s, box-shadow .2s, background .2s;
+        }
+        .metodo-card:hover { border-color: rgba(59,130,246,0.4); transform: translateY(-2px); }
+        .metodo-card:active { transform: translateY(0); }
+        .metodo-icon-wrap {
+            width: 38px; height: 38px; margin: 0 auto 10px; border-radius: 10px;
+            background: rgba(255,255,255,0.06); display: flex; align-items: center; justify-content: center;
+            font-size: 1.05rem; color: var(--accent-dim,#a1a1aa); transition: .2s;
+        }
+        .metodo-card[data-metodo="ars"] .metodo-icon-wrap { background: rgba(59,130,246,0.14); color: #60a5fa; }
+        .metodo-card[data-metodo="usdt"] .metodo-icon-wrap { background: rgba(74,222,128,0.14); color: #4ade80; }
+        .metodo-card[data-metodo="payoneer"] .metodo-icon-wrap { background: rgba(251,191,36,0.14); color: #fbbf24; }
+        .metodo-card strong { display: block; font-size: .84rem; color: white; font-weight: 700; }
+        .metodo-card .metodo-sub { display: block; font-size: .68rem; color: #777; margin-top: 3px; }
+        .metodo-card.selected {
+            border-color: var(--primary-color,#3b82f6);
+            background: linear-gradient(180deg, rgba(59,130,246,0.12), rgba(139,92,246,0.05));
+            box-shadow: 0 0 0 1px rgba(59,130,246,0.35), 0 10px 24px -12px rgba(59,130,246,0.55);
+        }
+        .metodo-card.selected .metodo-icon-wrap { background: linear-gradient(135deg,#3b82f6,#8b5cf6); color: white; }
+        .metodo-check {
+            position: absolute; top: 10px; right: 10px; width: 18px; height: 18px; border-radius: 50%;
+            background: linear-gradient(135deg,#3b82f6,#8b5cf6); display: flex; align-items: center; justify-content: center;
+            font-size: .58rem; color: white; opacity: 0; transform: scale(.5); transition: opacity .18s, transform .18s;
+        }
+        .metodo-card.selected .metodo-check { opacity: 1; transform: scale(1); }
+
+        /* En mobile: tarjetas en fila horizontal (icono + texto), apiladas de a una —
+           mucho más legibles y con mejor superficie de toque que 3 columnas apretadas. */
+        @media (max-width: 560px) {
+            .metodos-pago { grid-template-columns: 1fr; gap: 10px; }
+            .metodo-card { display: flex; align-items: center; gap: 14px; text-align: left; padding: 13px 16px; }
+            .metodo-icon-wrap { margin: 0; flex-shrink: 0; width: 42px; height: 42px; font-size: 1.15rem; }
+            .metodo-card strong { font-size: .88rem; }
+            .metodo-card .metodo-sub { margin-top: 1px; }
+            .metodo-check { position: static; margin-left: auto; flex-shrink: 0; }
+        }
+
+        .pago-panel { background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.08); border-radius: var(--radius-sm,12px); padding: 20px; }
+        .pago-panel p.pago-intro { font-size: .85rem; color: var(--accent-dim,#a1a1aa); margin: 0 0 16px; line-height: 1.5; }
+        .pago-campo { margin-bottom: 14px; }
+        .pago-campo label { display: block; font-size: .7rem; text-transform: uppercase; letter-spacing: .5px; color: #888; margin-bottom: 6px; font-weight: 700; }
+        .pago-valor-row { display: flex; gap: 8px; }
+        .pago-valor-row input {
+            flex: 1; min-width: 0; font-family: ui-monospace, 'Courier New', monospace; font-size: .82rem;
+            background: #0c0c0c; border: 1px solid rgba(255,255,255,0.1); border-radius: 8px;
+            padding: 10px; color: #93c5fd;
+        }
+        .pago-copy-btn {
+            background: rgba(59,130,246,0.15); color: #93c5fd; border: 1px solid rgba(59,130,246,0.3);
+            border-radius: 8px; padding: 0 14px; cursor: pointer; font-weight: 700; font-size: .78rem; flex-shrink: 0;
+        }
+        .btn-mp {
+            width: 100%; background: linear-gradient(90deg,#3b82f6,#8b5cf6); color: white; border: none;
+            padding: 14px; border-radius: var(--radius-sm,12px); font-weight: 700; cursor: pointer;
+            display: flex; align-items: center; justify-content: center; gap: 8px; font-size: .95rem;
+        }
+        .btn-mp:disabled { opacity: .65; cursor: not-allowed; }
+        .btn-whatsapp-confirm {
+            width: 100%; background: #25D366; color: #06210f; border: none;
+            padding: 14px; border-radius: var(--radius-sm,12px); font-weight: 700; cursor: pointer;
+            display: flex; align-items: center; justify-content: center; gap: 8px; font-size: .92rem;
+            text-decoration: none; margin-top: 14px;
+        }
+        .pago-nota { font-size: .76rem; color: #71717a; margin-top: 12px; line-height: 1.5; }
+        .pago-loading { text-align: center; padding: 20px; color: #888; font-size: .88rem; }
+        .pago-loading i { margin-right: 8px; }
+
+        .back-link { display: inline-flex; align-items: center; gap: 6px; color: #666; font-size: 0.86rem; text-decoration: none; margin-top: 22px; }
+        .back-link:hover { color: white; }
+
+        /* ── RESUMEN ESTILO "BOLETA" ────────────────────────────── */
+        .ticket { position: sticky; top: 130px; }
+        .ticket-stub {
+            background: #171717; border: 1px solid rgba(255,255,255,0.12);
+            border-radius: 24px 24px 0 0; padding: 30px 30px 26px;
+            position: relative;
+        }
+        .ticket-eyebrow { text-transform: uppercase; font-size: 0.7rem; letter-spacing: 1.5px; color: var(--accent-dim, #a1a1aa); font-weight: 700; margin-bottom: 12px; }
+        .ticket-plan { font-size: 1.4rem; font-weight: 800; margin-bottom: 14px; line-height: 1.25; }
+        .ticket-price-row { display: flex; align-items: baseline; gap: 8px; }
+        .ticket-price { font-size: 2.1rem; font-weight: 800; background: linear-gradient(90deg, #3b82f6, #8b5cf6); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .ticket-period { font-size: 0.88rem; color: var(--accent-dim, #a1a1aa); font-weight: 500; }
+
+        /* Perforación estilo boleta, con muescas circulares en los bordes */
+        .ticket-seam {
+            position: relative; height: 1px;
+            background: repeating-linear-gradient(90deg, rgba(255,255,255,0.18) 0 8px, transparent 8px 16px);
+            margin: 0 -1px;
+        }
+        .ticket-seam::before, .ticket-seam::after {
+            content: ''; position: absolute; top: -12px; width: 24px; height: 24px; border-radius: 50%;
+            background: var(--bg-page, #000);
+        }
+        .ticket-seam::before { left: -13px; }
+        .ticket-seam::after { right: -13px; }
+
+        .ticket-body {
+            background: #171717; border: 1px solid rgba(255,255,255,0.12); border-top: none;
+            border-radius: 0 0 24px 24px; padding: 26px 30px 30px;
+        }
+        .summary-row { display: flex; justify-content: space-between; align-items: center; font-size: 0.86rem; color: var(--accent-dim, #a1a1aa); padding: 10px 0; }
+        .summary-row + .summary-row { border-top: 1px dashed rgba(255,255,255,0.08); }
+        .summary-row span:last-child { color: #eee; font-family: ui-monospace, 'Courier New', monospace; font-size: 0.85rem; }
+
+        .trust-strip { display: flex; justify-content: space-between; margin-top: 18px; padding-top: 18px; border-top: 1px solid rgba(255,255,255,0.08); gap: 10px; }
+        .trust-mini { display: flex; flex-direction: column; align-items: center; gap: 6px; font-size: 0.72rem; color: var(--accent-dim, #a1a1aa); text-align: center; flex: 1; }
+        .trust-mini i { color: var(--primary-color, #3b82f6); font-size: 1.05rem; }
+
+        @media (max-width: 860px) {
+            .checkout-grid { grid-template-columns: 1fr; }
+            .checkout-grid { display: flex; flex-direction: column-reverse; }
+            .ticket { position: static; }
+            .checkout-wrap { padding-top: 110px; }
+        }
     </style>
 </head>
 <body>
+<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-P499M76P" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+<div class="checkout-glow"></div>
 
-    <div class="contract-container">
-        <div style="text-align: center; margin-bottom: 30px;">
-            <h2 style="font-size: 1.8rem;">Solicitud de Contratación</h2>
-            <p style="color: #888;">Paso 1 de 2: Datos de Facturación</p>
-        </div>
+<nav class="navbar-floating">
+    <div class="logo">
+        <a href="index.html" style="color:white; text-decoration:none;">
+            <i class="fa-solid fa-layer-group"></i> Avanza
+        </a>
+    </div>
+    <a href="index.html" class="btn-nav">Volver a planes</a>
+</nav>
 
-        <div class="contract-box">
-            
-            <div class="plan-summary">
-                <p style="margin:0; font-size: 0.9rem; color: #bfdbfe;">Estás solicitando:</p>
-                <h3 id="planDisplay" style="margin: 5px 0 0 0; color: white;">Cargando plan...</h3>
+<div class="checkout-wrap">
+    <div class="checkout-head r">
+        <span class="eyebrow-mono">Antes de arrancar</span>
+        <h1>Vamos a poner esto en <span class="highlight">marcha</span></h1>
+        <p>Completá tus datos y te contactamos para coordinar el pago.</p>
+
+        <div class="step-tracker">
+            <div class="step active" id="stepUno">
+                <div class="step-dot">1</div>
+                <span>Tus datos</span>
             </div>
-
-            <form action="https://script.google.com/macros/s/AKfycbzOPqONZsGaHmTf3cNdsXs-TCZr-zNBz3ewTeHDxgQf171BqjIqcMDCPxI4Xu6qi8c/exec" method="POST">
-                
-                <input type="hidden" name="plan_seleccionado" id="planInput">
-                <input type="hidden" name="codigo_orden" id="orderId">
-                
-                <input type="hidden" name="precio_usd" id="precioInput">
-
-                <div class="form-group">
-                    <label>Razón Social / Nombre Empresa</label>
-                    <input type="text" name="empresa" class="form-control" required placeholder="Ej: Industrias Metalúrgicas SA">
-                </div>
-
-                <div class="form-group">
-                    <label>Nombre del Responsable</label>
-                    <input type="text" name="nombre_contacto" class="form-control" required placeholder="Persona que autoriza el pago">
-                </div>
-
-                <div class="form-group">
-                    <label>Email de Facturación</label>
-                    <input type="email" name="email" class="form-control" required placeholder="donde enviaremos la factura">
-                </div>
-
-                <div class="form-group">
-                    <label>Teléfono / WhatsApp</label>
-                    <input type="tel" name="telefono" class="form-control" required placeholder="+54 9 ...">
-                </div>
-
-                <div class="terms">
-                    <input type="checkbox" required id="checkTerms" style="margin-top: 3px;">
-                    <label for="checkTerms" style="display:inline; color:#888;">Entiendo que al enviar esta solicitud recibiré una factura por transferencia bancaria. El servicio se activa una vez acreditado el pago.</label>
-                </div>
-
-                <button type="submit" class="btn-submit">CONFIRMAR Y SOLICITAR</button>
-            </form>
-            
-            <div style="text-align: center; margin-top: 20px;">
-                <a href="index.html" style="color: #666; font-size: 0.9rem; text-decoration: none;">&larr; Volver a planes</a>
+            <div class="step-line"></div>
+            <div class="step" id="stepDos">
+                <div class="step-dot">2</div>
+                <span>Pago y activación</span>
             </div>
         </div>
     </div>
 
-    <script>
-        // 1. Obtener el plan de la URL
-        const params = new URLSearchParams(window.location.search);
-        const plan = params.get('plan') || 'Plan General';
-        
-        // 2. Mostrarlo en pantalla y guardarlo en el input hidden
-        document.getElementById('planDisplay').innerText = plan;
-        document.getElementById('planInput').value = plan;
+    <div class="checkout-grid">
+        <!-- FORMULARIO -->
+        <div class="contract-box r d1">
+          <div id="pasoDatos">
+            <h3><i class="fa-solid fa-file-signature"></i> Tus datos</h3>
 
-        // 3. EXTRAER EL PRECIO AUTOMÁTICAMENTE SEGÚN EL NOMBRE DEL PLAN
-        let precio = "0";
-        // Esta línea atrapa cualquier número que esté al lado de "USD" (ej: USD450 o USD7500)
-        let coincidencia = plan.match(/USD\s*(\d+)/i); 
-        
-        if (coincidencia) {
-            precio = coincidencia[1]; // Aquí guarda el 450 o el 7500
-        } else if (params.get('precio')) {
-            precio = params.get('precio'); // Plan B: por si en el futuro mandas el precio separado en la URL
+            <div class="form-error-banner" id="formError">
+                <i class="fa-solid fa-triangle-exclamation"></i>
+                No pudimos enviar la solicitud. Probá de nuevo o escribinos por
+                <a href="https://wa.me/5493424392759" target="_blank">WhatsApp</a>.
+            </div>
+
+            <form id="formContratar" novalidate>
+                <input type="hidden" name="plan_seleccionado" id="planInput">
+                <input type="hidden" name="codigo_orden" id="orderId">
+                <input type="hidden" name="precio_usd" id="precioInput">
+
+                <div class="form-group">
+                    <label>Razón social / Nombre de la empresa</label>
+                    <div class="input-icon">
+                        <i class="fa-solid fa-building"></i>
+                        <input type="text" name="empresa" id="fEmpresa" class="form-control" required placeholder="Ej: Industrias Metalúrgicas SA">
+                    </div>
+                    <div class="field-error" id="errEmpresa">Ingresá el nombre de la empresa.</div>
+                </div>
+
+                <div class="form-group">
+                    <label>Nombre del responsable</label>
+                    <div class="input-icon">
+                        <i class="fa-solid fa-user"></i>
+                        <input type="text" name="nombre_contacto" id="fNombre" class="form-control" required placeholder="Persona que autoriza el pago">
+                    </div>
+                    <div class="field-error" id="errNombre">Ingresá el nombre del responsable.</div>
+                </div>
+
+                <div class="form-group">
+                    <label>Email de contacto</label>
+                    <div class="input-icon">
+                        <i class="fa-solid fa-envelope"></i>
+                        <input type="email" name="email" id="fEmail" class="form-control" required placeholder="para coordinar el pago">
+                    </div>
+                    <div class="field-error" id="errEmail">Ingresá un email válido.</div>
+                </div>
+
+                <div class="form-group">
+                    <label>Teléfono / WhatsApp</label>
+                    <div class="input-icon">
+                        <i class="fa-brands fa-whatsapp"></i>
+                        <input type="tel" name="telefono" id="fTelefono" class="form-control" required placeholder="+54 9 341 ...">
+                    </div>
+                    <div class="field-error" id="errTelefono">Ingresá un teléfono válido (mínimo 8 dígitos).</div>
+                </div>
+
+                <div class="terms">
+                    <input type="checkbox" required id="checkTerms">
+                    <label for="checkTerms" style="color:#888;" id="terminosLabel">Entiendo que al enviar esta solicitud, Avanza Digital se va a contactar conmigo por WhatsApp o email para coordinar el pago. El servicio se activa una vez acreditado.</label>
+                </div>
+
+                <button type="submit" class="btn-submit" id="btnSubmit">
+                    <span class="spinner" id="spinner"></span>
+                    <span id="btnText">CONFIRMAR Y SOLICITAR</span>
+                    <i class="fa-solid fa-arrow-right" id="btnArrow"></i>
+                </button>
+
+                <div class="secure-note"><i class="fa-solid fa-lock"></i> Tus datos viajan encriptados</div>
+            </form>
+
+            <a href="index.html" class="back-link"><i class="fa-solid fa-arrow-left"></i> Volver a planes</a>
+          </div>
+
+          <!-- PASO 2: método de pago (solo para planes de pago único soportados) -->
+          <div id="pasoPago" style="display:none;">
+            <h3><i class="fa-solid fa-credit-card"></i> Elegí cómo pagar</h3>
+
+            <div class="metodos-pago" id="metodosPago">
+                <button type="button" class="metodo-card" data-metodo="ars" onclick="seleccionarMetodo('ars')">
+                    <span class="metodo-icon-wrap"><i class="fa-solid fa-building-columns"></i></span>
+                    <strong>MercadoPago</strong>
+                    <span class="metodo-sub">Pesos argentinos</span>
+                    <span class="metodo-check"><i class="fa-solid fa-check"></i></span>
+                </button>
+                <button type="button" class="metodo-card" data-metodo="usdt" onclick="seleccionarMetodo('usdt')">
+                    <span class="metodo-icon-wrap"><i class="fa-solid fa-coins"></i></span>
+                    <strong>USDT</strong>
+                    <span class="metodo-sub">Cripto · TRC20</span>
+                    <span class="metodo-check"><i class="fa-solid fa-check"></i></span>
+                </button>
+                <button type="button" class="metodo-card" data-metodo="payoneer" onclick="seleccionarMetodo('payoneer')">
+                    <span class="metodo-icon-wrap"><i class="fa-solid fa-money-check-dollar"></i></span>
+                    <strong>Payoneer</strong>
+                    <span class="metodo-sub">USD · transferencia</span>
+                    <span class="metodo-check"><i class="fa-solid fa-check"></i></span>
+                </button>
+            </div>
+
+            <div id="panelPago"></div>
+
+            <button type="button" class="back-link" style="background:none;border:none;cursor:pointer;padding:0;" onclick="volverAPasoDatos()"><i class="fa-solid fa-arrow-left"></i> Volver a mis datos</button>
+          </div>
+        </div>
+
+        <!-- RESUMEN ESTILO BOLETA -->
+        <div class="ticket r d2">
+            <div class="ticket-stub">
+                <div class="ticket-eyebrow">Estás solicitando</div>
+                <div class="ticket-plan" id="planDisplay">Cargando plan...</div>
+                <div class="ticket-price-row">
+                    <span class="ticket-price" id="precioDisplay">USD —</span>
+                    <span class="ticket-period" id="periodoDisplay"></span>
+                </div>
+            </div>
+            <div class="ticket-seam"></div>
+            <div class="ticket-body">
+                <div class="summary-row">
+                    <span>Código de orden</span>
+                    <span id="ordenDisplay">—</span>
+                </div>
+                <div class="summary-row">
+                    <span>Forma de pago</span>
+                    <span>Transferencia</span>
+                </div>
+                <div class="summary-row">
+                    <span>Fecha de solicitud</span>
+                    <span id="fechaDisplay">—</span>
+                </div>
+
+                <div class="trust-strip">
+                    <div class="trust-mini"><i class="fa-solid fa-shield-halved"></i> Datos protegidos</div>
+                    <div class="trust-mini"><i class="fa-solid fa-bolt"></i> Activación 24–48hs</div>
+                    <div class="trust-mini"><i class="fa-solid fa-headset"></i> Soporte directo</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // 1. Obtener el plan de la URL
+    const params = new URLSearchParams(window.location.search);
+    const planCrudo = params.get('plan') || 'Plan General';
+
+    // 2. Separar nombre / precio / periodicidad del string del plan
+    //    Ej: "Plan Cuidado (USD80 mensual)" -> nombre="Plan Cuidado", precio="80", periodo="mensual"
+    let planNombre = planCrudo;
+    let precio = "0";
+    let periodo = "";
+
+    const m = planCrudo.match(/^(.*?)\(?\s*USD\s*([\d.,]+)\s*(mensual|unico|único)?\)?\s*$/i);
+    if (m) {
+        planNombre = m[1].trim() || planCrudo;
+        precio = m[2].replace(/[.,]/g, '');
+        periodo = (m[3] || '').toLowerCase().replace('único', 'unico');
+    } else if (params.get('precio')) {
+        precio = params.get('precio');
+    }
+
+    document.getElementById('planDisplay').innerText = planNombre;
+    document.getElementById('planInput').value = planCrudo;
+    document.getElementById('precioInput').value = precio;
+
+    document.getElementById('precioDisplay').innerText = precio !== "0"
+        ? `USD ${Number(precio).toLocaleString('es-AR')}`
+        : 'A confirmar';
+
+    const periodoLabel = periodo === 'mensual' ? '/mes' : (periodo === 'unico' ? 'pago único' : '');
+    document.getElementById('periodoDisplay').innerText = periodoLabel;
+
+    document.getElementById('fechaDisplay').innerText = new Date().toLocaleDateString('es-AR', { day: '2-digit', month: 'short', year: 'numeric' });
+
+    // 2.b Ver si este plan tiene pago directo integrado (MercadoPago/USDT/Payoneer).
+    //     Solo los 4 planes de pago único — los mensuales todavía coordinan por WhatsApp.
+    //     OJO: la clave real en el backend para el plan de USD7500 es "Estrategico 360"
+    //     (sin la palabra "Plan" adelante) — por eso el mapeo explícito acá.
+    const PLAN_BACKEND_MAP = {
+        'Plan Base': 'Plan Base',
+        'Plan Pro': 'Plan Pro',
+        'Plan Industrial': 'Plan Industrial',
+        'Plan Estrategico 360': 'Estrategico 360',
+    };
+    const planBackend = PLAN_BACKEND_MAP[planNombre] || null;
+
+    if (planBackend) {
+        document.getElementById('terminosLabel').innerText =
+            'Entiendo que en el siguiente paso elijo cómo pagar, y que el servicio se activa una vez acreditado el pago.';
+    }
+
+    // 3. Generar código de orden
+    const year = new Date().getFullYear();
+    const randomCode = Math.floor(1000 + Math.random() * 9000);
+    const orderCode = `AVZ-${year}-${randomCode}`;
+    document.getElementById('orderId').value = orderCode;
+    document.getElementById('ordenDisplay').innerText = orderCode;
+
+    // 4. Validación + envío
+    // Mismo patrón que /leads/capturar y /auditorias/log en el resto del sitio:
+    // ruta relativa, proxeada same-origin por el _redirects hacia el backend.
+    const ENDPOINT_URL = "/solicitudes/contratar";
+    const form = document.getElementById('formContratar');
+    const btn = document.getElementById('btnSubmit');
+    const spinner = document.getElementById('spinner');
+    const btnText = document.getElementById('btnText');
+    const btnArrow = document.getElementById('btnArrow');
+    const formError = document.getElementById('formError');
+
+    function marcarError(inputId, errId, mostrar) {
+        document.getElementById(inputId).classList.toggle('error', mostrar);
+        document.getElementById(errId).classList.toggle('show', mostrar);
+    }
+
+    function validar() {
+        let ok = true;
+        const empresa = document.getElementById('fEmpresa').value.trim();
+        const nombre = document.getElementById('fNombre').value.trim();
+        const email = document.getElementById('fEmail').value.trim();
+        const telefono = document.getElementById('fTelefono').value.trim().replace(/[^0-9+]/g, '');
+
+        marcarError('fEmpresa', 'errEmpresa', empresa.length < 2); if (empresa.length < 2) ok = false;
+        marcarError('fNombre', 'errNombre', nombre.length < 2); if (nombre.length < 2) ok = false;
+
+        const emailOk = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+        marcarError('fEmail', 'errEmail', !emailOk); if (!emailOk) ok = false;
+
+        const telOk = telefono.replace(/\D/g, '').length >= 8;
+        marcarError('fTelefono', 'errTelefono', !telOk); if (!telOk) ok = false;
+
+        return ok;
+    }
+
+    form.addEventListener('submit', function (e) {
+        e.preventDefault();
+        if (!validar()) return;
+
+        // Datos que van a hacer falta en el paso 2 (pago), los guardamos ya validados.
+        window._datosCliente = {
+            empresa: document.getElementById('fEmpresa').value.trim(),
+            nombre: document.getElementById('fNombre').value.trim(),
+            email: document.getElementById('fEmail').value.trim(),
+            telefono: document.getElementById('fTelefono').value.trim(),
+        };
+
+        if (planBackend) {
+            // Plan con pago directo disponible: no hace falta pasar por el mail
+            // de "coordinar por WhatsApp" — vamos directo al selector de pago.
+            irAPasoPago();
+            return;
         }
-        
-        // Asignamos el precio extraído al campo oculto para que viaje en el formulario
-        document.getElementById('precioInput').value = precio;
 
-        // 4. Generar ID de Orden (Simulado en Frontend para referencia rápida)
-        const year = new Date().getFullYear();
-        const randomCode = Math.floor(1000 + Math.random() * 9000); 
-        const orderCode = `AVZ-${year}-${randomCode}`;
-        document.getElementById('orderId').value = orderCode;
-    </script>
+        btn.disabled = true;
+        spinner.classList.add('show');
+        btnArrow.style.display = 'none';
+        btnText.innerText = 'Enviando...';
+        formError.classList.remove('show');
+
+        const datos = new FormData(form);
+        const qs = new URLSearchParams(datos).toString();
+
+        fetch(`${ENDPOINT_URL}?${qs}`, { method: 'POST' })
+            .then(function (res) {
+                if (!res.ok) throw new Error('status ' + res.status);
+                return res.json();
+            })
+            .then(function () {
+                if (window.dataLayer) {
+                    window.dataLayer.push({ event: 'lead_generated', plan: planCrudo, orden: orderCode, valor_usd: precio });
+                }
+                const destino = `gracias-contratacion.html?orden=${encodeURIComponent(orderCode)}&plan=${encodeURIComponent(planNombre)}&monto=${encodeURIComponent(precio)}`;
+                window.location.href = destino;
+            })
+            .catch(function (err) {
+                console.warn('No se pudo enviar la solicitud', err);
+                btn.disabled = false;
+                spinner.classList.remove('show');
+                btnArrow.style.display = '';
+                btnText.innerText = 'CONFIRMAR Y SOLICITAR';
+                formError.classList.add('show');
+            });
+    });
+
+    // ── PASO 2: selector de método de pago ──────────────────────────────────
+    let metodoActual = null;
+    let linkIds = { usdt: null, payoneer: null };
+
+    function irAPasoPago() {
+        document.getElementById('pasoDatos').style.display = 'none';
+        document.getElementById('pasoPago').style.display = 'block';
+        document.getElementById('stepUno').classList.remove('active');
+        document.getElementById('stepDos').classList.add('active');
+        if (window.dataLayer) {
+            window.dataLayer.push({ event: 'lead_generated', plan: planCrudo, orden: orderCode, valor_usd: precio });
+        }
+        seleccionarMetodo('ars');
+    }
+
+    function volverAPasoDatos() {
+        document.getElementById('pasoPago').style.display = 'none';
+        document.getElementById('pasoDatos').style.display = 'block';
+        document.getElementById('stepDos').classList.remove('active');
+        document.getElementById('stepUno').classList.add('active');
+    }
+
+    function seleccionarMetodo(m) {
+        metodoActual = m;
+        document.querySelectorAll('.metodo-card').forEach(function (c) {
+            c.classList.toggle('selected', c.dataset.metodo === m);
+        });
+        renderPanelPago(m);
+    }
+
+    function renderPanelPago(m) {
+        const panel = document.getElementById('panelPago');
+        if (m === 'ars') {
+            panel.innerHTML = `
+                <div class="pago-panel">
+                    <p class="pago-intro">Te lleva a MercadoPago para pagar con tarjeta, dinero en cuenta o transferencia. Confirmamos el pago automáticamente, sin esperar a que lo revisemos a mano.</p>
+                    <button type="button" class="btn-mp" id="btnPagarMP" onclick="pagarMercadoPago()">
+                        <i class="fa-solid fa-lock"></i> Pagar con MercadoPago
+                    </button>
+                    <p class="pago-nota" id="notaMP"></p>
+                </div>`;
+            return;
+        }
+
+        // USDT / Payoneer: métodos manuales — generamos el registro pendiente
+        // y mostramos los datos para transferir.
+        panel.innerHTML = `<div class="pago-panel"><div class="pago-loading"><i class="fa-solid fa-spinner fa-spin"></i>Preparando los datos de pago...</div></div>`;
+        prepararPagoManual(m);
+    }
+
+    async function prepararPagoManual(metodo) {
+        const cli = window._datosCliente || {};
+        try {
+            if (!linkIds[metodo]) {
+                const urlManual = `/checkout/manual?plan=${encodeURIComponent(planBackend)}&ref_code=directo`
+                    + `&nombre_cliente=${encodeURIComponent(cli.nombre || 'Cliente')}&metodo=${metodo}`
+                    + `&cliente_email=${encodeURIComponent(cli.email || '')}&cliente_whatsapp=${encodeURIComponent(cli.telefono || '')}`;
+                const resManual = await fetch(urlManual, { method: 'POST' });
+                if (!resManual.ok) throw new Error('manual status ' + resManual.status);
+                const dataManual = await resManual.json();
+                linkIds[metodo] = dataManual.link_id;
+            }
+
+            const resConfig = await fetch(`/config/${metodo === 'usdt' ? 'usdt' : 'payoneer'}`);
+            const config = await resConfig.json();
+
+            if (metodoActual !== metodo) return; // el usuario cambió de método mientras cargaba
+
+            if (!config.activo) {
+                document.getElementById('panelPago').innerHTML =
+                    `<div class="pago-panel"><p class="pago-intro">Este método no está disponible en este momento. Probá con otro, o escribinos por <a href="https://wa.me/5493424392759" target="_blank" style="color:#93c5fd;">WhatsApp</a>.</p></div>`;
+                return;
+            }
+
+            if (metodo === 'usdt') {
+                document.getElementById('panelPago').innerHTML = `
+                    <div class="pago-panel">
+                        <p class="pago-intro">Transferí <strong>USD ${Number(precio).toLocaleString('es-AR')}</strong> en USDT (red ${config.red}) a esta dirección:</p>
+                        <div class="pago-campo">
+                            <label>Dirección USDT · ${config.red}</label>
+                            <div class="pago-valor-row">
+                                <input type="text" id="valorUsdt" value="${config.direccion}" readonly>
+                                <button type="button" class="pago-copy-btn" onclick="copiarValor('valorUsdt', this)"><i class="fa-solid fa-copy"></i></button>
+                            </div>
+                        </div>
+                        <button type="button" class="btn-whatsapp-confirm" onclick="confirmarPagoManual('usdt')">
+                            <i class="fa-brands fa-whatsapp"></i> Ya transferí, avisar por WhatsApp
+                        </button>
+                        <p class="pago-nota">Verificamos la transferencia y activamos el servicio dentro de las 24hs hábiles.</p>
+                    </div>`;
+            } else {
+                const banco = config.banco || {};
+                document.getElementById('panelPago').innerHTML = `
+                    <div class="pago-panel">
+                        <p class="pago-intro">Transferí <strong>USD ${Number(precio).toLocaleString('es-AR')}</strong> por Payoneer a:</p>
+                        <div class="pago-campo">
+                            <label>Email Payoneer</label>
+                            <div class="pago-valor-row">
+                                <input type="text" id="valorPayoneer" value="${config.email}" readonly>
+                                <button type="button" class="pago-copy-btn" onclick="copiarValor('valorPayoneer', this)"><i class="fa-solid fa-copy"></i></button>
+                            </div>
+                        </div>
+                        ${banco.beneficiario ? `<p class="pago-nota">Beneficiario: ${banco.beneficiario}${banco.banco ? ' · ' + banco.banco : ''}</p>` : ''}
+                        <button type="button" class="btn-whatsapp-confirm" onclick="confirmarPagoManual('payoneer')">
+                            <i class="fa-brands fa-whatsapp"></i> Ya transferí, avisar por WhatsApp
+                        </button>
+                        <p class="pago-nota">Verificamos la transferencia y activamos el servicio dentro de las 24hs hábiles.</p>
+                    </div>`;
+            }
+        } catch (err) {
+            console.warn('No se pudo preparar el pago manual', err);
+            document.getElementById('panelPago').innerHTML =
+                `<div class="pago-panel"><p class="pago-intro">No pudimos cargar los datos de pago. Probá de nuevo o escribinos por <a href="https://wa.me/5493424392759" target="_blank" style="color:#93c5fd;">WhatsApp</a>.</p></div>`;
+        }
+    }
+
+    function copiarValor(inputId, btnEl) {
+        const el = document.getElementById(inputId);
+        navigator.clipboard.writeText(el.value).then(function () {
+            const original = btnEl.innerHTML;
+            btnEl.innerHTML = '<i class="fa-solid fa-check"></i>';
+            setTimeout(function () { btnEl.innerHTML = original; }, 1200);
+        }).catch(function () { el.select(); document.execCommand('copy'); });
+    }
+
+    async function pagarMercadoPago() {
+        const cli = window._datosCliente || {};
+        const boton = document.getElementById('btnPagarMP');
+        boton.disabled = true;
+        boton.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Generando el pago...';
+        try {
+            const url = `/checkout/crear?plan=${encodeURIComponent(planBackend)}&ref_code=directo`
+                + `&nombre_cliente=${encodeURIComponent(cli.nombre || 'Cliente')}&moneda=ars`
+                + `&cliente_email=${encodeURIComponent(cli.email || '')}&cliente_whatsapp=${encodeURIComponent(cli.telefono || '')}`;
+            const res = await fetch(url, { method: 'POST' });
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.detail || 'error al generar el pago');
+
+            if (data.fallback || !data.checkout_url) {
+                document.getElementById('notaMP').innerText = data.mensaje || 'MercadoPago no está disponible ahora mismo. Escribinos por WhatsApp para coordinar el pago.';
+                boton.disabled = false;
+                boton.innerHTML = '<i class="fa-solid fa-lock"></i> Pagar con MercadoPago';
+                return;
+            }
+            window.location.href = data.checkout_url;
+        } catch (err) {
+            console.warn('No se pudo generar el pago con MercadoPago', err);
+            document.getElementById('notaMP').innerText = 'No pudimos generar el pago. Probá de nuevo o elegí otro método.';
+            boton.disabled = false;
+            boton.innerHTML = '<i class="fa-solid fa-lock"></i> Pagar con MercadoPago';
+        }
+    }
+
+    async function confirmarPagoManual(metodo) {
+        const linkId = linkIds[metodo];
+        if (linkId) {
+            try { await fetch(`/checkout/manual/${linkId}/reportar`, { method: 'POST' }); }
+            catch (err) { console.warn('No se pudo marcar el pago como reportado', err); }
+        }
+        const cli = window._datosCliente || {};
+        const texto = encodeURIComponent(
+            `Hola! Realicé la transferencia de USD ${precio} por ${metodo === 'usdt' ? 'USDT' : 'Payoneer'} para el ${planNombre} de Avanza Digital. Mi nombre: ${cli.nombre || ''}, email: ${cli.email || ''}.`
+        );
+        window.open(`https://wa.me/5493424392759?text=${texto}`, '_blank');
+
+        const destino = `gracias-contratacion.html?orden=${encodeURIComponent(orderCode)}&plan=${encodeURIComponent(planNombre)}&monto=${encodeURIComponent(precio)}`;
+        window.location.href = destino;
+    }
+</script>
 <script type="text/javascript" id="hs-script-loader" async defer src="//js.hs-scripts.com/51067454.js"></script>
 </body>
 </html>

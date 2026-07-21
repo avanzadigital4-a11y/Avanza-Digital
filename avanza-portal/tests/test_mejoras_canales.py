@@ -42,14 +42,24 @@ def test_reciclado_no_contesto_va_a_cooldown_via_endpoint(client, db, aliado, le
     # El hook lo mandó a nurture, NO de vuelta crudo a 'disponible'.
     assert lead_basico.estado == "nurture"
     assert lead_basico.cooldown_hasta is not None
-    assert lead_basico.aliado_id is None
+    # Prioridad de reclamo (sin límite de tiempo): el aliado que lo trabajó
+    # conserva la titularidad durante el cooldown y después, hasta que otro
+    # lo reclame — ver reciclado.py, sección "PRIORIDAD DE RECLAMO". Antes
+    # esto se limpiaba acá al instante; ya no.
+    assert lead_basico.aliado_id == aliado.id
     assert lead_basico.intentos == 1
 
 
 def test_reciclado_job_reactiva_tras_cooldown(db, aliado, lead_basico):
     import reciclado
+    # registrar_intento() nunca ASIGNA aliado_id — solo lo usa para el log del
+    # historial. En producción siempre se llama con el lead ya reclamado por
+    # ese aliado (vía /contactar o el job de 48hs), así que simulamos esa
+    # misma precondición acá.
+    lead_basico.aliado_id = aliado.id
     reciclado.registrar_intento(db, lead_basico, aliado.id, "no_contesto"); db.commit()
     assert lead_basico.estado == "nurture"
+    assert lead_basico.aliado_id == aliado.id
     # Forzar cooldown vencido y correr el job.
     lead_basico.cooldown_hasta = datetime.now() - timedelta(hours=1); db.commit()
     out = reciclado.procesar_cooldowns(db)
@@ -57,6 +67,11 @@ def test_reciclado_job_reactiva_tras_cooldown(db, aliado, lead_basico):
     db.refresh(lead_basico)
     assert lead_basico.estado == "disponible"
     assert lead_basico.reciclados == 1
+    # El job ya NO limpia aliado_id: el lead queda visible para todos en la
+    # bolsa general, pero el aliado original conserva prioridad de reclamo
+    # (puede reabrirlo directo con /bolsa/{id}/reactivar) mientras nadie más
+    # lo haya tomado. Ver test_reactivar_* más abajo.
+    assert lead_basico.aliado_id == aliado.id
 
 
 def test_reciclado_segundo_no_interesado_quema(db, aliado, lead_basico):
@@ -67,6 +82,78 @@ def test_reciclado_segundo_no_interesado_quema(db, aliado, lead_basico):
     assert r.get("quemado") is True
     db.refresh(lead_basico)
     assert lead_basico.estado == "quemado"
+    # A diferencia de 'nurture', un lead 'quemado' SÍ libera aliado_id: sale
+    # de circulación para todos, incluido quien lo trabajó — no tiene sentido
+    # conservarle prioridad sobre un lead que ya decidimos retirar.
+    assert lead_basico.aliado_id is None
+
+
+# ════════════════════ 1b. PRIORIDAD DE RECLAMO (/reactivar) ════════════════
+
+def test_reactivar_recupera_lead_propio_sin_limite_de_tiempo(client, db, aliado, lead_basico):
+    """Caso real que motivó el cambio: el aliado marca 'no contestó' y días
+    después (más allá del cooldown de 72hs) el cliente le responde.
+    /reactivar se lo devuelve directo, sin tener que competir por él."""
+    lead_basico.estado = "reclamado"
+    lead_basico.aliado_id = aliado.id
+    lead_basico.fecha_reclamo = datetime.now()
+    db.commit()
+
+    r = client.patch(f"/bolsa/{lead_basico.id}/contactar?resultado=no_contesto",
+                     headers=_h(aliado.codigo))
+    assert r.status_code == 200, r.text
+
+    # Simula que pasaron varios días: el job ya lo pasó a 'disponible' para
+    # todo el mundo (cooldown de 72hs largamente vencido).
+    db.refresh(lead_basico)
+    lead_basico.estado = "disponible"
+    lead_basico.cooldown_hasta = None
+    db.commit()
+
+    r2 = client.post(f"/bolsa/{lead_basico.id}/reactivar", headers=_h(aliado.codigo))
+    assert r2.status_code == 200, r2.text
+
+    db.refresh(lead_basico)
+    assert lead_basico.estado == "reclamado"
+    assert lead_basico.aliado_id == aliado.id
+    assert lead_basico.fecha_reclamo is not None
+
+
+def test_reactivar_falla_si_otro_aliado_ya_lo_reclamo(client, db, aliado, aliado_con_sponsor, lead_basico):
+    """Si otro aliado fue más rápido y lo reclamó por el flujo normal de la
+    bolsa, el aliado original pierde la prioridad — no hay doble titularidad
+    ni superposición posible."""
+    lead_basico.estado = "reclamado"
+    lead_basico.aliado_id = aliado.id
+    lead_basico.fecha_reclamo = datetime.now()
+    db.commit()
+
+    client.patch(f"/bolsa/{lead_basico.id}/contactar?resultado=no_contesto",
+                headers=_h(aliado.codigo))
+
+    db.refresh(lead_basico)
+    lead_basico.estado = "disponible"
+    lead_basico.cooldown_hasta = None
+    db.commit()
+
+    # Otro aliado lo reclama primero por el flujo normal.
+    r_otro = client.post(f"/bolsa/{lead_basico.id}/reclamar",
+                         headers=_h(aliado_con_sponsor.codigo))
+    assert r_otro.status_code == 200, r_otro.text
+
+    # El aliado original ya no lo puede reactivar: /reclamar le pisó el
+    # aliado_id, tal como pasa siempre.
+    r = client.post(f"/bolsa/{lead_basico.id}/reactivar", headers=_h(aliado.codigo))
+    assert r.status_code == 404
+
+
+def test_reactivar_falla_si_lead_quemado(client, db, aliado, lead_basico):
+    """Un lead quemado ya no tiene dueño — no vuelve por este camino."""
+    lead_basico.estado = "quemado"
+    lead_basico.aliado_id = None
+    db.commit()
+    r = client.post(f"/bolsa/{lead_basico.id}/reactivar", headers=_h(aliado.codigo))
+    assert r.status_code == 404
 
 
 def test_reciclado_historial_visible(client, db, aliado, lead_basico):

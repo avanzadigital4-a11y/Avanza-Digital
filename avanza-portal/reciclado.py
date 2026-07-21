@@ -17,6 +17,25 @@ Este módulo le pone memoria a la bolsa:
 Cooldowns por resultado (un "no contesto" se reintenta antes que un "no
 interesado"; un abandono por vencimiento, casi enseguida).
 
+PRIORIDAD DE RECLAMO (sin tope de tiempo)
+------------------------------------------
+Un lead que entra en cooldown NO le saca la titularidad al aliado que lo
+trabajó — `aliado_id` se conserva durante 'nurture' y también después,
+cuando el job lo pasa a 'disponible'. Esto le da al aliado una ventana de
+reclamo/edición SIN límite de horas: si el cliente responde tarde (aunque
+ya haya pasado el cooldown), el aliado puede reabrirlo con
+`POST /bolsa/{id}/reactivar` o marcarlo directo con
+`PATCH /bolsa/{id}/contactar`, en bolsa.py — ambos endpoints solo chequean
+`aliado_id == aliado autenticado`, sin mirar el estado.
+
+Esa prioridad NO es exclusiva ni bloquea a los demás: en cuanto el lead está
+en estado 'disponible', cualquier otro aliado lo puede reclamar por el flujo
+normal (`POST /bolsa/{id}/reclamar`, que sólo filtra por estado). El primero
+que actúe (el dueño original reactivando, u otro aliado reclamando) se queda
+con el lead — es una carrera autolimitada, no un candado. Solo se corta la
+prioridad cuando el lead se 'quema' (ahí sí se libera `aliado_id`, porque ya
+salió de circulación para todos).
+
 INTEGRACIÓN (ver INTEGRACION.md) — todo son 1-línea en bolsa.py:
   - registrar_intento(...) en registrar_resultado()  (no_interesado / no_contesto)
   - registrar_intento(..., 'abandono') al liberar por vencimiento (job 48h) y al
@@ -87,6 +106,9 @@ def registrar_intento(db: Session, lead: LeadBolsa, aliado_id, resultado: str,
     lead.intentos = (lead.intentos or 0) + 1
 
     # ¿Se quema? Por tope de reciclados o por quema directa del resultado.
+    # Acá SÍ liberamos aliado_id: un lead quemado sale de circulación para
+    # todos, incluido quien lo trabajó — no tiene sentido conservarle prioridad
+    # sobre un lead que ya decidimos retirar.
     intentos_de_este = sum(1 for h in hist if h.get("resultado") == resultado)
     if ((lead.reciclados or 0) >= MAX_RECICLADOS
             or intentos_de_este >= QUEMA_DIRECTA.get(resultado, 99)):
@@ -97,10 +119,14 @@ def registrar_intento(db: Session, lead: LeadBolsa, aliado_id, resultado: str,
         return {"reciclado": False, "quemado": True, "intentos": lead.intentos}
 
     # Si no, a enfriar: 'nurture' con cooldown. El job lo devuelve a 'disponible'.
+    # IMPORTANTE: a diferencia de antes, NO tocamos aliado_id ni fecha_reclamo.
+    # El aliado que lo trabajó conserva la titularidad — puede reabrirlo en
+    # cualquier momento (sin límite de horas) mientras nadie más lo reclame,
+    # vía /bolsa/{id}/reactivar o /bolsa/{id}/contactar. Ver docstring del
+    # módulo ("PRIORIDAD DE RECLAMO"). Tampoco cuenta contra su límite de 3
+    # reclamos activos, porque ese contador solo mira estado == 'reclamado'.
     horas = COOLDOWN_HORAS[resultado]
     lead.estado = "nurture"
-    lead.aliado_id = None
-    lead.fecha_reclamo = None
     lead.resultado = None  # se limpia el resultado puntual; el historial queda
     lead.cooldown_hasta = datetime.now() + timedelta(hours=horas)
     return {"reciclado": True, "estado": "nurture",
@@ -109,7 +135,15 @@ def registrar_intento(db: Session, lead: LeadBolsa, aliado_id, resultado: str,
 
 def procesar_cooldowns(db: Session) -> dict:
     """Job: devuelve a 'disponible' los leads cuyo cooldown ya venció, contándolos
-    como reciclados. SÍ hace commit (corre como tarea independiente del scheduler)."""
+    como reciclados. SÍ hace commit (corre como tarea independiente del scheduler).
+
+    Ojo: NO limpiamos aliado_id/fecha_reclamo acá. El lead queda visible en la
+    bolsa general (cualquiera lo puede reclamar con /bolsa/{id}/reclamar, que
+    solo filtra por estado), pero el aliado que lo trabajó antes conserva su
+    referencia y puede reabrirlo directo (sin competir) mientras nadie más lo
+    haya tomado — ver "PRIORIDAD DE RECLAMO" en el docstring del módulo.
+    En cuanto otro aliado lo reclama, /reclamar pisa aliado_id igual que
+    siempre, así que no hay conflicto ni doble titularidad posible."""
     ahora = datetime.now()
     pendientes = (db.query(LeadBolsa)
                   .filter(LeadBolsa.estado == "nurture",
@@ -121,8 +155,6 @@ def procesar_cooldowns(db: Session) -> dict:
         lead.estado = "disponible"
         lead.reciclados = (lead.reciclados or 0) + 1
         lead.cooldown_hasta = None
-        lead.aliado_id = None
-        lead.fecha_reclamo = None
         n += 1
     if n:
         db.commit()
@@ -170,7 +202,10 @@ def admin_reciclados(db: Session = Depends(get_db),
     def fila(l):
         return {"id": l.id, "empresa": l.empresa, "rubro": l.rubro,
                 "intentos": l.intentos or 0, "reciclados": l.reciclados or 0,
-                "cooldown_hasta": l.cooldown_hasta.strftime("%d/%m %H:%M") if l.cooldown_hasta else None}
+                "cooldown_hasta": l.cooldown_hasta.strftime("%d/%m %H:%M") if l.cooldown_hasta else None,
+                # Desde el cambio de prioridad de reclamo, un lead en 'nurture'
+                # sigue teniendo aliado_id (quemados no, ahí sí se libera).
+                "aliado_prioridad": l.aliado.nombre if l.aliado_id and l.aliado else None}
 
     return {
         "en_cooldown": [fila(l) for l in nurture],

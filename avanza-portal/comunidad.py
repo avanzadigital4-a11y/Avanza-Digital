@@ -24,7 +24,7 @@ import schemas
 from auth import current_aliado_required, current_admin_required
 from database import get_db
 from models import Aliado, ComentarioComunidad, PostComunidad
-from notificaciones import notificar_aliado, enviar_push_a_aliado
+from notificaciones import notificar_aliado, notificar_aliado_multicanal, enviar_push_a_aliado
 
 router = APIRouter(tags=["comunidad"])
 
@@ -172,20 +172,21 @@ def comentar(id: int, com: schemas.ComentarioComunidadIn,
     c = ComentarioComunidad(post_id=p.id, aliado_id=aliado.id, cuerpo=com.cuerpo.strip()[:1000])
     db.add(c)
 
-    # Aviso al autor del post (si no se comentó a sí mismo).
+    # Aviso al autor del post (si no se comentó a sí mismo). Cascada completa
+    # (WhatsApp → email → campanita/push): muchos aliados postean una vez y no
+    # vuelven a mirar la campanita, así que el aviso tiene que ir a buscarlos.
     if p.aliado_id and p.aliado_id != aliado.id:
         quien = (aliado.nombre or "Alguien").split()[0]
-        notificar_aliado(db, p.aliado_id, "comunidad",
-                         f"{quien} respondió tu publicación",
-                         f"«{(p.titulo or '')[:80]}»", tab="comunidad")
+        notificar_aliado_multicanal(
+            db, p.aliado_id, "comunidad",
+            f"{quien} respondió tu publicación",
+            f"«{(p.titulo or '')[:80]}»", tab="comunidad",
+            mensaje_whatsapp=(
+                f"💬 {quien} te respondió en Comunidad Avanza:\n\n"
+                f"«{(p.titulo or '')[:100]}»\n\n{com.cuerpo.strip()[:250]}"
+            ),
+        )
     db.commit()
-
-    if p.aliado_id and p.aliado_id != aliado.id:
-        try:
-            enviar_push_a_aliado(db, p.aliado_id, "Nueva respuesta en la comunidad",
-                                 f"{(aliado.nombre or 'Alguien').split()[0]} respondió tu publicación.", "/")
-        except Exception:
-            pass
     return {"mensaje": "Comentario publicado.", "id": c.id}
 
 
@@ -219,18 +220,17 @@ def resolver_post(id: int, body: schemas.ResolverPostIn,
         aceptado.aceptada = True
         # Avisar al autor de la respuesta aceptada (si no es el mismo).
         if aceptado.aliado_id and aceptado.aliado_id != aliado.id:
-            notificar_aliado(db, aceptado.aliado_id, "comunidad",
-                             "Tu respuesta fue aceptada ✓",
-                             f"Marcaron tu respuesta como la solución de «{(p.titulo or '')[:80]}».",
-                             tab="comunidad")
+            notificar_aliado_multicanal(
+                db, aceptado.aliado_id, "comunidad",
+                "Tu respuesta fue aceptada ✓",
+                f"Marcaron tu respuesta como la solución de «{(p.titulo or '')[:80]}».",
+                tab="comunidad",
+                mensaje_whatsapp=(
+                    f"✅ Tu respuesta fue aceptada como solución en Comunidad Avanza:\n\n"
+                    f"«{(p.titulo or '')[:100]}»"
+                ),
+            )
     db.commit()
-
-    if aceptado and aceptado.aliado_id and aceptado.aliado_id != aliado.id:
-        try:
-            enviar_push_a_aliado(db, aceptado.aliado_id, "Respuesta aceptada ✓",
-                                 "Tu respuesta fue marcada como la solución.", "/")
-        except Exception:
-            pass
     return {"mensaje": "Pregunta actualizada.", "resuelto": p.resuelto}
 
 

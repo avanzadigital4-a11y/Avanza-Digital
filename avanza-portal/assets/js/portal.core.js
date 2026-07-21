@@ -647,6 +647,7 @@ function cambiarTab(tab, btn) {
   // Cualquier cambio de solapa frena el auto-refresh de Mi Red (si estaba
   // activo). Se vuelve a encender más abajo solo si la nueva solapa es 'red'.
   detenerAutoRefreshRed();
+  if (typeof chatDetenerPolling === 'function') chatDetenerPolling();
   document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));
   document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
   const panel = document.getElementById(`tab-${tab}`);
@@ -690,7 +691,7 @@ function cambiarTab(tab, btn) {
   if(tab==='red') { cargarRed(); iniciarAutoRefreshRed(); }
   if(tab==='equipo') cargarEquipo();
   if(tab==='entregas') cargarEntregas();
-  if(tab==='comunidad') cargarComunidad();
+  if(tab==='comunidad') _comunidadCargarSubtabActivo();
   if(tab==='academia') inicializarAcademia();
   // v1.4: refrescar TC al entrar al cotizador y comisiones al entrar a su tab
   if(tab==='cotizador') { cargarTipoDeCambio(); recuperarUltimoLinkActivo(); }
@@ -702,6 +703,35 @@ function cambiarTab(tab, btn) {
     cargarModulo('jarvis', window.__MODS.jarvis.file, window.__MODS.jarvis.centinela)
       .then(() => inicializarJarvisV2())
       .catch((e) => console.error('[Jarvis] carga diferida falló:', e));
+  }
+}
+
+// ── Comunidad: sub-vistas Foro / Chat dentro de la misma pestaña ────────────
+// El Chat (sala general + directos) vive ADENTRO de "Comunidad" para no sumar
+// otro botón más al nav lateral, que ya viene largo. Al tocar "Chat" ocupa
+// todo el espacio del panel, igual que el Foro cuando está activo.
+let _comunidadSubtabActual = 'foro';
+
+function comunidadCambiarSubtab(sub, btn) {
+  _comunidadSubtabActual = sub;
+  document.querySelectorAll('#comunidad-subtabs .chat-subtab-btn').forEach(b => b.classList.remove('activo'));
+  if (btn) btn.classList.add('activo');
+  const panelForo = document.getElementById('comunidad-panel-foro');
+  const panelChat = document.getElementById('comunidad-panel-chat');
+  if (panelForo) panelForo.style.display = sub === 'foro' ? '' : 'none';
+  if (panelChat) panelChat.style.display = sub === 'chat' ? '' : 'none';
+  _comunidadCargarSubtabActivo();
+}
+
+function _comunidadCargarSubtabActivo() {
+  if (_comunidadSubtabActual === 'chat') {
+    // Carga perezosa: baja portal.chat.js la 1ra vez y luego inicializa.
+    cargarModulo('chat', window.__MODS.chat.file, window.__MODS.chat.centinela)
+      .then(() => inicializarChat())
+      .catch((e) => console.error('[Chat] carga diferida falló:', e));
+  } else {
+    if (typeof chatDetenerPolling === 'function') chatDetenerPolling();
+    cargarComunidad();
   }
 }
 
@@ -3163,6 +3193,62 @@ function _contactoAccionesBolsa(l) {
     '<div style="display:flex;gap:8px;flex-wrap:wrap;">' + btns.join('') + '</div></div>';
 }
 
+// Config visual + acción por estado de un lead reclamado, según el ciclo
+// completo del reciclado (ver reciclado.py): reclamado (48h) -> contactado
+// (exitoso, cierre) o nurture (cooldown, no cerrado) -> disponible (ya
+// liberado a la bolsa general, pero este aliado conserva prioridad de
+// reclamo sin límite de horas mientras nadie más lo tome).
+function _estadoCfgBolsa(l) {
+  const ULTIMO_RESULTADO_LABEL = {
+    no_contesto: 'No contestó la última vez',
+    no_interesado: 'No le interesó la última vez',
+  };
+  const notaUltimo = ULTIMO_RESULTADO_LABEL[l.ultimo_resultado] || '';
+
+  if (l.estado === 'reclamado') {
+    const colorReloj = l.horas_restantes < 12 ? 'var(--red)' : 'var(--amber)';
+    return {
+      borderColor: 'rgba(245,158,11,0.35)',
+      badge: `<span style="background:rgba(245,158,11,0.15);color:${colorReloj};border:1px solid rgba(245,158,11,0.3);border-radius:20px;font-size:.7rem;font-weight:700;padding:3px 10px;"><i class="fa-solid fa-hourglass-half"></i> Quedan ${l.horas_restantes}h</span>`,
+      accionBtn: `<button class="btn-green" style="width:100%;padding:9px;font-size:.82rem;" onclick="marcarContactadoBolsa(${l.id})"><i class="fa-solid fa-phone"></i> Ya lo contacté</button>`,
+    };
+  }
+
+  if (l.estado === 'nurture') {
+    const h = l.cooldown_horas_restantes;
+    const texto = (h !== null && h !== undefined) ? `Vuelve a la bolsa general en ${h}h` : 'En pausa';
+    return {
+      borderColor: 'rgba(148,163,184,0.3)',
+      badge: `<span style="background:rgba(148,163,184,0.12);color:#94a3b8;border:1px solid rgba(148,163,184,0.3);border-radius:20px;font-size:.7rem;font-weight:700;padding:3px 10px;"><i class="fa-solid fa-moon"></i> En pausa</span>`,
+      accionBtn: `
+        <div style="text-align:center;font-size:.74rem;color:var(--text-dim);margin-bottom:6px;line-height:1.5;">
+          <i class="fa-solid fa-clock"></i> ${texto}${notaUltimo ? ' · ' + notaUltimo : ''}<br>
+          Mientras tanto, sos el único que la puede reclamar.
+        </div>
+        <button class="btn-primary" style="width:100%;padding:9px;font-size:.82rem;font-weight:700;" onclick="reactivarLeadBolsa(${l.id}, '${(l.empresa||'').replace(/'/g, "\\'")}')"><i class="fa-solid fa-rotate-left"></i> ¿Te respondió? Reactivar</button>`,
+    };
+  }
+
+  if (l.estado === 'disponible' && l.puede_reactivar) {
+    return {
+      borderColor: 'rgba(239,68,68,0.4)',
+      badge: `<span style="background:rgba(239,68,68,0.12);color:var(--red);border:1px solid rgba(239,68,68,0.3);border-radius:20px;font-size:.7rem;font-weight:700;padding:3px 10px;"><i class="fa-solid fa-triangle-exclamation"></i> Volvió a la bolsa</span>`,
+      accionBtn: `
+        <div style="text-align:center;font-size:.74rem;color:var(--red);margin-bottom:6px;font-weight:700;line-height:1.5;">
+          <i class="fa-solid fa-bolt"></i> Ya está visible para cualquier aliado${notaUltimo ? ' · ' + notaUltimo : ''}
+        </div>
+        <button class="btn-primary" style="width:100%;padding:9px;font-size:.82rem;font-weight:700;" onclick="reactivarLeadBolsa(${l.id}, '${(l.empresa||'').replace(/'/g, "\\'")}')"><i class="fa-solid fa-rotate-left"></i> Reactivar antes que otro lo tome</button>`,
+    };
+  }
+
+  // 'contactado' (cierre exitoso) — estado final, sin acción pendiente.
+  return {
+    borderColor: 'var(--border)',
+    badge: `<span style="background:rgba(59,130,246,0.12);color:#60a5fa;border:1px solid rgba(59,130,246,0.25);border-radius:20px;font-size:.7rem;font-weight:700;padding:3px 10px;"><i class="fa-solid fa-check"></i> Contactado</span>`,
+    accionBtn: `<div style="text-align:center;font-size:.78rem;color:var(--text-dim);"><i class="fa-solid fa-check-double"></i> Gestionado</div>`,
+  };
+}
+
 async function cargarBolsa() {
   if(!aliado) return;
   try {
@@ -3214,15 +3300,10 @@ async function cargarBolsa() {
       tbodyReclamos.innerHTML = '<div style="text-align:center;padding:24px;color:var(--text-dim);grid-column:1/-1;"><p>No tenés leads reclamados. ¡Aprovechá la bolsa!</p></div>';
     } else {
       tbodyReclamos.innerHTML = data.mis_reclamos.map(l => {
-        const esPendiente = l.estado === 'reclamado';
-        const colorReloj = l.horas_restantes < 12 ? 'var(--red)' : 'var(--amber)';
-        const estadoBadge = esPendiente
-          ? `<span style="background:rgba(245,158,11,0.15);color:var(--amber);border:1px solid rgba(245,158,11,0.3);border-radius:20px;font-size:.7rem;font-weight:700;padding:3px 10px;"><i class="fa-solid fa-hourglass-half"></i> Quedan ${l.horas_restantes}h</span>`
-          : `<span style="background:rgba(59,130,246,0.12);color:#60a5fa;border:1px solid rgba(59,130,246,0.25);border-radius:20px;font-size:.7rem;font-weight:700;padding:3px 10px;"><i class="fa-solid fa-check"></i> Contactado</span>`;
-        const accionBtn = esPendiente
-          ? `<button class="btn-green" style="width:100%;padding:9px;font-size:.82rem;" onclick="marcarContactadoBolsa(${l.id})"><i class="fa-solid fa-phone"></i> Ya lo contacté</button>`
-          : `<div style="text-align:center;font-size:.78rem;color:var(--text-dim);"><i class="fa-solid fa-check-double"></i> Gestionado</div>`;
-        return `<div style="background:var(--bg2);border:1px solid ${esPendiente?'rgba(245,158,11,0.35)':'var(--border)'};border-radius:12px;padding:16px;display:flex;flex-direction:column;gap:4px;">
+        const estadoCfg = _estadoCfgBolsa(l);
+        const estadoBadge = estadoCfg.badge;
+        const accionBtn = estadoCfg.accionBtn;
+        return `<div style="background:var(--bg2);border:1px solid ${estadoCfg.borderColor};border-radius:12px;padding:16px;display:flex;flex-direction:column;gap:4px;">
           <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px;">
             <div>
               <div style="font-size:1rem;font-weight:800;color:var(--text);line-height:1.2;">${l.empresa}</div>
@@ -3537,6 +3618,26 @@ async function confirmarResultado(id, resultado) {
     }
   } catch(e) { mostrarToast('Error de conexión', 'red'); }
 }
+
+async function reactivarLeadBolsa(id, empresa) {
+  // El aliado recupera prioridad sobre un lead en pausa ('nurture') o ya
+  // liberado a la bolsa general ('disponible') porque el cliente respondió
+  // tarde. Sin límite de horas — ver bolsa.py /bolsa/{id}/reactivar.
+  const ok = confirm(`¿Reactivar a ${empresa || 'este lead'}? Vuelve a tus reclamos activos y arranca de nuevo el plazo de 48hs para marcarlo como contactado.`);
+  if (!ok) return;
+  try {
+    const res = await apiFetch(`${API}/bolsa/${id}/reactivar`, { method: 'POST' });
+    const data = await res.json();
+    if (res.ok) {
+      mostrarToast(data.mensaje || '¡Lead reactivado!', 'green');
+      cargarBolsa();
+    } else {
+      mostrarToast(data.detail || 'No se pudo reactivar — puede que ya lo haya tomado otro aliado.', 'red');
+      cargarBolsa();
+    }
+  } catch(e) { mostrarToast('Error de conexión', 'red'); }
+}
+
 
 async function cargarHistorialBolsa() {
   if(!aliado) return;

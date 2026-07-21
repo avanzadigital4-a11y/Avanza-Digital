@@ -2936,49 +2936,114 @@ html.avz-collapsed #avz-sidebar .avz-exit span{ display:none; }
     </div>
 
 
-    <!-- TAB COMUNIDAD (v1.3) ────────────────────────────────────────── -->
+    <!-- TAB COMUNIDAD (v1.4 — Foro + Chat en la misma pestaña) ─────────── -->
     <div id="tab-comunidad" class="tab-panel">
-      <div class="bento-box" style="margin-bottom:24px; background:linear-gradient(135deg,rgba(192,132,252,0.06),transparent); border-color:rgba(192,132,252,0.2);">
-        <h3 style="font-size:1.1rem;font-weight:800;margin-bottom:8px;"><i class="fa-solid fa-comments" style="color:#c084fc;"></i> Comunidad Avanza</h3>
-        <p style="color:var(--text-muted); font-size:0.9rem; margin-bottom:20px;">Compartí tips, preguntas o celebrá tus cierres. La red aprende junta.</p>
-
-        <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:12px;">
-          <select id="post-categoria" style="background:#111; border:1px solid var(--border); color:white; padding:10px 12px; border-radius:8px;">
-            <option value="pregunta">❓ Pregunta</option>
-            <option value="mejora">🛠️ Mejora del portal</option>
-            <option value="charla">💬 Charla / Tip</option>
-            <option value="victoria">🎉 Victoria / Cierre</option>
-          </select>
-          <input type="text" id="post-titulo" placeholder="Título (ej: Cómo cerré un Industrial en 3 días)" style="background:#111; border:1px solid var(--border); color:white; padding:10px 12px; border-radius:8px;">
+      <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px; margin-bottom:18px;">
+        <div>
+          <h3 style="font-size:1.1rem;font-weight:800;margin-bottom:4px;"><i class="fa-solid fa-comments" style="color:#c084fc;"></i> Comunidad Avanza</h3>
+          <p style="color:var(--text-muted); font-size:0.85rem;">Compartí tips, preguntas o celebrá tus cierres — o charlá en vivo con la red.</p>
         </div>
-        <textarea id="post-cuerpo" rows="4" placeholder="Contá tu idea, tu cierre o tu pregunta..." style="width:100%; background:#111; border:1px solid var(--border); color:white; padding:12px; border-radius:8px; font-family:inherit; resize:vertical; margin-bottom:12px;"></textarea>
-        <div style="display:flex; gap:10px; flex-wrap:wrap;">
-          <button onclick="abrirAsistenteComunidad()" style="background:rgba(192,132,252,0.12); color:#c084fc; border:1px solid rgba(192,132,252,0.3); padding:10px 16px; border-radius:8px; font-size:.85rem; font-weight:700; cursor:pointer;"><i class="fa-solid fa-wand-magic-sparkles"></i> Asistente IA</button>
-          <button onclick="publicarPost()" class="btn-primary" style="padding:10px 20px;"><i class="fa-solid fa-paper-plane"></i> Publicar</button>
+        <div id="comunidad-subtabs" style="display:flex; gap:8px;">
+          <button class="chat-subtab-btn activo" data-sub="foro" onclick="comunidadCambiarSubtab('foro',this)"><i class="fa-solid fa-list-ul"></i> Foro</button>
+          <button class="chat-subtab-btn" data-sub="chat" onclick="comunidadCambiarSubtab('chat',this)"><i class="fa-solid fa-message"></i> Chat<span id="comunidad-chat-badge" class="chat-badge-count" style="display:none;">0</span></button>
         </div>
-      </div>
-
-      <div style="display:flex; flex-wrap:wrap; gap:10px; align-items:center; margin-bottom:16px;">
-        <div id="com-cats" style="display:flex; flex-wrap:wrap; gap:6px;">
-          <button class="com-chip activo" data-cat="" onclick="filtrarComunidadCat('', this)">Todas</button>
-          <button class="com-chip" data-cat="pregunta" onclick="filtrarComunidadCat('pregunta', this)">❓ Preguntas</button>
-          <button class="com-chip" data-cat="mejora" onclick="filtrarComunidadCat('mejora', this)">🛠️ Mejoras</button>
-          <button class="com-chip" data-cat="charla" onclick="filtrarComunidadCat('charla', this)">💬 Charla</button>
-          <button class="com-chip" data-cat="victoria" onclick="filtrarComunidadCat('victoria', this)">🎉 Victorias</button>
-        </div>
-        <div style="flex:1;"></div>
-        <select id="com-orden" onchange="cargarComunidad()" style="background:#111; border:1px solid var(--border); color:white; padding:8px 10px; border-radius:8px; font-size:.82rem;">
-          <option value="recientes">Recientes</option>
-          <option value="sin_responder">Sin responder</option>
-          <option value="mas_votados">Más votados</option>
-        </select>
-        <input type="text" id="com-buscar" placeholder="Buscar…" onkeyup="if(event.key==='Enter')cargarComunidad()" style="background:#111; border:1px solid var(--border); color:white; padding:8px 12px; border-radius:8px; font-size:.82rem; min-width:140px;">
       </div>
       <style>
+        .chat-subtab-btn{background:rgba(255,255,255,0.04);border:1px solid var(--border);color:var(--text-muted);padding:8px 16px;border-radius:8px;font-size:.85rem;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:6px;font-family:'Inter',sans-serif;}
+        .chat-subtab-btn.activo{background:var(--primary);border-color:var(--primary);color:#fff;}
+        .chat-badge-count{background:#ef4444;color:#fff;font-size:.65rem;font-weight:800;padding:1px 7px;border-radius:99px;margin-left:6px;}
+        .chat-msg-row{display:flex;margin-bottom:10px;}
+        .chat-msg-row.mio{justify-content:flex-end;}
+        .chat-bubble{max-width:72%;padding:9px 13px;border-radius:14px;font-size:.86rem;line-height:1.45;word-break:break-word;}
+        .chat-msg-row:not(.mio) .chat-bubble{background:rgba(255,255,255,0.05);border:1px solid var(--border);border-bottom-left-radius:4px;}
+        .chat-msg-row.mio .chat-bubble{background:var(--primary);color:#fff;border-bottom-right-radius:4px;}
+        .chat-meta{font-size:.68rem;color:var(--text-dim);margin-top:3px;}
+        .chat-msg-row.mio .chat-meta{text-align:right;}
+        .chat-conv-item{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:10px;cursor:pointer;border:1px solid transparent;}
+        .chat-conv-item:hover{background:rgba(255,255,255,0.03);}
+        .chat-conv-item.activo{background:rgba(0,196,255,0.07);border-color:rgba(0,196,255,0.25);}
         .com-chip{background:rgba(255,255,255,0.04);border:1px solid var(--border);color:var(--text-muted);padding:6px 12px;border-radius:20px;font-size:.8rem;font-weight:700;cursor:pointer;}
         .com-chip.activo{background:var(--primary);border-color:var(--primary);color:#fff;}
+        @media (max-width:720px){ #chat-dm-layout{grid-template-columns:1fr !important;} }
       </style>
-      <div id="comunidad-feed"></div>
+
+      <!-- SUB-VISTA: FORO (comportamiento original, sin cambios funcionales) -->
+      <div id="comunidad-panel-foro">
+        <div class="bento-box" style="margin-bottom:24px; background:linear-gradient(135deg,rgba(192,132,252,0.06),transparent); border-color:rgba(192,132,252,0.2);">
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:12px;">
+            <select id="post-categoria" style="background:#111; border:1px solid var(--border); color:white; padding:10px 12px; border-radius:8px;">
+              <option value="pregunta">❓ Pregunta</option>
+              <option value="mejora">🛠️ Mejora del portal</option>
+              <option value="charla">💬 Charla / Tip</option>
+              <option value="victoria">🎉 Victoria / Cierre</option>
+            </select>
+            <input type="text" id="post-titulo" placeholder="Título (ej: Cómo cerré un Industrial en 3 días)" style="background:#111; border:1px solid var(--border); color:white; padding:10px 12px; border-radius:8px;">
+          </div>
+          <textarea id="post-cuerpo" rows="4" placeholder="Contá tu idea, tu cierre o tu pregunta..." style="width:100%; background:#111; border:1px solid var(--border); color:white; padding:12px; border-radius:8px; font-family:inherit; resize:vertical; margin-bottom:12px;"></textarea>
+          <div style="display:flex; gap:10px; flex-wrap:wrap;">
+            <button onclick="abrirAsistenteComunidad()" style="background:rgba(192,132,252,0.12); color:#c084fc; border:1px solid rgba(192,132,252,0.3); padding:10px 16px; border-radius:8px; font-size:.85rem; font-weight:700; cursor:pointer;"><i class="fa-solid fa-wand-magic-sparkles"></i> Asistente IA</button>
+            <button onclick="publicarPost()" class="btn-primary" style="padding:10px 20px;"><i class="fa-solid fa-paper-plane"></i> Publicar</button>
+          </div>
+        </div>
+
+        <div style="display:flex; flex-wrap:wrap; gap:10px; align-items:center; margin-bottom:16px;">
+          <div id="com-cats" style="display:flex; flex-wrap:wrap; gap:6px;">
+            <button class="com-chip activo" data-cat="" onclick="filtrarComunidadCat('', this)">Todas</button>
+            <button class="com-chip" data-cat="pregunta" onclick="filtrarComunidadCat('pregunta', this)">❓ Preguntas</button>
+            <button class="com-chip" data-cat="mejora" onclick="filtrarComunidadCat('mejora', this)">🛠️ Mejoras</button>
+            <button class="com-chip" data-cat="charla" onclick="filtrarComunidadCat('charla', this)">💬 Charla</button>
+            <button class="com-chip" data-cat="victoria" onclick="filtrarComunidadCat('victoria', this)">🎉 Victorias</button>
+          </div>
+          <div style="flex:1;"></div>
+          <select id="com-orden" onchange="cargarComunidad()" style="background:#111; border:1px solid var(--border); color:white; padding:8px 10px; border-radius:8px; font-size:.82rem;">
+            <option value="recientes">Recientes</option>
+            <option value="sin_responder">Sin responder</option>
+            <option value="mas_votados">Más votados</option>
+          </select>
+          <input type="text" id="com-buscar" placeholder="Buscar…" onkeyup="if(event.key==='Enter')cargarComunidad()" style="background:#111; border:1px solid var(--border); color:white; padding:8px 12px; border-radius:8px; font-size:.82rem; min-width:140px;">
+        </div>
+        <div id="comunidad-feed"></div>
+      </div>
+
+      <!-- SUB-VISTA: CHAT (sala general + directos) — oculta hasta tocar "Chat" -->
+      <div id="comunidad-panel-chat" style="display:none;">
+        <div class="bento-box">
+          <div style="display:flex;gap:8px;margin-bottom:16px;">
+            <button class="chat-subtab-btn activo" data-sub="sala" onclick="chatCambiarSubtab('sala',this)"><i class="fa-solid fa-users"></i> Sala General</button>
+            <button class="chat-subtab-btn" data-sub="dm" onclick="chatCambiarSubtab('dm',this)"><i class="fa-solid fa-comment-dots"></i> Mensajes<span id="chat-dm-badge" class="chat-badge-count" style="display:none;">0</span></button>
+          </div>
+
+          <!-- SALA GENERAL -->
+          <div id="chat-panel-sala">
+            <div id="chat-sala-mensajes" style="height:420px;overflow-y:auto;background:rgba(0,0,0,0.25);border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:12px;display:flex;flex-direction:column;"></div>
+            <div style="display:flex;gap:8px;">
+              <input type="text" id="chat-sala-input" placeholder="Escribí un mensaje..." maxlength="4000" onkeyup="if(event.key==='Enter')chatEnviarSala()" style="flex:1;background:#111;border:1px solid var(--border);color:#fff;padding:10px 14px;border-radius:8px;font-size:.86rem;">
+              <button onclick="chatEnviarSala()" class="btn-primary" style="padding:10px 18px;"><i class="fa-solid fa-paper-plane"></i></button>
+            </div>
+          </div>
+
+          <!-- MENSAJES DIRECTOS -->
+          <div id="chat-panel-dm" style="display:none;">
+            <div id="chat-dm-layout" style="display:grid;grid-template-columns:260px 1fr;gap:16px;">
+              <div>
+                <div style="display:flex;gap:6px;margin-bottom:10px;">
+                  <input type="text" id="chat-dm-buscar-codigo" placeholder="Código de aliado..." onkeyup="if(event.key==='Enter')chatAbrirDMPorCodigo()" style="flex:1;background:#111;border:1px solid var(--border);color:#fff;padding:8px 10px;border-radius:8px;font-size:.78rem;">
+                  <button onclick="chatAbrirDMPorCodigo()" title="Escribirle a un aliado por su código" style="background:rgba(255,255,255,0.06);border:1px solid var(--border);color:var(--text-muted);border-radius:8px;padding:8px 12px;font-size:.78rem;cursor:pointer;"><i class="fa-solid fa-plus"></i></button>
+                </div>
+                <div id="chat-conversaciones" style="display:flex;flex-direction:column;gap:4px;max-height:420px;overflow-y:auto;"></div>
+              </div>
+              <div style="display:flex;flex-direction:column;">
+                <div id="chat-dm-header" style="font-size:.85rem;font-weight:800;color:var(--text-muted);padding-bottom:10px;border-bottom:1px solid var(--border);margin-bottom:10px;">Elegí una conversación o escribile a alguien por su código</div>
+                <div id="chat-dm-mensajes" style="flex:1;height:340px;overflow-y:auto;background:rgba(0,0,0,0.25);border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:12px;display:flex;flex-direction:column;"></div>
+                <div style="display:flex;gap:8px;">
+                  <input type="text" id="chat-dm-input" placeholder="Escribí un mensaje directo..." maxlength="4000" onkeyup="if(event.key==='Enter')chatEnviarDM()" style="flex:1;background:#111;border:1px solid var(--border);color:#fff;padding:10px 14px;border-radius:8px;font-size:.86rem;" disabled>
+                  <button onclick="chatEnviarDM()" class="btn-primary" style="padding:10px 18px;" disabled id="chat-dm-btn-enviar"><i class="fa-solid fa-paper-plane"></i></button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
 </div>
 
@@ -4487,7 +4552,8 @@ function cargarModulo(nombre, archivo, centinela) {
   return window.__avanzaMods[nombre];
 }
 window.__MODS = {
-  jarvis: { file: 'portal.jarvis.js', centinela: 'inicializarJarvisV2' }
+  jarvis: { file: 'portal.jarvis.js', centinela: 'inicializarJarvisV2' },
+  chat: { file: 'portal.chat.js', centinela: 'inicializarChat' }
 };
 </script>
 <script defer src="assets/js/portal.core.js"></script>

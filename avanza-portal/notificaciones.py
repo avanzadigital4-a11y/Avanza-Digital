@@ -309,6 +309,59 @@ def notificar_aliado(db, aliado_id: int, tipo: str, titulo: str,
     except Exception as e:
         print(f"[NOVEDADES] No se pudo crear novedad para aliado {aliado_id}: {e}")
 
+
+def notificar_aliado_multicanal(db, aliado_id: int, tipo: str, titulo: str,
+                                cuerpo: str = "", tab: str = None,
+                                mensaje_whatsapp: str = None):
+    """Avisa por TODOS los canales, en cascada de más a menos efectivo para
+    esta base de aliados — la mayoría vive en WhatsApp y no vuelve sola al
+    portal a mirar la campanita (evidencia: hilo "Solo activos a la empresa"
+    en Comunidad, donde terminan armando el grupo por fuera):
+
+        1) Campanita in-app (siempre; dispara push si el tipo está en
+           PUSH_TIPOS_INMEDIATOS — comportamiento normal de notificar_aliado)
+        2) Push web inmediato (siempre, sin depender de esa variable — mismo
+           criterio que ya usaba comunidad.py para comentarios)
+        3) WhatsApp, si el aliado cargó número y Twilio está activo
+        4) Email como respaldo, solo si no se pudo mandar el WhatsApp
+
+    Nunca rompe el flujo principal: cualquier canal que falle se loguea y
+    sigue. NO hace commit — igual que notificar_aliado, la transacción la
+    maneja el caller.
+    """
+    notificar_aliado(db, aliado_id, tipo, titulo, cuerpo, tab=tab)
+    try:
+        enviar_push_a_aliado(db, aliado_id, titulo, cuerpo, "/")
+    except Exception:
+        pass
+
+    if not aliado_id:
+        return
+    try:
+        from models import Aliado as _Aliado
+        a = db.query(_Aliado).filter(_Aliado.id == aliado_id).first()
+    except Exception:
+        a = None
+    if not a:
+        return
+
+    texto = mensaje_whatsapp or (f"{titulo}\n\n{cuerpo}".strip() if cuerpo else titulo)
+    enviado_wa = False
+    if getattr(a, "whatsapp", None):
+        try:
+            from jarvis_whatsapp import enviar_whatsapp, is_enabled
+            if is_enabled():
+                r = enviar_whatsapp(a.whatsapp, texto)
+                enviado_wa = bool(r.get("ok"))
+        except Exception as e:
+            print(f"[NOTIF-MULTICANAL] WhatsApp falló para aliado {aliado_id}: {e}")
+
+    if not enviado_wa and getattr(a, "email", None):
+        try:
+            enviar_email(a.email, titulo, f"<p>{(cuerpo or titulo)}</p>")
+        except Exception as e:
+            print(f"[NOTIF-MULTICANAL] Email falló para aliado {aliado_id}: {e}")
+
 # ═══ ROUTER: ENDPOINTS DE PUSH Y NOVEDADES ═══════════════════════════════════
 # Migrados de main.py en el segundo tramo del split. Este módulo ya era el
 # dueño de la lógica de push/campanita; ahora también expone sus endpoints.

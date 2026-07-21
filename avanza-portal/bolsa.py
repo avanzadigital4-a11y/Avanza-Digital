@@ -25,6 +25,7 @@ en main.py — dependen del stack Jarvis/Groq y migran con ese dominio.
 Helpers compartidos de main (_get_aliado, PORTAL_URL) se acceden por import
 diferido para evitar el ciclo main → bolsa → main.
 """
+import json
 import sys
 from datetime import datetime, timedelta
 from typing import Optional
@@ -44,6 +45,17 @@ router = APIRouter(tags=["bolsa"])
 
 
 # ── Puente diferido a helpers de main (evita import circular) ────────────────
+
+def _cargar_historial_json(hist_json) -> list:
+    """Parseo defensivo del historial de intentos (mismo formato que
+    reciclado._cargar). Duplicado acá liviano para no crear un import
+    circular bolsa<->reciclado solo por esto."""
+    try:
+        v = json.loads(hist_json or "[]")
+        return v if isinstance(v, list) else []
+    except Exception:
+        return []
+
 
 def _get_aliado(codigo, db):
     from main import _get_aliado as f
@@ -262,12 +274,33 @@ def ver_bolsa_aliado(codigo: str, pais: str = "", db: Session = Depends(get_db),
         if l.estado == "reclamado" and l.fecha_reclamo:
             horas_pasadas = (datetime.now() - l.fecha_reclamo).total_seconds() / 3600
             horas_restantes = max(0, 48 - int(horas_pasadas))
-            
+
+        # RECICLADO — cuenta regresiva de cooldown ('nurture') y prioridad de
+        # reclamo sin límite de horas (ver reciclado.py). El front usa esto
+        # para mostrar "vuelve a la bolsa en Xh" y el botón de reactivar.
+        cooldown_horas_restantes = None
+        if l.estado == "nurture" and l.cooldown_hasta:
+            horas_para_liberar = (l.cooldown_hasta - datetime.now()).total_seconds() / 3600
+            cooldown_horas_restantes = max(0, round(horas_para_liberar, 1))
+
+        ultimo_resultado = None
+        if l.estado in ("nurture", "disponible"):
+            hist = _cargar_historial_json(l.historial_intentos)
+            if hist:
+                ultimo_resultado = hist[-1].get("resultado")
+
         reclamos_formateados.append({
             "id": l.id, "empresa": l.empresa, "rubro": l.rubro,
             "nombre_contacto": l.nombre_contacto, "ciudad": l.ciudad,
             "telefono": l.telefono, "whatsapp": l.whatsapp, "email": l.email,
             "estado": l.estado, "horas_restantes": horas_restantes,
+            # Reciclado: null salvo en 'nurture' (contando hasta que vuelva a
+            # la bolsa general). 'puede_reactivar' cubre nurture Y el estado
+            # posterior 'disponible' (ya liberado, pero este aliado conserva
+            # prioridad de reclamo mientras nadie más lo haya tomado).
+            "cooldown_horas_restantes": cooldown_horas_restantes,
+            "puede_reactivar": l.estado in ("nurture", "disponible"),
+            "ultimo_resultado": ultimo_resultado,
             "prospecto_id": l.prospecto_id,  # CRM bridge: != None si ya se convirtió
             # Reparto setter→closer + reciclado (para botones del front).
             "setter_id": l.setter_id,
@@ -454,6 +487,56 @@ def _crear_prospecto_desde_lead(db: Session, a: Aliado, lead: LeadBolsa) -> Pros
 
     lead.prospecto_id = p.id
     return p
+
+
+@router.post("/bolsa/{id}/reactivar")
+def reactivar_lead_bolsa(id: int,
+                         aliado: Aliado = Depends(current_aliado_required),
+                         db: Session = Depends(get_db)):
+    """Reabre un lead que este aliado ya trabajó antes (en cooldown 'nurture'
+    o ya vuelto a 'disponible' tras el reciclado) para seguir gestionándolo,
+    sin pasar por la bolsa general ni competir por él.
+
+    Caso de uso real: el aliado marcó "no contestó" (o se le venció el plazo
+    de 48hs sin contactar) y días después el cliente le responde. En vez de
+    perder el lead, lo reactiva acá directo y sigue el pipeline normal
+    (contactar → exitoso/no_interesado/no_contesto de nuevo si hace falta).
+
+    SIN LÍMITE DE TIEMPO: funciona mientras `aliado_id` siga siendo de este
+    aliado (ver reciclado.py, sección "PRIORIDAD DE RECLAMO"). Eso deja de
+    ser cierto en dos casos, y ahí este endpoint devuelve 404 a propósito
+    (mismo criterio que el resto de la bolsa: no filtramos existencia):
+      - Otro aliado ya lo reclamó primero por /bolsa/{id}/reclamar (le pisó
+        el aliado_id) — primero en actuar, se lo queda.
+      - El lead se "quemó" (demasiados reciclados) y quedó sin dueño; ahí ya
+        no vuelve por este camino — el aliado puede cargar el prospecto a
+        mano en Mi CRM si igual cierra la venta.
+
+    No cuenta contra el límite de 3 reclamos activos en el momento de
+    reactivar (la validación de LIMITE_RECLAMOS_ACTIVOS es para reclamos
+    *nuevos* de la bolsa general, no para recuperar algo que ya era propio).
+    """
+    a = aliado
+    if (getattr(a, "tipo_aliado", "canal1") or "canal1") == "canal2":
+        raise HTTPException(403, "La bolsa de leads no está disponible para aliados Canal 2.")
+
+    lead = db.query(LeadBolsa).filter(LeadBolsa.id == id, LeadBolsa.aliado_id == a.id).first()
+    if not lead:
+        raise HTTPException(404, "Lead no encontrado, no te pertenece, o ya lo reclamó otro aliado.")
+    if lead.estado == "quemado":
+        raise HTTPException(400, "Este lead ya fue retirado de la bolsa (demasiados intentos sin cerrar). Si el cliente respondió, podés cargarlo a mano en Mi CRM.")
+    if lead.estado == "contactado":
+        raise HTTPException(400, "Este lead ya está marcado como contactado. Si querés cambiar el resultado, usá el botón de contactar de nuevo.")
+
+    lead.estado = "reclamado"
+    lead.fecha_reclamo = datetime.now()
+    lead.cooldown_hasta = None
+    db.commit()
+
+    return {
+        "mensaje": "¡Lead reactivado! Volvió a tus reclamos activos — tenés 48hs para marcarlo como contactado.",
+        "id": lead.id,
+    }
 
 
 @router.post("/bolsa/{id}/convertir-prospecto")
