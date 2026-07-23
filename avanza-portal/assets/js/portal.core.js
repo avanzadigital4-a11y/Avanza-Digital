@@ -2368,9 +2368,13 @@ function plRegistrarDesdeProspecto(id) {
     ? todosProspectosPipeline.find(x => x.id === id) : null;
   if (!p) return;
   const elNombre = document.getElementById('pl-ref-nombre');
+  const elEmail  = document.getElementById('pl-ref-email');
+  const elWa     = document.getElementById('pl-ref-whatsapp');
   const elPlan   = document.getElementById('pl-ref-plan');
   const elNotas  = document.getElementById('pl-ref-notas');
   if (elNombre) elNombre.value = p.nombre || '';
+  if (elEmail) elEmail.value = p.email || '';
+  if (elWa) elWa.value = p.whatsapp || '';
   if (elPlan) {
     // El plan_interes del CRM usa los mismos values que el select de registro.
     const mapPlan = { 'Plan Base':'Plan Base', 'Plan Pro':'Plan Pro', 'Plan Industrial':'Plan Industrial', 'Estrategico 360':'Estrategico 360', 'Estratégico 360':'Estrategico 360' };
@@ -2620,6 +2624,13 @@ function _pintarBtnRegistrarVenta(p) {
       const opt = Array.from(sel.options).find(o => o.value === p.plan_interes);
       sel.value = opt ? p.plan_interes : '';
     } else if (sel) { sel.value = ''; }
+    // Precargar email/whatsapp con lo que ya haya guardado (sección Contacto y deal)
+    const refEmail = document.getElementById('ficha-ref-email');
+    const refWa = document.getElementById('ficha-ref-whatsapp');
+    const mainEmail = document.getElementById('ficha-email');
+    const mainWa = document.getElementById('ficha-whatsapp');
+    if (refEmail) refEmail.value = (p && p.email) || (mainEmail ? mainEmail.value : '') || '';
+    if (refWa) refWa.value = (p && p.whatsapp) || (mainWa ? mainWa.value : '') || '';
   }
 }
 
@@ -2632,11 +2643,15 @@ function toggleRegistrarVentaFicha() {
 async function confirmarRegistrarVentaFicha() {
   if (!_fichaLeadId) return;
   const plan = (document.getElementById('ficha-ref-plan').value || '').trim();
+  const email = (document.getElementById('ficha-ref-email').value || '').trim();
+  const whatsapp = (document.getElementById('ficha-ref-whatsapp').value || '').trim();
   if (!plan) { mostrarToast('Elegí el plan que va a contratar el cliente.', 'red'); return; }
+  if (!email) { mostrarToast('Falta el email del cliente — es obligatorio para registrar la venta.', 'red'); return; }
+  if (!whatsapp) { mostrarToast('Falta el WhatsApp del cliente — es obligatorio para registrar la venta.', 'red'); return; }
   const btn = document.getElementById('ficha-ref-confirm');
   btn.disabled = true; btn.innerHTML = '<span class="spinner"></span>';
   try {
-    const res = await apiFetch(`${API}/prospectos/${_fichaLeadId}/registrar-referido?plan=${encodeURIComponent(plan)}`, { method: 'POST' });
+    const res = await apiFetch(`${API}/prospectos/${_fichaLeadId}/registrar-referido?plan=${encodeURIComponent(plan)}&email=${encodeURIComponent(email)}&whatsapp=${encodeURIComponent(whatsapp)}`, { method: 'POST' });
     const data = await res.json();
     if (!res.ok) throw new Error(data.detail || 'No se pudo registrar.');
     mostrarToast(data.ya_existia
@@ -2645,7 +2660,9 @@ async function confirmarRegistrarVentaFicha() {
     // Reflejar en memoria local + UI sin esperar al refetch
     const p = (typeof todosProspectosPipeline !== 'undefined' && todosProspectosPipeline)
       ? todosProspectosPipeline.find(x => x.id === _fichaLeadId) : null;
-    if (p) p.referido_id = data.id_referido;
+    if (p) { p.referido_id = data.id_referido; p.email = email; p.whatsapp = whatsapp; }
+    const mainEmail = document.getElementById('ficha-email'); if (mainEmail) mainEmail.value = email;
+    const mainWa = document.getElementById('ficha-whatsapp'); if (mainWa) mainWa.value = whatsapp;
     _pintarBtnRegistrarVenta(p);
     cargarFichaLead(_fichaLeadId);  // timeline con la actividad nueva
     setTimeout(() => { cargarTodo(); if (typeof plRenderReferidos === 'function') plRenderReferidos(); }, 800);
@@ -3064,20 +3081,26 @@ async function plCrearProspecto() {
 
 async function plRegistrarReferido() {
   const nombre = document.getElementById('pl-ref-nombre').value.trim();
+  const email = document.getElementById('pl-ref-email').value.trim();
+  const whatsapp = document.getElementById('pl-ref-whatsapp').value.trim();
   const plan = document.getElementById('pl-ref-plan').value;
   const notas = document.getElementById('pl-ref-notas').value;
   const btn = document.getElementById('pl-btn-ref');
   const success = document.getElementById('pl-ref-success');
   if (!nombre||!plan) { alert('Completá el nombre del cliente y el plan elegido.'); return; }
+  if (!email) { alert('Falta el email del cliente — es obligatorio para registrar el prospecto.'); return; }
+  if (!whatsapp) { alert('Falta el WhatsApp del cliente — es obligatorio para registrar el prospecto.'); return; }
   btn.innerHTML='<span class="spinner"></span> Registrando...'; btn.disabled=true; success.style.display='none';
   try {
-    const res = await apiFetch(`${API}/referidos/registrar?ref_code=${aliado.ref_code}&nombre_cliente=${encodeURIComponent(nombre)}&plan_elegido=${encodeURIComponent(plan)}&notas=${encodeURIComponent(notas)}`,{method:'POST'});
+    const res = await apiFetch(`${API}/referidos/registrar?ref_code=${aliado.ref_code}&nombre_cliente=${encodeURIComponent(nombre)}&plan_elegido=${encodeURIComponent(plan)}&notas=${encodeURIComponent(notas)}&email=${encodeURIComponent(email)}&whatsapp=${encodeURIComponent(whatsapp)}`,{method:'POST'});
     const data = await res.json();
     if (res.ok) {
       const comision = Math.round(PLANES[plan]*pct(aliado.nivel_calculado||'BASIC'));
       success.innerHTML=`<i class="fa-solid fa-circle-check"></i> <strong>Prospecto registrado.</strong> Avanza Digital fue notificado.<br>Comisión estimada si se cierra: <strong>USD ${comision.toLocaleString()}</strong>.`;
       success.style.display='block';
       document.getElementById('pl-ref-nombre').value='';
+      document.getElementById('pl-ref-email').value='';
+      document.getElementById('pl-ref-whatsapp').value='';
       document.getElementById('pl-ref-plan').value='';
       document.getElementById('pl-ref-notas').value='';
       setTimeout(()=>{ cargarTodo(); plRenderReferidos(); },800);

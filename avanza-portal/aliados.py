@@ -266,7 +266,9 @@ def _aliado_detalle(a, incluir_token: bool = False):
                        "fecha": r.registrado_en.strftime("%d/%m/%Y"),
                        "confirmado": r.acuse_recibo, "convertido": r.convertido,
                        "rechazado": bool(getattr(r, "rechazado", False)),
-                       "nota_admin": getattr(r, "nota_admin", None)}
+                       "nota_admin": getattr(r, "nota_admin", None),
+                       "cliente_email": (getattr(r, "email", None) or (r.prospecto.email if r.prospecto else None)),
+                       "cliente_whatsapp": (getattr(r, "whatsapp", None) or (r.prospecto.whatsapp if r.prospecto else None))}
                       for r in a.referidos],
         "ventas": [{"cliente": v.nombre_cliente, "plan": v.plan,
                     "valor": v.valor_usd, "comision": v.comision_usd,

@@ -136,6 +136,8 @@ class RegistrarReferidoIn(_Base):
     nombre_cliente: str = Field(..., min_length=1, max_length=200)
     plan_elegido: str
     notas: str = ""
+    email: str = ""
+    whatsapp: str = ""
 
 
 class RegistrarVentaIn(_Base):

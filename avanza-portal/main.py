@@ -1446,7 +1446,9 @@ try:
         _conn.execute(text("ALTER TABLE referidos ADD COLUMN IF NOT EXISTS rechazado BOOLEAN DEFAULT FALSE"))
         _conn.execute(text("ALTER TABLE referidos ADD COLUMN IF NOT EXISTS nota_admin TEXT"))
         _conn.execute(text("ALTER TABLE referidos ADD COLUMN IF NOT EXISTS nota_admin_en TIMESTAMP"))
-    print("[REFERIDOS] Migración OK (rechazado, nota_admin, nota_admin_en)", flush=True)
+        _conn.execute(text("ALTER TABLE referidos ADD COLUMN IF NOT EXISTS email TEXT"))
+        _conn.execute(text("ALTER TABLE referidos ADD COLUMN IF NOT EXISTS whatsapp TEXT"))
+    print("[REFERIDOS] Migración OK (rechazado, nota_admin, nota_admin_en, email, whatsapp)", flush=True)
 except Exception as _e:
     print(f"[REFERIDOS] Error en migración de columnas admin: {_e}", file=sys.stderr)
 jarvis_contratos_routes.register(app, get_db, current_aliado_required)  # POST /ventas/{id}/contrato y /contratos/preview → PDF del contrato
@@ -1805,7 +1807,7 @@ def ver_contrato():
 @limiter.limit("30/hour")
 def registrar_referido(request: Request, body: schemas.RegistrarReferidoIn | None = Body(default=None),
                         ref_code: str = "", nombre_cliente: str = "", plan_elegido: str = "",
-                        notas: str = "",
+                        notas: str = "", email: str = "", whatsapp: str = "",
                         db: Session = Depends(get_db)):
     """Registra un referido público (NO requiere auth — el ref_code identifica
     al aliado). Acepta body JSON (preferido) o query (legacy)."""
@@ -1814,14 +1816,23 @@ def registrar_referido(request: Request, body: schemas.RegistrarReferidoIn | Non
         nombre_cliente = body.nombre_cliente
         plan_elegido = body.plan_elegido
         notas = body.notas
+        email = body.email
+        whatsapp = body.whatsapp
     if not ref_code or not nombre_cliente or not plan_elegido:
         raise HTTPException(400, "Faltan ref_code, nombre_cliente o plan_elegido.")
+    email = (email or "").strip()
+    whatsapp = (whatsapp or "").strip()
+    if not email:
+        raise HTTPException(400, "Falta el email del cliente. Es obligatorio para registrar el prospecto.")
+    if not whatsapp:
+        raise HTTPException(400, "Falta el WhatsApp del cliente. Es obligatorio para registrar el prospecto.")
     a = db.query(Aliado).filter(Aliado.ref_code == ref_code).first()
     if not a: raise HTTPException(404, "Código de referido inválido.")
     if (getattr(a, "tipo_aliado", "canal1") or "canal1") == "canal2":
         raise HTTPException(403, "Referidos no disponibles para aliados Canal 2.")
     if plan_elegido not in PLANES: raise HTTPException(400, f"Plan inválido.")
-    r = Referido(aliado_id=a.id, nombre_cliente=nombre_cliente, plan_elegido=plan_elegido, notas=notas)
+    r = Referido(aliado_id=a.id, nombre_cliente=nombre_cliente, plan_elegido=plan_elegido, notas=notas,
+                 email=email, whatsapp=whatsapp)
     db.add(r); db.commit(); db.refresh(r)
     return {
         "mensaje": "Referido registrado.", "id_referido": r.id,

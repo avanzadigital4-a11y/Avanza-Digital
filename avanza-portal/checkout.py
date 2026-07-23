@@ -552,7 +552,7 @@ def crear_pago_manual(plan: str,
 
 
 @router.post("/checkout/manual/{link_id}/reportar")
-def reportar_pago_manual(link_id: int, db: Session = Depends(get_db)):
+def reportar_pago_manual(link_id: int, codigo_orden: str = "", db: Session = Depends(get_db)):
     """El cliente o el aliado avisa que ya transfirió. Marca el registro como
     'reportado' para que el admin lo priorice en el panel. No mueve plata."""
     lp = db.query(LinkPago).filter(LinkPago.id == link_id).first()
@@ -601,6 +601,26 @@ def reportar_pago_manual(link_id: int, db: Session = Depends(get_db)):
         enviar_email(ADMIN_EMAIL, asunto, cuerpo)
     except Exception as _e:
         print(f"[PAGO MANUAL] No pude enviar el aviso por mail: {_e}")
+
+    # Confirmación al CLIENTE con su código de orden. Esto no depende de que
+    # vuelva a mirar la pestaña del navegador ni de que el popup de WhatsApp
+    # se haya abierto bien — llega sí o sí en cuanto reporta el pago.
+    try:
+        if email_g:
+            asunto_cli = f"✅ Recibimos tu solicitud — Avanza Digital{f' (Orden {codigo_orden})' if codigo_orden else ''}"
+            cuerpo_cli = f"""
+            <div style="font-family:Inter,sans-serif;background:#050505;color:#fff;padding:28px;max-width:640px;margin:auto;border-radius:12px;">
+              <p style="font-size:.72rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#4ade80;margin:0 0 6px;">¡Recibimos tu pago!</p>
+              <h1 style="font-size:1.4rem;font-weight:800;margin:0 0 4px;">Gracias{f', {nombre_g}' if nombre_g else ''}</h1>
+              <p style="color:#a1a1aa;font-size:.88rem;margin:0 0 18px;">Ya nos avisaron que transferiste USD {lp.precio_usd} por {lp.processor.upper()} para el {lp.plan}.</p>
+              {f'<div style="background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.12);border-radius:10px;padding:10px 16px;display:inline-block;font-family:monospace;font-size:.92rem;margin-bottom:18px;">Orden: <strong>{codigo_orden}</strong></div>' if codigo_orden else ''}
+              <p style="color:#e2e8f0;font-size:.9rem;line-height:1.6;">Vamos a confirmar la transferencia y activar tu servicio dentro de las próximas 24–48hs hábiles. Guardá este mail o tu código de orden por si necesitás hacer alguna consulta.</p>
+              <p style="margin-top:18px;"><a href="https://wa.me/5493424392759" style="color:#4ade80;">Escribinos por WhatsApp →</a></p>
+            </div>
+            """
+            enviar_email(email_g, asunto_cli, cuerpo_cli)
+    except Exception as _e:
+        print(f"[PAGO MANUAL] No pude enviar la confirmación al cliente: {_e}")
 
     return {"estado": "reportado", "mensaje": "Reportado. Avanza verificará la transferencia."}
 

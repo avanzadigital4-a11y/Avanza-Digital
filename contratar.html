@@ -731,17 +731,26 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
         }
     }
 
-    async function confirmarPagoManual(metodo) {
-        const linkId = linkIds[metodo];
-        if (linkId) {
-            try { await fetch(`/checkout/manual/${linkId}/reportar`, { method: 'POST' }); }
-            catch (err) { console.warn('No se pudo marcar el pago como reportado', err); }
-        }
+    function confirmarPagoManual(metodo) {
+        // El window.open() va PRIMERO y sin ningún await antes: varios
+        // navegadores (sobre todo en el celular) solo permiten abrir una
+        // pestaña/app nueva mientras dura el "gesto del usuario" (el toque
+        // del botón). Si antes hay un await, para el navegador ya pasó ese
+        // momento y puede bloquear el popup en silencio — el cliente toca
+        // el botón y no pasa nada, sin ningún aviso de error.
         const cli = window._datosCliente || {};
         const texto = encodeURIComponent(
             `Hola! Realicé la transferencia de USD ${precio} por ${metodo === 'usdt' ? 'USDT' : 'Payoneer'} para el ${planNombre} de Avanza Digital. Mi nombre: ${cli.nombre || ''}, email: ${cli.email || ''}.`
         );
         window.open(`https://wa.me/5493424392759?text=${texto}`, '_blank');
+
+        const linkId = linkIds[metodo];
+        if (linkId) {
+            // Fire-and-forget: no bloqueamos la navegación esperando esto.
+            const qsReportar = new URLSearchParams({ codigo_orden: orderCode }).toString();
+            fetch(`/checkout/manual/${linkId}/reportar?${qsReportar}`, { method: 'POST' })
+                .catch(function (err) { console.warn('No se pudo marcar el pago como reportado', err); });
+        }
 
         const destino = `gracias-contratacion.html?orden=${encodeURIComponent(orderCode)}&plan=${encodeURIComponent(planNombre)}&monto=${encodeURIComponent(precio)}&metodo=${encodeURIComponent(metodo)}&pagado=1`;
         window.location.href = destino;

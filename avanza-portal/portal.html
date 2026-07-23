@@ -2550,6 +2550,15 @@ html.avz-collapsed #avz-sidebar .avz-exit span{ display:none; }
             <input type="text" id="pl-ref-nombre" placeholder="Ej: Metalúrgica San Martín S.A.">
           </div>
           <div class="form-row">
+            <label>Email del cliente</label>
+            <input type="email" id="pl-ref-email" placeholder="Ej: contacto@metalurgicasanmartin.com">
+          </div>
+          <div class="form-row">
+            <label>WhatsApp del cliente</label>
+            <input type="text" id="pl-ref-whatsapp" placeholder="Ej: 3424000000">
+          </div>
+          <div style="font-size:.72rem;color:var(--text-dim);margin:-6px 0 10px;">Email y WhatsApp son obligatorios — así el equipo de Avanza Digital puede contactar al cliente.</div>
+          <div class="form-row">
             <label>Plan elegido</label>
             <select id="pl-ref-plan">
               <option value="">— Seleccioná un plan —</option>
@@ -3587,6 +3596,11 @@ html.avz-collapsed #avz-sidebar .avz-exit span{ display:none; }
       </div>
       <div id="ficha-ref-panel" style="display:none; margin-top:10px; background:rgba(239,68,68,0.05); border:1px solid rgba(239,68,68,0.3); border-radius:10px; padding:12px;">
         <div style="font-size:.76rem; color:#fca5a5; line-height:1.5; margin-bottom:10px;"><i class="fa-solid fa-triangle-exclamation"></i> Esto crea el <strong>registro oficial que atribuye la venta a tu cuenta</strong> (el Paso 2 del pipeline, sin volver a tipear nada). Hacelo <strong>ANTES</strong> de que el cliente pague.</div>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:6px;">
+          <input id="ficha-ref-email" type="email" placeholder="Email del cliente *" style="background:#111; border:1px solid var(--border); color:white; padding:9px; border-radius:8px; font-size:.84rem;">
+          <input id="ficha-ref-whatsapp" type="text" placeholder="WhatsApp del cliente *" style="background:#111; border:1px solid var(--border); color:white; padding:9px; border-radius:8px; font-size:.84rem;">
+        </div>
+        <div style="font-size:.68rem; color:var(--text-dim); margin-bottom:10px;">* Obligatorio — así el equipo de Avanza Digital puede contactar al cliente antes del pago.</div>
         <div style="display:flex; gap:8px; flex-wrap:wrap;">
           <select id="ficha-ref-plan" style="flex:1; min-width:180px; background:#111; border:1px solid var(--border); color:white; padding:9px; border-radius:8px; font-size:.84rem;">
             <option value="">— Seleccioná el plan —</option>

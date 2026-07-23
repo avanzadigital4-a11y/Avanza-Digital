@@ -540,13 +540,20 @@ def marcar_ganado(id: int, request: Request, valor_usd: float | None = None,
 
 @router.post("/prospectos/{id}/registrar-referido")
 def registrar_referido_desde_crm(id: int, request: Request, plan: str = "",
-                                 notas: str = "", db: Session = Depends(get_db)):
+                                 notas: str = "", email: str = "", whatsapp: str = "",
+                                 db: Session = Depends(get_db)):
     """Puente CRM → Referido: registra el prospecto para venta en 1 click.
 
     Crea el Referido (el registro contractual que atribuye la venta al aliado,
     obligatorio ANTES de que el cliente pague) con los datos del prospecto,
     sin volver a tipear nada. Idempotente: si ya fue registrado, devuelve el
     referido existente. Mismas reglas de negocio que /referidos/registrar.
+
+    Email y WhatsApp del cliente son obligatorios en este paso: son el dato
+    de contacto que le permite a Avanza Digital comunicarse directamente
+    con el cliente. Si el prospecto ya los tenía cargados desde el CRM,
+    no hace falta volver a tipearlos; si vienen en la request, se guardan
+    (y actualizan) en el prospecto.
     """
     p = _get_prospecto_owned_or_admin(id, request, db)
     a = db.query(Aliado).filter(Aliado.id == p.aliado_id).first()
@@ -557,9 +564,19 @@ def registrar_referido_desde_crm(id: int, request: Request, plan: str = "",
     if plan not in PLANES:
         raise HTTPException(400, "Plan inválido. Elegí uno de los planes de sistema.")
 
+    email_final = (email or "").strip() or (p.email or "").strip()
+    whatsapp_final = (whatsapp or "").strip() or (p.whatsapp or "").strip()
+    if not email_final:
+        raise HTTPException(400, "Falta el email del cliente. Es obligatorio para registrar la venta.")
+    if not whatsapp_final:
+        raise HTTPException(400, "Falta el WhatsApp del cliente. Es obligatorio para registrar la venta.")
+    p.email = email_final
+    p.whatsapp = whatsapp_final
+
     # Idempotencia: un prospecto se registra para venta UNA sola vez.
     existente = db.query(Referido).filter(Referido.prospecto_id == p.id).first()
     if existente:
+        db.commit()
         return {
             "mensaje": "Este lead ya estaba registrado para venta.",
             "id_referido": existente.id,
@@ -574,6 +591,8 @@ def registrar_referido_desde_crm(id: int, request: Request, plan: str = "",
         plan_elegido=plan,
         notas=notas_final,
         prospecto_id=p.id,
+        email=email_final,
+        whatsapp=whatsapp_final,
     )
     db.add(r)
     if not (p.plan_interes or "").strip():

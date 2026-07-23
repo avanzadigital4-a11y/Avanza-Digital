@@ -243,6 +243,11 @@ class Referido(Base):
     # Puente CRM → Referido: si el referido se creó desde la ficha de un
     # prospecto del CRM, acá queda el vínculo (idempotencia + badge en ficha).
     prospecto_id = Column(Integer, ForeignKey("prospectos.id"), nullable=True)
+    # Contacto del cliente (email/WhatsApp) para que Avanza Digital pueda
+    # comunicarse directamente. Se completa en el formulario "Registrar un
+    # prospecto" (Paso 2) o se copia del prospecto vinculado, si lo hay.
+    email = Column(String, nullable=True)
+    whatsapp = Column(String, nullable=True)
 
     aliado = relationship("Aliado", back_populates="referidos")
     venta = relationship("Venta", back_populates="referido", uselist=False)

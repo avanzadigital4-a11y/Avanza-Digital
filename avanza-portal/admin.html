@@ -585,7 +585,7 @@ tr:hover td { background:rgba(255,255,255,0.02); }
         <div style="overflow-x:auto;">
           <table>
             <thead><tr>
-              <th>Aliado</th><th>Cliente referido</th><th>Plan</th><th>Comisión est.</th>
+              <th>Aliado</th><th>Cliente referido</th><th>Contacto</th><th>Plan</th><th>Comisión est.</th>
               <th>Registrado</th><th>Acuse</th><th>Estado</th><th>Acción</th>
             </tr></thead>
             <tbody id="tabla-ref-body"></tbody>
@@ -2442,7 +2442,7 @@ function filtroRef(tipo, btn) {
 function renderReferidos(tipo) {
   const data = tipo==='pendientes' ? todosReferidos.filter(r=>!r.confirmado) : todosReferidos;
   const el = document.getElementById('tabla-ref-body');
-  if (!data.length) { el.innerHTML=`<tr><td colspan="8"><div class="empty-state"><i class="fa-solid fa-bell"></i><p>${tipo==='pendientes'?'¡Todo confirmado!':'No hay referidos registrados.'}</p></div></td></tr>`; return; }
+  if (!data.length) { el.innerHTML=`<tr><td colspan="9"><div class="empty-state"><i class="fa-solid fa-bell"></i><p>${tipo==='pendientes'?'¡Todo confirmado!':'No hay referidos registrados.'}</p></div></td></tr>`; return; }
   el.innerHTML = data.map((r)=>{
     let estadoCol;
     if (r.rechazado) {
@@ -2455,9 +2455,19 @@ function renderReferidos(tipo) {
     const accionCol = (!r.confirmado && !r.rechazado)
       ? `<button class="btn-green" onclick="abrirModalRevisarReferido(${r.id},'${(r.aliado_nombre||'').replace(/'/g,"\\'")}','${(r.cliente||'').replace(/'/g,"\\'")}','${(r.plan||'').replace(/'/g,"\\'")}')"><i class="fa-solid fa-magnifying-glass"></i> Revisar</button>`
       : `<button class="btn-outline" style="font-size:.75rem;padding:6px 10px;" onclick="abrirModalRevisarReferido(${r.id},'${(r.aliado_nombre||'').replace(/'/g,"\\'")}','${(r.cliente||'').replace(/'/g,"\\'")}','${(r.plan||'').replace(/'/g,"\\'")}')">Revisar de nuevo</button>`;
+    const email = (r.cliente_email||'').trim();
+    const waDigits = (r.cliente_whatsapp||'').replace(/[^\d]/g,'');
+    const emailHtml = email
+      ? `<a href="mailto:${email}" title="${email}" style="color:var(--primary);"><i class="fa-solid fa-envelope"></i></a>`
+      : `<i class="fa-solid fa-envelope" style="color:var(--text-dim);" title="Sin email"></i>`;
+    const waHtml = waDigits
+      ? `<a href="https://wa.me/${waDigits}" target="_blank" rel="noopener" title="${r.cliente_whatsapp}" style="color:var(--green);"><i class="fa-brands fa-whatsapp"></i></a>`
+      : `<i class="fa-brands fa-whatsapp" style="color:var(--text-dim);" title="Sin WhatsApp"></i>`;
+    const contactoCol = `<div style="display:flex;gap:10px;font-size:1rem;">${emailHtml}${waHtml}</div>`;
     return `<tr>
     <td style="color:var(--text);font-weight:600;">${r.aliado_nombre}</td>
     <td>${r.cliente}</td>
+    <td>${contactoCol}</td>
     <td><span class="badge badge-blue">${r.plan}</span></td>
     <td style="color:var(--green);font-weight:700;">USD ${(r.comision_est||0).toLocaleString()}</td>
     <td style="font-size:.8rem;color:var(--text-dim);">${r.fecha}</td>
