@@ -311,7 +311,7 @@ def ver_bolsa_aliado(codigo: str, pais: str = "", db: Session = Depends(get_db),
             "tiene_web": bool(l.tiene_web), "tiene_redes": bool(l.tiene_redes),
             "observacion": l.observacion,
         })
-        
+
     return {
         "disponibles": [
             {
@@ -319,7 +319,6 @@ def ver_bolsa_aliado(codigo: str, pais: str = "", db: Session = Depends(get_db),
                 "ciudad": l.ciudad or "", "pais": l.pais or "AR",
                 "tier": l.tier,
                 "score_calidad": l.score_calidad,
-                "costo_creditos": l.costo_creditos,
                 # Reciclado: si el lead ya pasó por la bolsa, el que lo va a
                 # reclamar ve que viene trabajado y puede mirar su historial.
                 "reciclados": l.reciclados or 0,
@@ -662,8 +661,7 @@ def ver_marketplace(codigo_aliado: str = "",
                     db: Session = Depends(get_db)):
     """Lista los leads calificados/premium disponibles para reclamar GRATIS.
 
-    Los leads ya no consumen créditos (los créditos son sólo para Jarvis IA),
-    así que el costo viaja siempre en 0 por compatibilidad con el front.
+    Los leads ya no consumen créditos (los créditos son sólo para Jarvis IA).
     SECURITY: usa el aliado del JWT, no acepta `codigo_aliado` para spoofing.
     """
     a = aliado  # del JWT
@@ -688,7 +686,6 @@ def ver_marketplace(codigo_aliado: str = "",
                 "ciudad": l.ciudad or "",
                 "pais": l.pais or "AR",
                 "tier": l.tier,
-                "costo_creditos": 0,  # leads gratis: el costo quedó deprecado
                 "score_calidad": l.score_calidad or 50,
                 # Notas internas del admin que califica — texto público para el aliado
                 # va por `observacion`. Mantenemos `notas` por compatibilidad con
@@ -781,7 +778,6 @@ class LeadBolsaCreateAdv(BaseModel):
     whatsapp: str = ""
     email: str = ""
     tier: str = "basico"            # basico | calificado | premium
-    costo_creditos: int = 0
     score_calidad: int = 50
     notas_calificacion: str = ""
     # v1.6 — presencia digital
@@ -790,6 +786,7 @@ class LeadBolsaCreateAdv(BaseModel):
     tiene_web: bool = False
     tiene_redes: bool = False
     observacion: Optional[str] = None
+    fuente_dato: Optional[str] = None  # de dónde salió tel/email: "places", "web propia", "instagram"...
 
 
 @router.post("/admin/bolsa-v2")
@@ -807,7 +804,7 @@ def cargar_lead_bolsa_v2(lead: LeadBolsaCreateAdv, db: Session = Depends(get_db)
         whatsapp=lead.whatsapp or None,
         email=lead.email or None,
         estado="disponible",
-        tier=lead.tier, costo_creditos=0,  # leads gratis: el costo quedó deprecado
+        tier=lead.tier,
         score_calidad=lead.score_calidad, notas_calificacion=lead.notas_calificacion,
         # v1.6 — presencia digital
         web=lead.web or None,
@@ -815,6 +812,7 @@ def cargar_lead_bolsa_v2(lead: LeadBolsaCreateAdv, db: Session = Depends(get_db)
         tiene_web=bool(lead.tiene_web),
         tiene_redes=bool(lead.tiene_redes),
         observacion=lead.observacion or None,
+        fuente_dato=lead.fuente_dato or None,
     )
     db.add(nuevo); db.commit()
     _notificar_nuevo_lead_bolsa(db, lead.empresa, lead.rubro, lead.tier)
@@ -913,7 +911,7 @@ def cargar_leads_bulk(payload: LeadBolsaBulkPayload, db: Session = Depends(get_d
             whatsapp=lead.whatsapp or None,
             email=lead.email or None,
             estado="disponible",
-            tier=tier, costo_creditos=0,  # leads gratis: el costo quedó deprecado
+            tier=tier,
             score_calidad=lead.score_calidad, notas_calificacion=lead.notas_calificacion,
             # v1.6 — presencia digital
             web=lead.web or None,
@@ -921,6 +919,7 @@ def cargar_leads_bulk(payload: LeadBolsaBulkPayload, db: Session = Depends(get_d
             tiene_web=bool(lead.tiene_web),
             tiene_redes=bool(lead.tiene_redes),
             observacion=lead.observacion or None,
+            fuente_dato=lead.fuente_dato or None,
         )
         db.add(nuevo)
         insertados.append(lead)

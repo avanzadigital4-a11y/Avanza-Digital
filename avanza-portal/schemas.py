@@ -185,7 +185,6 @@ class LeadBolsaCreateIn(_Base):
     email: str = ""
     notas: str = ""
     tier: str = "basico"
-    costo_creditos: int = 0
     score_calidad: int = 50
     notas_calificacion: str = ""
     # v1.6 — presencia digital

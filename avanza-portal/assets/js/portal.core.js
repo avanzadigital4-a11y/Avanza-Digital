@@ -625,18 +625,37 @@ async function iniciarSesion() {
   const btn = document.getElementById('btn-login');
   btn.innerHTML = '<span class="spinner"></span> Verificando...';
   btn.disabled = true;
+
+  // Si el free tier de Render tenía el servicio dormido, el cold start puede
+  // tardar 30-60s. Sin este aviso, el botón queda en "Verificando..." tanto
+  // tiempo que parece colgado. A los 4s avisamos qué está pasando en realidad.
+  const avisoDespertar = setTimeout(() => {
+    btn.innerHTML = '<span class="spinner"></span> Iniciando el servidor, un momento...';
+  }, 4000);
+
   try {
     const res = await apiFetch(`${API}/aliados/login`, {
       method: 'POST',
       body: { codigo, password: pass }
     });
-    if (!res.ok) throw new Error();
+    clearTimeout(avisoDespertar);
+    if (!res.ok) throw new Error('credenciales');
     aliado = await res.json();
     if (aliado.token) _setToken(aliado.token);
     document.getElementById('login-screen').style.display = 'none';
     document.getElementById('portal-screen').style.display = 'block';
     cargarTodo();
-  } catch {
+  } catch (e) {
+    clearTimeout(avisoDespertar);
+    if (e && e.message === 'credenciales') {
+      err.style.background = ''; err.style.borderColor = ''; err.style.color = '';
+      err.innerHTML = '<i class="fa-solid fa-circle-exclamation"></i> &nbsp;Código no encontrado o contraseña incorrecta.';
+    } else {
+      // Fetch falló antes de recibir respuesta: probablemente el servidor
+      // seguía despertando. No es un error de credenciales — lo aclaramos.
+      err.style.background = 'rgba(59,130,246,0.12)'; err.style.borderColor = 'rgba(59,130,246,0.3)'; err.style.color = 'var(--primary)';
+      err.innerHTML = '<i class="fa-solid fa-circle-info"></i> &nbsp;No pudimos conectar con el servidor. Puede estar iniciándose todavía — probá de nuevo en unos segundos.';
+    }
     err.style.display = 'block';
   }
   btn.innerHTML = '<i class="fa-solid fa-arrow-right-to-bracket"></i> Ingresar al portal';
@@ -900,18 +919,46 @@ function cerrarSesion() {
 async function intentarAutoLogin() {
   const token = _getToken();
   if (!token) return false;
+  const loginErr = document.getElementById('login-error');
+  const avisoDespertar = setTimeout(() => {
+    if (loginErr) {
+      loginErr.style.background = 'rgba(59,130,246,0.12)'; loginErr.style.borderColor = 'rgba(59,130,246,0.3)'; loginErr.style.color = 'var(--primary)';
+      loginErr.innerHTML = '<span class="spinner"></span> &nbsp;Iniciando el servidor, esto puede tardar unos segundos...';
+      loginErr.style.display = 'block';
+    }
+  }, 4000);
+
+  const intentarFetch = () => fetch(API + '/aliados/me', { headers: { 'Authorization': 'Bearer ' + token } });
+
   try {
-    const res = await fetch(API + '/aliados/me', {
-      headers: { 'Authorization': 'Bearer ' + token }
-    });
-    if (!res.ok) { _clearToken(); return false; }
+    let res;
+    try {
+      res = await intentarFetch();
+    } catch {
+      // Primer intento falló por red (típico de un cold start a mitad de
+      // camino). Reintentamos una vez solo, en silencio, antes de rendirnos.
+      await new Promise(r => setTimeout(r, 3000));
+      res = await intentarFetch();
+    }
+    clearTimeout(avisoDespertar);
+    if (loginErr) loginErr.style.display = 'none';
+    // Solo un 401 real significa "token vencido/inválido". Cualquier otro
+    // fallo (500, servidor recién levantando, etc.) no debe borrar la sesión.
+    if (res.status === 401) { _clearToken(); return false; }
+    if (!res.ok) return false;
     aliado = await res.json();
     aliado.token = token;
     document.getElementById('login-screen').style.display = 'none';
     document.getElementById('portal-screen').style.display = 'block';
     cargarTodo();
     return true;
-  } catch { _clearToken(); return false; }
+  } catch {
+    // Falla de red persistente incluso tras reintentar: NO tocamos el token
+    // guardado, así el aliado no pierde la sesión por una demora del servidor.
+    clearTimeout(avisoDespertar);
+    if (loginErr) loginErr.style.display = 'none';
+    return false;
+  }
 }
 
 let _heartbeatTimer = null;

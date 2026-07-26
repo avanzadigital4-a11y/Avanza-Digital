@@ -246,6 +246,9 @@ for col_sql in [
     "ALTER TABLE comunidad_comentarios ADD COLUMN aceptada BOOLEAN DEFAULT FALSE",
     # v3.3 — Canal 1: alerta de "muchos contactos, cero ventas" (campanita + WA)
     "ALTER TABLE aliados ADD COLUMN canal1_alerta_sin_venta_en TIMESTAMP",
+    # v3.4 — Bolsa: fuente de verificación de cada dato de contacto (prospección IA:
+    # "places", "web propia", "instagram", etc. — vacío si el campo no se confirmó)
+    "ALTER TABLE bolsa_leads ADD COLUMN fuente_dato VARCHAR",
 ]:
     _aplicar_migracion(col_sql)
 

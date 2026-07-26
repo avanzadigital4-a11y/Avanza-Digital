@@ -520,6 +520,7 @@ class LeadBolsa(Base):
     tiene_web = Column(Boolean, default=False)
     tiene_redes = Column(Boolean, default=False)
     observacion = Column(Text, nullable=True)
+    fuente_dato = Column(String, nullable=True)  # de dónde salió tel/email: "places", "web propia", "instagram"...
 
     # --- CRM BRIDGE (v2.x) ---
     # Si el aliado convirtió este lead en un prospecto del CRM, acá queda el

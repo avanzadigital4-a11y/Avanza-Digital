@@ -14,6 +14,7 @@ async function actualizarBadgeCapturas() {
   if (!aliado) return;
   try {
     const r = await apiFetch(`${API}/aliados/${aliado.codigo}/capturas`);
+    if (r.status === 401) { _manejarSesionVencidaPolling(); return; }
     if (!r.ok) return;
     _capturasData = await r.json();
     _pintarBadgeCapturas(_capturasData.no_vistas || 0);
@@ -64,6 +65,7 @@ async function cargarCapturas(force = false) {
   if (!lista) return;
   try {
     const r = await apiFetch(`${API}/aliados/${aliado.codigo}/capturas`);
+    if (r.status === 401) { _manejarSesionVencidaPolling(); return; }
     if (!r.ok) { lista.innerHTML = '<div class="bento-box" style="color:var(--text-muted);font-size:.85rem;">No se pudieron cargar las capturas. Probá de nuevo.</div>'; return; }
     const d = await r.json();
     _capturasData = d;
@@ -112,6 +114,21 @@ async function convertirCaptura(id) {
 let _novedadesTimer = null;
 let _novedadesData = null;
 
+// Sesión vencida detectada por el polling de novedades/capturas (401):
+// antes esto se ignoraba en silencio y el timer de 90s seguía pegándole
+// al backend indefinidamente con la pestaña abierta (ver caso AL-275 en
+// los logs de Render — consumía horas de instancia gratis sin necesidad).
+// Cortamos el timer, limpiamos el token y forzamos el login una sola vez.
+let _sesionVencidaPollingHandled = false;
+function _manejarSesionVencidaPolling() {
+  if (_sesionVencidaPollingHandled) return;
+  _sesionVencidaPollingHandled = true;
+  if (_novedadesTimer) { clearInterval(_novedadesTimer); _novedadesTimer = null; }
+  _clearToken();
+  if (typeof mostrarToast === 'function') mostrarToast('Sesión expirada, ingresá de nuevo.', 'red');
+  setTimeout(() => location.reload(), 1200);
+}
+
 function iniciarNovedades() {
   cargarNovedades();
   if (_novedadesTimer) clearInterval(_novedadesTimer);
@@ -131,6 +148,7 @@ async function cargarNovedades() {
   if (!aliado) return;
   try {
     const r = await apiFetch(`${API}/aliados/${aliado.codigo}/novedades`);
+    if (r.status === 401) { _manejarSesionVencidaPolling(); return; }
     if (!r.ok) return;
     _novedadesData = await r.json();
     const badge = document.getElementById('novedades-badge');

@@ -956,7 +956,6 @@ tr:hover td { background:rgba(255,255,255,0.02); }
           <span style="color:#4ade80;">✓ Todos los leads se reclaman GRATIS.</span> El <code>tier</code> ya solo indica la <strong>calidad del dato</strong> (los créditos quedaron solo para Jarvis IA).<br>
           <span style="color:var(--amber);">⚠️ tier</span> solo acepta: <code>basico</code> | <code>calificado</code> | <code>premium</code><br>
           <span style="color:var(--amber);">⚠️ pais</span>: código ISO de 2 letras (<code>AR</code>, <code>US</code>, <code>MX</code>, <code>CL</code>…). Acepta nombres y los normaliza.<br>
-          <span style="color:var(--amber);">⚠️ costo_creditos</span> es opcional: si el CSV lo trae, se ignora (los leads son gratis).<br>
           <span style="color:var(--amber);">⚠️ score_calidad</span>: número entre 0 y 100 — La primera fila (encabezado) se ignora automáticamente.<br>
           <span style="color:var(--amber);">⚠️ tiene_web / tiene_redes</span>: poner <code>1</code> si tiene, <code>0</code> si no tiene<br>
           <span style="color:var(--amber);">⚠️ web / instagram</span>: URL o usuario (@empresa), dejar vacío si no se tiene<br>
@@ -3507,7 +3506,7 @@ function _normalizarPais(raw) {
 }
 
 // Parser robusto y guiado por la CABECERA.
-// - Mapea columnas por NOMBRE (acepta el CSV con o sin la columna costo_creditos).
+// - Mapea columnas por NOMBRE (tolera CSVs con columnas de más o de menos).
 // - 'observacion' es el único campo de texto libre que puede traer el separador:
 //   si una fila tiene columnas de más/menos, anclamos por ambos extremos
 //   (campos fijos del frente + campos fijos del final) y todo lo del medio es
@@ -3529,8 +3528,8 @@ function parsearCSVMasivo(texto) {
     dataLines = lineas.slice(1);
   } else {
     header = ['empresa','rubro','nombre_contacto','ciudad','pais','telefono','whatsapp',
-              'email','web','instagram','tiene_web','tiene_redes','observacion','tier',
-              'costo_creditos','score_calidad'];
+              'email','web','instagram','tiene_web','tiene_redes','fuente_dato','observacion',
+              'tier','score_calidad'];
     dataLines = lineas; // no hay cabecera que saltar
   }
 
@@ -3580,13 +3579,13 @@ function parsearCSVMasivo(texto) {
       whatsapp: rec['whatsapp'] || telefono,
       email: rec['email'] || '',
       tier,
-      costo_creditos: 0,                 // leads gratis: el costo quedó deprecado
       score_calidad,
       notas_calificacion: '',
       web: rec['web'] || '',
       instagram: rec['instagram'] || '',
       tiene_web:   tw === '1' || tw === 'true' || tw === 'si' || tw === 'sí',
       tiene_redes: tr === '1' || tr === 'true' || tr === 'si' || tr === 'sí',
+      fuente_dato: rec['fuente_dato'] || '',
       observacion: rec['observacion'] || '',
       _incompleto: _falta.length > 0,
       _falta
@@ -3828,7 +3827,6 @@ async function cargarLeadBolsa() {
   const whatsapp = document.getElementById('bl-whatsapp').value.trim();
   const email = document.getElementById('bl-email').value.trim();
   const tier = document.getElementById('bl-tier').value;
-  const costo_creditos = 0; // leads gratis: el costo quedó deprecado
   const score_calidad = parseInt(document.getElementById('bl-score').value || '50');
   const notas = document.getElementById('bl-notas').value.trim();
   const notas_calificacion = document.getElementById('bl-notas-calificacion').value.trim();
@@ -3849,7 +3847,7 @@ async function cargarLeadBolsa() {
       headers: {'Content-Type': 'application/json'},
       body: JSON.stringify({
         empresa, rubro, nombre_contacto, ciudad, pais, telefono, whatsapp, email,
-        notas, tier, costo_creditos, score_calidad, notas_calificacion,
+        notas, tier, score_calidad, notas_calificacion,
         web, instagram, tiene_web, tiene_redes, observacion
       })
     });
