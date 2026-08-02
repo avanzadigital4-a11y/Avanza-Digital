@@ -2163,9 +2163,15 @@ def estado_onboarding(codigo: str, db: Session = Depends(get_db), _owner=Depends
     # Orden deliberado: el aliado canal1 debe reclamar un lead básico ANTES de
     # cargar un referido. El lead básico es gratis, de riesgo cero, y da contexto
     # real sobre cómo funciona el programa antes de comprometer un contacto propio.
+    academia_ok = db.query(AliadoModuloCompletado.modulo_id).filter(
+        AliadoModuloCompletado.aliado_id == a.id,
+        AliadoModuloCompletado.modulo_id.in_([1, 2, 3]),
+    ).distinct().count() >= 3
+
     pasos = [
         {"id": "registro", "titulo": "Te registraste", "completado": True},
         {"id": "cbu", "titulo": "Configurá tu método de cobro", "completado": bool(getattr(a, "cbu_alias", None) or getattr(a, "payment_info", None))},
+        {"id": "academia", "titulo": "Completaste los primeros 3 módulos de la Academia", "completado": academia_ok},
     ]
     if not es_canal2:
         pasos.append({

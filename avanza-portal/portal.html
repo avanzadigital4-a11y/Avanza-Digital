@@ -3131,33 +3131,29 @@ html.avz-collapsed #avz-sidebar .avz-exit span{ display:none; }
       <!-- Columna izquierda: kit + ganancias -->
       <div class="onboard-col-left">
 
-        <!-- Kit descargable -->
-        <div style="background:rgba(249,115,22,0.08);border:1px solid rgba(249,115,22,0.25);border-radius:10px;padding:16px;">
-          <div style="font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:var(--orange);margin-bottom:12px;"><i class="fa-solid fa-box-open"></i> &nbsp;Tu kit de aliado</div>
-          <div style="display:flex;flex-direction:column;gap:8px;">
+        <!-- Kit descargable — compactado a 1 línea por ítem (antes: 4 tarjetas con descripción) -->
+        <div style="background:rgba(249,115,22,0.08);border:1px solid rgba(249,115,22,0.25);border-radius:10px;padding:14px 16px;">
+          <div style="font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:var(--orange);margin-bottom:10px;"><i class="fa-solid fa-box-open"></i> &nbsp;Tu kit de aliado</div>
+          <div style="display:flex;flex-direction:column;gap:4px;">
             <a href="#" onclick="descargarPDF(_PDF_BROCHURE,'Brochure_Comercial_AvanzaDigital_v4.pdf');return false;"
-               style="display:flex;align-items:center;gap:10px;background:rgba(255,255,255,0.05);border:1px solid var(--border);border-radius:8px;padding:10px 12px;text-decoration:none;color:var(--text);transition:all .2s;"
-               onmouseover="this.style.borderColor='#ef4444'" onmouseout="this.style.borderColor='var(--border)'">
-              <i class="fa-solid fa-file-pdf" style="color:#ef4444;font-size:1.1rem;flex-shrink:0;"></i>
-              <div><div style="font-weight:700;font-size:.83rem;">Brochure Comercial v4</div><div style="font-size:.71rem;color:var(--text-muted);">Para mostrarle al cliente</div></div>
+               style="display:flex;align-items:center;gap:8px;padding:6px 4px;text-decoration:none;color:var(--text);font-size:.82rem;font-weight:600;border-radius:6px;transition:background .15s;"
+               onmouseover="this.style.background='rgba(255,255,255,0.05)'" onmouseout="this.style.background='transparent'">
+              <i class="fa-solid fa-file-pdf" style="color:#ef4444;font-size:.9rem;width:16px;flex-shrink:0;"></i> Brochure Comercial v4 <i class="fa-solid fa-download" style="margin-left:auto;color:var(--text-dim);font-size:.75rem;"></i>
             </a>
             <a href="#" onclick="descargarPDF(_PDF_PARTNER,'Avanza_Partner_Network_2026.pdf');return false;"
-               style="display:flex;align-items:center;gap:10px;background:rgba(255,255,255,0.05);border:1px solid var(--border);border-radius:8px;padding:10px 12px;text-decoration:none;color:var(--text);transition:all .2s;"
-               onmouseover="this.style.borderColor='var(--orange)'" onmouseout="this.style.borderColor='var(--border)'">
-              <i class="fa-solid fa-handshake" style="color:var(--orange);font-size:1.1rem;flex-shrink:0;"></i>
-              <div><div style="font-weight:700;font-size:.83rem;">Avanza Partner Network</div><div style="font-size:.71rem;color:var(--text-muted);">Programa oficial de alianzas</div></div>
+               style="display:flex;align-items:center;gap:8px;padding:6px 4px;text-decoration:none;color:var(--text);font-size:.82rem;font-weight:600;border-radius:6px;transition:background .15s;"
+               onmouseover="this.style.background='rgba(255,255,255,0.05)'" onmouseout="this.style.background='transparent'">
+              <i class="fa-solid fa-handshake" style="color:var(--orange);font-size:.9rem;width:16px;flex-shrink:0;"></i> Avanza Partner Network <i class="fa-solid fa-download" style="margin-left:auto;color:var(--text-dim);font-size:.75rem;"></i>
             </a>
             <a href="#" onclick="descargarPDF(_PDF_GUION_RUBRO,'Guion_Ventas_Por_Rubro.pdf');return false;"
-               style="display:flex;align-items:center;gap:10px;background:rgba(255,255,255,0.05);border:1px solid var(--border);border-radius:8px;padding:10px 12px;text-decoration:none;color:var(--text);transition:all .2s;"
-               onmouseover="this.style.borderColor='var(--primary)'" onmouseout="this.style.borderColor='var(--border)'">
-              <i class="fa-solid fa-book" style="color:var(--primary);font-size:1.1rem;flex-shrink:0;"></i>
-              <div><div style="font-weight:700;font-size:.83rem;">Guión por Rubro</div><div style="font-size:.71rem;color:var(--text-muted);">Casos por industria para cerrar</div></div>
+               style="display:flex;align-items:center;gap:8px;padding:6px 4px;text-decoration:none;color:var(--text);font-size:.82rem;font-weight:600;border-radius:6px;transition:background .15s;"
+               onmouseover="this.style.background='rgba(255,255,255,0.05)'" onmouseout="this.style.background='transparent'">
+              <i class="fa-solid fa-book" style="color:var(--primary);font-size:.9rem;width:16px;flex-shrink:0;"></i> Guión por Rubro <i class="fa-solid fa-download" style="margin-left:auto;color:var(--text-dim);font-size:.75rem;"></i>
             </a>
             <a href="#" onclick="descargarPDF(_PDF_GUION_PASOS,'Guion_Ventas_Paso_a_Paso.pdf');return false;"
-               style="display:flex;align-items:center;gap:10px;background:rgba(255,255,255,0.05);border:1px solid var(--border);border-radius:8px;padding:10px 12px;text-decoration:none;color:var(--text);transition:all .2s;"
-               onmouseover="this.style.borderColor='var(--green)'" onmouseout="this.style.borderColor='var(--border)'">
-              <i class="fa-solid fa-list-ol" style="color:var(--green);font-size:1.1rem;flex-shrink:0;"></i>
-              <div><div style="font-weight:700;font-size:.83rem;">Guión Paso a Paso</div><div style="font-size:.71rem;color:var(--text-muted);">Qué decir en cada momento</div></div>
+               style="display:flex;align-items:center;gap:8px;padding:6px 4px;text-decoration:none;color:var(--text);font-size:.82rem;font-weight:600;border-radius:6px;transition:background .15s;"
+               onmouseover="this.style.background='rgba(255,255,255,0.05)'" onmouseout="this.style.background='transparent'">
+              <i class="fa-solid fa-list-ol" style="color:var(--green);font-size:.9rem;width:16px;flex-shrink:0;"></i> Guión Paso a Paso <i class="fa-solid fa-download" style="margin-left:auto;color:var(--text-dim);font-size:.75rem;"></i>
             </a>
           </div>
         </div>
@@ -3243,30 +3239,25 @@ html.avz-collapsed #avz-sidebar .avz-exit span{ display:none; }
           </div>
         </div>
 
-        <!-- Herramientas de venta clave — Cotizador y Auditoría -->
-        <div style="margin-top:14px;background:rgba(139,92,246,0.07);border:1px solid rgba(139,92,246,0.25);border-radius:10px;padding:14px 16px;">
-          <div style="font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:1.4px;color:#a78bfa;margin-bottom:10px;"><i class="fa-solid fa-toolbox"></i> &nbsp;Herramientas de venta (¡usálas desde el día 1!)</div>
-          <div style="display:flex;flex-direction:column;gap:8px;">
-            <div style="display:flex;align-items:flex-start;gap:10px;cursor:pointer;" onclick="cerrarOnboarding();setTimeout(()=>document.querySelector('.tab-btn[onclick*=cotizador]')?.click(),300);">
-              <div style="width:32px;height:32px;border-radius:8px;background:rgba(139,92,246,0.15);border:1px solid rgba(139,92,246,0.3);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-                <i class="fa-solid fa-file-invoice-dollar" style="color:#a78bfa;font-size:.85rem;"></i>
-              </div>
-              <div>
-                <div style="font-size:.82rem;font-weight:700;color:var(--text);">Cotizador con IA <span style="font-size:.68rem;color:#a78bfa;font-weight:600;margin-left:4px;">→ Abrir</span></div>
-                <div style="font-size:.73rem;color:var(--text-muted);line-height:1.4;">Generá una propuesta personalizada en segundos. Elegís rubro y plan, la IA arma el argumento de valor.</div>
-              </div>
+        <!-- ⚠️ AVISO CRÍTICO: límite de reclamos y 48hs — debe aparecer ANTES de que entren a la Bolsa.
+             Va acá adentro (columna derecha, scrolleable) en vez del footer fijo, para no comerle
+             altura al área de contenido dentro del cap de 92vh del modal. -->
+        <div id="onboard-reglas-bolsa" style="background:rgba(250,204,21,0.07);border:1px solid rgba(250,204,21,0.3);border-radius:10px;padding:14px 16px;">
+          <div style="font-size:.72rem;font-weight:800;text-transform:uppercase;letter-spacing:1.2px;color:#facc15;margin-bottom:8px;"><i class="fa-solid fa-triangle-exclamation"></i> &nbsp;Reglas de la Bolsa de Leads — leé esto antes de entrar</div>
+          <div style="display:flex;flex-direction:column;gap:6px;">
+            <div style="display:flex;align-items:flex-start;gap:10px;font-size:.82rem;color:#e4e4e7;">
+              <span style="color:#facc15;font-size:.9rem;flex-shrink:0;margin-top:1px;">⏱</span>
+              <span><strong style="color:#fff;">48 horas por lead.</strong> Cada lead que reclamás tiene 48hs de vida. Si no lo marcás como <em>Contactado</em> dentro de ese plazo, vuelve al pool automáticamente y perdés el cupo.</span>
             </div>
-            <div style="display:flex;align-items:flex-start;gap:10px;cursor:pointer;" onclick="cerrarOnboarding();setTimeout(()=>document.querySelector('.tab-btn[onclick*=herramientas]')?.click(),300);">
-              <div style="width:32px;height:32px;border-radius:8px;background:rgba(139,92,246,0.15);border:1px solid rgba(139,92,246,0.3);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-                <i class="fa-solid fa-magnifying-glass" style="color:#a78bfa;font-size:.85rem;"></i>
-              </div>
-              <div>
-                <div style="font-size:.82rem;font-weight:700;color:var(--text);">Auditoría Digital B2B <span style="font-size:.68rem;color:#a78bfa;font-weight:600;margin-left:4px;">→ Abrir</span></div>
-                <div style="font-size:.73rem;color:var(--text-muted);line-height:1.4;">Mandá el link de auditoría al cliente antes de la reunión. Genera autoridad y abre la conversación sin que vos digas nada primero.</div>
-              </div>
+            <div style="display:flex;align-items:flex-start;gap:10px;font-size:.82rem;color:#e4e4e7;">
+              <span style="color:#facc15;font-size:.9rem;flex-shrink:0;margin-top:1px;">🔒</span>
+              <span><strong style="color:#fff;">Máximo 3 reclamos activos.</strong> Tenés 3 cupos en paralelo. Si se te vencen los 3 sin contactar, quedás bloqueado sin cupos disponibles hasta que liberen.</span>
+            </div>
+            <div style="display:flex;align-items:flex-start;gap:10px;font-size:.82rem;color:#e4e4e7;">
+              <span style="color:#f97316;font-size:.9rem;flex-shrink:0;margin-top:1px;">🎓</span>
+              <span><strong style="color:#f97316;">La Academia, primero.</strong> Los primeros 3 módulos son 15 minutos y duplican tus chances de cierre. Están en la pestaña <strong>Academia</strong> de la barra principal.</span>
             </div>
           </div>
-          <div style="font-size:.7rem;color:var(--text-dim);margin-top:8px;"><i class="fa-solid fa-grid-2" style="margin-right:4px;"></i>Las encontrás en el menú <strong style="color:#a78bfa;">Herramientas</strong> de la barra superior.</div>
         </div>
 
       </div>
@@ -3274,24 +3265,6 @@ html.avz-collapsed #avz-sidebar .avz-exit span{ display:none; }
     </div><!-- fin onboard-body -->
 
     <div class="onboard-footer">
-      <!-- ⚠️ AVISO CRÍTICO: límite de reclamos y 48hs — debe aparecer ANTES de que entren a la Bolsa -->
-      <div id="onboard-reglas-bolsa" style="background:rgba(250,204,21,0.07);border:1px solid rgba(250,204,21,0.3);border-radius:10px;padding:14px 16px;margin-bottom:14px;">
-        <div style="font-size:.72rem;font-weight:800;text-transform:uppercase;letter-spacing:1.2px;color:#facc15;margin-bottom:8px;"><i class="fa-solid fa-triangle-exclamation"></i> &nbsp;Reglas de la Bolsa de Leads — leé esto antes de entrar</div>
-        <div style="display:flex;flex-direction:column;gap:6px;">
-          <div style="display:flex;align-items:flex-start;gap:10px;font-size:.82rem;color:#e4e4e7;">
-            <span style="color:#facc15;font-size:.9rem;flex-shrink:0;margin-top:1px;">⏱</span>
-            <span><strong style="color:#fff;">48 horas por lead.</strong> Cada lead que reclamás tiene 48hs de vida. Si no lo marcás como <em>Contactado</em> dentro de ese plazo, vuelve al pool automáticamente y perdés el cupo.</span>
-          </div>
-          <div style="display:flex;align-items:flex-start;gap:10px;font-size:.82rem;color:#e4e4e7;">
-            <span style="color:#facc15;font-size:.9rem;flex-shrink:0;margin-top:1px;">🔒</span>
-            <span><strong style="color:#fff;">Máximo 3 reclamos activos.</strong> Tenés 3 cupos en paralelo. Si se te vencen los 3 sin contactar, quedás bloqueado sin cupos disponibles hasta que liberen.</span>
-          </div>
-          <div style="display:flex;align-items:flex-start;gap:10px;font-size:.82rem;color:#e4e4e7;">
-            <span style="color:#f97316;font-size:.9rem;flex-shrink:0;margin-top:1px;">🎓</span>
-            <span><strong style="color:#f97316;">Hacé la Academia primero.</strong> Los primeros 3 módulos son 15 minutos y duplican tus chances de cierre. Están en la pestaña <strong>Academia</strong> de la barra principal.</span>
-          </div>
-        </div>
-      </div>
       <button class="btn-primary" onclick="cerrarOnboarding()" style="width:100%;padding:14px;font-size:0.95rem;">
         <i class="fa-solid fa-rocket"></i> ¡Entendido, a vender!
       </button>

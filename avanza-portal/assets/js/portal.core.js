@@ -4130,6 +4130,10 @@ async function cargarOnboardingChecklist() {
           ? `<a href="#" onclick="cambiarTab('mi-cuenta', document.getElementById('btn-tab-mi-cuenta')); return false;"
                style="margin-left:auto;font-size:.72rem;font-weight:700;color:var(--amber);background:rgba(250,204,21,0.1);border:1px solid rgba(250,204,21,0.3);padding:2px 10px;border-radius:50px;text-decoration:none;white-space:nowrap;">
                Cargar →</a>`
+          : !p.completado && p.id==='academia'
+          ? `<a href="#" onclick="cambiarTab('academia', document.querySelector('.tab-btn[onclick*=academia]')); return false;"
+               style="margin-left:auto;font-size:.72rem;font-weight:700;color:var(--orange);background:rgba(249,115,22,0.1);border:1px solid rgba(249,115,22,0.3);padding:2px 10px;border-radius:50px;text-decoration:none;white-space:nowrap;">
+               Ir →</a>`
           : !p.completado
           ? '<span style="margin-left:auto;font-size:.72rem;font-weight:700;color:var(--primary);background:rgba(59,130,246,0.1);padding:2px 8px;border-radius:50px;">Pendiente</span>'
           : ''}
