@@ -1221,57 +1221,20 @@ def job_eliminacion_definitiva():
         for a in candidatos:
             codigo = a.codigo
             nombre = a.nombre
-            try:
-                # Reutilizar la lógica de eliminación en cascada
-                from main import eliminar_aliado  # misma sesión no aplica; llamamos directo
-            except Exception:
-                pass
-
-            # Eliminación en cascada inline (misma lógica que el endpoint admin)
+            # Eliminación en cascada — usa la MISMA función que el endpoint admin
+            # (aliados.ejecutar_cascada_borrado_aliado). Antes este job tenía su
+            # propia copia inline de la lógica de cascada, que se desincronizó de
+            # la del endpoint admin (le faltaban el paso 8.5 de hijos de prospecto
+            # y el nulling de eventos_uso) — eso hacía que el db.delete(a) final
+            # tirara ForeignKeyViolation, se hiciera rollback completo, y la cuenta
+            # quedara para siempre con activo=False pero sin borrarse de verdad:
+            # invisible en el listado admin (que filtra activo==True) pero todavía
+            # ocupando el email único, bloqueando cualquier re-registro futuro con
+            # ese mismo email.
             aid = a.id
-            def _sp(fn):
-                sp = db.begin_nested()
-                try:
-                    fn()
-                    sp.commit()
-                except Exception as e:
-                    sp.rollback()
-                    print(f"[job_eliminacion] SKIP — {type(e).__name__}: {e}", file=sys.stderr)
-
+            from aliados import ejecutar_cascada_borrado_aliado
             try:
-                prospecto_ids = [r[0] for r in db.query(Prospecto.id).filter(Prospecto.aliado_id == aid).all()]
-                post_ids      = [r[0] for r in db.query(PostComunidad.id).filter(PostComunidad.aliado_id == aid).all()]
-
-                if post_ids:
-                    _sp(lambda: db.query(ComentarioComunidad).filter(ComentarioComunidad.post_id.in_(post_ids)).delete(synchronize_session=False))
-                _sp(lambda: db.query(ComentarioComunidad).filter(ComentarioComunidad.aliado_id == aid).delete(synchronize_session=False))
-                _sp(lambda: db.query(PostComunidad).filter(PostComunidad.aliado_id == aid).delete(synchronize_session=False))
-                _sp(lambda: db.query(Comision).filter(Comision.aliado_id == aid).delete(synchronize_session=False))
-                if prospecto_ids:
-                    _sp(lambda: db.query(Comision).filter(Comision.prospecto_id.in_(prospecto_ids)).delete(synchronize_session=False))
-                _sp(lambda: db.query(LinkPago).filter(LinkPago.aliado_id == aid).delete(synchronize_session=False))
-                if prospecto_ids:
-                    _sp(lambda: db.query(LinkPago).filter(LinkPago.prospecto_id.in_(prospecto_ids)).delete(synchronize_session=False))
-                _sp(lambda: db.query(AutomationLog).filter(AutomationLog.aliado_id == aid).delete(synchronize_session=False))
-                if prospecto_ids:
-                    _sp(lambda: db.query(AutomationLog).filter(AutomationLog.prospecto_id.in_(prospecto_ids)).delete(synchronize_session=False))
-                _sp(lambda: db.query(Venta).filter(Venta.aliado_id == aid).delete(synchronize_session=False))
-                _sp(lambda: db.query(Referido).filter(Referido.aliado_id == aid).delete(synchronize_session=False))
-                _sp(lambda: db.query(Prospecto).filter(Prospecto.aliado_id == aid).delete(synchronize_session=False))
-                _sp(lambda: db.query(TransaccionCredito).filter(TransaccionCredito.aliado_id == aid).delete(synchronize_session=False))
-                _sp(lambda: db.query(AuditoriaLog).filter(AuditoriaLog.aliado_id == aid).update({AuditoriaLog.aliado_id: None}, synchronize_session=False))
-                _sp(lambda: db.query(LeadBolsa).filter(LeadBolsa.aliado_id == aid).update({LeadBolsa.aliado_id: None, LeadBolsa.estado: "disponible", LeadBolsa.fecha_reclamo: None}, synchronize_session=False))
-                _sp(lambda: db.query(Aliado).filter(Aliado.sponsor_id == aid).update({Aliado.sponsor_id: None}, synchronize_session=False))
-
-                _sp(lambda: db.query(EmailEnviado).filter(EmailEnviado.aliado_id == aid).update({EmailEnviado.aliado_id: None}, synchronize_session=False))
-                _sp(lambda: db.query(Equipo).filter((Equipo.aliado_a_id == aid) | (Equipo.aliado_b_id == aid)).delete(synchronize_session=False))
-                _sp(lambda: db.query(Novedad).filter(Novedad.aliado_id == aid).delete(synchronize_session=False))
-                _sp(lambda: db.query(ReporteMalContacto).filter(ReporteMalContacto.aliado_id == aid).delete(synchronize_session=False))
-                _sp(lambda: db.query(AliadoModuloCompletado).filter(AliadoModuloCompletado.aliado_id == aid).delete(synchronize_session=False))
-                _sp(lambda: db.query(SolicitudCompraCreditos).filter(SolicitudCompraCreditos.aliado_id == aid).delete(synchronize_session=False))
-                _sp(lambda: db.query(PlanContinuidadActivo).filter(PlanContinuidadActivo.aliado_id == aid).delete(synchronize_session=False))
-                _sp(lambda: db.query(PasswordResetToken).filter(PasswordResetToken.aliado_id == aid).delete(synchronize_session=False))
-                _sp(lambda: db.query(PushSubscription).filter(PushSubscription.aliado_id == aid).delete(synchronize_session=False))
+                ejecutar_cascada_borrado_aliado(db, aid, log_tag="job_eliminacion")
                 db.delete(a)
                 db.commit()
                 eliminados += 1

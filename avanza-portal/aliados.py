@@ -393,6 +393,18 @@ def notificar_inactivos_manual(background_tasks: BackgroundTasks,
     return {"ok": True, "mensaje": "Job de inactividad lanzado en background. Revisá los logs."}
 
 
+@router.post("/admin/ejecutar-eliminacion-definitiva")
+def ejecutar_eliminacion_definitiva_manual(background_tasks: BackgroundTasks,
+                                           _admin=Depends(current_admin_required)):
+    """Dispara manualmente el job de eliminación definitiva (job_eliminacion_definitiva).
+    Útil para no esperar al cron de 24hs cuando una cuenta quedó con activo=False
+    (suspendida/baja) bloqueando su email para un re-registro, y ya se corrigió la
+    causa del error que impedía que el borrado terminara."""
+    from main import job_eliminacion_definitiva  # diferido: el job vive junto al scheduler en main
+    background_tasks.add_task(job_eliminacion_definitiva)
+    return {"ok": True, "mensaje": "Job de eliminación definitiva lanzado en background. Revisá los logs."}
+
+
 @router.get("/aliados")
 def listar_aliados(db: Session = Depends(get_db),
                    _admin=Depends(current_admin_required)):
@@ -642,21 +654,28 @@ def activar_aliado(codigo: str, db: Session = Depends(get_db),
     return {"mensaje": f"{a.nombre} reactivado."}
 
 
-@router.delete("/aliados/{codigo}/eliminar")
-def eliminar_aliado(codigo: str, db: Session = Depends(get_db),
-                    _admin=Depends(current_admin_required)):
+def ejecutar_cascada_borrado_aliado(db: Session, aid: int, log_tag: str = "eliminar_aliado") -> None:
     """
-    Borra un aliado de forma permanente, limpiando primero TODAS las tablas
-    con FK hacia aliados.id.
+    Limpia TODAS las tablas con FK hacia aliados.id para el aliado `aid`,
+    dejándolo listo para el `db.delete()` final del caller.
+
+    Única fuente de verdad de la cascada de borrado — la usan tanto el
+    endpoint admin (DELETE /aliados/{codigo}/eliminar) como el job
+    programado job_eliminacion_definitiva (main.py), para que ambos
+    caminos limpien exactamente las mismas tablas y no se desincronicen
+    (ya pasó antes: el job tenía una copia vieja de esta lógica que le
+    faltaban pasos y por eso algunas cuentas quedaban a medio borrar,
+    bloqueando el email para un re-registro).
 
     Cada paso usa un savepoint independiente: si alguna tabla todavía no existe
     en la BD de producción (ProgrammingError / OperationalError), ese paso se
     descarta silenciosamente y el resto continúa — evitando que un schema
     desactualizado aborte toda la transacción (que era el ProgrammingError que
     se veía en pantalla).
+
+    No hace commit ni borra al Aliado en sí — eso queda a cargo del caller,
+    junto con el manejo de errores/rollback de la transacción externa.
     """
-    a = _get_aliado(codigo, db)
-    aid = a.id
 
     def _sp(fn):
         """Ejecuta fn() en un savepoint; si falla por tabla/columna inexistente lo ignora."""
@@ -666,160 +685,169 @@ def eliminar_aliado(codigo: str, db: Session = Depends(get_db),
             sp.commit()
         except (ProgrammingError, OperationalError) as e:
             sp.rollback()
-            print(f"[eliminar_aliado] SKIP (tabla/col faltante) — {type(e).__name__}: {e}", file=sys.stderr)
+            print(f"[{log_tag}] SKIP (tabla/col faltante) — {type(e).__name__}: {e}", file=sys.stderr)
 
-    try:
-        # 1) Obtener IDs auxiliares dentro de savepoints (por si las tablas no existen aún)
-        prospecto_ids: list = []
-        post_ids: list = []
+    # 1) Obtener IDs auxiliares dentro de savepoints (por si las tablas no existen aún)
+    prospecto_ids: list = []
+    post_ids: list = []
 
-        def _get_aux():
-            nonlocal prospecto_ids, post_ids
-            prospecto_ids = [r[0] for r in db.query(Prospecto.id).filter(Prospecto.aliado_id == aid).all()]
-            post_ids      = [r[0] for r in db.query(PostComunidad.id).filter(PostComunidad.aliado_id == aid).all()]
-        _sp(_get_aux)
+    def _get_aux():
+        nonlocal prospecto_ids, post_ids
+        prospecto_ids = [r[0] for r in db.query(Prospecto.id).filter(Prospecto.aliado_id == aid).all()]
+        post_ids      = [r[0] for r in db.query(PostComunidad.id).filter(PostComunidad.aliado_id == aid).all()]
+    _sp(_get_aux)
 
-        # 2) Comentarios de comunidad (hijos de posts + propios del aliado)
-        if post_ids:
-            _sp(lambda: db.query(ComentarioComunidad)
-                .filter(ComentarioComunidad.post_id.in_(post_ids))
-                .delete(synchronize_session=False))
+    # 2) Comentarios de comunidad (hijos de posts + propios del aliado)
+    if post_ids:
         _sp(lambda: db.query(ComentarioComunidad)
-            .filter(ComentarioComunidad.aliado_id == aid)
+            .filter(ComentarioComunidad.post_id.in_(post_ids))
             .delete(synchronize_session=False))
+    _sp(lambda: db.query(ComentarioComunidad)
+        .filter(ComentarioComunidad.aliado_id == aid)
+        .delete(synchronize_session=False))
 
-        # 3) Posts del aliado
-        _sp(lambda: db.query(PostComunidad)
-            .filter(PostComunidad.aliado_id == aid)
-            .delete(synchronize_session=False))
+    # 3) Posts del aliado
+    _sp(lambda: db.query(PostComunidad)
+        .filter(PostComunidad.aliado_id == aid)
+        .delete(synchronize_session=False))
 
-        # 4) Comisiones (depende de LinkPago y Prospecto → va antes)
+    # 4) Comisiones (depende de LinkPago y Prospecto → va antes)
+    _sp(lambda: db.query(Comision)
+        .filter(Comision.aliado_id == aid)
+        .delete(synchronize_session=False))
+    if prospecto_ids:
         _sp(lambda: db.query(Comision)
-            .filter(Comision.aliado_id == aid)
+            .filter(Comision.prospecto_id.in_(prospecto_ids))
             .delete(synchronize_session=False))
-        if prospecto_ids:
-            _sp(lambda: db.query(Comision)
-                .filter(Comision.prospecto_id.in_(prospecto_ids))
-                .delete(synchronize_session=False))
 
-        # 5) Links de pago
+    # 5) Links de pago
+    _sp(lambda: db.query(LinkPago)
+        .filter(LinkPago.aliado_id == aid)
+        .delete(synchronize_session=False))
+    if prospecto_ids:
         _sp(lambda: db.query(LinkPago)
-            .filter(LinkPago.aliado_id == aid)
+            .filter(LinkPago.prospecto_id.in_(prospecto_ids))
             .delete(synchronize_session=False))
-        if prospecto_ids:
-            _sp(lambda: db.query(LinkPago)
-                .filter(LinkPago.prospecto_id.in_(prospecto_ids))
-                .delete(synchronize_session=False))
 
-        # 6) Logs de automatización
+    # 6) Logs de automatización
+    _sp(lambda: db.query(AutomationLog)
+        .filter(AutomationLog.aliado_id == aid)
+        .delete(synchronize_session=False))
+    if prospecto_ids:
         _sp(lambda: db.query(AutomationLog)
-            .filter(AutomationLog.aliado_id == aid)
-            .delete(synchronize_session=False))
-        if prospecto_ids:
-            _sp(lambda: db.query(AutomationLog)
-                .filter(AutomationLog.prospecto_id.in_(prospecto_ids))
-                .delete(synchronize_session=False))
-
-        # 7) Ventas
-        _sp(lambda: db.query(Venta)
-            .filter(Venta.aliado_id == aid)
+            .filter(AutomationLog.prospecto_id.in_(prospecto_ids))
             .delete(synchronize_session=False))
 
-        # 8) Referidos
-        _sp(lambda: db.query(Referido)
-            .filter(Referido.aliado_id == aid)
+    # 7) Ventas
+    _sp(lambda: db.query(Venta)
+        .filter(Venta.aliado_id == aid)
+        .delete(synchronize_session=False))
+
+    # 8) Referidos
+    _sp(lambda: db.query(Referido)
+        .filter(Referido.aliado_id == aid)
+        .delete(synchronize_session=False))
+
+    # 8.5) Hijos de prospectos — DEBEN limpiarse ANTES que los prospectos.
+    #      El delete masivo del paso 9 saltea el cascade del ORM, así que las
+    #      FK a nivel BD (actividades_prospecto / contactos_prospecto, ambas
+    #      NOT NULL) bloquean el borrado si no se vacían primero.
+    if prospecto_ids:
+        _sp(lambda: db.query(ActividadProspecto)
+            .filter(ActividadProspecto.prospecto_id.in_(prospecto_ids))
             .delete(synchronize_session=False))
-
-        # 8.5) Hijos de prospectos — DEBEN limpiarse ANTES que los prospectos.
-        #      El delete masivo del paso 9 saltea el cascade del ORM, así que las
-        #      FK a nivel BD (actividades_prospecto / contactos_prospecto, ambas
-        #      NOT NULL) bloquean el borrado si no se vacían primero.
-        if prospecto_ids:
-            _sp(lambda: db.query(ActividadProspecto)
-                .filter(ActividadProspecto.prospecto_id.in_(prospecto_ids))
-                .delete(synchronize_session=False))
-            _sp(lambda: db.query(ContactoProspecto)
-                .filter(ContactoProspecto.prospecto_id.in_(prospecto_ids))
-                .delete(synchronize_session=False))
-            # Referencias nullable a estos prospectos → desvincular (preservar fila)
-            _sp(lambda: db.query(Novedad)
-                .filter(Novedad.prospecto_id.in_(prospecto_ids))
-                .update({Novedad.prospecto_id: None}, synchronize_session=False))
-            _sp(lambda: db.query(AuditoriaLog)
-                .filter(AuditoriaLog.prospecto_id.in_(prospecto_ids))
-                .update({AuditoriaLog.prospecto_id: None}, synchronize_session=False))
-            _sp(lambda: db.query(Referido)
-                .filter(Referido.prospecto_id.in_(prospecto_ids))
-                .update({Referido.prospecto_id: None}, synchronize_session=False))
-
-        # 9) Prospectos
-        _sp(lambda: db.query(Prospecto)
-            .filter(Prospecto.aliado_id == aid)
+        _sp(lambda: db.query(ContactoProspecto)
+            .filter(ContactoProspecto.prospecto_id.in_(prospecto_ids))
             .delete(synchronize_session=False))
-
-        # 10) Transacciones de créditos
-        _sp(lambda: db.query(TransaccionCredito)
-            .filter(TransaccionCredito.aliado_id == aid)
-            .delete(synchronize_session=False))
-
-        # 11) Auditoría: preservar con aliado_id = NULL
-        _sp(lambda: db.query(AuditoriaLog)
-            .filter(AuditoriaLog.aliado_id == aid)
-            .update({AuditoriaLog.aliado_id: None}, synchronize_session=False))
-
-        # 12) Bolsa de leads: liberar → vuelven a estar disponibles
-        _sp(lambda: db.query(LeadBolsa)
-            .filter(LeadBolsa.aliado_id == aid)
-            .update({
-                LeadBolsa.aliado_id: None,
-                LeadBolsa.estado: "disponible",
-                LeadBolsa.fecha_reclamo: None,
-            }, synchronize_session=False))
-
-        # 13) Sub-aliados: solo desvincular sponsor, no borrar
-        _sp(lambda: db.query(Aliado)
-            .filter(Aliado.sponsor_id == aid)
-            .update({Aliado.sponsor_id: None}, synchronize_session=False))
-
-        # 13.5) Resto de FKs directas a aliados.id que faltaban limpiar.
-        #       Sin estas, el commit final disparaba ForeignKeyViolation
-        #       (p.ej. emails_enviados, equipos, password_reset_tokens...).
-        # emails_enviados: preservar métricas de campaña → solo desvincular (col nullable)
-        _sp(lambda: db.query(EmailEnviado)
-            .filter(EmailEnviado.aliado_id == aid)
-            .update({EmailEnviado.aliado_id: None}, synchronize_session=False))
-        # Equipos setter/closer: el aliado puede ser A o B → borrar el vínculo
-        _sp(lambda: db.query(Equipo)
-            .filter((Equipo.aliado_a_id == aid) | (Equipo.aliado_b_id == aid))
-            .delete(synchronize_session=False))
-        # Tablas NOT NULL (no se pueden nulear → se borran):
+        # Referencias nullable a estos prospectos → desvincular (preservar fila)
         _sp(lambda: db.query(Novedad)
-            .filter(Novedad.aliado_id == aid)
-            .delete(synchronize_session=False))
-        _sp(lambda: db.query(ReporteMalContacto)
-            .filter(ReporteMalContacto.aliado_id == aid)
-            .delete(synchronize_session=False))
-        _sp(lambda: db.query(AliadoModuloCompletado)
-            .filter(AliadoModuloCompletado.aliado_id == aid)
-            .delete(synchronize_session=False))
-        _sp(lambda: db.query(SolicitudCompraCreditos)
-            .filter(SolicitudCompraCreditos.aliado_id == aid)
-            .delete(synchronize_session=False))
-        _sp(lambda: db.query(PlanContinuidadActivo)
-            .filter(PlanContinuidadActivo.aliado_id == aid)
-            .delete(synchronize_session=False))
-        _sp(lambda: db.query(PasswordResetToken)
-            .filter(PasswordResetToken.aliado_id == aid)
-            .delete(synchronize_session=False))
-        _sp(lambda: db.query(PushSubscription)
-            .filter(PushSubscription.aliado_id == aid)
-            .delete(synchronize_session=False))
-        # eventos_uso: tracking de uso del portal (col nullable) → solo desvincular,
-        # preserva las estadísticas agregadas de qué se usa en el portal.
-        _sp(lambda: db.query(EventoUso)
-            .filter(EventoUso.aliado_id == aid)
-            .update({EventoUso.aliado_id: None}, synchronize_session=False))
+            .filter(Novedad.prospecto_id.in_(prospecto_ids))
+            .update({Novedad.prospecto_id: None}, synchronize_session=False))
+        _sp(lambda: db.query(AuditoriaLog)
+            .filter(AuditoriaLog.prospecto_id.in_(prospecto_ids))
+            .update({AuditoriaLog.prospecto_id: None}, synchronize_session=False))
+        _sp(lambda: db.query(Referido)
+            .filter(Referido.prospecto_id.in_(prospecto_ids))
+            .update({Referido.prospecto_id: None}, synchronize_session=False))
 
+    # 9) Prospectos
+    _sp(lambda: db.query(Prospecto)
+        .filter(Prospecto.aliado_id == aid)
+        .delete(synchronize_session=False))
+
+    # 10) Transacciones de créditos
+    _sp(lambda: db.query(TransaccionCredito)
+        .filter(TransaccionCredito.aliado_id == aid)
+        .delete(synchronize_session=False))
+
+    # 11) Auditoría: preservar con aliado_id = NULL
+    _sp(lambda: db.query(AuditoriaLog)
+        .filter(AuditoriaLog.aliado_id == aid)
+        .update({AuditoriaLog.aliado_id: None}, synchronize_session=False))
+
+    # 12) Bolsa de leads: liberar → vuelven a estar disponibles
+    _sp(lambda: db.query(LeadBolsa)
+        .filter(LeadBolsa.aliado_id == aid)
+        .update({
+            LeadBolsa.aliado_id: None,
+            LeadBolsa.estado: "disponible",
+            LeadBolsa.fecha_reclamo: None,
+        }, synchronize_session=False))
+
+    # 13) Sub-aliados: solo desvincular sponsor, no borrar
+    _sp(lambda: db.query(Aliado)
+        .filter(Aliado.sponsor_id == aid)
+        .update({Aliado.sponsor_id: None}, synchronize_session=False))
+
+    # 13.5) Resto de FKs directas a aliados.id que faltaban limpiar.
+    #       Sin estas, el commit final disparaba ForeignKeyViolation
+    #       (p.ej. emails_enviados, equipos, password_reset_tokens...).
+    # emails_enviados: preservar métricas de campaña → solo desvincular (col nullable)
+    _sp(lambda: db.query(EmailEnviado)
+        .filter(EmailEnviado.aliado_id == aid)
+        .update({EmailEnviado.aliado_id: None}, synchronize_session=False))
+    # Equipos setter/closer: el aliado puede ser A o B → borrar el vínculo
+    _sp(lambda: db.query(Equipo)
+        .filter((Equipo.aliado_a_id == aid) | (Equipo.aliado_b_id == aid))
+        .delete(synchronize_session=False))
+    # Tablas NOT NULL (no se pueden nulear → se borran):
+    _sp(lambda: db.query(Novedad)
+        .filter(Novedad.aliado_id == aid)
+        .delete(synchronize_session=False))
+    _sp(lambda: db.query(ReporteMalContacto)
+        .filter(ReporteMalContacto.aliado_id == aid)
+        .delete(synchronize_session=False))
+    _sp(lambda: db.query(AliadoModuloCompletado)
+        .filter(AliadoModuloCompletado.aliado_id == aid)
+        .delete(synchronize_session=False))
+    _sp(lambda: db.query(SolicitudCompraCreditos)
+        .filter(SolicitudCompraCreditos.aliado_id == aid)
+        .delete(synchronize_session=False))
+    _sp(lambda: db.query(PlanContinuidadActivo)
+        .filter(PlanContinuidadActivo.aliado_id == aid)
+        .delete(synchronize_session=False))
+    _sp(lambda: db.query(PasswordResetToken)
+        .filter(PasswordResetToken.aliado_id == aid)
+        .delete(synchronize_session=False))
+    _sp(lambda: db.query(PushSubscription)
+        .filter(PushSubscription.aliado_id == aid)
+        .delete(synchronize_session=False))
+    # eventos_uso: tracking de uso del portal (col nullable) → solo desvincular,
+    # preserva las estadísticas agregadas de qué se usa en el portal.
+    _sp(lambda: db.query(EventoUso)
+        .filter(EventoUso.aliado_id == aid)
+        .update({EventoUso.aliado_id: None}, synchronize_session=False))
+
+
+@router.delete("/aliados/{codigo}/eliminar")
+def eliminar_aliado(codigo: str, db: Session = Depends(get_db),
+                    _admin=Depends(current_admin_required)):
+    """Borra un aliado de forma permanente (admin). Ver ejecutar_cascada_borrado_aliado
+    para el detalle de la limpieza de tablas relacionadas."""
+    a = _get_aliado(codigo, db)
+    aid = a.id
+    try:
+        ejecutar_cascada_borrado_aliado(db, aid, log_tag="eliminar_aliado")
         # 14) Por fin: el aliado mismo
         db.delete(a)
         db.commit()
