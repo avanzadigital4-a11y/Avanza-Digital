@@ -36,7 +36,7 @@ def test_split_sistemas_oneshot_con_modelo_b(db, aliado):
                     setter_id=setter.id, setter_split_pct=0.40)
     db.add(pro); db.commit(); db.refresh(pro)
 
-    plan = "Plan Industrial"          # 4900
+    plan = "Plan Industrial"          # 6990
     valor = PLANES[plan]
     # La comision se calcula con el pct del aliado AL MOMENTO de la venta; la
     # primera venta puede subir su nivel/pct, asi que lo capturamos antes.

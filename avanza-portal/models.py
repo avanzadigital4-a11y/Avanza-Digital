@@ -862,10 +862,10 @@ class PasswordResetToken(Base):
 
 # ─── CONSTANTES DE NEGOCIO ───────────────────────────────────────────────────
 PLANES = {
-    "Plan Base":         1050.0,
-    "Plan Pro":          2900.0,
-    "Plan Industrial":   4900.0,
-    "Estrategico 360":   7500.0,
+    "Plan Base":         1190.0,
+    "Plan Pro":          3490.0,
+    "Plan Industrial":   6990.0,
+    "Estrategico 360":   9999.0,
 }
 
 # Planes de continuidad mensuales (suscripción). El aliado cobra 10% mensual

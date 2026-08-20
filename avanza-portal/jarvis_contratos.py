@@ -52,7 +52,7 @@ AVANZA = {
 # ──────────────────────────────────────────────────────────────────────────────
 PLAN_INFO = {
     "Plan Base": {
-        "precio": 1050.0,
+        "precio": 1190.0,
         "plazo_dias": 7,
         "garantia": "90 (noventa) días corridos",
         "capacitacion": 0,
@@ -67,7 +67,7 @@ PLAN_INFO = {
         ],
     },
     "Plan Pro": {
-        "precio": 2900.0,
+        "precio": 3490.0,
         "plazo_dias": 14,
         "garantia": "90 (noventa) días corridos",
         "capacitacion": 1,
@@ -85,7 +85,7 @@ PLAN_INFO = {
         ],
     },
     "Plan Industrial": {
-        "precio": 4900.0,
+        "precio": 6990.0,
         "plazo_dias": 21,
         "garantia": "90 (noventa) días corridos",
         "capacitacion": 1,
@@ -105,7 +105,7 @@ PLAN_INFO = {
         ],
     },
     "Estrategico 360": {
-        "precio": 7500.0,
+        "precio": 9999.0,
         "plazo_dias": 30,
         "garantia": "12 (doce) meses",   # garantía extendida prometida en el brochure
         "capacitacion": 2,
@@ -471,7 +471,7 @@ def _inline_html(text: str) -> str:
 
 
 def _fmt_usd(n) -> str:
-    """Formatea un monto en USD con separador de miles LATAM (punto), p.ej. USD 7.500.
+    """Formatea un monto en USD con separador de miles LATAM (punto), p.ej. USD 9.999.
     Única fuente de verdad para que el precio se vea igual en todo el contrato
     (cuerpo, Anexo I y Anexo II — antes el Anexo usaba formato con coma y no coincidía)."""
     return f"USD {n:,.0f}".replace(",", ".")

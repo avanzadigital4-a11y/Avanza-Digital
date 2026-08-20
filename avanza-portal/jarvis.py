@@ -28,10 +28,10 @@ JARVIS_TIMEOUT    = 15.0
 
 # Planes de Avanza — deben coincidir con models.PLANES
 PLANES_AVANZA = {
-    "Plan Base":       1050.0,
-    "Plan Pro":        2900.0,
-    "Plan Industrial": 4900.0,
-    "Estrategico 360": 7500.0,
+    "Plan Base":       1190.0,
+    "Plan Pro":        3490.0,
+    "Plan Industrial": 6990.0,
+    "Estrategico 360": 9999.0,
 }
 
 
@@ -183,10 +183,10 @@ Tu función es ayudar a los aliados de Avanza a vender más: analizar leads, pre
 {contexto}
 
 PLANES QUE VENDE AVANZA:
-- Plan Base: $1.050 ARS/mes — para empresas chicas que necesitan presencia digital básica
-- Plan Pro: $2.900 ARS/mes — el más vendido, incluye web + SEO + gestión de consultas
-- Plan Industrial: $4.900 ARS/mes — para empresas medianas con necesidades técnicas específicas
-- Estratégico 360: $7.500 ARS/mes — solución completa para empresas grandes
+- Plan Base: $1.190 ARS/mes — para empresas chicas que necesitan presencia digital básica
+- Plan Pro: $3.490 ARS/mes — el más vendido, incluye web + SEO + gestión de consultas
+- Plan Industrial: $6.990 ARS/mes — para empresas medianas con necesidades técnicas específicas
+- Estratégico 360: $9.999 ARS/mes — solución completa para empresas grandes
 
 REGLAS DE OPERACIÓN:
 1. Respondé siempre en español rioplatense (vos, che, etc.) para aliados de Argentina.
@@ -335,10 +335,10 @@ CONTEXTO DEL ALIADO QUE VA A CONTACTAR:
 {contexto_aliado}
 
 PLANES DISPONIBLES:
-- Plan Base: $1.050/mes (empresas chicas, arranque digital)
-- Plan Pro: $2.900/mes (el más vendido — web + SEO + leads)
-- Plan Industrial: $4.900/mes (empresas medianas con necesidades técnicas)
-- Estratégico 360: $7.500/mes (empresas grandes, solución completa)
+- Plan Base: $1.190/mes (empresas chicas, arranque digital)
+- Plan Pro: $3.490/mes (el más vendido — web + SEO + leads)
+- Plan Industrial: $6.990/mes (empresas medianas con necesidades técnicas)
+- Estratégico 360: $9.999/mes (empresas grandes, solución completa)
 
 Generá un análisis completo con este JSON exacto:
 {{
@@ -375,7 +375,7 @@ Respondé ÚNICAMENTE con JSON válido. Sin texto antes ni después. Sin bloques
 
     # Asegurar tipos correctos
     parsed["score"] = max(0, min(100, int(parsed.get("score", 50))))
-    parsed["ticket_esperado"] = float(parsed.get("ticket_esperado", 2900.0))
+    parsed["ticket_esperado"] = float(parsed.get("ticket_esperado", 3490.0))
     if "objeciones" not in parsed:
         parsed["objeciones"] = []
 
@@ -418,10 +418,10 @@ DATOS DEL PROSPECTO:
 ALIADO: {aliado_nombre or 'el aliado'} — especialidad: {', '.join(aliado_rubros) if aliado_rubros else 'general'}
 
 PLANES:
-- Plan Base: $1.050/mes
-- Plan Pro: $2.900/mes (más vendido)
-- Plan Industrial: $4.900/mes
-- Estratégico 360: $7.500/mes
+- Plan Base: $1.190/mes
+- Plan Pro: $3.490/mes (más vendido)
+- Plan Industrial: $6.990/mes
+- Estratégico 360: $9.999/mes
 
 Devolvé exactamente este JSON:
 {{
@@ -445,7 +445,7 @@ Respondé ÚNICAMENTE con JSON válido. Sin texto antes ni después."""
         return None
 
     parsed["score"] = max(0, min(100, int(parsed.get("score", 50))))
-    parsed["ticket_esperado"] = float(parsed.get("ticket_esperado", 2900.0))
+    parsed["ticket_esperado"] = float(parsed.get("ticket_esperado", 3490.0))
     return parsed
 
 
@@ -585,7 +585,7 @@ def generar_propuesta(
           "notas_aliado": str,
         }
     """
-    ticket = PLANES_AVANZA.get(plan, 2900.0)
+    ticket = PLANES_AVANZA.get(plan, 3490.0)
 
     prompt = f"""
 Generá una propuesta comercial para presentarle a este prospecto.

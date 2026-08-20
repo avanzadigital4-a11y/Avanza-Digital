@@ -50,10 +50,10 @@ from jarvis_config import JARVIS_MODEL  # modelo centralizado en jarvis_config.p
 JARVIS_TIMEOUT    = 25.0  # propuestas son respuestas largas
 
 PLANES_AVANZA = {
-    "Plan Base":       1050.0,
-    "Plan Pro":        2900.0,
-    "Plan Industrial": 4900.0,
-    "Estrategico 360": 7500.0,
+    "Plan Base":       1190.0,
+    "Plan Pro":        3490.0,
+    "Plan Industrial": 6990.0,
+    "Estrategico 360": 9999.0,
 }
 
 CONTENIDOS_POR_PLAN = {
@@ -269,7 +269,7 @@ def generar_propuesta_completa(
         }
     O None si Claude no está disponible.
     """
-    ticket = PLANES_AVANZA.get(plan, 2900.0)
+    ticket = PLANES_AVANZA.get(plan, 3490.0)
     contenido_plan = _get_contenido_plan(plan)
     contexto_aliado = _build_aliado_context(
         aliado_nombre=aliado_nombre,
@@ -419,7 +419,7 @@ def generar_propuesta_rapida(
         }
     O None si Claude no está disponible.
     """
-    ticket = PLANES_AVANZA.get(plan, 2900.0)
+    ticket = PLANES_AVANZA.get(plan, 3490.0)
     contenido_plan = _get_contenido_plan(plan)
 
     perfiles_desc = {
@@ -501,7 +501,7 @@ def estimar_roi(
         }
     O None si Claude no está disponible.
     """
-    ticket = PLANES_AVANZA.get(plan, 2900.0)
+    ticket = PLANES_AVANZA.get(plan, 3490.0)
 
     ticket_venta_str = f"${ticket_promedio_venta:,.0f}" if ticket_promedio_venta > 0 else "no especificado"
     clientes_str = str(clientes_actuales) if clientes_actuales > 0 else "no especificado"
@@ -593,7 +593,7 @@ def generar_email_propuesta(
         }
     O None si Claude no está disponible.
     """
-    ticket = PLANES_AVANZA.get(plan, 2900.0)
+    ticket = PLANES_AVANZA.get(plan, 3490.0)
     pais_nombre = PAISES.get(aliado_pais, aliado_pais)
 
     prompt = f"""Generá el email de envío de propuesta y su email de seguimiento.

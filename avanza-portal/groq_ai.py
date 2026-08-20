@@ -28,10 +28,10 @@ GROQ_TIMEOUT = float(os.environ.get("GROQ_TIMEOUT", "8.0"))
 # ─── LISTA OFICIAL DE PLANES — debe coincidir con models.PLANES ──────────────
 _PLANES_VALIDOS = ("Plan Base", "Plan Pro", "Plan Industrial", "Estrategico 360")
 _PRECIOS_PLANES = {
-    "Plan Base":         1050.0,
-    "Plan Pro":          2900.0,
-    "Plan Industrial":   4900.0,
-    "Estrategico 360":   7500.0,
+    "Plan Base":         1190.0,
+    "Plan Pro":          3490.0,
+    "Plan Industrial":   6990.0,
+    "Estrategico 360":   9999.0,
 }
 
 
@@ -124,10 +124,10 @@ Tu trabajo: analizar un lead y devolver una recomendación accionable para un al
 CONTEXTO DEL NEGOCIO (AvanzaDigital):
 - Vendemos sitios web + sistemas digitales a PyMEs e industrias en Argentina.
 - Planes disponibles (USD, único pago):
-  • "Plan Base" (USD 1050): sitio simple, Google Business, métricas básicas. Para microempresas.
-  • "Plan Pro" (USD 2900): sitio + captación de leads + automatizaciones básicas. Default versátil.
-  • "Plan Industrial" (USD 4900): sistema completo B2B, catálogo técnico, integraciones. Para metalúrgicas, agro, construcción, logística grandes.
-  • "Estrategico 360" (USD 7500): canal digital completo operando como una máquina de ventas. Para tech / empresas medianas-grandes que esperan excelencia.
+  • "Plan Base" (USD 1190): sitio simple, Google Business, métricas básicas. Para microempresas.
+  • "Plan Pro" (USD 3490): sitio + captación de leads + automatizaciones básicas. Default versátil.
+  • "Plan Industrial" (USD 6990): sistema completo B2B, catálogo técnico, integraciones. Para metalúrgicas, agro, construcción, logística grandes.
+  • "Estrategico 360" (USD 9999): canal digital completo operando como una máquina de ventas. Para tech / empresas medianas-grandes que esperan excelencia.
 
 REGLAS DURAS:
 - Devolvé EXACTAMENTE este JSON, sin nada más:
@@ -467,7 +467,7 @@ respuesta que reformule (no contradiga) y avance la conversación.
 
 CONTEXTO DEL NEGOCIO (AvanzaDigital):
 - Vendemos sitios web + sistemas digitales a PyMEs e industrias en Argentina.
-- Planes en USD (pago único): Plan Base 1050, Plan Pro 2900, Plan Industrial 4900, Estratégico 360 7500.
+- Planes en USD (pago único): Plan Base 1190, Plan Pro 3490, Plan Industrial 6990, Estratégico 360 9999.
 - También se puede pagar en cuotas (3, 6, 12) con recargo. Aceptamos pesos.
 
 REGLAS DURAS:

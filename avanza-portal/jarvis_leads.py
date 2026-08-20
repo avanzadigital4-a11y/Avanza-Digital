@@ -47,10 +47,10 @@ from jarvis_config import JARVIS_MODEL  # modelo centralizado en jarvis_config.p
 JARVIS_TIMEOUT    = 20.0
 
 PLANES_AVANZA = {
-    "Plan Base":       1050.0,
-    "Plan Pro":        2900.0,
-    "Plan Industrial": 4900.0,
-    "Estrategico 360": 7500.0,
+    "Plan Base":       1190.0,
+    "Plan Pro":        3490.0,
+    "Plan Industrial": 6990.0,
+    "Estrategico 360": 9999.0,
 }
 
 PAISES = {
@@ -290,10 +290,10 @@ DATOS DEL LEAD:
 {contexto_aliado}
 
 PLANES DISPONIBLES DE AVANZA:
-- Plan Base: $1.050 ARS/mes (presencia digital básica)
-- Plan Pro: $2.900 ARS/mes (el más vendido — web + SEO + leads)
-- Plan Industrial: $4.900 ARS/mes (empresas medianas, necesidades técnicas)
-- Estratégico 360: $7.500 ARS/mes (solución completa para empresas grandes)
+- Plan Base: $1.190 ARS/mes (presencia digital básica)
+- Plan Pro: $3.490 ARS/mes (el más vendido — web + SEO + leads)
+- Plan Industrial: $6.990 ARS/mes (empresas medianas, necesidades técnicas)
+- Estratégico 360: $9.999 ARS/mes (solución completa para empresas grandes)
 
 Generá el análisis completo con este JSON exacto:
 {{
@@ -370,7 +370,7 @@ Respondé ÚNICAMENTE con JSON válido. Sin texto antes ni después. Sin bloques
 
     # Normalizar tipos
     parsed["score"]          = max(0, min(100, int(parsed.get("score", 50))))
-    parsed["ticket_esperado"] = float(parsed.get("ticket_esperado", 2900.0))
+    parsed["ticket_esperado"] = float(parsed.get("ticket_esperado", 3490.0))
     if "objeciones" not in parsed:
         parsed["objeciones"] = []
     if "plan_ataque" not in parsed:
@@ -432,7 +432,7 @@ EL ALIADO:
 - Sectores de especialidad: {rubros_str}
 - Avanza ofrece: web + SEO + gestión de leads + IA comercial para PYMES industriales B2B
 - Ventaja de Avanza: especialización en industria, conocimiento de rubro, IA JARVIS incluida,
-  soporte local, planes desde $1.050/mes hasta $7.500/mes
+  soporte local, planes desde $1.190/mes hasta $9.999/mes
 
 Generá el battle card con este JSON exacto:
 {{
@@ -524,7 +524,7 @@ CONTEXTO:
 - Aliado de Avanza: {aliado_nombre or 'el aliado'} ({pais_nombre})
 
 Avanza Digital ofrece: web profesional + SEO industrial + generación de leads + IA JARVIS.
-Planes desde $1.050/mes a $7.500/mes. Especialización en sector industrial B2B latinoamericano.
+Planes desde $1.190/mes a $9.999/mes. Especialización en sector industrial B2B latinoamericano.
 
 Generá el análisis con este JSON exacto:
 {{

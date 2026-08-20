@@ -153,7 +153,7 @@ SECTORES DEL ALIADO: {rubros_str}
 VENTAS CONFIRMADAS DEL ALIADO: {aliado_ventas}
 
 Avanza Digital ofrece: presencia web B2B, SEO, generación de leads, sistemas
-de marketing digital para PYMES industriales. Planes $1.050 - $7.500 ARS/mes.
+de marketing digital para PYMES industriales. Planes $1.190 - $9.999 ARS/mes.
 
 DOCUMENTO (RFP / LICITACIÓN / PEDIDO DE COTIZACIÓN):
 ---
@@ -247,7 +247,7 @@ PROSPECTO EN DISPUTA: {empresa_prospecto or "el prospecto"}
 ALIADO DE AVANZA: {aliado_nombre or "el aliado"} — sectores: {rubros_str}
 
 Avanza Digital ofrece: presencia web B2B, SEO, generación de leads, sistemas
-de marketing digital para PYMES industriales. Planes $1.050 - $7.500 ARS/mes.
+de marketing digital para PYMES industriales. Planes $1.190 - $9.999 ARS/mes.
 
 PROPUESTA DEL COMPETIDOR:
 ---
@@ -442,7 +442,7 @@ ALIADO: {aliado_nombre or "el aliado de Avanza Digital"} — ciudad: {aliado_ciu
 SECTORES DEL ALIADO: {rubros_str}
 
 Avanza Digital ofrece: presencia web B2B, SEO, generación de leads, sistemas
-de marketing digital para PYMES industriales. Planes $1.050 - $7.500 ARS/mes.
+de marketing digital para PYMES industriales. Planes $1.190 - $9.999 ARS/mes.
 
 COMUNICADO / NOTICIA:
 ---
@@ -774,7 +774,7 @@ ALIADO: {aliado_nombre or "el aliado de Avanza Digital"} — ciudad: {aliado_ciu
 SECTORES DEL ALIADO: {rubros_str}
 
 Avanza Digital ofrece: presencia web B2B, SEO, generación de leads, sistemas
-de marketing digital para PYMES industriales. Planes $1.050 - $7.500 ARS/mes.
+de marketing digital para PYMES industriales. Planes $1.190 - $9.999 ARS/mes.
 
 DOCUMENTO:
 ---

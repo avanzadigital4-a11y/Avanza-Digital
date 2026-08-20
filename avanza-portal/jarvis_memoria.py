@@ -533,7 +533,7 @@ No sos un chatbot. No sos un asistente genérico. Sos el copiloto comercial
 específico de este aliado — conocés su historia, su sector y cómo vende.
 
 Avanza Digital ofrece: presencia web B2B, SEO, generación de leads y sistemas
-de marketing digital para PYMES industriales. Planes desde $1.050 a $7.500 ARS/mes.
+de marketing digital para PYMES industriales. Planes desde $1.190 a $9.999 ARS/mes.
 
 
 ╔══════════════════════════════════════════════════════════════════════════════╗

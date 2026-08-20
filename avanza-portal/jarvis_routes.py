@@ -278,7 +278,7 @@ def register(app, get_db_func, auth_dep, ajustar_creditos_fn=None):
             "score": lead.score_calidad or 50,
             "temperatura": "tibio",
             "plan_recomendado": "Plan Pro",
-            "ticket_esperado": 2900.0,
+            "ticket_esperado": 3490.0,
             "razon": "Análisis heurístico — JARVIS no disponible.",
             "perfil_comprador": "Decisor típico del sector.",
             "script_whatsapp": f"Hola, te contacto de Avanza Digital. Trabajamos con empresas del sector {lead.rubro or 'industrial'} y me gustaría mostrarte cómo podemos ayudar a {lead.empresa}. ¿Tenés 15 minutos esta semana?",

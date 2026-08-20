@@ -127,7 +127,7 @@ CONTEXTO DEL ALIADO:
 
 Avanza Digital es una agencia que vende presencia web, posicionamiento SEO,
 generación de leads digitales y sistemas de marketing B2B industrial a PYMES.
-Los planes van desde $1.050 hasta $7.500 ARS/mes. Diferencial clave: conocimiento
+Los planes van desde $1.190 hasta $9.999 ARS/mes. Diferencial clave: conocimiento
 sectorial industrial, soporte personalizado, resultados medibles en 90 días.
 
 Generá un battle card completo. Sé honesto: si el competidor tiene ventajas reales,
@@ -193,7 +193,7 @@ CONTACTO: {nombre_contacto or "no identificado"} — {cargo_contacto or "cargo d
 NOTAS PREVIAS: {notas_previas or "primera reunión, sin contacto previo"}
 
 Avanza Digital vende: presencia web B2B, SEO industrial, generación de leads digitales,
-sistemas de marketing para PYMES industriales. Tickets desde $1.050 hasta $7.500 ARS/mes.
+sistemas de marketing para PYMES industriales. Tickets desde $1.190 hasta $9.999 ARS/mes.
 
 Basate en el perfil típico de empresas de ese sector y tamaño para inferir dolores,
 motivaciones y objeciones probables. Sé específico al sector.
@@ -402,7 +402,7 @@ CONTENIDO DE LA SOLICITUD:
 ---
 
 Avanza Digital ofrece: presencia web B2B, SEO, generación de leads, sistemas de
-marketing digital para PYMES industriales. Planes desde $1.050 a $7.500 ARS/mes.
+marketing digital para PYMES industriales. Planes desde $1.190 a $9.999 ARS/mes.
 
 Devolvé este JSON:
 {{
@@ -478,7 +478,7 @@ CONTENIDO DE LA PROPUESTA DEL COMPETIDOR:
 ---
 
 Avanza Digital ofrece: presencia web B2B, SEO, generación de leads, sistemas de
-marketing digital para PYMES industriales. Planes $1.050 - $7.500 ARS/mes.
+marketing digital para PYMES industriales. Planes $1.190 - $9.999 ARS/mes.
 Diferenciales: conocimiento sectorial industrial, soporte personalizado, resultados
 medibles en 90 días, sin contratos largos obligatorios.
 

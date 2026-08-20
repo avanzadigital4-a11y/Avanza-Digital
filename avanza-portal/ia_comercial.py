@@ -529,7 +529,7 @@ def _perfilar_prospecto_heuristico(p: Prospecto) -> dict:
         score += 5
 
     # Normalizar ticket esperado
-    ticket = PLANES.get(plan, 2900) * mult
+    ticket = PLANES.get(plan, 3490) * mult
     score = max(0, min(100, int(score)))
 
     # 6. Pitch sugerido

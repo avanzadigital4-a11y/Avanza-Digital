@@ -703,12 +703,12 @@ def detectar_sector(texto: str) -> Optional[str]:
     return mejor_sector
 
 
-def get_roi_pitch(sector: str, *, plan_precio_ars: float = 2900.0) -> str:
+def get_roi_pitch(sector: str, *, plan_precio_ars: float = 3490.0) -> str:
     """
     Genera un pitch de ROI específico para el sector y el precio del plan.
     Listo para usar en propuestas o respuestas a 'cuánto sale'.
 
-    >>> print(get_roi_pitch("metalurgica", plan_precio_ars=2900))
+    >>> print(get_roi_pitch("metalurgica", plan_precio_ars=3490))
     """
     data = get_sector_knowledge(sector)
     if not data:

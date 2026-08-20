@@ -184,7 +184,7 @@ def _msg_dia7(aliado) -> str:
         f"¿Cómo vas, {nombre}? 🎯\n\n"
         f"Recordatorio rápido: con *1 sola venta* en los próximos 6 meses "
         f"pasás a nivel *SILVER* y tu comisión sube de 10% a *12%*.\n\n"
-        f"En un plan de USD 1.050 eso son *USD 20 más por venta*. "
+        f"En un plan de USD 1.190 eso son *USD 20 más por venta*. "
         f"En 5 ventas son USD 100 extra.\n\n"
         f"¿Tenés leads en vista? Si querés te ayudo a armar el pitch."
     )
@@ -238,7 +238,7 @@ def _msg_subida_elite(aliado) -> str:
         f"👑 *¡ELITE, {nombre}!*\n\n"
         f"Máximo nivel del programa. "
         f"A partir de ahora ganás *20% de comisión* en cada cierre.\n\n"
-        f"En un plan Pro de USD 2.900 eso son *USD 580 por venta*.\n\n"
+        f"En un plan Pro de USD 3.490 eso son *USD 580 por venta*.\n\n"
         f"Sos de los mejores aliados del network. "
         f"Si querés escalar más, hablemos de sub-aliados y estructura de red. 🏆"
     )

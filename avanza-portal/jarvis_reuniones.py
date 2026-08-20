@@ -136,7 +136,7 @@ SECTORES EN LOS QUE EL ALIADO OPERA: {rubros_str}
 VENTAS CONFIRMADAS DEL ALIADO: {aliado_ventas}
 
 Avanza Digital ofrece: presencia web B2B, SEO, generación de leads, sistemas de
-marketing digital para PYMES industriales. Planes $1.050 - $7.500 ARS/mes.
+marketing digital para PYMES industriales. Planes $1.190 - $9.999 ARS/mes.
 
 Devolvé este JSON:
 {{
